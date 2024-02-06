@@ -3952,7 +3952,7 @@ exit:
 
 psa_status_t psa_key_derivation_verify_key(
     psa_key_derivation_operation_t *operation,
-    psa_key_id_t expected)
+    mbedtls_svc_key_id_t expected)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
