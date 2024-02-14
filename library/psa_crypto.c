@@ -3842,7 +3842,7 @@ static psa_status_t psa_generate_derived_key_internal(
             case 256:
             case 384: break;
             case 521: data[0] &= 0x01; break; // truncate to 521 bits
-            default: 
+            default:
                 {
                     status = PSA_ERROR_INVALID_ARGUMENT;
                     goto exit;
@@ -4139,7 +4139,7 @@ psa_status_t psa_key_derivation_input_integer(
             status = PSA_ERROR_NOT_SUPPORTED;
             goto exit;
         }
-    } 
+    }
 
     status = psa_driver_wrapper_key_derivation_input_integer(operation, step, value);
     if (status != PSA_SUCCESS) goto exit;
@@ -4519,7 +4519,7 @@ psa_status_t psa_pake_set_password_key(psa_pake_operation_t *operation,
         goto exit;
     }
 #endif
-     
+
     status = psa_get_and_lock_key_slot_with_policy(
         password, &slot, PSA_KEY_USAGE_DERIVE, operation->alg);
     if (status != PSA_SUCCESS) goto exit;

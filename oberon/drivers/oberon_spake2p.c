@@ -64,7 +64,7 @@ exit:
 static psa_status_t oberon_update_ids(oberon_spake2p_operation_t *op)
 {
     psa_status_t status;
-    
+
     // add idProver to TT
     status = oberon_update_hash_with_prefix(&op->hash_op, op->prover, op->prover_len);
     if (status != PSA_SUCCESS) return status;

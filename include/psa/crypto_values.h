@@ -2140,7 +2140,7 @@
  *
  * This is an HMAC-based, counter mode key derivation function, using the construction recommended
  * specified by SP800-108, §4.1.
- * 
+ *
  * This key derivation algorithm uses the following inputs:
  * - #PSA_KEY_DERIVATION_INPUT_SECRET is the secret input keying material, K_in.
  * - #PSA_KEY_DERIVATION_INPUT_LABEL is the label.
@@ -2155,11 +2155,11 @@
  * When the first output is requested, the value of L is calculated as L = 8 * cap, where cap is the value of
  * psa_key_derivation_get_capacity().
  * Subsequent calls to psa_key_derivation_set_capacity() are not permitted for this algorithm.
- * 
+ *
  * The derivation is constructed as described in SP800-108 §4.1, with the iteration counter i and
  * output length L encoded as big-endian, 32-bit values. The resulting output stream
  * K_1 || K_2 || K_3 || ... is computed as:
- * 
+ *
  * K_i = HMAC( K_in, [i]4 || label || 0x00 || context || [L]4 ), for i = 1, 2, 3, ...
  * Where [x]n is the big-endian, n-byte encoding of the integer x.
  *
@@ -2189,7 +2189,7 @@
  *
  * This is a CMAC-based, counter mode key derivation function, using the construction recommended
  * specified by SP800-108, §4.1.
- * 
+ *
  * This key derivation algorithm uses the following inputs:
  * - #PSA_KEY_DERIVATION_INPUT_SECRET is the secret input keying material, K_in.
  *   This must be a block-cipher key that is compatible with the CMAC algorithm,
@@ -2206,13 +2206,13 @@
  * When the first output is requested, the value of L is calculated as L = 8 * cap, where cap is the value of
  * psa_key_derivation_get_capacity().
  * Subsequent calls to psa_key_derivation_set_capacity() are not permitted for this algorithm.
- * 
+ *
  * The derivation is constructed as described in SP800-108 §4.1, , with the following details:
  * - The iteration counter i and output length L are encoded as big-endian, 32-bit values.
  * - The mitigation to make the CMAC-based construction robust is implemented.
- * 
+ *
  * The resulting output stream K_1 || K_2 || K_3 || ... is computed as:
- * 
+ *
  * K_0 = CMAC( K_in, label || 0x00 || context || [L]4 )
  * K_i = CMAC( K_in, [i]4 || label || 0x00 || context || [L]4 || K_0), for i = 1, 2, 3, ...
  * Where [x]n is the big-endian, n-byte encoding of the integer x.
