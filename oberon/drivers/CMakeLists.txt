@@ -42,7 +42,7 @@ set(OBERON_SOURCES
         oberon_spake2p.h
         oberon_srp.c
         oberon_srp.h
-        )
+)
 
 target_sources(${PROJECT_NAME} PRIVATE ${OBERON_SOURCES})
 
