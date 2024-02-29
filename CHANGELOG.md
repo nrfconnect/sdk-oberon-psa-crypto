@@ -1,7 +1,7 @@
 # Oberon PSA Crypto change log
 
 ## Oberon PSA Crypto 1.2.1
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.1
+https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/rel1.2.1
 
 25-Jan-2024 (7462663)
 
