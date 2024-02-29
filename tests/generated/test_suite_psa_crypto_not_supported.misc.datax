@@ -1,0 +1,12 @@
+PSA import PSA_KEY_TYPE_NONE never supported
+0:exp:0:hex:"1234"
+
+PSA generate PSA_KEY_TYPE_NONE never supported
+1:exp:0:int:16
+
+PSA import PSA_KEY_TYPE_CATEGORY_SYMMETRIC never supported
+0:exp:1:hex:"1234"
+
+PSA generate PSA_KEY_TYPE_CATEGORY_SYMMETRIC never supported
+1:exp:1:int:16
+

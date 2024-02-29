@@ -1,0 +1,32 @@
+* -text
+
+*.h             text eol=lf
+*.c             text eol=lf
+*.s             text eol=lf
+*.S             text eol=lf
+*.sh            text eol=lf
+*.json          text eol=lf
+*.md            text eol=lf
+*.txt           text eol=lf
+*.xml           text eol=lf
+*.cmake         text eol=lf
+Makefile        text eol=lf
+Doxyfile        text eol=lf
+
+*.clang-format  text eol=lf
+*.gitignore     text eol=lf
+
+*.bat           text eol=crlf
+
+*.ewp           text eol=crlf
+*.eww           text eol=crlf
+*.icf           text eol=crlf
+
+*.uvprojx       text eol=crlf
+*.uvoptx        text eol=crlf
+*.scvd          text eol=crlf
+*.uvmpw         text eol=crlf
+
+*.sln           text eol=crlf
+*.vcxproj       text eol=crlf
+*.filters       text eol=crlf

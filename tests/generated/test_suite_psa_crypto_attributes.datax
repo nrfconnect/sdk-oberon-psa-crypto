@@ -1,0 +1,28 @@
+PSA key attributes structure
+depends_on:0:1
+0:exp:0:int:0x6963:exp:1:exp:2:exp:3:exp:4:int:128
+
+PSA key attributes: id only
+1:int:0x1234:int:0x5678:int:-1:int:-1:int:0:int:0x1234:int:0x5678:exp:1
+
+PSA key attributes: lifetime=3 only
+1:int:-1:int:0:int:3:int:-1:int:0:int:0:int:0:int:3
+
+PSA key attributes: id then back to volatile
+1:int:0x1234:int:0x5678:exp:5:int:-1:int:0:int:0:int:0x5678:exp:5
+
+PSA key attributes: id then back to non local volatile
+1:int:0x1234:int:0x5678:exp:6:int:-1:int:0:int:0:int:0x5678:exp:6
+
+PSA key attributes: id then lifetime
+1:int:0x1234:int:0x5678:int:3:int:-1:int:0:int:0x1234:int:0x5678:int:3
+
+PSA key attributes: lifetime then id
+1:int:0x1234:int:0x5678:int:3:int:0x1235:int:0x5679:int:0x1235:int:0x5679:int:3
+
+PSA key attributes: non local volatile lifetime then id
+1:int:0x1234:int:0x5678:exp:7:int:0x1235:int:0x5679:int:0x1235:int:0x5679:exp:8
+
+PSA key attributes: slot number
+2
+

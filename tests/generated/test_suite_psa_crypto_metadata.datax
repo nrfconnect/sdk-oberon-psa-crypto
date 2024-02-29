@@ -1,0 +1,465 @@
+Hash: MD5
+depends_on:0
+0:exp:0:int:16
+
+Hash: RIPEMD160
+depends_on:1
+0:exp:1:int:20
+
+Hash: SHA-1
+depends_on:2
+0:exp:2:int:20
+
+Hash: SHA-2 SHA-224
+depends_on:3
+0:exp:3:int:28
+
+Hash: SHA-2 SHA-256
+depends_on:4
+0:exp:4:int:32
+
+Hash: SHA-2 SHA-384
+depends_on:5
+0:exp:5:int:48
+
+Hash: SHA-2 SHA-512
+depends_on:6
+0:exp:6:int:64
+
+Hash: SHA-3 SHA3-224
+depends_on:7
+0:exp:7:int:28
+
+Hash: SHA-3 SHA3-256
+depends_on:8
+0:exp:8:int:32
+
+Hash: SHA-3 SHA3-384
+depends_on:9
+0:exp:9:int:48
+
+Hash: SHA-3 SHA3-512
+depends_on:10
+0:exp:10:int:64
+
+MAC: HMAC-MD5
+depends_on:11:0
+2:exp:11:int:16:int:64
+
+MAC: HMAC-RIPEMD160
+depends_on:11:1
+2:exp:12:int:20:int:64
+
+MAC: HMAC-SHA-1
+depends_on:11:2
+2:exp:13:int:20:int:64
+
+MAC: HMAC-SHA-224
+depends_on:11:3
+2:exp:14:int:28:int:64
+
+MAC: HMAC-SHA-256
+depends_on:11:4
+2:exp:15:int:32:int:64
+
+MAC: HMAC-SHA-384
+depends_on:11:5
+2:exp:16:int:48:int:128
+
+MAC: HMAC-SHA-512
+depends_on:11:6
+2:exp:17:int:64:int:128
+
+MAC: CBC_MAC-AES-128
+depends_on:12:13:14
+1:exp:18:exp:19:int:16:exp:20:int:128
+
+MAC: CBC_MAC-AES-192
+depends_on:12:13:14:15
+1:exp:18:exp:19:int:16:exp:20:int:192
+
+MAC: CBC_MAC-AES-256
+depends_on:12:13:14:15
+1:exp:18:exp:19:int:16:exp:20:int:256
+
+MAC: CBC_MAC-3DES
+depends_on:12:16:14
+1:exp:18:exp:19:int:8:exp:21:int:192
+
+MAC: CMAC-AES-128
+depends_on:17:13
+1:exp:22:exp:19:int:16:exp:20:int:128
+
+MAC: CMAC-AES-192
+depends_on:17:13:15
+1:exp:22:exp:19:int:16:exp:20:int:192
+
+MAC: CMAC-AES-256
+depends_on:17:13:15
+1:exp:22:exp:19:int:16:exp:20:int:256
+
+MAC: CMAC-3DES
+depends_on:17:16
+1:exp:22:exp:19:int:8:exp:21:int:192
+
+Cipher: STREAM_CIPHER
+depends_on:18
+3:exp:23:exp:24
+
+Cipher: CTR
+depends_on:19:14
+3:exp:25:exp:24
+
+Cipher: CFB
+depends_on:20:14
+3:exp:26:exp:24
+
+Cipher: OFB
+depends_on:21:14
+3:exp:27:exp:24
+
+Cipher: ECB-nopad
+depends_on:22:14
+3:exp:28:int:0
+
+Cipher: CBC-nopad
+depends_on:23:14
+3:exp:29:int:0
+
+Cipher: CBC-PKCS#7
+depends_on:24:14
+3:exp:30:int:0
+
+Cipher: XTS
+depends_on:25:14
+3:exp:31:int:0
+
+Cipher: CCM*
+depends_on:26
+3:exp:32:exp:24
+
+AEAD: CCM-AES-128
+depends_on:13:27
+4:exp:33:exp:34:int:16:exp:20:int:128
+
+AEAD: CCM-AES-192
+depends_on:13:27:15
+4:exp:33:exp:34:int:16:exp:20:int:192
+
+AEAD: CCM-AES-256
+depends_on:13:27:15
+4:exp:33:exp:34:int:16:exp:20:int:256
+
+AEAD: CCM-ARIA-128
+depends_on:28:27
+4:exp:33:exp:34:int:16:exp:35:int:128
+
+AEAD: CCM-ARIA-192
+depends_on:28:27
+4:exp:33:exp:34:int:16:exp:35:int:192
+
+AEAD: CCM-ARIA-256
+depends_on:28:27
+4:exp:33:exp:34:int:16:exp:35:int:256
+
+AEAD: CCM-CAMELLIA-128
+depends_on:29:27
+4:exp:33:exp:34:int:16:exp:36:int:128
+
+AEAD: CCM-CAMELLIA-192
+depends_on:29:27
+4:exp:33:exp:34:int:16:exp:36:int:192
+
+AEAD: CCM-CAMELLIA-256
+depends_on:29:27
+4:exp:33:exp:34:int:16:exp:36:int:256
+
+AEAD: GCM-AES-128
+depends_on:13:30
+4:exp:37:exp:34:int:16:exp:20:int:128
+
+AEAD: GCM-AES-192
+depends_on:13:30:15
+4:exp:37:exp:34:int:16:exp:20:int:192
+
+AEAD: GCM-AES-256
+depends_on:13:30:15
+4:exp:37:exp:34:int:16:exp:20:int:256
+
+AEAD: GCM-ARIA-128
+depends_on:28:30
+4:exp:37:exp:34:int:16:exp:35:int:128
+
+AEAD: GCM-ARIA-192
+depends_on:28:30
+4:exp:37:exp:34:int:16:exp:35:int:192
+
+AEAD: GCM-ARIA-256
+depends_on:28:30
+4:exp:37:exp:34:int:16:exp:35:int:256
+
+AEAD: GCM-CAMELLIA-128
+depends_on:29:30
+4:exp:37:exp:34:int:16:exp:36:int:128
+
+AEAD: GCM-CAMELLIA-192
+depends_on:29:30
+4:exp:37:exp:34:int:16:exp:36:int:192
+
+AEAD: GCM-CAMELLIA-256
+depends_on:29:30
+4:exp:37:exp:34:int:16:exp:36:int:256
+
+AEAD: ChaCha20_Poly1305
+depends_on:31
+4:exp:38:int:0:int:16:exp:39:int:256
+
+Asymmetric signature: RSA PKCS#1 v1.5 raw
+depends_on:32
+5:exp:40:exp:41
+
+Asymmetric signature: RSA PKCS#1 v1.5 SHA-256
+depends_on:32:4
+5:exp:42:exp:43
+
+Asymmetric signature: RSA PSS SHA-256
+depends_on:33:4
+5:exp:44:exp:45
+
+Asymmetric signature: RSA PSS-any-salt SHA-256
+depends_on:33:4
+5:exp:46:exp:47
+
+Asymmetric signature: randomized ECDSA (no hashing)
+depends_on:34
+5:exp:48:exp:49
+
+Asymmetric signature: SHA-256 + randomized ECDSA
+depends_on:34:4
+5:exp:50:exp:51
+
+Asymmetric signature: SHA-256 + deterministic ECDSA using SHA-256
+depends_on:35:4
+5:exp:52:exp:53
+
+Asymmetric signature: pure EdDSA
+depends_on:36
+5:exp:54:int:0
+
+Asymmetric signature: Ed25519ph
+depends_on:36
+5:exp:55:exp:56
+
+Asymmetric signature: Ed448ph
+depends_on:36
+5:exp:57:exp:56
+
+Asymmetric signature: RSA PKCS#1 v1.5 with wildcard hash
+depends_on:32
+6:exp:58:exp:59
+
+Asymmetric signature: RSA PSS with wildcard hash
+depends_on:33
+6:exp:60:exp:61
+
+Asymmetric signature: RSA PSS-any-salt with wildcard hash
+depends_on:33
+6:exp:62:exp:63
+
+Asymmetric signature: randomized ECDSA with wildcard hash
+depends_on:34
+6:exp:64:exp:65
+
+Asymmetric signature: deterministic ECDSA with wildcard hash
+depends_on:35
+6:exp:66:exp:67
+
+Asymmetric encryption: RSA PKCS#1 v1.5
+depends_on:37
+7:exp:68:int:0
+
+Asymmetric encryption: RSA OAEP using SHA-256
+depends_on:38:4
+7:exp:69:exp:70
+
+Key derivation: HKDF using SHA-256
+depends_on:39:4
+8:exp:71:exp:72
+
+Key derivation: HKDF using SHA-384
+depends_on:39:5
+8:exp:73:exp:72
+
+Key derivation: HKDF-Extract using SHA-256
+depends_on:40:4
+8:exp:74:exp:75
+
+Key derivation: HKDF-Extract using SHA-384
+depends_on:40:5
+8:exp:76:exp:75
+
+Key derivation: HKDF-Expand using SHA-256
+depends_on:41:4
+8:exp:77:exp:78
+
+Key derivation: HKDF-Expand using SHA-384
+depends_on:41:5
+8:exp:79:exp:78
+
+Key derivation: TLS1.2 ECJPAKE-to-PMS
+depends_on:42
+8:exp:80:int:0
+
+Key derivation: TLS 1.2 PRF using SHA-256
+depends_on:4:43
+8:exp:81:exp:82
+
+Key derivation: TLS 1.2 PRF using SHA-384
+depends_on:5:43
+8:exp:83:exp:82
+
+Key derivation: TLS 1.2 PSK-to-MS using SHA-256
+depends_on:4:44
+8:exp:84:exp:85
+
+Key derivation: TLS 1.2 PSK-to-MS using SHA-384
+depends_on:5:44
+8:exp:86:exp:85
+
+Key agreement: FFDH, raw output
+depends_on:45
+9:exp:87:exp:88:exp:87:exp:89
+
+Key agreement: FFDH, HKDF using SHA-256
+depends_on:45:39:4
+9:exp:90:exp:91:exp:87:exp:71
+
+Key agreement: FFDH, HKDF using SHA-384
+depends_on:45:39:5
+9:exp:92:exp:91:exp:87:exp:73
+
+Key agreement: ECDH, raw output
+depends_on:46
+9:exp:93:exp:94:exp:93:exp:89
+
+Key agreement: ECDH, HKDF using SHA-256
+depends_on:46:39:4
+9:exp:95:exp:96:exp:93:exp:71
+
+Key agreement: ECDH, HKDF using SHA-384
+depends_on:46:39:5
+9:exp:97:exp:96:exp:93:exp:73
+
+PAKE: J-PAKE
+10:exp:98
+
+Key type: raw data
+11:exp:99:exp:100
+
+Key type: HMAC
+depends_on:47
+11:exp:101:exp:100
+
+Key type: secret for key derivation
+11:exp:102:exp:100
+
+Key type: password
+11:exp:103:exp:100
+
+Key type: password hash
+11:exp:104:exp:100
+
+Block cipher key type: AES
+depends_on:13
+12:exp:20:int:16
+
+Block cipher key type: ARIA
+depends_on:28
+12:exp:35:int:16
+
+Block cipher key type: DES
+depends_on:16
+12:exp:21:int:8
+
+Block cipher key type: Camellia
+depends_on:29
+12:exp:36:int:16
+
+Stream cipher key type: ChaCha20
+depends_on:48
+13:exp:39
+
+Key type: RSA public key
+depends_on:49
+11:exp:105:exp:106
+
+Key type: RSA key pair
+depends_on:50:51:52
+11:exp:107:exp:108
+
+ECC key family: SECP K1
+14:exp:109
+
+ECC key family: SECP R1
+14:exp:110
+
+ECC key family: SECP R2
+14:exp:111
+
+ECC key family: SECT K1
+14:exp:112
+
+ECC key family: SECT R1
+14:exp:113
+
+ECC key family: SECT R2
+14:exp:114
+
+ECC key family: Brainpool P R1
+14:exp:115
+
+ECC key family: Montgomery (Curve25519, Curve448)
+14:exp:116
+
+ECC key family: Twisted Edwards (Ed25519, Ed448)
+14:exp:117
+
+DH group family: RFC 7919
+15:exp:118
+
+Lifetime: VOLATILE
+16:exp:119:exp:120:exp:121:exp:122
+
+Lifetime: PERSISTENT
+16:exp:123:int:0:exp:124:exp:122
+
+Lifetime: volatile, local storage
+16:exp:125:exp:120:exp:121:exp:122
+
+Lifetime: default, local storage
+16:exp:126:int:0:exp:124:exp:122
+
+Lifetime: 2, local storage
+16:exp:127:int:0:int:2:exp:122
+
+Lifetime: 254, local storage
+16:exp:128:int:0:int:254:exp:122
+
+Lifetime: read-only, local storage
+16:exp:129:exp:130:exp:131:exp:122
+
+Lifetime: volatile, 0x123456
+16:exp:132:exp:120:exp:121:int:0x123456
+
+Lifetime: default, 0x123456
+16:exp:133:int:0:exp:124:int:0x123456
+
+Lifetime: 2, 0x123456
+16:exp:134:int:0:int:2:int:0x123456
+
+Lifetime: 254, 0x123456
+16:exp:135:int:0:int:254:int:0x123456
+
+Lifetime: read-only, 0x123456
+16:exp:136:exp:130:exp:131:int:0x123456
+

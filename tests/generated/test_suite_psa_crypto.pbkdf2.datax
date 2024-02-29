@@ -1,0 +1,16 @@
+PSA key derivation: PBKDF2-HMAC(SHA-1), RFC6070 #4
+depends_on:0:1
+96:exp:0:exp:1:hex:"01000000":exp:2:exp:3:hex:"73616c74":exp:2:exp:4:hex:"70617373776f7264":exp:2:int:0:hex:"":exp:2:hex:"":int:20:hex:"eefe3d61cd4da4e4e9945b3d6ba2158c2634e984":hex:"":int:0:int:1:int:0
+
+PSA key derivation: PBKDF2-HMAC(SHA-256), RFC7914 #2
+depends_on:0:2
+96:exp:5:exp:1:hex:"013880":exp:2:exp:3:hex:"4e61436c":exp:2:exp:4:hex:"50617373776f7264":exp:2:int:0:hex:"":exp:2:hex:"":int:64:hex:"4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56a1d425a1225833549adb841b51c9b3176a272bdebba1d078478f62b397f33c8d":hex:"":int:0:int:1:int:0
+
+PSA key derivation: PBKDF2-AES-CMAC-PRF-128, inputs from RFC6070 #4
+depends_on:3:4:5
+96:exp:6:exp:1:hex:"01000000":exp:2:exp:3:hex:"73616c74":exp:2:exp:4:hex:"70617373776f7264":exp:2:int:0:hex:"":exp:2:hex:"":int:20:hex:"c19b71d2daf483abc9e04fbc78928b4204398d1e":hex:"":int:0:int:1:int:0
+
+PSA key derivation: PBKDF2-AES-CMAC-PRF-128, inputs from RFC7914 #2
+depends_on:3:4:5
+96:exp:6:exp:1:hex:"013880":exp:2:exp:3:hex:"4e61436c":exp:2:exp:4:hex:"50617373776f7264":exp:2:int:0:hex:"":exp:2:hex:"":int:64:hex:"3298e89bc3560e61b59aef2c104f93380b5fa26e2e011cb5ac5895fcd5a3bd5a92e617d7cae020fa2c6ef895182d9ffa0cc8f9c22778beb02856127719d95570":hex:"":int:0:int:1:int:0
+

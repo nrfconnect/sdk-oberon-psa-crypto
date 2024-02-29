@@ -1,0 +1,228 @@
+Transient slot, check after closing
+0:int:0x1:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:1
+
+Transient slot, check after closing and restarting
+0:int:0x13:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:2
+
+Transient slot, check after destroying
+0:int:0x135:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:3
+
+Transient slot, check after destroying and restarting
+0:int:0x1357:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:4
+
+Transient slot, check after restart with live handles
+0:int:0x13579:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:5
+
+Persistent slot, check after closing, id=min
+1:exp:6:int:124:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:1
+
+Persistent slot, check after closing and restarting, id=min
+1:exp:6:int:125:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:2
+
+Persistent slot, check after destroying, id=min
+1:exp:6:int:126:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:3
+
+Persistent slot, check after destroying and restarting, id=min
+1:exp:6:int:127:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:4
+
+Persistent slot, check after purging, id=min
+1:exp:6:int:200:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:8
+
+Persistent slot, check after purging and restarting, id=min
+1:exp:6:int:201:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:9
+
+Persistent slot, check after restart with live handle, id=min
+1:exp:6:int:128:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:5
+
+Persistent slot, check after closing, id=max
+1:exp:6:int:129:exp:10:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:1
+
+Persistent slot, check after destroying, id=max
+1:exp:6:int:130:exp:10:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:3
+
+Persistent slot, check after purging, id=max
+1:exp:6:int:202:exp:10:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:8
+
+Persistent slot, check after restart, id=max
+1:exp:6:int:131:exp:10:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:5
+
+Persistent slot: ECP keypair (ECDSA, exportable), close
+depends_on:0:1:2:3:4
+1:exp:6:int:132:int:1:exp:11:exp:12:int:0:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:1
+
+Persistent slot: ECP keypair (ECDSA, exportable), close+restart
+depends_on:0:1:2:3:4
+1:exp:6:int:133:int:1:exp:11:exp:12:int:0:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:2
+
+Persistent slot: ECP keypair (ECDSA, exportable), purge
+depends_on:0:1:2:3:4
+1:exp:6:int:132:int:1:exp:11:exp:12:int:0:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:8
+
+Persistent slot: ECP keypair (ECDSA, exportable), restart
+depends_on:0:1:2:3:4
+1:exp:6:int:134:int:1:exp:11:exp:12:int:0:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:5
+
+Persistent slot: ECP keypair (ECDH+ECDSA, exportable), close
+depends_on:5:0:6:7:1:2:3:4
+1:exp:6:int:135:int:1:exp:11:exp:14:exp:12:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:1
+
+Persistent slot: ECP keypair (ECDH+ECDSA, exportable), close+restart
+depends_on:5:0:6:7:1:2:3:4
+1:exp:6:int:136:int:1:exp:11:exp:14:exp:12:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:2
+
+Persistent slot: ECP keypair (ECDH+ECDSA, exportable), purge
+depends_on:5:0:6:7:1:2:3:4
+1:exp:6:int:135:int:1:exp:11:exp:14:exp:12:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:8
+
+Persistent slot: ECP keypair (ECDH+ECDSA, exportable), restart
+depends_on:5:0:6:7:1:2:3:4
+1:exp:6:int:137:int:1:exp:11:exp:14:exp:12:exp:13:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:5
+
+Persistent slot, check after closing, persistence=2
+1:exp:15:int:124:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:1
+
+Persistent slot, check after closing and restarting, persistence=2
+1:exp:15:int:125:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:2
+
+Persistent slot, check after destroying, persistence=2
+1:exp:15:int:126:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:3
+
+Persistent slot, check after destroying and restarting, persistence=2
+1:exp:15:int:127:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:4
+
+Persistent slot, check after purging, persistence=2
+1:exp:15:int:200:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:8
+
+Persistent slot, check after purging and restarting, persistence=2
+1:exp:15:int:201:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:9
+
+Persistent slot, check after restart with live handle, persistence=2
+1:exp:15:int:128:exp:7:int:0:int:0:int:0:exp:0:hex:"0123456789abcdef0123456789abcdef":exp:5
+
+Attempt to overwrite: close before
+2:exp:6:int:0x1736:int:1:exp:16
+
+Attempt to overwrite: close after
+2:exp:6:int:0x7361:int:1:exp:17
+
+Attempt to overwrite: keep open
+2:exp:6:int:0x3617:int:1:exp:18
+
+Open failure: invalid identifier (0)
+depends_on:8
+3:int:0:exp:19
+
+Open failure: invalid identifier (random seed UID)
+depends_on:8
+3:exp:20:exp:19
+
+Open failure: invalid identifier (reserved range)
+depends_on:8
+3:exp:21:exp:19
+
+Open failure: invalid identifier (implementation range)
+depends_on:8
+3:exp:22:exp:19
+
+Open failure: non-existent identifier
+depends_on:8
+3:int:1:exp:19
+
+Create failure: read-only key
+depends_on:8
+4:exp:23:int:1:exp:24
+
+Create failure: invalid location for a persistent key
+depends_on:8
+4:exp:25:int:1:exp:24
+
+Create failure: invalid location for a volatile key
+depends_on:8
+4:exp:26:int:0:exp:24
+
+Create failure: invalid key id (0) for a persistent key
+depends_on:8
+4:exp:6:int:0:exp:24
+
+Create failure: invalid key id (1) for a volatile key
+4:exp:27:int:1:exp:24
+
+Create failure: invalid key id (random seed UID)
+depends_on:8
+4:exp:6:exp:20:exp:24
+
+Create failure: invalid key id (reserved range)
+depends_on:8
+4:exp:6:exp:21:exp:24
+
+Create failure: invalid key id (implementation range)
+depends_on:8
+4:exp:6:exp:22:exp:24
+
+Open not supported
+depends_on:9:10
+3:int:1:exp:28
+
+Create not supported
+depends_on:9
+4:exp:6:int:1:exp:28
+
+Copy volatile to volatile
+5:exp:27:int:0x10:int:0:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:27:int:0x10:int:0:exp:30:int:0:int:0:exp:30:int:0:int:0
+
+Copy volatile to persistent
+depends_on:8
+5:exp:27:int:0x100:int:0:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x100:int:1:exp:30:int:0:int:0:exp:30:int:0:int:0
+
+Copy persistent to volatile
+depends_on:8
+5:exp:6:int:0x1000:int:1:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:27:int:0x1000:int:0:exp:30:int:0:int:0:exp:30:int:0:int:0
+
+Copy persistent to persistent
+depends_on:8
+5:exp:6:int:0x10000:int:1:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x10000:int:2:exp:30:int:0:int:0:exp:30:int:0:int:0
+
+Copy persistent to persistent, same id but different owner
+depends_on:8:11
+5:exp:6:int:0x10000:int:1:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x10001:int:1:exp:30:int:0:int:0:exp:30:int:0:int:0
+
+Copy persistent to persistent with enrollment algorithm
+depends_on:12:13:14:8
+5:exp:6:int:0x100000:int:1:exp:29:exp:31:exp:32:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:0x100000:int:2:exp:30:exp:31:exp:32:exp:30:exp:31:exp:32
+
+Copy volatile to occupied
+depends_on:12:13:14:8
+6:exp:27:int:0:exp:29:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:2:exp:30:exp:32:exp:33:hex:"606162636465666768696a6b6c6d6e6f"
+
+Copy persistent to occupied
+depends_on:12:13:14:8
+6:exp:6:int:1:exp:29:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:2:exp:30:exp:32:exp:33:hex:"606162636465666768696a6b6c6d6e6f"
+
+Copy persistent to same
+depends_on:13:14:8
+6:exp:6:int:1:exp:29:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:1:exp:30:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f"
+
+invalid handle: 0
+7:exp:34:exp:35
+
+invalid handle: never opened
+7:exp:36:exp:37
+
+invalid handle: already closed
+7:exp:38:exp:37
+
+invalid handle: huge
+7:exp:39:exp:37
+
+Open many transient keys
+8:int:42
+
+Key slot eviction to import a new persistent key
+9:exp:6
+
+Key slot eviction to import a new volatile key
+9:exp:27
+
+Non reusable key slots integrity in case of key slot starvation
+10
+
