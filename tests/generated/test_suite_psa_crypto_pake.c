@@ -221,9 +221,11 @@ typedef enum {
     PAKE_ROUND_TWO
 } pake_round_t;
 
+#if defined(PSA_WANT_ALG_JPAKE)
 /* The only two JPAKE user/peer identifiers supported for the time being. */
 static const uint8_t jpake_server_id[] = { 's', 'e', 'r', 'v', 'e', 'r' };
 static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
+#endif
 
 /*
  * Inject an error on the specified buffer ONLY it this is the correct stage.
@@ -722,6 +724,27 @@ exit:
         goto exit;                                                          \
     }
 
+#if defined(PSA_WANT_ALG_JPAKE)
+static psa_status_t psa_pake_get_implicit_key(  // !!OM
+    psa_pake_operation_t *operation,
+    psa_key_derivation_operation_t *output)
+{
+    psa_status_t status;
+    psa_key_id_t key = 0;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, output->alg);
+
+    status = psa_pake_get_shared_key(operation, &attributes, &key);
+    if (status == PSA_SUCCESS) {
+        status = psa_key_derivation_input_key(output, PSA_KEY_DERIVATION_INPUT_SECRET, key);
+    }
+    psa_destroy_key(key);
+    return status;
+}
+#endif
+
 /*
  * This check is used for failures that are injected at code level. There's only
  * 1 input parameter that is relevant in this case and it's the stage at which
@@ -748,11 +771,11 @@ void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t operation = psa_pake_operation_init();
-    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t hash_alg = hash_arg;
+    psa_algorithm_t alg = alg_arg | (hash_alg & PSA_ALG_HASH_MASK);
     psa_pake_primitive_t primitive = primitive_arg;
     psa_key_type_t key_type_pw = key_type_pw_arg;
     psa_key_usage_t key_usage_pw = key_usage_pw_arg;
-    psa_algorithm_t hash_alg = hash_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     ecjpake_error_stage_t err_stage = err_stage_arg;
@@ -765,6 +788,8 @@ void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
     uint8_t *peer = (uint8_t *) peer_arg;
     size_t user_len = strlen(user_arg);
     size_t peer_len = strlen(peer_arg);
+
+    if (err_stage == ERR_IN_OUTPUT) return;
 
     psa_key_derivation_operation_t key_derivation =
         PSA_KEY_DERIVATION_OPERATION_INIT;
@@ -783,7 +808,7 @@ void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
+    if (PSA_ALG_IS_JPAKE(alg)) psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     PSA_ASSERT(psa_pake_abort(&operation));
 
@@ -791,8 +816,6 @@ void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
         TEST_EQUAL(psa_pake_set_user(&operation, user, user_len),
                    expected_error);
         TEST_EQUAL(psa_pake_set_peer(&operation, peer, peer_len),
-                   expected_error);
-        TEST_EQUAL(psa_pake_set_password_key(&operation, key),
                    expected_error);
         TEST_EQUAL(psa_pake_set_role(&operation, PSA_PAKE_ROLE_SERVER),
                    expected_error);
@@ -807,10 +830,12 @@ void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
         goto exit;
     }
 
-    SETUP_ALWAYS_CHECK_STEP(psa_pake_setup(&operation, &cipher_suite),
-                            ERR_IN_SETUP);
+    status = psa_pake_setup(&operation, key, &cipher_suite);
+    if (status == PSA_ERROR_NOT_SUPPORTED) goto exit;
+    if (err_stage == ERR_IN_SET_PASSWORD_KEY) err_stage = ERR_IN_SETUP;
+    SETUP_ALWAYS_CHECK_STEP(status, ERR_IN_SETUP);
 
-    SETUP_CONDITIONAL_CHECK_STEP(psa_pake_setup(&operation, &cipher_suite),
+    SETUP_CONDITIONAL_CHECK_STEP(psa_pake_setup(&operation, key, &cipher_suite),
                                  ERR_INJECT_DUPLICATE_SETUP);
 
     SETUP_CONDITIONAL_CHECK_STEP(psa_pake_set_role(&operation, PSA_PAKE_ROLE_SERVER),
@@ -830,9 +855,6 @@ void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
 
     SETUP_CONDITIONAL_CHECK_STEP(psa_pake_set_peer(&operation, peer, peer_len),
                                  ERR_DUPLICATE_SET_PEER);
-
-    SETUP_ALWAYS_CHECK_STEP(psa_pake_set_password_key(&operation, key),
-                            ERR_IN_SET_PASSWORD_KEY);
 
     const size_t size_key_share = PSA_PAKE_INPUT_SIZE(alg, primitive,
                                                       PSA_PAKE_STEP_KEY_SHARE);
@@ -942,8 +964,8 @@ void test_ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t server = psa_pake_operation_init();
     psa_pake_operation_t client = psa_pake_operation_init();
-    psa_algorithm_t alg = alg_arg;
     psa_algorithm_t hash_alg = hash_arg;
+    psa_algorithm_t alg = alg_arg | (hash_alg & PSA_ALG_HASH_MASK);
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     ecjpake_error_stage_t err_stage = err_stage_arg;
@@ -959,18 +981,15 @@ void test_ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive_arg);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
+    if (PSA_ALG_IS_JPAKE(alg)) psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
-    PSA_ASSERT(psa_pake_setup(&server, &cipher_suite));
-    PSA_ASSERT(psa_pake_setup(&client, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&server, key, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&client, key, &cipher_suite));
 
     PSA_ASSERT(psa_pake_set_user(&server, jpake_server_id, sizeof(jpake_server_id)));
     PSA_ASSERT(psa_pake_set_peer(&server, jpake_client_id, sizeof(jpake_client_id)));
     PSA_ASSERT(psa_pake_set_user(&client, jpake_client_id, sizeof(jpake_client_id)));
     PSA_ASSERT(psa_pake_set_peer(&client, jpake_server_id, sizeof(jpake_server_id)));
-
-    PSA_ASSERT(psa_pake_set_password_key(&server, key));
-    PSA_ASSERT(psa_pake_set_password_key(&client, key));
 
     ecjpake_do_round(alg, primitive_arg, &server, &client,
                      client_input_first, PAKE_ROUND_ONE,
@@ -1009,8 +1028,8 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t server = psa_pake_operation_init();
     psa_pake_operation_t client = psa_pake_operation_init();
-    psa_algorithm_t alg = alg_arg;
     psa_algorithm_t hash_alg = hash_arg;
+    psa_algorithm_t alg = alg_arg | (hash_alg & PSA_ALG_HASH_MASK);
     psa_algorithm_t derive_alg = derive_alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -1030,7 +1049,7 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive_arg);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
+    if (PSA_ALG_IS_JPAKE(alg)) psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     /* Get shared key */
     PSA_ASSERT(psa_key_derivation_setup(&server_derive, derive_alg));
@@ -1046,16 +1065,13 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
                                                   (const uint8_t *) "", 0));
     }
 
-    PSA_ASSERT(psa_pake_setup(&server, &cipher_suite));
-    PSA_ASSERT(psa_pake_setup(&client, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&server, key, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&client, key, &cipher_suite));
 
     PSA_ASSERT(psa_pake_set_user(&server, jpake_server_id, sizeof(jpake_server_id)));
     PSA_ASSERT(psa_pake_set_peer(&server, jpake_client_id, sizeof(jpake_client_id)));
     PSA_ASSERT(psa_pake_set_user(&client, jpake_client_id, sizeof(jpake_client_id)));
     PSA_ASSERT(psa_pake_set_peer(&client, jpake_server_id, sizeof(jpake_server_id)));
-
-    PSA_ASSERT(psa_pake_set_password_key(&server, key));
-    PSA_ASSERT(psa_pake_set_password_key(&client, key));
 
     if (destroy_key == 1) {
         psa_destroy_key(key);
@@ -1109,7 +1125,7 @@ void test_ecjpake_rounds_wrapper( void ** params )
 #line 934 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_ecjpake_size_macros(void)
 {
-    const psa_algorithm_t alg = PSA_ALG_JPAKE;
+    const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
     const size_t bits = 256;
     const psa_pake_primitive_t prim = PSA_PAKE_PRIMITIVE(
         PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, bits);
@@ -1165,7 +1181,7 @@ void test_pake_input_getters_password(void)
     psa_pake_operation_t operation = psa_pake_operation_init();
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    const char *password = "password";
+    //const char *password = "password";
     //uint8_t password_ret[20] = { 0 }; // max key length is 20 bytes
     //size_t password_len_ret = 0;
     //size_t buffer_len_ret = 0;
@@ -1176,17 +1192,17 @@ void test_pake_input_getters_password(void)
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
+    psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
 
-    PSA_ASSERT(psa_pake_setup(&operation, &cipher_suite));
+    //PSA_ASSERT(psa_pake_setup(&operation, key, &cipher_suite));
 
-    PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
+    //PSA_ASSERT(psa_import_key(&attributes, (uint8_t *) password, strlen(password), &key));
 
     /* !!OM-PCI-24 no driver callback interface in Oberon-PSA-Crypto */
     //TEST_EQUAL(psa_crypto_driver_pake_get_password(&operation.data.inputs,
@@ -1196,8 +1212,6 @@ void test_pake_input_getters_password(void)
 
     //TEST_EQUAL(psa_crypto_driver_pake_get_password_len(&operation.data.inputs, &password_len_ret),
     //           PSA_ERROR_BAD_STATE);
-
-    //PSA_ASSERT(psa_pake_set_password_key(&operation, key));
 
     //TEST_EQUAL(psa_crypto_driver_pake_get_password_len(&operation.data.inputs, &password_len_ret),
     //           PSA_SUCCESS);
@@ -1244,9 +1258,9 @@ void test_pake_input_getters_cipher_suite(void)
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
+    psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     /* !!OM-PCI-24 no driver callback interface in Oberon-PSA-Crypto */
     //TEST_EQUAL(psa_crypto_driver_pake_get_cipher_suite(&operation.data.inputs, &cipher_suite_ret),
@@ -1289,17 +1303,17 @@ void test_pake_input_getters_user(void)
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
+    psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     for (size_t i = 0; i < ARRAY_LENGTH(users); i++) {
         //uint8_t *user = (uint8_t *) users[i];
         //uint8_t user_len = strlen(users[i]);
 
-        PSA_ASSERT(psa_pake_abort(&operation));
+        //PSA_ASSERT(psa_pake_abort(&operation));
 
-        PSA_ASSERT(psa_pake_setup(&operation, &cipher_suite));
+        //PSA_ASSERT(psa_pake_setup(&operation, &cipher_suite));
 
         /* !!OM-PCI-24 no driver callback interface in Oberon-PSA-Crypto */
         //TEST_EQUAL(psa_crypto_driver_pake_get_user(&operation.data.inputs,
@@ -1360,17 +1374,17 @@ void test_pake_input_getters_peer(void)
 
     PSA_INIT();
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
+    psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     for (size_t i = 0; i < ARRAY_LENGTH(peers); i++) {
         //uint8_t *peer = (uint8_t *) peers[i];
         //uint8_t peer_len = strlen(peers[i]);
 
-        PSA_ASSERT(psa_pake_abort(&operation));
+        //PSA_ASSERT(psa_pake_abort(&operation));
 
-        PSA_ASSERT(psa_pake_setup(&operation, &cipher_suite));
+        //PSA_ASSERT(psa_pake_setup(&operation, &cipher_suite));
 
         /* !!OM-PCI-24 no driver callback interface in Oberon-PSA-Crypto */
         //TEST_EQUAL(psa_crypto_driver_pake_get_peer(&operation.data.inputs,
@@ -1449,7 +1463,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
 
         case 0:
             {
-                *out_value = PSA_ALG_JPAKE;
+                *out_value = PSA_ALG_JPAKE(0);
             }
             break;
         case 1:

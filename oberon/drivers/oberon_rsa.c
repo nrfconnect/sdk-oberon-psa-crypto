@@ -776,7 +776,7 @@ static psa_status_t rsa_key_setup(
     ocrypto_rsa_pub_key *pub_key,
     uint32_t *key_mem)
 {
-    int res = 0;
+    int res = 1;
     psa_status_t status;
     size_t bits = psa_get_key_bits(attributes);
     key_info_t key_info;

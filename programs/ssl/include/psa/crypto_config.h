@@ -77,8 +77,11 @@
 #define PSA_WANT_ALG_SHA3_384                   1
 #define PSA_WANT_ALG_SHA3_512                   1
 #define PSA_WANT_ALG_SHAKE256_512               1
-#define PSA_WANT_ALG_SPAKE2P                    1
+#define PSA_WANT_ALG_SPAKE2P_HMAC               1
+#define PSA_WANT_ALG_SPAKE2P_CMAC               1
+#define PSA_WANT_ALG_SPAKE2P_MATTER             1
 #define PSA_WANT_ALG_SRP_6                      1
+#define PSA_WANT_ALG_SRP_PASSWORD_HASH          1
 #define PSA_WANT_ALG_STREAM_CIPHER              1
 #define PSA_WANT_ALG_TLS12_PRF                  1
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
@@ -104,6 +107,8 @@
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 //#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY    1
+#define PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY        1
 
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC    1
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1
@@ -114,6 +119,16 @@
 #define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC    1
 #define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT   1
 #define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT   1
+
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC  1
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT 1
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT 1
+#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE 1
+
+#define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_BASIC    1
+#define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_DERIVE   1
 
 // Additional AES key size option
 #define PSA_WANT_AES_KEY_SIZE_128               1

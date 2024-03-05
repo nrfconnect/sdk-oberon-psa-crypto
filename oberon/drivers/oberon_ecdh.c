@@ -38,7 +38,7 @@ psa_status_t oberon_ecdh(
     const uint8_t *peer_key, size_t peer_key_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
-    int res = 0;
+    int res = 1;
     size_t bits = psa_get_key_bits(attributes);
     if (alg != PSA_ALG_ECDH) return PSA_ERROR_NOT_SUPPORTED;
     if (key_length != PSA_BITS_TO_BYTES(bits)) return PSA_ERROR_INVALID_ARGUMENT;

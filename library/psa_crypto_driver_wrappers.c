@@ -74,6 +74,10 @@
 #include "demo_opaque.h"
 #endif
 
+#ifdef OBERON_PAKE_INJECT_RANDOM
+#include "oberon_test_drbg.h"
+#endif
+
 
 /* Unique driver ids */
 #define OBERON_DRIVER_ID         1
@@ -536,6 +540,34 @@ psa_status_t psa_driver_wrapper_copy_key(
         (void)target_key_buffer;
         (void)target_key_buffer_size;
         (void)target_key_buffer_length;
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+}
+
+psa_status_t psa_driver_wrapper_derive_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *input, size_t input_length,
+    uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
+{
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    case PSA_KEY_LOCATION_LOCAL_STORAGE:
+        /* Add cases for transparent drivers here */
+#ifdef PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER
+        return oberon_derive_key(
+            attributes, input, input_length,
+            key_buffer, key_buffer_size, key_buffer_length);
+#endif /* PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER */
+        break;
+
+        /* Add cases for opaque drivers here */
+
+    default:
+        /* Key is declared with a lifetime not known to us */
+        (void) input;
+        (void) input_length;
+        (void) key_buffer;
+        (void) key_buffer_size;
+        (void) key_buffer_length;
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 }
@@ -1803,12 +1835,9 @@ psa_status_t psa_driver_wrapper_key_agreement(
  */
 psa_status_t psa_driver_wrapper_pake_setup(
     psa_pake_operation_t *operation,
-    const psa_pake_cipher_suite_t *cipher_suite,
     const psa_key_attributes_t *attributes,
     const uint8_t *password, size_t password_length,
-    const uint8_t *user_id, size_t user_id_length,
-    const uint8_t *peer_id, size_t peer_id_length,
-    psa_pake_role_t role)
+    const psa_pake_cipher_suite_t *cipher_suite)
 {
     psa_status_t status;
 
@@ -1818,11 +1847,8 @@ psa_status_t psa_driver_wrapper_pake_setup(
 #ifdef PSA_NEED_OBERON_PAKE_DRIVER
         status = oberon_pake_setup(
             &operation->ctx.oberon_pake_ctx,
-            cipher_suite, attributes,
-            password, password_length,
-            user_id, user_id_length,
-            peer_id, peer_id_length,
-            role);
+            attributes, password, password_length,
+            cipher_suite);
         if (status == PSA_SUCCESS) operation->id = OBERON_DRIVER_ID;
         return status;
 #endif /* PSA_NEED_OBERON_PAKE_DRIVER */
@@ -1833,15 +1859,85 @@ psa_status_t psa_driver_wrapper_pake_setup(
     default:
         (void)status;
         (void)operation;
-        (void)cipher_suite;
         (void)password;
         (void)password_length;
+        (void)cipher_suite;
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+}
+
+psa_status_t psa_driver_wrapper_pake_set_role(
+    psa_pake_operation_t *operation,
+    psa_pake_role_t role)
+{
+    switch (operation->id) {
+#ifdef PSA_NEED_OBERON_PAKE_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_pake_set_role(
+            &operation->ctx.oberon_pake_ctx,
+            role);
+#endif /* PSA_NEED_OBERON_PAKE_DRIVER */
+
+    default:
+        (void)role;
+        return PSA_ERROR_BAD_STATE;
+    }
+}
+
+psa_status_t psa_driver_wrapper_pake_set_user(
+    psa_pake_operation_t *operation,
+    const uint8_t *user_id, size_t user_id_length)
+{
+    switch (operation->id) {
+#ifdef PSA_NEED_OBERON_PAKE_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_pake_set_user(
+            &operation->ctx.oberon_pake_ctx,
+            user_id, user_id_length);
+#endif /* PSA_NEED_OBERON_PAKE_DRIVER */
+
+    default:
         (void)user_id;
         (void)user_id_length;
+        return PSA_ERROR_BAD_STATE;
+    }
+}
+
+psa_status_t psa_driver_wrapper_pake_set_peer(
+    psa_pake_operation_t *operation,
+    const uint8_t *peer_id, size_t peer_id_length)
+{
+    switch (operation->id) {
+#ifdef PSA_NEED_OBERON_PAKE_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_pake_set_peer(
+            &operation->ctx.oberon_pake_ctx,
+            peer_id, peer_id_length);
+#endif /* PSA_NEED_OBERON_PAKE_DRIVER */
+
+    default:
         (void)peer_id;
         (void)peer_id_length;
-        (void)role;
-        return PSA_ERROR_INVALID_ARGUMENT;
+        return PSA_ERROR_BAD_STATE;
+    }
+}
+
+psa_status_t psa_driver_wrapper_pake_set_context(
+    psa_pake_operation_t *operation,
+    const uint8_t *context, size_t context_length)
+{
+    switch (operation->id) {
+#ifdef PSA_NEED_OBERON_PAKE_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_pake_set_context(
+            &operation->ctx.oberon_pake_ctx,
+            context, context_length);
+#endif /* PSA_NEED_OBERON_PAKE_DRIVER */
+
+    default:
+        (void)context;
+        (void)context_length;
+        return PSA_ERROR_BAD_STATE;
     }
 }
 
@@ -1890,22 +1986,25 @@ psa_status_t psa_driver_wrapper_pake_input(
     }
 }
 
-psa_status_t psa_driver_wrapper_pake_get_implicit_key(
+psa_status_t psa_driver_wrapper_pake_get_shared_key(
     psa_pake_operation_t *operation,
-    uint8_t *output, size_t output_size, size_t *output_length)
+    const psa_key_attributes_t *attributes,
+    uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
     switch (operation->id) {
 #ifdef PSA_NEED_OBERON_PAKE_DRIVER
     case OBERON_DRIVER_ID:
-        return oberon_pake_get_implicit_key(
+        return oberon_pake_get_shared_key(
             &operation->ctx.oberon_pake_ctx,
-            output, output_size, output_length);
+            attributes,
+            key_buffer, key_buffer_size, key_buffer_length);
 #endif /* PSA_NEED_OBERON_PAKE_DRIVER */
 
     default:
-        (void)output;
-        (void)output_size;
-        (void)output_length;
+        (void)attributes;
+        (void)key_buffer;
+        (void)key_buffer_size;
+        (void)key_buffer_length;
         return PSA_ERROR_BAD_STATE;
     }
 }
@@ -1968,6 +2067,10 @@ psa_status_t psa_driver_wrapper_get_random(
     psa_driver_random_context_t *context,
     uint8_t *output, size_t output_size)
 {
+#ifdef OBERON_PAKE_INJECT_RANDOM
+    psa_status_t status = oberon_test_drbg_get_random(NULL, output, output_size);
+    if (status != PSA_ERROR_INSUFFICIENT_ENTROPY) return status;
+#endif /* OBERON_PAKE_INJECT_RANDOM */
 #ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
     return oberon_ctr_drbg_get_random(&context->oberon_ctr_drbg_ctx, output, output_size);
 #endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */

@@ -36,13 +36,15 @@ directive is given, and - where applicable - the supported key types:
 | RSA (signature)                     | PSA_WANT_ALG_RSA_PKCS1V15_SIGN/PSS                                               | 1)                                        |
 | ECDH (NIST and Montgomery curves)   | PSA_WANT_ALG_ECDH                                                                | 2)                                        |
 | EC-JPAKE                            | PSA_WANT_ALG_JPAKE                                                               | TLS12_ECJPAKE_TO_PMS                      |
-| SPAKE2+                             | PSA_WANT_ALG_SPAKE2P                                                             | -                                         |
-| SRP-6                               | PSA_WANT_ALG_SRP_6                                                               | -                                         |
+| SPAKE2+                             | PSA_WANT_ALG_SPAKE2P_HMAC/CMAC/MATTER                                            | 3)                 |
+| SRP-6                               | PSA_WANT_ALG_SRP_6                                                               | 4)                     |
 | CTR-DRBG                            | PSA_WANT_GENERATE_RANDOM + PSA_USE_CTR_DRBG_DRIVER                               | -                                         |
 | HMAC-DRBG                           | PSA_WANT_GENERATE_RANDOM + PSA_USE_HMAC_DRBG_DRIVER                              | -                                         |
 
 1) PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC/IMPORT/EXPORT
 2) PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC/IMPORT/EXPORT/GENERATE/DERIVE
+3) PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE
+4) PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE
 
 By defining these directives, the application developer provides the C
 preprocessor with the information that is necessary to include only the wanted

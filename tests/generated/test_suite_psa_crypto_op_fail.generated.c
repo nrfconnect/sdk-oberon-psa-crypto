@@ -1495,7 +1495,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 172:
             {
-                *out_value = PSA_ALG_JPAKE;
+                *out_value = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
             }
             break;
         case 173:

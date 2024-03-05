@@ -173,7 +173,7 @@ static psa_status_t oberon_cmac_update(
     oberon_cmac_operation_t *operation,
     const uint8_t *input, size_t input_length)
 {
-    psa_status_t status;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     size_t length, free;
 
     if (!input_length) return PSA_SUCCESS;
@@ -384,7 +384,7 @@ psa_status_t oberon_mac_verify_finish(
     oberon_mac_operation_t *operation,
     const uint8_t *mac, size_t mac_length)
 {
-    psa_status_t status;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     uint8_t temp_mac[PSA_HASH_MAX_SIZE];
     size_t mac_len;
 

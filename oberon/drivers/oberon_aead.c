@@ -275,7 +275,7 @@ psa_status_t oberon_aead_verify(
     uint8_t *plaintext, size_t plaintext_size, size_t *plaintext_length,
     const uint8_t *tag, size_t tag_length)
 {
-    int res;
+    int res = 1;
     if (tag_length != operation->tag_length) return PSA_ERROR_INVALID_SIGNATURE;
     if (operation->length_set &&
         (operation->pt_length != 0 || operation->ad_length != 0)) return PSA_ERROR_INVALID_ARGUMENT;
@@ -420,7 +420,7 @@ psa_status_t oberon_aead_decrypt(
     uint8_t *plaintext, size_t plaintext_size, size_t *plaintext_length)
 {
     ocrypto_context ctx;
-    int res;
+    int res = 1;
     size_t tag_length = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
     size_t pt_length = ciphertext_length - tag_length;
     if (ciphertext_length < tag_length) return PSA_ERROR_INVALID_ARGUMENT;

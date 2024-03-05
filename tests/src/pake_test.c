@@ -15,52 +15,22 @@
  *  limitations under the License.
  */
 
+#include <string.h>
+
 #include "psa/crypto.h"
 #include "test/helpers.h"
 #include <test/macros.h>
 #include <test/helpers.h>
-#include <string.h>
+#include "oberon_test_drbg.h"
 
-/*
- * JPAKE Tests
- */
 
-#ifdef PSA_WANT_ALG_JPAKE
-static int setup_jpake_endpoint(psa_pake_operation_t *op, const uint8_t *user, const uint8_t *peer, const uint8_t *pw, size_t pw_len)
-{
-    psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_key_id_t pw_key = 0;
-    psa_pake_primitive_t jpake_primitive =
-        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256);
-
-    psa_pake_cs_set_algorithm(&suite, PSA_ALG_JPAKE);
-    psa_pake_cs_set_primitive(&suite, jpake_primitive);
-    psa_pake_cs_set_hash(&suite, PSA_ALG_SHA_256);
-
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
-    TEST_ASSERT(psa_import_key(&attributes, pw, pw_len, &pw_key) == PSA_SUCCESS);
-
-    TEST_ASSERT(psa_pake_setup(op, &suite) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_set_user(op, user, 6) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_set_peer(op, peer, 6) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_set_password_key(op, pw_key) == PSA_SUCCESS);
-    TEST_ASSERT(psa_destroy_key(pw_key) == PSA_SUCCESS);
-
-    return 1;
-exit:
-    psa_destroy_key(pw_key);
-    return 0;
-}
-
-static int send_message(psa_pake_operation_t *from, psa_pake_operation_t *to, psa_pake_step_t step)
+int send_message(psa_pake_operation_t *from, psa_pake_operation_t *to, psa_pake_step_t step, size_t size)
 {
     uint8_t data[1024];
     size_t length;
 
     TEST_ASSERT(psa_pake_output(from, step, data, sizeof data, &length) == PSA_SUCCESS);
+    TEST_ASSERT(length == size);
     TEST_ASSERT(psa_pake_input(to, step, data, length) == PSA_SUCCESS);
 
     return 1;
@@ -68,90 +38,510 @@ exit:
     return 0;
 }
 
-static const uint8_t password[] = "MyPassword";
+int send_message_err(psa_pake_operation_t *from, psa_pake_operation_t *to, psa_pake_step_t step, int n)
+{
+    uint8_t data[1024];
+    size_t length;
 
-static int test_jpake(void)
+    if (n == 1) { // wrong step
+        TEST_ASSERT(psa_pake_output(from, step, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_input(to, step, data, 32) == PSA_ERROR_BAD_STATE);
+    } else {
+        TEST_ASSERT(psa_pake_output(from, step, data, sizeof data, &length) == PSA_SUCCESS);
+        if (n == 2) { // wrong input size
+            TEST_ASSERT(psa_pake_input(to, step, data, length + 8) == PSA_ERROR_INVALID_ARGUMENT);
+        } else if (n == 3) { // wrong proof size
+            TEST_ASSERT(psa_pake_input(to, step, data, length + 8) == PSA_ERROR_INVALID_SIGNATURE);
+        } else if (n == 4) { // wrong proof data
+            data[0]++;
+            TEST_ASSERT(psa_pake_input(to, step, data, length) == PSA_ERROR_INVALID_SIGNATURE);
+        } else {
+            TEST_ASSERT(psa_pake_input(to, step, data, length) == PSA_SUCCESS);
+        }
+    }
+
+    return 1;
+exit:
+    return 0;
+}
+
+/*
+ * JPAKE Tests
+ */
+#ifdef PSA_WANT_ALG_JPAKE
+
+static const uint8_t jpake_psk[] = {
+    0x00, 0x74, 0x68, 0x72, 0x65, 0x61, 0x64, 0x6a, 0x70, 0x61, 0x6b, 0x65, 0x74, 0x65, 0x73, 0x74};
+
+static const uint8_t jpake_pms1[] = {
+    0xf3, 0xd4, 0x7f, 0x59, 0x98, 0x44, 0xdb, 0x92, 0xa5, 0x69, 0xbb, 0xe7, 0x98, 0x1e, 0x39, 0xd9,
+    0x31, 0xfd, 0x74, 0x3b, 0xf2, 0x2e, 0x98, 0xf9, 0xb4, 0x38, 0xf7, 0x19, 0xd3, 0xc4, 0xf3, 0x51};
+static const uint8_t jpake_pms2[] = {
+    0x9a, 0xb4, 0xcf, 0xc7, 0x4c, 0xc1, 0xb3, 0x12, 0xdf, 0x87, 0xa8, 0x62, 0x53, 0xae, 0xbe, 0xd8,
+    0x57, 0x8a, 0x02, 0x8b, 0x37, 0x73, 0x15, 0x32, 0x05, 0x8a, 0x44, 0xd5, 0x41, 0x90, 0xf4, 0x36};
+static const uint8_t jpake_pms3[] = {
+    0xa6, 0xa2, 0x47, 0xff, 0xb3, 0x90, 0x81, 0xf6, 0x28, 0x93, 0x31, 0x09, 0x59, 0xbb, 0x13, 0xe9,
+    0x2a, 0x84, 0xea, 0x22, 0x67, 0x41, 0xaf, 0x79, 0x2e, 0x30, 0x25, 0xc6, 0x6a, 0x75, 0x9a, 0x22};
+
+static const uint8_t jpake_random1[] = {
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, // g1
+    0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x21,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v1
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70, // g2
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f, 0x81,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v2
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70, // g3
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f, 0x81,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v3
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, // g4
+    0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe1,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v4
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v5
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v6
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55};
+static const uint8_t jpake_random23[] = {
+    0x5f, 0xd5, 0x79, 0xd3, 0x0e, 0xd3, 0x2a, 0x92, 0x60, 0x9e, 0xa4, 0xd7, 0xdf, 0xe3, 0x0a, 0x1b, // g1
+    0x8c, 0xb1, 0xaa, 0x98, 0x21, 0xb5, 0x1f, 0xb0, 0xbc, 0xad, 0x1d, 0x94, 0x0f, 0xaa, 0x46, 0xf8,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v1
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x16, 0xda, 0xea, 0xd4, 0x48, 0xf5, 0xa2, 0x3c, 0x87, 0xb1, 0x5b, 0xed, 0x64, 0xc7, 0x3f, 0xaa, // g2
+    0x54, 0xef, 0x06, 0x11, 0x57, 0xcd, 0x14, 0xdf, 0x75, 0x8b, 0x3a, 0x27, 0x11, 0xe1, 0x3a, 0x62,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v2
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x74, 0xb5, 0xc7, 0xd3, 0x51, 0x0d, 0x03, 0xcd, 0xfc, 0xd0, 0xd1, 0xc7, 0x78, 0x01, 0x84, 0x01, // g3
+    0x55, 0x72, 0xad, 0xd2, 0x5a, 0x48, 0x83, 0x4c, 0x86, 0xe6, 0x38, 0xda, 0xc3, 0x1b, 0x2d, 0xad,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v3
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0xf6, 0x7f, 0xa8, 0xc1, 0x60, 0x68, 0xce, 0x67, 0x48, 0x3b, 0x94, 0xbf, 0xbe, 0x95, 0xa3, 0x9c, // g4
+    0xd4, 0xf9, 0x8f, 0x34, 0x88, 0x63, 0x03, 0x45, 0xd9, 0x73, 0x24, 0xf8, 0x82, 0x97, 0x7e, 0xe3,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v4
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v5
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, // v6
+    0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55};
+
+static int setup_jpake_endpoint(psa_pake_operation_t *op,
+    const char *user, const char *peer, psa_key_id_t pw_key)
+{
+    psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
+    psa_pake_primitive_t jpake_primitive =
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256);
+
+    psa_pake_cs_set_algorithm(&suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
+    psa_pake_cs_set_primitive(&suite, jpake_primitive);
+    psa_pake_cs_set_key_confirmation(&suite, PSA_PAKE_UNCONFIRMED_KEY);
+
+    TEST_ASSERT(psa_pake_setup(op, pw_key, &suite) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t*)peer, strlen(peer)) == PSA_SUCCESS);
+
+    return 1;
+exit:
+    return 0;
+}
+
+static int test_jpake(const uint8_t *pw, size_t pw_len, int vect)
 {
     psa_pake_operation_t first = PSA_PAKE_OPERATION_INIT;
     psa_pake_operation_t second = PSA_PAKE_OPERATION_INIT;
     psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t pw_key = 0, key = 0;
     uint8_t secret1[32], secret2[32];
+    size_t share_size, public_size, proof_size;
 
-    TEST_ASSERT(setup_jpake_endpoint(&first, (const uint8_t *) "client", (const uint8_t *) "server", password, sizeof password - 1));
-    TEST_ASSERT(setup_jpake_endpoint(&second, (const uint8_t *) "server", (const uint8_t *) "client", password, sizeof password - 1));
+    if (vect == 1) {
+        oberon_test_drbg_setup(jpake_random1, sizeof jpake_random1);
+    } else {
+        oberon_test_drbg_setup(jpake_random23, sizeof jpake_random23);
+    }
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD_HASH);
+    TEST_ASSERT(psa_import_key(&attributes, pw, pw_len, &pw_key) == PSA_SUCCESS);
+
+    TEST_ASSERT(setup_jpake_endpoint(&first, "client", "server", pw_key));
+    TEST_ASSERT(setup_jpake_endpoint(&second, "server", "client", pw_key));
+
+    share_size = PSA_PAKE_OUTPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256),
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
+        PSA_PAKE_STEP_KEY_SHARE);
+    public_size = PSA_PAKE_OUTPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256),
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
+        PSA_PAKE_STEP_ZK_PUBLIC);
+    proof_size = PSA_PAKE_OUTPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256),
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
+        PSA_PAKE_STEP_ZK_PROOF);
 
     // Get g1
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_KEY_SHARE));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_KEY_SHARE, share_size));
     // Get V1, the ZKP public key for x1
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PUBLIC));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PUBLIC, public_size));
     // Get r1, the ZKP proof for x1
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PROOF));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PROOF, proof_size));
     // Get g2
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_KEY_SHARE));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_KEY_SHARE, share_size));
     // Get V2, the ZKP public key for x2
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PUBLIC));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PUBLIC, public_size));
     // Get r2, the ZKP proof for x2
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PROOF));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PROOF, proof_size));
 
     // Set g3
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_KEY_SHARE));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_KEY_SHARE, share_size));
     // Set V3, the ZKP public key for x3
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PUBLIC));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PUBLIC, public_size));
     // Set r3, the ZKP proof for x3
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PROOF));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PROOF, proof_size));
     // Set g4
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_KEY_SHARE));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_KEY_SHARE, share_size));
     // Set V4, the ZKP public key for x4
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PUBLIC));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PUBLIC, public_size));
     // Set r4, the ZKP proof for x4
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PROOF));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PROOF, proof_size));
 
     // Get A
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_KEY_SHARE));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_KEY_SHARE, share_size));
     // Get V5, the ZKP public key for x2*s
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PUBLIC));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PUBLIC, public_size));
     // Get r5, the ZKP proof for x2*s
-    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PROOF));
+    TEST_ASSERT(send_message(&first, &second, PSA_PAKE_STEP_ZK_PROOF, proof_size));
 
     // Set B
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_KEY_SHARE));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_KEY_SHARE, share_size));
     // Set V6, the ZKP public key for x4*s
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PUBLIC));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PUBLIC, public_size));
     // Set r6, the ZKP proof for x4*s
-    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PROOF));
+    TEST_ASSERT(send_message(&second, &first, PSA_PAKE_STEP_ZK_PROOF, proof_size));
+
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_TLS12_ECJPAKE_TO_PMS);
 
     // Set up the first KDF
+    TEST_ASSERT(psa_pake_get_shared_key(&first, &attributes, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&first) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_TLS12_ECJPAKE_TO_PMS) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&first, &kdf) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_SECRET, key) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret1, sizeof secret1) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
 
     // Set up the second KDF
+    TEST_ASSERT(psa_pake_get_shared_key(&second, &attributes, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&second) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_TLS12_ECJPAKE_TO_PMS) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&second, &kdf) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_SECRET, key) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret2, sizeof secret2) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
 
     ASSERT_COMPARE(secret1, sizeof secret1, secret2, sizeof secret2);
+    if (vect == 1) {
+        ASSERT_COMPARE(secret1, sizeof secret1, jpake_pms1, sizeof jpake_pms1);
+    } else if (vect == 2) {
+        ASSERT_COMPARE(secret1, sizeof secret1, jpake_pms2, sizeof jpake_pms2);
+    } else if (vect == 3) {
+        ASSERT_COMPARE(secret1, sizeof secret1, jpake_pms3, sizeof jpake_pms3);
+    }
+
+    TEST_ASSERT(psa_destroy_key(pw_key) == PSA_SUCCESS);
 
     return 1;
 exit:
+    psa_destroy_key(key);
+    psa_destroy_key(pw_key);
+    return 0;
+}
+
+static int setup_jpake_endpoint_err(psa_pake_operation_t *op,
+    const char *user, const char *peer, psa_key_id_t *key, int n)
+{
+    uint8_t psk[16], data[64];
+    size_t length;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t expected = PSA_SUCCESS;
+    psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
+    if (n == 1) { // wrong algorithm
+        psa_pake_cs_set_algorithm(&suite, PSA_ALG_SHA_256);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_algorithm(&suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
+    }
+
+    if (n == 2) { // wrong primitive type
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE((psa_pake_primitive_type_t) 0x03, PSA_ECC_FAMILY_SECP_R1, 256));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256));
+    }
+
+    if (n == 3) { // incompatible confirmation
+        psa_pake_cs_set_key_confirmation(&suite, PSA_PAKE_CONFIRMED_KEY);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_key_confirmation(&suite, PSA_PAKE_UNCONFIRMED_KEY);
+    }
+
+    if (n == 4) { // incompatible usage
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+        expected = PSA_ERROR_NOT_PERMITTED;
+    } else {
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    }
+
+    if (n == 5) { // incompatible algorithm
+        psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_512));
+        expected = PSA_ERROR_NOT_PERMITTED;
+    } else {
+        psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
+    }
+
+    if (n == 6) { // wrong key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD_HASH);
+    }
+
+    if (n == 7) { // wrong key data
+        memset(psk, 0, sizeof psk);
+        TEST_ASSERT(psa_import_key(&attributes, psk, sizeof psk, key) == PSA_SUCCESS);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        TEST_ASSERT(psa_import_key(&attributes, jpake_psk, sizeof jpake_psk, key) == PSA_SUCCESS);
+    }
+
+    TEST_ASSERT(psa_pake_setup(op, *key, &suite) == expected);
+    if (expected != PSA_SUCCESS) return 1;
+
+    if (n == 8) { // already started
+        TEST_ASSERT(psa_pake_setup(op, *key, &suite) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    if (n == 9) { // output before set_user
+        TEST_ASSERT(psa_pake_output(op, PSA_PAKE_STEP_KEY_SHARE, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
+    }
+
+    if (n == 10) { // set_peer before set_user
+        TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t*)peer, strlen(peer)) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    if (n == 11) { // wrong role
+        TEST_ASSERT(psa_pake_set_role(op, PSA_PAKE_ROLE_CLIENT) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    }
+
+    if (n == 12) { // wrong user
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)"", 0) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else {
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t *)user, strlen(user)) == PSA_SUCCESS);
+    }
+
+    if (n == 13) { // output before set_peer
+        TEST_ASSERT(psa_pake_output(op, PSA_PAKE_STEP_KEY_SHARE, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
+    }
+
+    if (n == 14) { // wrong peer
+        TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t *)user, strlen(user)) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else {
+        TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t *)peer, strlen(peer)) == PSA_SUCCESS);
+    }
+
+    return 1;
+exit:
+    return 0;
+}
+
+static int test_jpake_exchange_err(psa_pake_operation_t *op1, psa_pake_operation_t *op2, int n)
+{
+    if (n == 1) { // wrong direction
+        TEST_ASSERT(send_message_err(op2, op1, PSA_PAKE_STEP_KEY_SHARE, 1));
+        return 1;
+    } else if (n == 2) { // key share missing
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PUBLIC, 1));
+        return 1;
+    } else if (n == 3) { // wrong input size
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_KEY_SHARE, 2));
+        return 1;
+    } else {
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_KEY_SHARE, 0));
+    }
+
+    if (n == 4) { // wrong direction
+        TEST_ASSERT(send_message_err(op2, op1, PSA_PAKE_STEP_ZK_PUBLIC, 1));
+        return 1;
+    } else if (n == 5) { // zk public missing
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PROOF, 1));
+        return 1;
+    } else if (n == 6) { // wrong input size
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PUBLIC, 2));
+        return 1;
+    } else {
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PUBLIC, 0));
+    }
+
+    if (n == 7) { // wrong direction
+        TEST_ASSERT(send_message_err(op2, op1, PSA_PAKE_STEP_ZK_PROOF, 1));
+        return 1;
+    } else if (n == 8) { // wrong proof size
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PROOF, 3));
+        return 1;
+    } else if (n == 9) { // wrong proof data
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PROOF, 4));
+        return 1;
+    } else {
+        TEST_ASSERT(send_message_err(op1, op2, PSA_PAKE_STEP_ZK_PROOF, 0));
+    }
+
+    return 1;
+exit:
+    return 0;
+}
+
+static int test_jpake_err(int n)
+{
+    psa_pake_operation_t first = PSA_PAKE_OPERATION_INIT;
+    psa_pake_operation_t second = PSA_PAKE_OPERATION_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key1 = 0, key2 = 0, key = 0;
+    uint8_t data[32];
+    size_t length;
+
+    if (n <= 14) { // error in client setup
+        TEST_ASSERT(setup_jpake_endpoint_err(&first, "client", "server", &key1, n));
+        goto abort;
+    } else {
+        TEST_ASSERT(setup_jpake_endpoint_err(&first, "client", "server", &key1, 0));
+    }
+    if (n > 14 && n <= 28) { // error in server setup
+        TEST_ASSERT(setup_jpake_endpoint_err(&second, "server", "client", &key2, n - 14));
+        goto abort;
+    } else {
+        TEST_ASSERT(setup_jpake_endpoint_err(&second, "server", "client", &key2, 0));
+    }
+
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_TLS12_ECJPAKE_TO_PMS);
+
+    if (n > 28 && n <= 36) {
+        TEST_ASSERT(test_jpake_exchange_err(&first, &second, n - 27)); // >= 2
+        goto abort;
+    } else {
+        TEST_ASSERT(test_jpake_exchange_err(&first, &second, 0));
+    }
+    if (n > 36 && n <= 45) {
+        TEST_ASSERT(test_jpake_exchange_err(&first, &second, n - 36));
+        goto abort;
+    } else {
+        TEST_ASSERT(test_jpake_exchange_err(&first, &second, 0));
+    }
+    if (n > 45 && n <= 54) {
+        TEST_ASSERT(test_jpake_exchange_err(&second, &first, n - 45));
+        goto abort;
+    } else {
+        TEST_ASSERT(test_jpake_exchange_err(&second, &first, 0));
+    }
+    if (n == 55) { // wrong step
+        TEST_ASSERT(psa_pake_input(&first, PSA_PAKE_STEP_SALT, jpake_psk, sizeof jpake_psk) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    }
+    if (n == 56) { // wrong step
+        TEST_ASSERT(psa_pake_output(&first, PSA_PAKE_STEP_CONFIRM, data, sizeof data, &length) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    }
+    if (n > 56 && n <= 65) {
+        TEST_ASSERT(test_jpake_exchange_err(&second, &first, n - 56));
+        goto abort;
+    } else {
+        TEST_ASSERT(test_jpake_exchange_err(&second, &first, 0));
+    }
+    if (n == 66) { // early get_shared_secret
+        TEST_ASSERT(psa_pake_get_shared_key(&first, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_get_shared_key(&second, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        goto abort;
+    }
+    if (n > 66 && n <= 74) {
+        TEST_ASSERT(test_jpake_exchange_err(&first, &second, n - 65)); // >= 2
+        goto abort;
+    } else {
+        TEST_ASSERT(test_jpake_exchange_err(&first, &second, 0));
+    }
+    if (n == 75) { // early get_shared_secret
+        TEST_ASSERT(psa_pake_get_shared_key(&first, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_get_shared_key(&second, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        goto abort;
+    }
+    if (n > 75 && n <= 84) {
+        TEST_ASSERT(test_jpake_exchange_err(&second, &first, n - 75));
+        goto abort;
+    } else {
+        TEST_ASSERT(test_jpake_exchange_err(&second, &first, 0));
+    }
+
+    switch (n) {
+    case 85: // invalid key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+        TEST_ASSERT(psa_pake_get_shared_key(&first, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    case 86: // invalid key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+        TEST_ASSERT(psa_pake_get_shared_key(&second, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    case 87: // key size > 0
+        psa_set_key_bits(&attributes, 256);
+        TEST_ASSERT(psa_pake_get_shared_key(&first, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    case 88: // key size > 0
+        psa_set_key_bits(&attributes, 256);
+        TEST_ASSERT(psa_pake_get_shared_key(&second, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    }
+
+abort:
+    TEST_ASSERT(psa_pake_abort(&first) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&second) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key2) == PSA_SUCCESS);
+    return 1;
+exit:
+    psa_destroy_key(key);
+    psa_destroy_key(key1);
+    psa_destroy_key(key2);
     return 0;
 }
 #endif // PSA_WANT_ALG_JPAKE
 
 
 /*
-* SPAKE2+ Tests
-*/
-#ifdef PSA_WANT_ALG_SPAKE2P
+ * SPAKE2+ Tests
+ */
+#if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || defined(PSA_WANT_ALG_SPAKE2P_CMAC) || defined(PSA_WANT_ALG_SPAKE2P_MATTER)
 
-static const uint8_t w01_sha256[] = {
+static const uint8_t spake2p_w01_0[] = {
     0xbb, 0x8e, 0x1b, 0xbc, 0xf3, 0xc4, 0x8f, 0x62, 0xc0, 0x8d, 0xb2, 0x43, 0x65, 0x2a, 0xe5, 0x5d,
     0x3e, 0x55, 0x86, 0x05, 0x3f, 0xca, 0x77, 0x10, 0x29, 0x94, 0xf2, 0x3a, 0xd9, 0x54, 0x91, 0xb3,
     0x7e, 0x94, 0x5f, 0x34, 0xd7, 0x87, 0x85, 0xb8, 0xa3, 0xef, 0x44, 0xd0, 0xdf, 0x5a, 0x1a, 0x97,
     0xd6, 0xb3, 0xb4, 0x60, 0x40, 0x9a, 0x34, 0x5c, 0xa7, 0x83, 0x03, 0x87, 0xa7, 0x4b, 0x1d, 0xba};
-static const uint8_t w0L_sha256[] = {
+static const uint8_t spake2p_w0L_0[] = {
     0xbb, 0x8e, 0x1b, 0xbc, 0xf3, 0xc4, 0x8f, 0x62, 0xc0, 0x8d, 0xb2, 0x43, 0x65, 0x2a, 0xe5, 0x5d,
     0x3e, 0x55, 0x86, 0x05, 0x3f, 0xca, 0x77, 0x10, 0x29, 0x94, 0xf2, 0x3a, 0xd9, 0x54, 0x91, 0xb3,
     0x04,
@@ -159,164 +549,548 @@ static const uint8_t w0L_sha256[] = {
     0x3a, 0xe3, 0xe2, 0x25, 0xef, 0xbe, 0x91, 0xea, 0x48, 0x74, 0x25, 0x85, 0x4c, 0x7f, 0xc0, 0x0f,
     0x00, 0xbf, 0xed, 0xcb, 0xd0, 0x9b, 0x24, 0x00, 0x14, 0x2d, 0x40, 0xa1, 0x4f, 0x20, 0x64, 0xef,
     0x31, 0xdf, 0xaa, 0x90, 0x3b, 0x91, 0xd1, 0xfa, 0xea, 0x70, 0x93, 0xd8, 0x35, 0x96, 0x6e, 0xfd};
+static const uint8_t spake2p_w01_2[] = {
+    0x93, 0x13, 0xf3, 0xe3, 0x14, 0x51, 0xe8, 0xb5, 0xd3, 0x68, 0x78, 0x94, 0xed, 0xc4, 0xf6, 0x24,
+    0x39, 0x73, 0x92, 0xf1, 0xc0, 0xb8, 0x6f, 0x9e, 0x5b, 0xb0, 0x39, 0xcb, 0x66, 0xa7, 0xa8, 0x30,
+    0x4d, 0x5a, 0x0f, 0x0e, 0x44, 0x3f, 0x73, 0xda, 0xfa, 0x22, 0xa8, 0x99, 0x65, 0xa5, 0xba, 0x3a,
+    0x69, 0xd6, 0xfa, 0xaf, 0x6f, 0x18, 0x48, 0x76, 0xa0, 0xb4, 0x01, 0xc7, 0xa8, 0xe3, 0xab, 0xf4};
+static const uint8_t spake2p_w0L_2[] = {
+    0x93, 0x13, 0xf3, 0xe3, 0x14, 0x51, 0xe8, 0xb5, 0xd3, 0x68, 0x78, 0x94, 0xed, 0xc4, 0xf6, 0x24, 
+    0x39, 0x73, 0x92, 0xf1, 0xc0, 0xb8, 0x6f, 0x9e, 0x5b, 0xb0, 0x39, 0xcb, 0x66, 0xa7, 0xa8, 0x30, 
+    0x04, 
+    0xc7, 0xa5, 0xbc, 0x68, 0x8f, 0xbe, 0x4f, 0x4f, 0x00, 0x75, 0xb2, 0xe4, 0xcf, 0x30, 0x37, 0xbe, 
+    0x17, 0xce, 0xab, 0x07, 0x46, 0xbe, 0xa0, 0xc2, 0xba, 0x49, 0xb8, 0x05, 0x97, 0xcf, 0x8a, 0xf1, 
+    0x82, 0x05, 0x81, 0x6e, 0x00, 0x3d, 0x52, 0xd7, 0xca, 0xaa, 0x47, 0x29, 0x9c, 0xc9, 0xfe, 0xba, 
+    0xc7, 0xa9, 0xbe, 0x38, 0xba, 0x26, 0xbb, 0xd0, 0x41, 0x73, 0x10, 0x46, 0xa4, 0x2b, 0x91, 0x81}; 
+static const uint8_t spake2p_w01_4[] = {
+    0x55, 0xce, 0x1c, 0x0e, 0x10, 0x5d, 0xae, 0x65, 0x78, 0x36, 0x8c, 0x64, 0xc8, 0x4b, 0xac, 0xaf,
+    0xab, 0xa2, 0x43, 0xc5, 0xbc, 0xd3, 0xc1, 0xf7, 0x26, 0x8c, 0x63, 0xa9, 0x17, 0xbc, 0x64, 0x3b,
+    0xc6, 0xe0, 0x15, 0xa8, 0x2d, 0x43, 0xe2, 0x85, 0x16, 0x55, 0xae, 0x7e, 0x95, 0x6c, 0x18, 0x70, 
+    0x4d, 0xb5, 0x37, 0x94, 0x41, 0x21, 0x9b, 0xb3, 0xd7, 0x1c, 0x4c, 0x53, 0x3b, 0xdc, 0x40, 0x2d};
+static const uint8_t spake2p_w0L_4[] = {
+    0x55, 0xce, 0x1c, 0x0e, 0x10, 0x5d, 0xae, 0x65, 0x78, 0x36, 0x8c, 0x64, 0xc8, 0x4b, 0xac, 0xaf,
+    0xab, 0xa2, 0x43, 0xc5, 0xbc, 0xd3, 0xc1, 0xf7, 0x26, 0x8c, 0x63, 0xa9, 0x17, 0xbc, 0x64, 0x3b,
+    0x04, 
+    0xfc, 0xd7, 0xe0, 0x0e, 0xe6, 0xac, 0x58, 0xc6, 0xb7, 0x5e, 0x0e, 0xa1, 0xb4, 0x4d, 0x45, 0xcd, 
+    0xcd, 0x47, 0x98, 0x0d, 0x6d, 0xa6, 0x27, 0x15, 0x45, 0x07, 0x12, 0xe3, 0x6e, 0xaa, 0xb5, 0xda, 
+    0x30, 0xf2, 0xa8, 0xa4, 0x8e, 0x01, 0x79, 0xf6, 0xba, 0x60, 0x62, 0x7f, 0x22, 0xee, 0xe1, 0x0d, 
+    0x51, 0xb8, 0x0c, 0x5d, 0xee, 0xb1, 0x95, 0x61, 0xe9, 0x41, 0x7d, 0xb7, 0xef, 0xd4, 0x12, 0x86};
+static const uint8_t spake2p_w01_6[] = {
+    0xe6, 0x88, 0x7c, 0xf9, 0xbd, 0xfb, 0x75, 0x79, 0xc6, 0x9b, 0xf4, 0x79, 0x28, 0xa8, 0x45, 0x14,
+    0xb5, 0xe3, 0x55, 0xac, 0x03, 0x48, 0x63, 0xf7, 0xff, 0xaf, 0x43, 0x90, 0xe6, 0x7d, 0x79, 0x8c,
+    0x24, 0xb5, 0xae, 0x4a, 0xbd, 0xa8, 0x68, 0xec, 0x93, 0x36, 0xff, 0xc3, 0xb7, 0x8e, 0xe3, 0x1c,
+    0x57, 0x55, 0xbe, 0xf1, 0x75, 0x92, 0x27, 0xef, 0x53, 0x72, 0xca, 0x13, 0x9b, 0x94, 0xe5, 0x12};
+static const uint8_t spake2p_w0L_6[] = {
+    0xe6, 0x88, 0x7c, 0xf9, 0xbd, 0xfb, 0x75, 0x79, 0xc6, 0x9b, 0xf4, 0x79, 0x28, 0xa8, 0x45, 0x14,
+    0xb5, 0xe3, 0x55, 0xac, 0x03, 0x48, 0x63, 0xf7, 0xff, 0xaf, 0x43, 0x90, 0xe6, 0x7d, 0x79, 0x8c,
+    0x04,
+    0x95, 0x64, 0x5c, 0xfb, 0x74, 0xdf, 0x6e, 0x58, 0xf9, 0x74, 0x8b, 0xb8, 0x3a, 0x86, 0x62, 0x0b,
+    0xab, 0x7c, 0x82, 0xe1, 0x07, 0xf5, 0x7d, 0x68, 0x70, 0xda, 0x8c, 0xbc, 0xb2, 0xff, 0x9f, 0x70,
+    0x63, 0xa1, 0x4b, 0x64, 0x02, 0xc6, 0x2f, 0x99, 0xaf, 0xcb, 0x97, 0x06, 0xa4, 0xd1, 0xa1, 0x43,
+    0x27, 0x32, 0x59, 0xfe, 0x76, 0xf1, 0xc6, 0x05, 0xa3, 0x63, 0x97, 0x45, 0xa9, 0x21, 0x54, 0xb9};
+
+static const uint8_t spake2p_secret1[32] = {
+    0x0c, 0x5f, 0x8c, 0xcd, 0x14, 0x13, 0x42, 0x3a, 0x54, 0xf6, 0xc1, 0xfb, 0x26, 0xff, 0x01, 0x53,
+    0x4a, 0x87, 0xf8, 0x93, 0x77, 0x9c, 0x6e, 0x68, 0x66, 0x6d, 0x77, 0x2b, 0xfd, 0x91, 0xf3, 0xe7};
+static const uint8_t spake2p_secret2[32] = {
+    0x16, 0x16, 0xea, 0x63, 0xa4, 0xc3, 0x57, 0xf2, 0x90, 0xc5, 0x94, 0xad, 0x11, 0xa0, 0x91, 0x4b,
+    0x4f, 0x82, 0x28, 0xe2, 0x18, 0x83, 0xe7, 0xae, 0xdb, 0x2c, 0xb8, 0xcb, 0x0d, 0x83, 0x17, 0x39};
+static const uint8_t spake2p_secret3[16] = {
+    0x97, 0xdf, 0x07, 0x79, 0xc5, 0x08, 0x05, 0x5a, 0xd6, 0x97, 0xed, 0xe1, 0x2a, 0x62, 0x1a, 0x2d};
+static const uint8_t spake2p_secret4[32] = {
+    0x77, 0xbd, 0xe8, 0x67, 0x50, 0x2d, 0xb8, 0xae, 0x3e, 0xfa, 0x82, 0x7f, 0x11, 0x0d, 0x57, 0xb7,
+    0xaa, 0x88, 0xaa, 0x62, 0xef, 0x89, 0x3c, 0xf6, 0xfe, 0x3f, 0xa6, 0xa2, 0x1e, 0x3a, 0xa8, 0xb6};
+static const uint8_t spake2p_secret5[16] = {
+    0xbb, 0x22, 0x96, 0xfa, 0x25, 0x74, 0x32, 0x7d, 0x5e, 0x78, 0xc2, 0xda, 0x35, 0x55, 0x56, 0x7c};
+static const uint8_t spake2p_secret6[16] = {
+    0x80, 0x1d, 0xb2, 0x97, 0x65, 0x48, 0x16, 0xeb, 0x4f, 0x02, 0x86, 0x81, 0x29, 0xb9, 0xdc, 0x89};
+
+static const uint8_t spake2p_random_1[2 * 40] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // shareP
+    0xd1, 0x23, 0x2c, 0x8e, 0x86, 0x93, 0xd0, 0x23, 0x68, 0x97, 0x6c, 0x17, 0x4e, 0x20, 0x88, 0x85,
+    0x1b, 0x83, 0x65, 0xd0, 0xd7, 0x9a, 0x9e, 0xee, 0x70, 0x9c, 0x6a, 0x05, 0xa2, 0xfa, 0xd5, 0x39,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // shareV
+    0x71, 0x7a, 0x72, 0x34, 0x8a, 0x18, 0x20, 0x85, 0x10, 0x9c, 0x8d, 0x39, 0x17, 0xd6, 0xc4, 0x3d,
+    0x59, 0xb2, 0x24, 0xdc, 0x6a, 0x7f, 0xc4, 0xf0, 0x48, 0x32, 0x32, 0xfa, 0x65, 0x16, 0xd8, 0xb3};
+static const uint8_t spake2p_random_2[2 * 40] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // shareP
+    0x5f, 0xd5, 0x79, 0xd3, 0x0e, 0xd3, 0x2a, 0x92, 0x60, 0x9e, 0xa4, 0xd7, 0xdf, 0xe3, 0x0a, 0x1b,
+    0x8c, 0xb1, 0xaa, 0x98, 0x21, 0xb5, 0x1f, 0xb0, 0xbc, 0xad, 0x1d, 0x94, 0x0f, 0xaa, 0x46, 0xf8,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // shareV
+    0x16, 0xda, 0xea, 0xd4, 0x48, 0xf5, 0xa2, 0x3c, 0x87, 0xb1, 0x5b, 0xed, 0x64, 0xc7, 0x3f, 0xaa,
+    0x54, 0xef, 0x06, 0x11, 0x57, 0xcd, 0x14, 0xdf, 0x75, 0x8b, 0x3a, 0x27, 0x11, 0xe1, 0x3a, 0x62};
+static const uint8_t spake2p_random_6[2 * 40] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // shareP
+    0x8b, 0x0f, 0x3f, 0x38, 0x39, 0x05, 0xcf, 0x3a, 0x3b, 0xb9, 0x55, 0xef, 0x8f, 0xb6, 0x2e, 0x24,
+    0x84, 0x9d, 0xd3, 0x49, 0xa0, 0x5c, 0xa7, 0x9a, 0xaf, 0xb1, 0x80, 0x41, 0xd3, 0x0c, 0xbd, 0xb6,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // shareV
+    0x2e, 0x08, 0x95, 0xb0, 0xe7, 0x63, 0xd6, 0xd5, 0xa9, 0x56, 0x44, 0x33, 0xe6, 0x4a, 0xc3, 0xca,
+    0xc7, 0x4f, 0xf8, 0x97, 0xf6, 0xc3, 0x44, 0x52, 0x47, 0xba, 0x1b, 0xab, 0x40, 0x08, 0x2a, 0x91};
+
+static const char spake2p_hmac[] = "SPAKE2+-P256-SHA256-HKDF-SHA256-HMAC-SHA256 Test Vectors";
+static const char spake2p_s512[] = "SPAKE2+-P256-SHA512-HKDF-SHA512-HMAC-SHA512 Test Vectors";
+static const char spake2p_cmac[] = "SPAKE2+-P256-SHA256-HKDF-SHA256-CMAC-AES-128 Test Vectors";
+static const char spake2p_d_01[] = "SPAKE2+-P256-SHA256-HKDF draft-01";
 
 
 static int setup_spake2p_endpoint(psa_pake_operation_t *op,
-    const uint8_t *user, const uint8_t *peer, psa_pake_role_t role,
-    const uint8_t *w01, size_t w_len, psa_algorithm_t hash_alg)
+    psa_pake_role_t role, const char *user, const char *peer, const char *context,
+    psa_algorithm_t alg, psa_key_id_t key)
 {
     psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_key_id_t pw_key = 0;
     psa_pake_primitive_t spake2p_primitive =
         PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256);
 
-    psa_pake_cs_set_algorithm(&suite, PSA_ALG_SPAKE2P);
+    psa_pake_cs_set_algorithm(&suite, alg);
     psa_pake_cs_set_primitive(&suite, spake2p_primitive);
-    psa_pake_cs_set_hash(&suite, hash_alg);
 
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_SPAKE2P);
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD_HASH);
-    TEST_ASSERT(psa_import_key(&attributes, w01, w_len, &pw_key) == PSA_SUCCESS);
-
-    TEST_ASSERT(psa_pake_setup(op, &suite) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_setup(op, key, &suite) == PSA_SUCCESS);
     TEST_ASSERT(psa_pake_set_role(op, role) == PSA_SUCCESS);
-    if (role == PSA_PAKE_ROLE_CLIENT) {
-        if (user) {
-            TEST_ASSERT(psa_pake_set_user(op, user, 6) == PSA_SUCCESS);
+
+    if (user) {
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
+    }
+    if (peer) {
+        TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t*)peer, strlen(peer)) == PSA_SUCCESS);
+    }
+    if (context) {
+        TEST_ASSERT(psa_pake_set_context(op, (const uint8_t*)context, strlen(context)) == PSA_SUCCESS);
+    }
+
+    return 1;
+exit:
+    return 0;
+}
+
+static int test_spake2p(psa_algorithm_t alg, const char *context, const char *user, const char *peer, int vect)
+{
+    psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
+    psa_pake_operation_t server = PSA_PAKE_OPERATION_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0, ckey = 0, skey = 0;
+    uint8_t secret1[64], secret2[64], pub_key[97];
+    size_t length1, length2, pub_len;
+    psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_algorithm_t kdf_alg = PSA_ALG_PBKDF2_HMAC(PSA_ALG_GET_HASH(alg));
+    size_t share_size, conf_size;
+
+    if (vect >= 2 && vect <= 5) { // use password -> secret vector
+        oberon_test_drbg_setup(spake2p_random_2, sizeof spake2p_random_2);
+
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+        psa_set_key_algorithm(&attributes, kdf_alg);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
+        if (vect <= 3) {
+            TEST_ASSERT(psa_import_key(&attributes, (const uint8_t *)"p", 1, &key) == PSA_SUCCESS);
         } else {
-            TEST_ASSERT(psa_pake_set_user(op, NULL, 0) == PSA_SUCCESS);
+            TEST_ASSERT(psa_import_key(&attributes,
+                (const uint8_t *)"this is a very long password and it is very nice, so it should be completely ok.",
+                80, &key) == PSA_SUCCESS);
         }
-        if (peer) {
-            TEST_ASSERT(psa_pake_set_peer(op, peer, 6) == PSA_SUCCESS);
+
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+        psa_set_key_algorithm(&attributes, alg);
+        psa_set_key_bits(&attributes, 256);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+        TEST_ASSERT(psa_key_derivation_setup(&kdf, kdf_alg) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_input_integer(&kdf, PSA_KEY_DERIVATION_INPUT_COST, 10) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_SALT,
+            (const uint8_t *)"clientserver", 12) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_PASSWORD, key) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &ckey) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+        TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+
+        if (vect <= 3) {
+            TEST_ASSERT(psa_export_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+            ASSERT_COMPARE(pub_key, pub_len, spake2p_w01_2, sizeof spake2p_w01_2);
+            TEST_ASSERT(psa_export_public_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+            ASSERT_COMPARE(pub_key, pub_len, spake2p_w0L_2, sizeof spake2p_w0L_2); // ???
         } else {
-            TEST_ASSERT(psa_pake_set_peer(op, NULL, 0) == PSA_SUCCESS);
+            TEST_ASSERT(psa_export_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+            ASSERT_COMPARE(pub_key, pub_len, spake2p_w01_4, sizeof spake2p_w01_4);
+            TEST_ASSERT(psa_export_public_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+            ASSERT_COMPARE(pub_key, pub_len, spake2p_w0L_4, sizeof spake2p_w0L_4); // ???
+        }
+
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+        TEST_ASSERT(psa_import_key(&attributes, pub_key, pub_len, &skey) == PSA_SUCCESS);
+
+    } else if (vect == 6) {
+        oberon_test_drbg_setup(spake2p_random_6, sizeof spake2p_random_6);
+
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+        psa_set_key_algorithm(&attributes, alg);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+        TEST_ASSERT(psa_import_key(&attributes, spake2p_w01_6, sizeof spake2p_w01_6, &ckey) == PSA_SUCCESS);
+
+        TEST_ASSERT(psa_export_public_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+        ASSERT_COMPARE(pub_key, pub_len, spake2p_w0L_6, sizeof spake2p_w0L_6);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+        TEST_ASSERT(psa_import_key(&attributes, pub_key, pub_len, &skey) == PSA_SUCCESS);
+
+    } else { // use w0:w1
+        oberon_test_drbg_setup(spake2p_random_1, sizeof spake2p_random_1);
+
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+        psa_set_key_algorithm(&attributes, alg);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+        TEST_ASSERT(psa_import_key(&attributes, spake2p_w01_0, sizeof spake2p_w01_0, &ckey) == PSA_SUCCESS);
+
+        TEST_ASSERT(psa_export_public_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+        ASSERT_COMPARE(pub_key, pub_len, spake2p_w0L_0, sizeof spake2p_w0L_0);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+        TEST_ASSERT(psa_import_key(&attributes, pub_key, pub_len, &skey) == PSA_SUCCESS);
+    }
+
+    TEST_ASSERT(setup_spake2p_endpoint(&client, PSA_PAKE_ROLE_CLIENT, user, peer, context, alg, ckey));
+    TEST_ASSERT(setup_spake2p_endpoint(&server, PSA_PAKE_ROLE_SERVER, peer, user, context, alg, skey));
+
+    share_size = PSA_PAKE_OUTPUT_SIZE(alg,
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
+        PSA_PAKE_STEP_KEY_SHARE);
+    conf_size = PSA_PAKE_OUTPUT_SIZE(alg,
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
+        PSA_PAKE_STEP_CONFIRM);
+
+    // shareP
+    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size));
+    // shareV
+    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size));
+    // confirmV
+    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_CONFIRM, conf_size));
+    // confirmP
+    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_CONFIRM, conf_size));
+
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_GCM);
+    psa_set_key_bits(&attributes, 0);
+
+    // get client secret
+    TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&client) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(ckey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_export_key(key, secret1, sizeof secret1, &length1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+
+    // get server secret
+    TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&server) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_export_key(key, secret2, sizeof secret2, &length2) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+
+    ASSERT_COMPARE(secret1, length1, secret2, length2);
+
+    switch (vect) {
+    case 1:
+        ASSERT_COMPARE(secret1, length1, spake2p_secret1, sizeof spake2p_secret1);
+        break;
+    case 2:
+        ASSERT_COMPARE(secret1, length1, spake2p_secret2, sizeof spake2p_secret2);
+        break;
+    case 3:
+        ASSERT_COMPARE(secret1, length1, spake2p_secret3, sizeof spake2p_secret3);
+        break;
+    case 4:
+        ASSERT_COMPARE(secret1, length1, spake2p_secret4, sizeof spake2p_secret4);
+        break;
+    case 5:
+        ASSERT_COMPARE(secret1, length1, spake2p_secret5, sizeof spake2p_secret5);
+        break;
+    case 6:
+        ASSERT_COMPARE(secret1, length1, spake2p_secret6, sizeof spake2p_secret6);
+        break;
+    }
+
+    return 1;
+exit:
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_destroy_key(key);
+    return 0;
+}
+
+static int setup_spake2p_endpoint_err(psa_pake_operation_t *op,
+    psa_pake_role_t role, const char *user, const char *peer, psa_key_id_t *key, int n)
+{
+    uint8_t w0[128];
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t expected = PSA_SUCCESS;
+    psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
+
+    if (n == 1) { // wrong algorithm
+        psa_pake_cs_set_algorithm(&suite, PSA_ALG_SHA_256);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_algorithm(&suite, PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256));
+    }
+
+    if (n == 2) { // incompatible type
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC3526, 3072));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else if (n == 3) { // incompatible family
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R2, 256));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else if (n == 4) { // incompatible size
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 384));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256));
+    }
+
+    if (n == 5) { // incompatible confirmation
+        psa_pake_cs_set_key_confirmation(&suite, PSA_PAKE_UNCONFIRMED_KEY);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (n == 6) { // incompatible usage
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+        expected = PSA_ERROR_NOT_PERMITTED;
+    } else {
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    }
+
+    if (n == 7) { // incompatible algorithm
+        psa_set_key_algorithm(&attributes, PSA_ALG_SRP_6(PSA_ALG_SHA_512));
+        expected = PSA_ERROR_NOT_PERMITTED;
+    } else {
+        psa_set_key_algorithm(&attributes, PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256));
+    }
+
+    if (role == PSA_PAKE_ROLE_CLIENT) {
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+        if (n == 8) { // wrong w0
+            memset(w0, 0, 32);
+            memcpy(w0 + 32, spake2p_w01_0 + 32, 32);
+            TEST_ASSERT(psa_import_key(&attributes, w0, 64, key) == PSA_ERROR_INVALID_ARGUMENT);
+            return 1;
+        } else if (n == 9) { // wrong w1
+            memcpy(w0, spake2p_w01_0, 32);
+            memset(w0 + 32, 0xFF, 32);
+            TEST_ASSERT(psa_import_key(&attributes, w0, 64, key) == PSA_ERROR_INVALID_ARGUMENT);
+            return 1;
+        } else {
+            TEST_ASSERT(psa_import_key(&attributes, spake2p_w01_0, sizeof spake2p_w01_0, key) == PSA_SUCCESS);
         }
     } else {
-        if (peer) {
-            TEST_ASSERT(psa_pake_set_peer(op, peer, 6) == PSA_SUCCESS);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+        if (n == 8) { // wrong w0
+            memset(w0, 0xFF, 32);
+            memcpy(w0 + 32, spake2p_w0L_0 + 32, 65);
+            TEST_ASSERT(psa_import_key(&attributes, w0, 97, key) == PSA_ERROR_INVALID_ARGUMENT);
+            return 1;
+        } else if (n == 9) { // wrong L
+            memcpy(w0, spake2p_w0L_0, 32);
+            memset(w0, 0, 65);
+            TEST_ASSERT(psa_import_key(&attributes, w0, 97, key) == PSA_ERROR_INVALID_ARGUMENT);
+            return 1;
         } else {
-            TEST_ASSERT(psa_pake_set_peer(op, NULL, 0) == PSA_SUCCESS);
-        }
-        if (user) {
-            TEST_ASSERT(psa_pake_set_user(op, user, 6) == PSA_SUCCESS);
-        } else {
-            TEST_ASSERT(psa_pake_set_user(op, NULL, 0) == PSA_SUCCESS);
+            TEST_ASSERT(psa_import_key(&attributes, spake2p_w0L_0, sizeof spake2p_w0L_0, key) == PSA_SUCCESS);
         }
     }
-    TEST_ASSERT(psa_pake_set_password_key(op, pw_key) == PSA_SUCCESS);
-    TEST_ASSERT(psa_destroy_key(pw_key) == PSA_SUCCESS);
+
+    if (n == 10) { // set_role before setup
+        TEST_ASSERT(psa_pake_set_role(op, PSA_PAKE_ROLE_CLIENT) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    TEST_ASSERT(psa_pake_setup(op, *key, &suite) == expected);
+    if (expected != PSA_SUCCESS) return 1;
+
+    if (n == 11) { // already started
+        TEST_ASSERT(psa_pake_setup(op, *key, &suite) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    if (n == 12) { // set_user before set_role
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)user, strlen(user)) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    if (n == 13) { // wrong role
+        TEST_ASSERT(psa_pake_set_role(op, PSA_PAKE_ROLE_FIRST) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else if (n == 14 && role == PSA_PAKE_ROLE_SERVER) { // incompatible role
+        TEST_ASSERT(psa_pake_set_role(op, PSA_PAKE_ROLE_CLIENT) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else {
+        TEST_ASSERT(psa_pake_set_role(op, role) == PSA_SUCCESS);
+    }
+
+    TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t*)peer, strlen(peer)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_set_context(op, (const uint8_t*)spake2p_hmac, strlen(spake2p_hmac)) == PSA_SUCCESS);
 
     return 1;
 exit:
-    psa_destroy_key(pw_key);
     return 0;
 }
 
-static int test_spake2p(const uint8_t *context, size_t context_len, const uint8_t *user, const uint8_t *peer)
+static int test_spake2p_err(int n)
 {
     psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
     psa_pake_operation_t server = PSA_PAKE_OPERATION_INIT;
-    psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
-    uint8_t secret1[32], secret2[32];
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0, ckey = 0, skey = 0;
+    uint8_t data[64];
+    size_t length;
 
-    TEST_ASSERT(setup_spake2p_endpoint(&client, user, peer, PSA_PAKE_ROLE_CLIENT, w01_sha256, sizeof w01_sha256, PSA_ALG_SHA_256));
-    TEST_ASSERT(setup_spake2p_endpoint(&server, peer, user, PSA_PAKE_ROLE_SERVER, w0L_sha256, sizeof w0L_sha256, PSA_ALG_SHA_256));
-
-    if (context) {
-        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_CONTEXT, context, context_len) == PSA_SUCCESS);
-        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_CONTEXT, context, context_len) == PSA_SUCCESS);
+    if (n <= 14) { // error in client setup
+        TEST_ASSERT(setup_spake2p_endpoint_err(&client, PSA_PAKE_ROLE_CLIENT, "client", "server", &ckey, n));
+        goto abort;
+    } else {
+        TEST_ASSERT(setup_spake2p_endpoint_err(&client, PSA_PAKE_ROLE_CLIENT, "client", "server", &ckey, 0));
+    }
+    if (n > 14 && n <= 28) { // error in server setup
+        TEST_ASSERT(setup_spake2p_endpoint_err(&server, PSA_PAKE_ROLE_SERVER, "server", "client", &skey, n - 14));
+        goto abort;
+    } else {
+        TEST_ASSERT(setup_spake2p_endpoint_err(&server, PSA_PAKE_ROLE_SERVER, "server", "client", &skey, 0));
     }
 
-    // shareP
-    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE));
-    // shareV
-    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE));
-    // confirmP
-    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_CONFIRM));
-    // confirmV
-    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_CONFIRM));
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_GCM);
 
-    // Set up the first KDF
-    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t *) "Info", 4) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&client, &kdf) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret1, sizeof secret1) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
-
-    // Set up the second KDF
-    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t *) "Info", 4) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&server, &kdf) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret2, sizeof secret2) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
-
-    ASSERT_COMPARE(secret1, sizeof secret1, secret2, sizeof secret2);
-
-    return 1;
-exit:
-    return 0;
-}
-
-static int test_spake2p_sha512(const uint8_t *context, size_t context_len, const uint8_t *user, const uint8_t *peer)
-{
-    psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
-    psa_pake_operation_t server = PSA_PAKE_OPERATION_INIT;
-    psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
-    uint8_t secret1[32], secret2[32];
-
-    TEST_ASSERT(setup_spake2p_endpoint(&client, user, peer, PSA_PAKE_ROLE_CLIENT, w01_sha256, sizeof w01_sha256, PSA_ALG_SHA_512));
-    TEST_ASSERT(setup_spake2p_endpoint(&server, peer, user, PSA_PAKE_ROLE_SERVER, w0L_sha256, sizeof w0L_sha256, PSA_ALG_SHA_512));
-
-    if (context) {
-        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_CONTEXT, context, context_len) == PSA_SUCCESS);
-        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_CONTEXT, context, context_len) == PSA_SUCCESS);
+    switch (n) {
+    case 29:
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 1));
+        goto abort;
+    case 30:
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 31:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 32:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 33: // wrong input size
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 2));
+        goto abort;
+    case 34: // wrong input size
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 2));
+        goto abort;
+    case 35: // wrong confirm size
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 3));
+        goto abort;
+    case 36: // wrong confirm size
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 3));
+        goto abort;
+    case 37: // wrong step
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_ZK_PUBLIC, spake2p_w01_0, sizeof spake2p_w01_0) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    case 38: // wrong step
+        TEST_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_ZK_PROOF, data, sizeof data, &length) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    case 39: // wrong confirm
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 4));
+        goto abort;
+    case 40: // wrong confirm
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 4));
+        goto abort;
+    default:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 0));
+        break;
     }
 
-    // shareP
-    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE));
-    // shareV
-    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE));
-    // confirmP
-    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_CONFIRM));
-    // confirmV
-    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_CONFIRM));
+    switch (n) {
+    case 41: // invalid key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        break;
+    case 42: // invalid key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        break;
+    case 43: // key size > 0
+        psa_set_key_bits(&attributes, 256);
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        break;
+    case 44: // key size > 0
+        psa_set_key_bits(&attributes, 256);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        break;
+    }
 
-    // Set up the first KDF
-    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t *) "Info", 4) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&client, &kdf) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret1, sizeof secret1) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
-
-    // Set up the second KDF
-    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t *) "Info", 4) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&server, &kdf) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret2, sizeof secret2) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
-
-    ASSERT_COMPARE(secret1, sizeof secret1, secret2, sizeof secret2);
-
+abort:
+    TEST_ASSERT(psa_pake_abort(&client) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&server) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(ckey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
     return 1;
 exit:
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_destroy_key(key);
     return 0;
 }
-#endif // PSA_WANT_ALG_SPAKE2P
+#endif /* PSA_WANT_ALG_SPAKE2P_HMAC || PSA_WANT_ALG_SPAKE2P_CMAC || PSA_WANT_ALG_SPAKE2P_MATTER */
 
 
 /*
-* SRP-6-3072-SHA512 Tests
-*/
-
+ * SRP-6-3072-SHA512 Tests
+ */
 #ifdef PSA_WANT_ALG_SRP_6
 
 // Salt (s)
-static const uint8_t test_salt[16] = {
+static const uint8_t srp_salt[16] = {
     0xBE, 0xB2, 0x53, 0x79, 0xD1, 0xA8, 0x58, 0x1E, 0xB5, 0xA7, 0x27, 0x67, 0x3A, 0x24, 0x41, 0xEE};
 // Verifier (v)
-static const uint8_t test_verifier[384] = {
+static const uint8_t srp_verifier256[384] = {
+    0xeb, 0xe5, 0x2c, 0x3c, 0xac, 0x71, 0x2e, 0x0b, 0xe1, 0xba, 0x08, 0xd4, 0xda, 0xe9, 0xd3, 0x8c,
+    0x96, 0x0c, 0x3f, 0x09, 0x2e, 0xd0, 0xee, 0x37, 0x5b, 0x12, 0x17, 0x3b, 0x1c, 0xbe, 0x8c, 0x2d,
+    0x33, 0x80, 0xeb, 0x4b, 0x38, 0xf0, 0xc5, 0x29, 0xb3, 0xc5, 0xb2, 0x07, 0x22, 0x6c, 0x2b, 0x4c,
+    0x77, 0x41, 0x24, 0x9d, 0x96, 0x5a, 0x14, 0x37, 0xab, 0xe4, 0x80, 0xb1, 0xbb, 0x33, 0x15, 0x84,
+    0x67, 0x3e, 0x6e, 0x0b, 0x83, 0xda, 0xaf, 0x3b, 0x2f, 0xa3, 0x70, 0xf1, 0x0d, 0xc3, 0xb8, 0xd5,
+    0x99, 0xb4, 0x19, 0x13, 0x3b, 0xce, 0x88, 0xa4, 0x2c, 0xc2, 0x67, 0x55, 0x43, 0x56, 0x3f, 0xaa,
+    0x99, 0x9d, 0x93, 0x9e, 0x90, 0xc1, 0xc8, 0xe7, 0x02, 0x4b, 0x90, 0x68, 0x11, 0xfa, 0xa9, 0x03,
+    0x45, 0x12, 0x89, 0x0e, 0x21, 0xb0, 0x71, 0x35, 0xa1, 0xad, 0x30, 0x63, 0x80, 0xaa, 0x5c, 0x94,
+    0x62, 0xa2, 0x1e, 0x0d, 0x63, 0x5a, 0x20, 0xb0, 0x76, 0x09, 0x11, 0x45, 0xf8, 0xf1, 0xc0, 0x16,
+    0x6e, 0xfd, 0xe2, 0x24, 0xaf, 0x4d, 0x0c, 0xe5, 0xff, 0xb9, 0x85, 0x7d, 0xda, 0xc9, 0x38, 0x75,
+    0x75, 0x8e, 0x4f, 0x19, 0x11, 0x31, 0xf5, 0x83, 0x7e, 0x3d, 0xd5, 0xbb, 0xf8, 0xc3, 0x24, 0x28,
+    0x79, 0xd0, 0xbd, 0x7b, 0xc9, 0xf7, 0x5a, 0x0e, 0x49, 0x28, 0x04, 0xc6, 0x9b, 0x4f, 0xba, 0xc8,
+    0xec, 0x02, 0x84, 0x47, 0x29, 0xa5, 0x65, 0xb8, 0x59, 0xf1, 0x76, 0xe8, 0xff, 0xf9, 0x34, 0x8d,
+    0xeb, 0x0f, 0xf1, 0xee, 0x42, 0x9c, 0x2f, 0xff, 0xc1, 0x4a, 0xf6, 0x76, 0x4d, 0xc0, 0xc4, 0x57,
+    0x8d, 0x41, 0xcd, 0x39, 0x07, 0xe2, 0x1c, 0xde, 0x6d, 0xb9, 0x4a, 0xa6, 0x4f, 0xb7, 0x91, 0x13,
+    0xdd, 0xe0, 0x81, 0x44, 0xc7, 0x7b, 0x40, 0x4d, 0x15, 0xad, 0xdb, 0x04, 0xd0, 0x01, 0x57, 0x9d,
+    0x19, 0xbf, 0xa1, 0x68, 0x30, 0xda, 0x36, 0x6a, 0x74, 0x76, 0xa2, 0x9a, 0xad, 0xcd, 0xef, 0x47,
+    0x42, 0x3c, 0xa6, 0x52, 0xf7, 0x73, 0xeb, 0x04, 0x57, 0xc0, 0x81, 0x66, 0x83, 0x91, 0x3b, 0x63,
+    0xf1, 0x5a, 0x4b, 0x17, 0xd2, 0xbb, 0xf3, 0xda, 0x2d, 0xbf, 0x97, 0x6f, 0xe5, 0xbf, 0x66, 0xdb,
+    0x1c, 0xd5, 0xa0, 0x2f, 0x0f, 0x47, 0x65, 0xbc, 0x63, 0x6e, 0xbe, 0x15, 0x1d, 0x95, 0x03, 0x1c,
+    0x6a, 0x3f, 0xc2, 0x85, 0xc3, 0xdf, 0x13, 0x0b, 0xe7, 0xcc, 0x72, 0x81, 0xf3, 0x66, 0x4f, 0xec,
+    0xac, 0xb6, 0x6b, 0xe8, 0x05, 0x71, 0x55, 0x1d, 0x15, 0xa7, 0x1b, 0x05, 0x99, 0xef, 0x76, 0xb8,
+    0x79, 0x3f, 0x1e, 0x75, 0xeb, 0x61, 0x1f, 0x33, 0xdd, 0x33, 0xa0, 0x46, 0xd9, 0xc4, 0x76, 0xdf,
+    0x84, 0xc7, 0x6c, 0x5f, 0xa8, 0x5b, 0x66, 0x27, 0xe6, 0xc3, 0x87, 0x56, 0xc8, 0x4b, 0x27, 0x1a};
+static const uint8_t srp_verifier512[384] = {
     0x9b, 0x5e, 0x06, 0x17, 0x01, 0xea, 0x7a, 0xeb, 0x39, 0xcf, 0x6e, 0x35, 0x19, 0x65, 0x5a, 0x85,
     0x3c, 0xf9, 0x4c, 0x75, 0xca, 0xf2, 0x55, 0x5e, 0xf1, 0xfa, 0xf7, 0x59, 0xbb, 0x79, 0xcb, 0x47,
     0x70, 0x14, 0xe0, 0x4a, 0x88, 0xd6, 0x8f, 0xfc, 0x05, 0x32, 0x38, 0x91, 0xd4, 0xc2, 0x05, 0xb8,
@@ -342,106 +1116,440 @@ static const uint8_t test_verifier[384] = {
     0xc7, 0xeb, 0x71, 0x4f, 0x6f, 0xf7, 0xd4, 0x4c, 0xd5, 0xb8, 0x6f, 0x6b, 0xd1, 0x15, 0x81, 0x09,
     0x30, 0x63, 0x7c, 0x01, 0xd0, 0xf6, 0x01, 0x3b, 0xc9, 0x74, 0x0f, 0xa2, 0xc6, 0x33, 0xba, 0x89};
 
+static const uint8_t srp_secret256[32] = {
+    0x46, 0x8f, 0x4b, 0xb3, 0x04, 0xeb, 0x97, 0xc9, 0xc5, 0x14, 0x1b, 0xa8, 0x1e, 0x44, 0x36, 0x9a,
+    0x92, 0x9c, 0x3a, 0xa7, 0xd6, 0x95, 0x07, 0x8c, 0xc7, 0xed, 0x77, 0x61, 0x91, 0x5d, 0x03, 0x96};
+static const uint8_t srp_secret512[64] = {
+    0x5c, 0xbc, 0x21, 0x9d, 0xb0, 0x52, 0x13, 0x8e, 0xe1, 0x14, 0x8c, 0x71, 0xcd, 0x44, 0x98, 0x96,
+    0x3d, 0x68, 0x25, 0x49, 0xce, 0x91, 0xca, 0x24, 0xf0, 0x98, 0x46, 0x8f, 0x06, 0x01, 0x5b, 0xeb,
+    0x6a, 0xf2, 0x45, 0xc2, 0x09, 0x3f, 0x98, 0xc3, 0x65, 0x1b, 0xca, 0x83, 0xab, 0x8c, 0xab, 0x2b,
+    0x58, 0x0b, 0xbf, 0x02, 0x18, 0x4f, 0xef, 0xdf, 0x26, 0x14, 0x2f, 0x73, 0xdf, 0x95, 0xac, 0x50};
+
+static const uint8_t srp_random_cs[2 * 32] = { // client key : server key
+    0x60, 0x97, 0x55, 0x27, 0x03, 0x5c, 0xf2, 0xad, 0x19, 0x89, 0x80, 0x6f, 0x04, 0x07, 0x21, 0x0b,
+    0xc8, 0x1e, 0xdc, 0x04, 0xe2, 0x76, 0x2a, 0x56, 0xaf, 0xd5, 0x29, 0xdd, 0xda, 0x2d, 0x43, 0x93,
+    0xe4, 0x87, 0xcb, 0x59, 0xd3, 0x1a, 0xc5, 0x50, 0x47, 0x1e, 0x81, 0xf0, 0x0f, 0x69, 0x28, 0xe0,
+    0x1d, 0xda, 0x08, 0xe9, 0x74, 0xa0, 0x04, 0xf4, 0x9e, 0x61, 0xf5, 0xd1, 0x05, 0x28, 0x4d, 0x20};
+static const uint8_t srp_random_sc[2 * 32] = { // server key : client key
+    0xe4, 0x87, 0xcb, 0x59, 0xd3, 0x1a, 0xc5, 0x50, 0x47, 0x1e, 0x81, 0xf0, 0x0f, 0x69, 0x28, 0xe0,
+    0x1d, 0xda, 0x08, 0xe9, 0x74, 0xa0, 0x04, 0xf4, 0x9e, 0x61, 0xf5, 0xd1, 0x05, 0x28, 0x4d, 0x20,
+    0x60, 0x97, 0x55, 0x27, 0x03, 0x5c, 0xf2, 0xad, 0x19, 0x89, 0x80, 0x6f, 0x04, 0x07, 0x21, 0x0b,
+    0xc8, 0x1e, 0xdc, 0x04, 0xe2, 0x76, 0x2a, 0x56, 0xaf, 0xd5, 0x29, 0xdd, 0xda, 0x2d, 0x43, 0x93};
+
 static int setup_srp_endpoint(psa_pake_operation_t *op,
-    psa_pake_role_t role, psa_algorithm_t hash_alg)
+    psa_pake_role_t role, const char *user,
+    psa_algorithm_t alg, psa_key_id_t key)
 {
     psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_key_id_t pw_key = 0;
     psa_pake_primitive_t srp_primitive =
         PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC3526, 3072);
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
-    uint8_t hash[64];
-    size_t hash_len;
 
-    psa_pake_cs_set_algorithm(&suite, PSA_ALG_SRP_6);
+    psa_pake_cs_set_algorithm(&suite, alg);
     psa_pake_cs_set_primitive(&suite, srp_primitive);
-    psa_pake_cs_set_hash(&suite, hash_alg);
 
-    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-    psa_set_key_algorithm(&attributes, PSA_ALG_SRP_6);
-    psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD_HASH);
-
-    if (role == PSA_PAKE_ROLE_CLIENT) {
-        // h = SHA512(salt | SHA512(user | ":" | pass))
-        TEST_ASSERT(psa_hash_setup(&hash_op, hash_alg) == PSA_SUCCESS);
-        TEST_ASSERT(psa_hash_update(&hash_op, (const uint8_t *) "alice:password123", 17) == PSA_SUCCESS);
-        TEST_ASSERT(psa_hash_finish(&hash_op, hash, sizeof hash, &hash_len) == PSA_SUCCESS);
-
-        TEST_ASSERT(psa_hash_setup(&hash_op, hash_alg) == PSA_SUCCESS);
-        TEST_ASSERT(psa_hash_update(&hash_op, test_salt, sizeof test_salt) == PSA_SUCCESS);
-        TEST_ASSERT(psa_hash_update(&hash_op, hash, hash_len) == PSA_SUCCESS);
-        TEST_ASSERT(psa_hash_finish(&hash_op, hash, sizeof hash, &hash_len) == PSA_SUCCESS);
-
-        TEST_ASSERT(psa_import_key(&attributes, hash, hash_len, &pw_key) == PSA_SUCCESS);
-    } else {
-        TEST_ASSERT(psa_import_key(&attributes, test_verifier, sizeof test_verifier, &pw_key) == PSA_SUCCESS);
-    }
-
-    TEST_ASSERT(psa_pake_setup(op, &suite) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_setup(op, key, &suite) == PSA_SUCCESS);
     TEST_ASSERT(psa_pake_set_role(op, role) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_set_user(op, (const uint8_t *) "alice", 5) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_set_password_key(op, pw_key) == PSA_SUCCESS);
-    TEST_ASSERT(psa_destroy_key(pw_key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
 
     return 1;
 exit:
-    psa_destroy_key(pw_key);
-    psa_hash_abort(&hash_op);
     return 0;
 }
 
-static int test_srp(int seq)
+static int test_srp(psa_algorithm_t hash_alg, int n, const char *user, const char *pw, const uint8_t *v)
 {
     psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
     psa_pake_operation_t server = PSA_PAKE_OPERATION_INIT;
     psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
-    uint8_t secret1[32], secret2[32];
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_algorithm_t alg = PSA_ALG_SRP_6(hash_alg);
+    psa_key_id_t key = 0, skey = 0, ckey = 0;
+    uint8_t secret1[64], secret2[64], pub_key[384];
+    size_t pub_len, length1, length2;
+    size_t share_size, conf_size;
 
-    TEST_ASSERT(setup_srp_endpoint(&client, PSA_PAKE_ROLE_CLIENT, PSA_ALG_SHA_512));
-    TEST_ASSERT(setup_srp_endpoint(&server, PSA_PAKE_ROLE_SERVER, PSA_ALG_SHA_512));
+    if (n == 2 || n == 5) {
+        oberon_test_drbg_setup(srp_random_sc, sizeof srp_random_sc);
+    } else {
+        oberon_test_drbg_setup(srp_random_cs, sizeof srp_random_cs);
+    }
 
-    TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, test_salt, sizeof test_salt) == PSA_SUCCESS);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_SRP_PASSWORD_HASH(hash_alg));
+    psa_set_key_bits(&attributes, PSA_BYTES_TO_BITS(strlen(pw)));
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
+    TEST_ASSERT(psa_import_key(&attributes, (const uint8_t*)pw, strlen(pw), &key) == PSA_SUCCESS);
 
-    switch (seq) {
+    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_SRP_PASSWORD_HASH(hash_alg)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_PASSWORD, key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, alg);
+    psa_set_key_bits(&attributes, 3072);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_SRP_KEY_PAIR(PSA_DH_FAMILY_RFC3526));
+    TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &ckey) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_export_public_key(ckey, pub_key, sizeof pub_key, &pub_len) == PSA_SUCCESS);
+    ASSERT_COMPARE(pub_key, pub_len, v, pub_len);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_SRP_PUBLIC_KEY(PSA_DH_FAMILY_RFC3526));
+    psa_set_key_bits(&attributes, 0);
+    TEST_ASSERT(psa_import_key(&attributes, pub_key, pub_len, &skey) == PSA_SUCCESS);
+
+    TEST_ASSERT(setup_srp_endpoint(&client, PSA_PAKE_ROLE_CLIENT, user, alg, ckey));
+    TEST_ASSERT(setup_srp_endpoint(&server, PSA_PAKE_ROLE_SERVER, user, alg, skey));
+
+    share_size = PSA_PAKE_OUTPUT_SIZE(alg,
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC3526, 3072),
+        PSA_PAKE_STEP_KEY_SHARE);
+    conf_size = PSA_PAKE_OUTPUT_SIZE(alg,
+        PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC3526, 3072),
+        PSA_PAKE_STEP_CONFIRM);
+
+    switch (n) {
     case 1:
-        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, test_salt, sizeof test_salt) == PSA_SUCCESS);
-        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE)); // client key
-        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE)); // server key
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size)); // client key
+        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size)); // server key
         break;
     case 2:
-        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE)); // client key
-        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, test_salt, sizeof test_salt) == PSA_SUCCESS);
-        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE)); // server key
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size)); // server key
+        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size)); // client key
         break;
     case 3:
-        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, test_salt, sizeof test_salt) == PSA_SUCCESS);
-        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE)); // server key
-        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE)); // client key
+        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size)); // client key
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size)); // server key
+        break;
+    case 4:
+        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size)); // client key
+        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size)); // server key
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        break;
+    case 5:
+        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size)); // server key
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size)); // client key
+        break;
+    case 6:
+        TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_KEY_SHARE, share_size)); // client key
+        TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_KEY_SHARE, share_size)); // server key
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
         break;
     }
 
-    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_CONFIRM)); // client proof
-    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_CONFIRM)); // server proof
+    TEST_ASSERT(send_message(&client, &server, PSA_PAKE_STEP_CONFIRM, conf_size)); // client proof
+    TEST_ASSERT(send_message(&server, &client, PSA_PAKE_STEP_CONFIRM, conf_size)); // server proof
 
-    // Set up the first KDF
-    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t *) "Info", 4) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&client, &kdf) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret1, sizeof secret1) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_HKDF(hash_alg));
 
-    // Set up the second KDF
-    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t *) "Info", 4) == PSA_SUCCESS);
-    TEST_ASSERT(psa_pake_get_implicit_key(&server, &kdf) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, secret2, sizeof secret2) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+    // get client secret
+    TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&client) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(ckey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_export_key(key, secret1, sizeof secret1, &length1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
 
-    ASSERT_COMPARE(secret1, sizeof secret1, secret2, sizeof secret2);
+    // get server secret
+    TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&server) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_export_key(key, secret2, sizeof secret2, &length2) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+
+    ASSERT_COMPARE(secret1, length1, secret2, length2);
+
+    if (hash_alg == PSA_ALG_SHA_256) {
+        ASSERT_COMPARE(secret1, length1, srp_secret256, sizeof srp_secret256);
+    } else {
+        ASSERT_COMPARE(secret1, length1, srp_secret512, sizeof srp_secret512);
+    }
 
     return 1;
 exit:
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_destroy_key(key);
+    return 0;
+}
+
+static int setup_srp_endpoint_err(psa_pake_operation_t *op,
+    psa_pake_role_t role, psa_key_id_t *key, int n)
+{
+    uint8_t hash[64];
+    uint8_t verifier[384];
+    psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
+    size_t hash_len = PSA_HASH_LENGTH(PSA_ALG_SHA_256);
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_status_t expected = PSA_SUCCESS;
+    psa_pake_cipher_suite_t suite = PSA_PAKE_CIPHER_SUITE_INIT;
+
+    if (n == 1) { // wrong algorithm
+        psa_pake_cs_set_algorithm(&suite, PSA_ALG_SHA_256);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_algorithm(&suite, PSA_ALG_SRP_6(PSA_ALG_SHA_256));
+    }
+
+    if (n == 2) { // incompatible type
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else if (n == 3) { // incompatible family
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC7919, 3072));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else if (n == 4) { // incompatible size
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC3526, 4096));
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    } else {
+        psa_pake_cs_set_primitive(&suite,
+            PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_DH, PSA_DH_FAMILY_RFC3526, 3072));
+    }
+
+    if (n == 5) { // incompatible confirmation
+        psa_pake_cs_set_key_confirmation(&suite, PSA_PAKE_UNCONFIRMED_KEY);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (n == 6) { // incompatible usage
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+        expected = PSA_ERROR_NOT_PERMITTED;
+    } else {
+        psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    }
+
+    if (n == 7) { // incompatible algorithm
+        psa_set_key_algorithm(&attributes, PSA_ALG_SRP_6(PSA_ALG_SHA_512));
+        expected = PSA_ERROR_NOT_PERMITTED;
+    } else {
+        psa_set_key_algorithm(&attributes, PSA_ALG_SRP_6(PSA_ALG_SHA_256));
+    }
+
+    psa_set_key_bits(&attributes, 3072);
+
+    if (role == PSA_PAKE_ROLE_CLIENT) {
+        TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_SRP_PASSWORD_HASH(PSA_ALG_SHA_256)) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t*)"alice", 5) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_PASSWORD, (const uint8_t*)"password123", 11) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_output_bytes(&kdf, hash, hash_len) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SRP_KEY_PAIR(PSA_DH_FAMILY_RFC3526));
+        if (n == 8) { // wrong key data
+            memset(hash, 0, hash_len);
+            TEST_ASSERT(psa_import_key(&attributes, hash, hash_len, key) == PSA_ERROR_INVALID_ARGUMENT);
+            return 1;
+        } else {
+            TEST_ASSERT(psa_import_key(&attributes, hash, hash_len, key) == PSA_SUCCESS);
+        }
+    } else {
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_SRP_PUBLIC_KEY(PSA_DH_FAMILY_RFC3526));
+        if (n == 8) { // wrong key data
+            memset(verifier, 0xFF, sizeof verifier);
+            TEST_ASSERT(psa_import_key(&attributes, verifier, sizeof verifier, key) == PSA_ERROR_INVALID_ARGUMENT);
+            return 1;
+        } else {
+            TEST_ASSERT(psa_import_key(&attributes, srp_verifier256, sizeof srp_verifier256, key) == PSA_SUCCESS);
+        }
+    }
+
+    TEST_ASSERT(psa_pake_setup(op, *key, &suite) == expected);
+    if (expected != PSA_SUCCESS) return 1;
+
+    if (n == 9) { // already started
+        TEST_ASSERT(psa_pake_setup(op, *key, &suite) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    if (n == 10) { // set_user before set_role
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)"alice", 5) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    if (n == 11) { // wrong role
+        TEST_ASSERT(psa_pake_set_role(op, PSA_PAKE_ROLE_FIRST) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else if (n == 12 && role == PSA_PAKE_ROLE_SERVER) { // incompatible role
+        TEST_ASSERT(psa_pake_set_role(op, PSA_PAKE_ROLE_CLIENT) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else {
+        TEST_ASSERT(psa_pake_set_role(op, role) == PSA_SUCCESS);
+    }
+
+    if (n == 13) { // wrong user
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)"", 0) == PSA_ERROR_INVALID_ARGUMENT);
+        return 1;
+    } else {
+        TEST_ASSERT(psa_pake_set_user(op, (const uint8_t*)"alice", 5) == PSA_SUCCESS);
+    }
+
+    if (n == 14) { // no peer id allowed
+        TEST_ASSERT(psa_pake_set_peer(op, (const uint8_t*)"bob", 3) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
+    return 1;
+exit:
+    return 0;
+}
+
+static int test_srp_err(int n)
+{
+    psa_pake_operation_t client = PSA_PAKE_OPERATION_INIT;
+    psa_pake_operation_t server = PSA_PAKE_OPERATION_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0, skey = 0, ckey = 0;
+    uint8_t salt[32];
+    size_t length;
+
+    if (n <= 14) { // error in client setup
+        TEST_ASSERT(setup_srp_endpoint_err(&client, PSA_PAKE_ROLE_CLIENT, &ckey, n));
+        goto abort;
+    } else {
+        TEST_ASSERT(setup_srp_endpoint_err(&client, PSA_PAKE_ROLE_CLIENT, &ckey, 0));
+    }
+    if (n > 14 && n <= 28) { // error in server setup
+        TEST_ASSERT(setup_srp_endpoint_err(&server, PSA_PAKE_ROLE_SERVER, &skey, n - 14));
+        goto abort;
+    } else {
+        TEST_ASSERT(setup_srp_endpoint_err(&server, PSA_PAKE_ROLE_SERVER, &skey, 0));
+    }
+
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+
+    switch (n) {
+    case 29:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 30:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 31:
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 32:
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 33:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 2));
+        goto abort;
+    case 34:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 2));
+        goto abort;
+    case 35:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 1));
+        goto abort;
+    case 36:
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        goto abort;
+    case 37:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        goto abort;
+    case 38:
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 0));
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_BAD_STATE);
+        goto abort;
+    case 39: // wrong step
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_ZK_PUBLIC, srp_salt, sizeof srp_salt) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    case 40: // wrong step
+        TEST_ASSERT(psa_pake_output(&server, PSA_PAKE_STEP_SALT, salt, sizeof salt, &length) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    case 41: // wrong proof
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 4));
+        goto abort;
+    case 42: // wrong proof
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 4));
+        goto abort;
+    default:
+        TEST_ASSERT(psa_pake_input(&client, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&server, PSA_PAKE_STEP_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_KEY_SHARE, 0));
+        TEST_ASSERT(send_message_err(&client, &server, PSA_PAKE_STEP_CONFIRM, 0));
+        TEST_ASSERT(send_message_err(&server, &client, PSA_PAKE_STEP_CONFIRM, 0));
+        break;
+    }
+
+    switch (n) {
+    case 43: // invalid key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    case 44: // invalid key type
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    case 45: // key size > 0
+        psa_set_key_bits(&attributes, 256);
+        TEST_ASSERT(psa_pake_get_shared_key(&client, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    case 46: // key size > 0
+        psa_set_key_bits(&attributes, 256);
+        TEST_ASSERT(psa_pake_get_shared_key(&server, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(key == 0);
+        goto abort;
+    }
+
+abort:
+    TEST_ASSERT(psa_pake_abort(&client) == PSA_SUCCESS);
+    TEST_ASSERT(psa_pake_abort(&server) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(ckey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    return 1;
+exit:
+    psa_destroy_key(ckey);
+    psa_destroy_key(skey);
+    psa_destroy_key(key);
     return 0;
 }
 #endif // PSA_WANT_ALG_SRP_6
@@ -449,30 +1557,57 @@ exit:
 
 int main(void)
 {
+    int i;
+
     TEST_ASSERT(psa_crypto_init() == PSA_SUCCESS);
 
 #ifdef PSA_WANT_ALG_JPAKE
-    TEST_ASSERT(test_jpake());
+    TEST_ASSERT(test_jpake(jpake_psk, sizeof jpake_psk, 1));
+    TEST_ASSERT(test_jpake((const uint8_t*)"p", 1, 2));
+    TEST_ASSERT(test_jpake((const uint8_t*)"p1234567890123456789012345678901", 32, 3));
+    for (i = 1; i <= 88; i++) {
+        TEST_ASSERT(test_jpake_err(i));
+    }
 #endif
 
-#ifdef PSA_WANT_ALG_SPAKE2P
-    TEST_ASSERT(test_spake2p(NULL, 0, NULL, NULL));
-    TEST_ASSERT(test_spake2p_sha512(NULL, 0, NULL, NULL));
-    TEST_ASSERT(test_spake2p(NULL, 0, (const uint8_t *)"client", (const uint8_t *)"server"));
-    TEST_ASSERT(test_spake2p_sha512(NULL, 0, (const uint8_t *)"client", (const uint8_t *)"server"));
-    TEST_ASSERT(test_spake2p((const uint8_t *)"SPAKE2+-P256-SHA256-HKDF-HMAC-SHA256", 36, NULL, NULL));
-    TEST_ASSERT(test_spake2p_sha512((const uint8_t *)"SPAKE2+-P256-SHA256-HKDF-HMAC-SHA256", 36, NULL, NULL));
-    TEST_ASSERT(test_spake2p((const uint8_t *)"SPAKE2+-P256-SHA256-HKDF-HMAC-SHA256", 36, (const uint8_t *)"client", (const uint8_t *)"server"));
-    TEST_ASSERT(test_spake2p_sha512((const uint8_t *)"SPAKE2+-P256-SHA256-HKDF-HMAC-SHA256", 36, (const uint8_t *)"client", (const uint8_t *)"server"));
+#ifdef PSA_WANT_ALG_SPAKE2P_HMAC
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256), NULL,         NULL,     NULL,     0));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256), spake2p_hmac, NULL,     NULL,     0));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256), NULL,         "client", "server", 2));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256), NULL,         "client", "server", 4));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_256), spake2p_hmac, "client", "server", 1));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_512), NULL,         NULL,     NULL,     0));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_512), spake2p_s512, NULL,     NULL,     0));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_512), NULL,         "client", "server", 0));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_HMAC(PSA_ALG_SHA_512), spake2p_s512, "client", "server", 0));
+    for (i = 1; i <= 44; i++) {
+        TEST_ASSERT(test_spake2p_err(i));
+    }
+#endif
+
+#ifdef PSA_WANT_ALG_SPAKE2P_CMAC
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_CMAC(PSA_ALG_SHA_256), NULL,         "client", "server", 0));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_CMAC(PSA_ALG_SHA_256), spake2p_cmac, "client", "server", 0));
+#endif
+
+#ifdef PSA_WANT_ALG_SPAKE2P_MATTER
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_MATTER,                spake2p_d_01, "client", "server", 6));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_MATTER,                NULL,         "client", "server", 3));
+    TEST_ASSERT(test_spake2p(PSA_ALG_SPAKE2P_MATTER,                NULL,         "client", "server", 5));
 #endif
 
 #ifdef PSA_WANT_ALG_SRP_6
-    TEST_ASSERT(test_srp(1));
-    TEST_ASSERT(test_srp(2));
-    TEST_ASSERT(test_srp(3));
+    for (i = 1; i <= 6; i++) {
+        TEST_ASSERT(test_srp(PSA_ALG_SHA_256, i, "alice", "password123", srp_verifier256));
+        TEST_ASSERT(test_srp(PSA_ALG_SHA_512, i, "alice", "password123", srp_verifier512));
+    }
+    for (i = 1; i <= 46; i++) {
+        TEST_ASSERT(test_srp_err(i));
+    }
 #endif
 
     return 0;
 exit:
+    (void)i;
     return 1;
 }

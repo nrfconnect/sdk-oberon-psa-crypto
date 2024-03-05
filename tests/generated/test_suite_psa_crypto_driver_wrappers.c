@@ -3384,7 +3384,27 @@ void test_aead_decrypt_setup_wrapper( void ** params )
 
     test_aead_decrypt_setup( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10, &data12, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint );
 }
+
 #if defined(PSA_WANT_ALG_JPAKE)
+static psa_status_t psa_pake_get_implicit_key(  // !!OM
+    psa_pake_operation_t *operation,
+    psa_key_derivation_operation_t *output)
+{
+    psa_status_t status;
+    psa_key_id_t key = 0;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, output->alg);
+    
+    status = psa_pake_get_shared_key(operation, &attributes, &key);
+    if (status == PSA_SUCCESS) {
+        status = psa_key_derivation_input_key(output, PSA_KEY_DERIVATION_INPUT_SECRET, key);
+    }
+    psa_destroy_key(key);
+    return status;
+}
+
 #line 2994 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
 void test_pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_status_arg,
                      data_t *forced_output, int expected_status_arg,
@@ -3403,21 +3423,21 @@ void test_pake_operations(data_t *pw_data, int forced_status_setup_arg, int forc
         PSA_ECC_FAMILY_SECP_R1, 256);
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     unsigned char *input_buffer = NULL;
-    const size_t size_key_share = PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE, primitive,
+    const size_t size_key_share = PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256), primitive,
                                                       PSA_PAKE_STEP_KEY_SHARE);
     unsigned char *output_buffer = NULL;
     size_t output_len = 0;
-    size_t output_size = PSA_PAKE_OUTPUT_SIZE(PSA_ALG_JPAKE, primitive,
+    size_t output_size = PSA_PAKE_OUTPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256), primitive,
                                               PSA_PAKE_STEP_KEY_SHARE);
     int in_driver = (forced_status_setup_arg == PSA_SUCCESS);
 
     TEST_CALLOC(input_buffer,
-                PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE, primitive,
+                PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256), primitive,
                                     PSA_PAKE_STEP_KEY_SHARE));
     memset(input_buffer, 0xAA, size_key_share);
 
     TEST_CALLOC(output_buffer,
-                PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE, primitive,
+                PSA_PAKE_INPUT_SIZE(PSA_ALG_JPAKE(PSA_ALG_SHA_256), primitive,
                                     PSA_PAKE_STEP_KEY_SHARE));
     memset(output_buffer, 0x55, output_size);
 
@@ -3427,28 +3447,25 @@ void test_pake_operations(data_t *pw_data, int forced_status_setup_arg, int forc
 
     if (pw_data->len > 0) {
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-        psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE);
+        psa_set_key_algorithm(&attributes, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
         psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
         PSA_ASSERT(psa_import_key(&attributes, pw_data->x, pw_data->len,
                                   &key));
     }
 
-    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE);
+    psa_pake_cs_set_algorithm(&cipher_suite, PSA_ALG_JPAKE(PSA_ALG_SHA_256));
     psa_pake_cs_set_primitive(&cipher_suite, primitive);
-    psa_pake_cs_set_hash(&cipher_suite, PSA_ALG_SHA_256);
+    psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     mbedtls_test_driver_pake_hooks.forced_status = forced_status_setup;
 
     /* Collecting input stage (no driver entry points) */
 
-    TEST_EQUAL(psa_pake_setup(&operation, &cipher_suite),
+    TEST_EQUAL(psa_pake_setup(&operation, key, &cipher_suite),
                PSA_SUCCESS);
 
     PSA_ASSERT(psa_pake_set_user(&operation, jpake_server_id, sizeof(jpake_server_id)));
     PSA_ASSERT(psa_pake_set_peer(&operation, jpake_client_id, sizeof(jpake_client_id)));
-
-    TEST_EQUAL(psa_pake_set_password_key(&operation, key),
-               PSA_SUCCESS);
 
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
 
@@ -3516,7 +3533,7 @@ void test_pake_operations(data_t *pw_data, int forced_status_setup_arg, int forc
             }
             break;
 
-        case 4: /* get_implicit_key */
+        case 4: /* get_shared_key */
             /* Call driver setup indirectly */
             TEST_EQUAL(psa_pake_input(&operation, PSA_PAKE_STEP_KEY_SHARE,
                                       input_buffer, size_key_share),
@@ -3599,8 +3616,8 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t server = psa_pake_operation_init();
     psa_pake_operation_t client = psa_pake_operation_init();
-    psa_algorithm_t alg = alg_arg;
     psa_algorithm_t hash_alg = hash_arg;
+    psa_algorithm_t alg = alg_arg | (hash_alg & PSA_ALG_HASH_MASK);
     psa_algorithm_t derive_alg = derive_alg_arg;
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -3628,7 +3645,7 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
 
     psa_pake_cs_set_algorithm(&cipher_suite, alg);
     psa_pake_cs_set_primitive(&cipher_suite, primitive_arg);
-    psa_pake_cs_set_hash(&cipher_suite, hash_alg);
+    if (PSA_ALG_IS_JPAKE(alg)) psa_pake_cs_set_key_confirmation(&cipher_suite, PSA_PAKE_UNCONFIRMED_KEY);
 
     /* Get shared key */
     PSA_ASSERT(psa_key_derivation_setup(&server_derive, derive_alg));
@@ -3647,9 +3664,9 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
         mbedtls_test_driver_pake_hooks.forced_setup_status = PSA_ERROR_NOT_SUPPORTED;
     }
 
-    PSA_ASSERT(psa_pake_setup(&server, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&server, key, &cipher_suite));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
-    PSA_ASSERT(psa_pake_setup(&client, &cipher_suite));
+    PSA_ASSERT(psa_pake_setup(&client, key, &cipher_suite));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
 
 
@@ -3658,10 +3675,6 @@ void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
     PSA_ASSERT(psa_pake_set_user(&client, jpake_client_id, sizeof(jpake_client_id)));
     PSA_ASSERT(psa_pake_set_peer(&client, jpake_server_id, sizeof(jpake_server_id)));
-    TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
-    PSA_ASSERT(psa_pake_set_password_key(&server, key));
-    TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
-    PSA_ASSERT(psa_pake_set_password_key(&client, key));
     TEST_EQUAL(mbedtls_test_driver_pake_hooks.hits.total, 0);
 
     /* First round */
@@ -3948,7 +3961,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 40:
             {
-                *out_value = PSA_ALG_JPAKE;
+                *out_value = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
             }
             break;
         case 41:

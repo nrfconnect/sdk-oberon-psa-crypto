@@ -36,9 +36,9 @@ corresponding feature is included.
 undefined and reserved for future use.
 
 To define a configuration feature in a C header file, a symbol like
-`PSA_WANT_ALG_SPAKE2P` is defined like this:
+`PSA_WANT_ALG_SPAKE2P_HMAC` is defined like this:
 
-    #define PSA_WANT_ALG_SPAKE2P                    1
+    #define PSA_WANT_ALG_SPAKE2P_HMAC               1
 
 In the following sections, all available define directives are listed.
 

@@ -47,7 +47,7 @@ static int ecdsa_sign_hash(
     const uint8_t *ek,
     uint8_t *signature)
 {
-    int res;
+    int res = 1;
 
     switch (key_length) {
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_224
@@ -75,7 +75,6 @@ static int ecdsa_sign_hash(
         (void)hash;
         (void)ek;
         (void)signature;
-        res = 1;
     }
 
     return res;
@@ -337,7 +336,7 @@ psa_status_t oberon_ecdsa_verify_hash(
     const uint8_t *hash, size_t hash_length,
     const uint8_t *signature, size_t signature_length)
 {
-    int res;
+    int res = 1;
     uint8_t key_buf[2 * PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
 #if defined(PSA_NEED_OBERON_ECDSA_RANDOMIZED) || defined(PSA_NEED_OBERON_ECDSA_DETERMINISTIC)
     uint8_t ext_hash[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
@@ -469,7 +468,7 @@ psa_status_t oberon_ecdsa_verify_message(
     const uint8_t *input, size_t input_length,
     const uint8_t *signature, size_t signature_length)
 {
-    int res;
+    int res = 1;
 #if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
     uint8_t pub_key[57];
 #elif defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255)

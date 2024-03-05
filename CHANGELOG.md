@@ -1,7 +1,30 @@
 # Oberon PSA Crypto change log
 
+Oberon PSA Crypto 1.2.2
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.2>
+
+5-Mar-2024 (75c7949)
+
+Oberon crypto software drivers require _ocrypto_ version 3.5.x.
+
+### Breaking Changes
+- Implement new PAKE extension version 1.2 of PSA Certified Crypto API.
+- Implement PAKE PSA driver API according to new PAKE extension.
+- Implement SRP-6 according to new PSA Certified Crypto 1.2 PAKE extension.
+
+### Improvements
+- Add tests for new PAKE extension version 1.2 of PSA Certified Crypto API.
+- Add random injection option in driver wrapper for PAKE tests to enable 
+  provided test vectors.
+- Use Mbed TLS alias for psa_key_id_t to prevent naming conflicts in TF-M.
+- Add redundant local variable initializations in Oberon drivers to avoid 
+  compiler warnings.
+- Update Copyright year in license.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.2.1
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/rel1.2.1
+https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.1
 
 25-Jan-2024 (7462663)
 

@@ -321,6 +321,78 @@ exit:
 }
 #endif // PSA_WANT_ALG_SP800_108_COUNTER_CMAC || PSA_WANT_ALG_SP800_108_COUNTER_CMAC
 
+#ifdef PSA_WANT_ALG_SRP_PASSWORD_HASH
+static const uint8_t srp_salt[16] = {
+    0xBE, 0xB2, 0x53, 0x79, 0xD1, 0xA8, 0x58, 0x1E, 0xB5, 0xA7, 0x27, 0x67, 0x3A, 0x24, 0x41, 0xEE};
+
+static int srp_password_hash(uint8_t *hash, size_t hash_len,
+    const char *user, const char *pw,
+    const uint8_t *salt, size_t salt_len,
+    psa_algorithm_t hash_alg)
+{
+    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    size_t length;
+
+    // h = H(salt | H(user | ":" | pass))
+    TEST_ASSERT(psa_hash_setup(&hash_op, hash_alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&hash_op, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&hash_op, (const uint8_t*)":", 1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&hash_op, (const uint8_t*)pw, strlen(pw)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_finish(&hash_op, hash, hash_len, &length) == PSA_SUCCESS);
+    TEST_EQUAL(length, hash_len);
+
+    TEST_ASSERT(psa_hash_setup(&hash_op, hash_alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&hash_op, salt, salt_len) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&hash_op, hash, length) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_finish(&hash_op, hash, hash_len, &length) == PSA_SUCCESS);
+    TEST_EQUAL(length, hash_len);
+
+    return 1;
+exit:
+    psa_hash_abort(&hash_op);
+    return 0;
+}
+
+static int test_srp_password_hash_kdf(psa_algorithm_t hash_alg, const char *password, const char *user)
+{
+    psa_key_derivation_operation_t kdf = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t pkey = 0, skey = 0;
+    uint8_t data1[64], data2[64];
+    size_t length, hash_len = PSA_HASH_LENGTH(hash_alg);
+    int res = 0;
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&attributes, PSA_ALG_SRP_PASSWORD_HASH(hash_alg));
+    psa_set_key_bits(&attributes, PSA_BYTES_TO_BITS(strlen(password)));
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
+    TEST_ASSERT(psa_import_key(&attributes, (const uint8_t*)password, strlen(password), &pkey) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_SRP_PASSWORD_HASH(hash_alg)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_INFO, (const uint8_t*)user, strlen(user)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_PASSWORD, pkey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_SALT, srp_salt, sizeof srp_salt) == PSA_SUCCESS);
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_SRP_6(hash_alg));
+    psa_set_key_bits(&attributes, 3072);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_SRP_KEY_PAIR(PSA_DH_FAMILY_RFC3526));
+    TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &skey) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_export_key(skey, data1, sizeof data1, &length) == PSA_SUCCESS);
+    TEST_ASSERT(srp_password_hash(data2, hash_len, user, password, srp_salt, sizeof srp_salt, hash_alg));
+    ASSERT_COMPARE(data1, length, data2, hash_len);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(pkey) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
+
+    return res;
+}
+#endif // PSA_WANT_ALG_SRP_PASSWORD_HASH
+
 
 // Tests for psa_key_derivation_verify_key / psa_key_derivation_verify_bytes
 #ifdef PSA_WANT_ALG_HKDF
@@ -450,6 +522,12 @@ int main(void)
         SP800_108_CMAC_Label2, sizeof SP800_108_CMAC_Label2, NULL, 0, SP800_108_CMAC_Output2, sizeof SP800_108_CMAC_Output2));
 #endif
 
+#ifdef PSA_WANT_ALG_SRP_PASSWORD_HASH
+    TEST_ASSERT(test_srp_password_hash_kdf(PSA_ALG_SHA_256, "password", "user"));
+    TEST_ASSERT(test_srp_password_hash_kdf(PSA_ALG_SHA_256, "abcd", "client"));
+    TEST_ASSERT(test_srp_password_hash_kdf(PSA_ALG_SHA_512, "password", "user"));
+#endif
+
 #ifdef PSA_WANT_ALG_HKDF
     // output_bytes
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            0,                               0, PSA_SUCCESS));
@@ -471,16 +549,18 @@ int main(void)
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               0,                               1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               0,                               0,                               1, PSA_SUCCESS));
-    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            0,                               1, PSA_ERROR_NOT_PERMITTED));
-    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               0,                               1, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            0,                               1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            0,                               1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               0,                               1, PSA_SUCCESS));
     // verify_key
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
-    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_ERROR_NOT_PERMITTED));
-    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_DERIVE,            1, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
 #endif // PSA_WANT_ALG_HKDF
 
     return 0;

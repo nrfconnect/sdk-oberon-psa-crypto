@@ -1933,7 +1933,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 268:
             {
-                *out_value = PSA_ALG_JPAKE;
+                *out_value = PSA_ALG_JPAKE(0);
             }
             break;
         case 269:

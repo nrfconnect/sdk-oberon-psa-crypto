@@ -192,7 +192,6 @@ struct psa_key_derivation_s {  /*!!OM*/
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
     unsigned int MBEDTLS_PRIVATE(can_output_key) : 1;
     unsigned int MBEDTLS_PRIVATE(no_output) : 1;
-    unsigned int MBEDTLS_PRIVATE(no_verify) : 1;
     unsigned int MBEDTLS_PRIVATE(cost_set) : 1;
     unsigned int MBEDTLS_PRIVATE(salt_set) : 1;
     unsigned int MBEDTLS_PRIVATE(secret_set) : 1;
@@ -207,7 +206,7 @@ struct psa_key_derivation_s {  /*!!OM*/
     psa_driver_key_derivation_context_t MBEDTLS_PRIVATE(ctx);
 };
 
-#define PSA_KEY_DERIVATION_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
+#define PSA_KEY_DERIVATION_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
 static inline struct psa_key_derivation_s psa_key_derivation_operation_init(
     void)
 {
@@ -444,30 +443,16 @@ static inline size_t psa_get_key_bits(
 
 struct psa_pake_cipher_suite_s {
     psa_algorithm_t algorithm;
-    psa_pake_primitive_type_t type;
-    psa_pake_family_t family;
-    uint16_t  bits;
-    psa_algorithm_t hash;
+    psa_pake_primitive_t primitive;
+    uint32_t key_confirmation;
 };
 
-#define PSA_PAKE_CIPHER_SUITE_INIT {PSA_ALG_NONE, 0, 0, 0, PSA_ALG_NONE}
+#define PSA_PAKE_CIPHER_SUITE_INIT {PSA_ALG_NONE, 0, 0}
 static inline struct psa_pake_cipher_suite_s psa_pake_cipher_suite_init(void)
 {
     const struct psa_pake_cipher_suite_s v = PSA_PAKE_CIPHER_SUITE_INIT;
     return v;
 }
-
-struct psa_crypto_driver_pake_inputs_s {
-    uint8_t *MBEDTLS_PRIVATE(password);
-    size_t MBEDTLS_PRIVATE(password_len);
-    psa_pake_role_t MBEDTLS_PRIVATE(role);
-    uint8_t *MBEDTLS_PRIVATE(user);
-    size_t MBEDTLS_PRIVATE(user_len);
-    uint8_t *MBEDTLS_PRIVATE(peer);
-    size_t MBEDTLS_PRIVATE(peer_len);
-    psa_key_attributes_t MBEDTLS_PRIVATE(attributes);
-    psa_pake_cipher_suite_t MBEDTLS_PRIVATE(cipher_suite);
-};
 
 struct psa_pake_operation_s {  /*!!OM*/
     /** Unique ID indicating which driver got assigned to do the
@@ -479,21 +464,21 @@ struct psa_pake_operation_s {  /*!!OM*/
     unsigned int MBEDTLS_PRIVATE(id);
 
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
-    unsigned int MBEDTLS_PRIVATE(passw_set) : 1;
     unsigned int MBEDTLS_PRIVATE(user_set) : 1;
     unsigned int MBEDTLS_PRIVATE(peer_set) : 1;
     unsigned int MBEDTLS_PRIVATE(role_set) : 1;
+    unsigned int MBEDTLS_PRIVATE(context_set) : 1;
     unsigned int MBEDTLS_PRIVATE(is_second) : 1;
     unsigned int MBEDTLS_PRIVATE(started) : 1;
     unsigned int MBEDTLS_PRIVATE(done) : 1;
     unsigned int MBEDTLS_PRIVATE(sequence);
 
-    psa_crypto_driver_pake_inputs_t MBEDTLS_PRIVATE(inputs);
+    uint32_t secret_size;
     psa_driver_pake_context_t MBEDTLS_PRIVATE(ctx);
 };
 
 /* This only zeroes out the first byte in the union, the rest is unspecified. */
-#define PSA_PAKE_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 }, { 0 } }
+#define PSA_PAKE_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
 static inline struct psa_pake_operation_s psa_pake_operation_init(void)
 {
     const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;

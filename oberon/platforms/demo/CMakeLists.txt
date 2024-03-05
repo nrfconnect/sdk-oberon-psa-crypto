@@ -11,92 +11,99 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
 
     message(STATUS "CONFIG_MBEDTLS_PSA_TESTS: Building for ${PLATFORM}")
 
-    # create projects for each crypto_config
-    file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config*.h")
-    foreach(CRYPTO_CONFIG_H ${config_files})
-        get_filename_component(TEST_CONFIG "${CRYPTO_CONFIG_H}" NAME_WE)
-        message(STATUS "Config: ${TEST_CONFIG}")
-        project("${TEST_CONFIG}-lib" LANGUAGES C ASM)
-        configure_file("${CRYPTO_CONFIG_H}"
+    # add relative path to suites
+    foreach(SUITE ${MBEDTEST_SUITES})
+        list(APPEND TEST_SUITES "generated/${SUITE}")
+    endforeach()    
+    foreach(SUITE ${OBERON_TEST_SUITES})
+        list(APPEND TEST_SUITES "src/${SUITE}")
+    endforeach()
+
+    # one pass with pake inject, one path without
+    set(VARIANTS pake_inject std)
+    foreach(VARIANT ${VARIANTS})
+        # create projects for each crypto_config
+        file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config*.h")
+        foreach(CRYPTO_CONFIG_H ${config_files})
+            get_filename_component(TEST_CONFIG "${CRYPTO_CONFIG_H}" NAME_WE)
+            message(STATUS "Config: ${TEST_CONFIG}")
+            project("${TEST_CONFIG}-${VARIANT}-lib" LANGUAGES C)
+            configure_file("${CRYPTO_CONFIG_H}"
                 "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include/psa/crypto_config.h"
                 COPYONLY)
 
-        # test configuration library
-        add_library(${PROJECT_NAME} OBJECT)
-        set_target_properties(${PROJECT_NAME} PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}")
-
-        # Oberon drivers and ocrypto
-        target_link_libraries(${PROJECT_NAME} PUBLIC ocrypto)
-        add_subdirectory(${CMAKE_SOURCE_DIR}/oberon/drivers ${TEST_CONFIG})
-
-        # common sources
-        target_sources(${PROJECT_NAME} PRIVATE ${MBED_SOURCES})
-        target_sources(${PROJECT_NAME} PRIVATE ${MBEDTEST_SOURCES})
-
-        # add platform specific sources
-        add_subdirectory(drivers drivers/${TEST_CONFIG})
-        target_sources(${PROJECT_NAME} PRIVATE library/psa_crypto_driver_wrappers.c)
-
-        # add platform-config specific includes first
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
-
-        # add platform specific includes before mbed includes
-        target_include_directories(${PROJECT_NAME} PRIVATE drivers)
-        target_include_directories(${PROJECT_NAME} PRIVATE include)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
-
-        # add mbed includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/library)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-
-        foreach(SUITE ${MBEDTEST_SUITES})
-            project("${TEST_CONFIG}-${SUITE}")
-            message(STATUS "Add test suite ${SUITE}")
-            add_executable(${PROJECT_NAME})
+            # test configuration library
+            add_library(${PROJECT_NAME} OBJECT)
             set_target_properties(${PROJECT_NAME} PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}")
-            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/generated/${SUITE}.c")
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}")
 
-            add_custom_command(
-                    TARGET ${PROJECT_NAME} PRE_LINK
-                    COMMAND ${CMAKE_COMMAND} -E copy
-                    ${CMAKE_SOURCE_DIR}/tests/generated/${SUITE}.datax
-                    ${PROJECT_BINARY_DIR}/
-                    DEPENDS ${PROJECT_BINARY_DIR}/${SUITE}.datax)
+            # Oberon drivers and ocrypto
+            target_link_libraries(${PROJECT_NAME} PUBLIC ocrypto)
+            add_subdirectory(${CMAKE_SOURCE_DIR}/oberon/drivers ${TEST_CONFIG}-${VARIANT})
 
-            # include the same target include directories as the TEST_CONFIG library
-            target_include_directories("${PROJECT_NAME}" PRIVATE
-                    "$<TARGET_PROPERTY:${TEST_CONFIG}-lib,INCLUDE_DIRECTORIES>"
-            )
+            # common sources
+            target_sources(${PROJECT_NAME} PRIVATE ${MBED_SOURCES})
+            target_sources(${PROJECT_NAME} PRIVATE ${MBEDTEST_SOURCES})
 
-            # link libraries
-            target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
-            target_link_libraries(${PROJECT_NAME} PRIVATE ${TEST_CONFIG}-lib)
+            # add platform specific sources
+            add_subdirectory(drivers drivers/${TEST_CONFIG}-${VARIANT})
+            target_sources(${PROJECT_NAME} PRIVATE library/psa_crypto_driver_wrappers.c)
 
-            add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
-            set_property(TEST ${PROJECT_NAME} PROPERTY LABELS CONFIG_MBEDTLS_PSA_TESTS-${TEST_CONFIG})
-        endforeach()
-        foreach(SUITE ${OBERON_TEST_SUITES})
-            project("${TEST_CONFIG}-${SUITE}")
-            message(STATUS "Add test suite ${SUITE}")
-            add_executable(${PROJECT_NAME})
-            set_target_properties(${PROJECT_NAME} PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}")
-            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/src/${SUITE}.c")
+            if(${VARIANT} STREQUAL "pake_inject")
+                target_compile_definitions(${PROJECT_NAME} PRIVATE OBERON_PAKE_INJECT_RANDOM)
+                target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/src/oberon_test_drbg.c")
+            endif()
 
-            # include the same target include directories as the TEST_CONFIG library
-            target_include_directories("${PROJECT_NAME}" PRIVATE
-                    "$<TARGET_PROPERTY:${TEST_CONFIG}-lib,INCLUDE_DIRECTORIES>"
-            )
+            # add platform-config specific includes first
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}/include)
 
-            # link libraries
-            target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
-            target_link_libraries(${PROJECT_NAME} PRIVATE ${TEST_CONFIG}-lib)
+            # add platform specific includes before mbed includes
+            target_include_directories(${PROJECT_NAME} PRIVATE drivers)
+            target_include_directories(${PROJECT_NAME} PRIVATE include)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
 
-            add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
-            set_property(TEST ${PROJECT_NAME} PROPERTY LABELS CONFIG_MBEDTLS_PSA_TESTS-${TEST_CONFIG})
+            # add mbed includes
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/library)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+            foreach(SUITE_FILE ${TEST_SUITES})
+                get_filename_component(SUITE "${SUITE_FILE}" NAME)
+
+                if(${VARIANT} STREQUAL "pake_inject" AND ${SUITE} STREQUAL "pake_test" OR 
+                    NOT(${VARIANT} STREQUAL "pake_inject") AND NOT(${SUITE} STREQUAL "pake_test"))
+
+                    project("${TEST_CONFIG}-${SUITE}")
+                    message(STATUS "Add test suite ${SUITE}")
+                    add_executable(${PROJECT_NAME})
+                    set_target_properties(${PROJECT_NAME} PROPERTIES
+                        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}")
+                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.c")
+
+                    string(FIND ${SUITE_FILE} "generated" INDEX)
+                    if (INDEX EQUAL 0)
+                        add_custom_command(
+                            TARGET ${PROJECT_NAME} PRE_LINK
+                            COMMAND ${CMAKE_COMMAND} -E copy
+                            ${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.datax
+                            ${PROJECT_BINARY_DIR}/
+                            DEPENDS ${PROJECT_BINARY_DIR}/${SUITE}.datax)
+                    endif()
+
+                    # include the same target include directories as the TEST_CONFIG library
+                    target_include_directories("${PROJECT_NAME}" PRIVATE
+                        "$<TARGET_PROPERTY:${TEST_CONFIG}-${VARIANT}-lib,INCLUDE_DIRECTORIES>"
+                    )
+
+                    # link libraries
+                    target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
+                    target_link_libraries(${PROJECT_NAME} PRIVATE ${TEST_CONFIG}-${VARIANT}-lib)
+
+                    add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
+                    set_property(TEST ${PROJECT_NAME} PROPERTY LABELS CONFIG_MBEDTLS_PSA_TESTS-${TEST_CONFIG}-${VARIANT})
+                endif()
+            endforeach()
         endforeach()
     endforeach()
+
 endif()
