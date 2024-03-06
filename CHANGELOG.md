@@ -11,7 +11,15 @@ Oberon crypto software drivers require _ocrypto_ version 3.5.x.
 - Implement new PAKE extension version 1.2 of PSA Certified Crypto API.
 - Implement PAKE PSA driver API according to new PAKE extension.
 - Implement SRP-6 according to new PSA Certified Crypto 1.2 PAKE extension.
-
+- Implement PSA Certified Crypto API 1.2 policy changes for key derivation verify 
+  functions:
+  - Changed policy for psa_key_derivation_verify_bytes() and 
+    psa_key_derivation_verify_key(), so that these functions are also permitted when
+    an input key has the PSA_KEY_USAGE_DERIVE usage flag.
+  - Removed special treatment of PSA_ERROR_INVALID_SIGNATURE for key derivation 
+    operations. A verification failure in psa_key_derivation_verify_bytes() and 
+    psa_key_derivation_verify_key() now puts the operation into an error state.
+    
 ### Improvements
 - Add tests for new PAKE extension version 1.2 of PSA Certified Crypto API.
 - Add random injection option in driver wrapper for PAKE tests to enable 
