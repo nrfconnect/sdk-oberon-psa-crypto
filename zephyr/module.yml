@@ -1,0 +1,5 @@
+name: oberon-psa-crypto
+
+build:
+  cmake-ext: True
+  kconfig: Kconfig.oberon_psa_crypto
