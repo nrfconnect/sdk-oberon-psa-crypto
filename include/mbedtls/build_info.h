@@ -145,4 +145,18 @@
 #include "mbedtls/config_psa.h"
 #endif
 
+/* NCS PATCH 71 START */
+
+#include "mbedtls/config_adjust_legacy_crypto.h"
+
+#include "mbedtls/config_adjust_x509.h"
+
+#include "mbedtls/config_adjust_ssl.h"
+
+/* Make sure all configuration symbols are set before including check_config.h,
+ * even the ones that are calculated programmatically. */
+#include "mbedtls/check_config.h"
+
+/* NCS PATCH 71 END */
+
 #endif /* MBEDTLS_BUILD_INFO_H */
