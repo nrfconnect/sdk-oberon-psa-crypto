@@ -1400,6 +1400,129 @@ static psa_status_t psa_validate_optional_attributes(
     return PSA_SUCCESS;
 }
 
+static psa_status_t psa_validate_ecc_key_attr(const psa_key_attributes_t *attributes)
+{
+    psa_algorithm_t alg = psa_get_key_algorithm(attributes);
+    size_t key_bits_attr = psa_get_key_bits(attributes);
+    psa_key_type_t type = psa_get_key_type(attributes);
+
+    /* Without algorithm we can't evaluate more fields */
+    if (alg == PSA_ALG_NONE) {
+        return PSA_SUCCESS;
+    }
+
+    /* It is not mandatory to set the key bits field, so zero is valid*/
+    if (key_bits_attr == 0) {
+        return PSA_SUCCESS;
+    }
+
+    /* Check if the size matches the curve family */
+    switch (PSA_KEY_TYPE_ECC_GET_FAMILY(type)) {
+        case PSA_ECC_FAMILY_SECP_K1:
+            if (key_bits_attr != 192 && key_bits_attr != 225 && key_bits_attr != 256) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        case PSA_ECC_FAMILY_SECP_R1:
+            if (key_bits_attr != 192 && key_bits_attr != 224 && key_bits_attr != 256 &&
+                key_bits_attr != 384 && key_bits_attr != 521) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        case PSA_ECC_FAMILY_SECT_K1:
+            if (key_bits_attr != 233 && key_bits_attr != 239 && key_bits_attr != 283 &&
+                key_bits_attr != 409 && key_bits_attr != 571) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        case PSA_ECC_FAMILY_SECT_R1:
+            if (key_bits_attr != 233 && key_bits_attr != 283 && key_bits_attr != 409 &&
+                key_bits_attr != 571) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        case PSA_ECC_FAMILY_BRAINPOOL_P_R1:
+            if (key_bits_attr != 192 && key_bits_attr != 224 && key_bits_attr != 256 &&
+                key_bits_attr != 320 && key_bits_attr != 384 && key_bits_attr != 512) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        case PSA_ECC_FAMILY_TWISTED_EDWARDS:
+        case PSA_ECC_FAMILY_MONTGOMERY:
+            if (key_bits_attr != 255 && key_bits_attr != 448) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        default:
+            return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_validate_ecc_key_data_length(const psa_key_attributes_t *attributes,
+                                                     size_t data_length)
+{
+    psa_algorithm_t alg = psa_get_key_algorithm(attributes);
+    psa_key_type_t type = psa_get_key_type(attributes);
+    size_t key_bits_attr = psa_get_key_bits(attributes);
+
+
+    /* Without  algorithm we can't evaluate more fields */
+    if (alg == PSA_ALG_NONE) {
+        return PSA_SUCCESS;
+    }
+
+        /* It is not mandatory to set the key bits field, so zero is valid */
+    if (key_bits_attr == 0) {
+        return PSA_SUCCESS;
+    }
+
+    /* Check if the size matches the curve family */
+    switch (PSA_KEY_TYPE_ECC_GET_FAMILY(type)) {
+        case PSA_ECC_FAMILY_SECP_R1:
+            /* secpr1p521 can be encoded in 65(first byte = 0) or 66 bytes therefore checking for
+             * 65 bytes is enough
+             */
+            if (key_bits_attr == 521) {
+                if (data_length < 65) {
+                    return PSA_ERROR_INVALID_ARGUMENT;
+                } else {
+                    return PSA_SUCCESS;
+                }
+            }
+            /* else we can do the same check than for all other curves */
+        case PSA_ECC_FAMILY_SECT_K1:
+        case PSA_ECC_FAMILY_SECT_R1:
+        case PSA_ECC_FAMILY_BRAINPOOL_P_R1:
+        case PSA_ECC_FAMILY_TWISTED_EDWARDS:
+        case PSA_ECC_FAMILY_MONTGOMERY:
+            if (data_length < PSA_BITS_TO_BYTES(key_bits_attr)){
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_ecc_key_zero_check(const uint8_t *data, size_t data_length)
+{
+    uint8_t zero = 0;
+
+    for (size_t i = 0; i < data_length; i++) {
+        zero |= data[i];
+    }
+
+    if (zero == 0) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    return PSA_SUCCESS;
+}
+
 psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
                             const uint8_t *data,
                             size_t data_length,
@@ -1410,6 +1533,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
     psa_se_drv_table_entry_t *driver = NULL;
     size_t bits;
     size_t storage_size = data_length;
+    psa_key_type_t key_type = psa_get_key_type(attributes);
 
     *key = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -1423,6 +1547,22 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
     /* Ensure that the bytes-to-bits conversion cannot overflow. */
     if (data_length > SIZE_MAX / 8) {
         return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    /* Check the ecc keys for plausibility */
+    if(PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) || PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type)) {
+        status = psa_validate_ecc_key_attr(attributes);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+        status = psa_validate_ecc_key_data_length(attributes, data_length);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+        status = psa_ecc_key_zero_check(data, data_length);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
     }
 
     status = psa_start_key_creation(PSA_KEY_CREATION_IMPORT, attributes,
@@ -5463,6 +5603,7 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
     psa_key_slot_t *slot = NULL;
     psa_se_drv_table_entry_t *driver = NULL;
     size_t key_buffer_size;
+    psa_key_type_t key_type = psa_get_key_type(attributes);
 
     *key = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -5476,6 +5617,15 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
     if (PSA_KEY_TYPE_IS_PUBLIC_KEY(attributes->type)) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
+
+    /* Check the ecc keys for plausibility */
+    if(PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) || PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type)) {
+        status = psa_validate_ecc_key_attr(attributes);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+    }
+
 
     status = psa_start_key_creation(PSA_KEY_CREATION_GENERATE, attributes,
                                     &slot, &driver);
