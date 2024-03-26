@@ -730,7 +730,7 @@ static psa_status_t psa_pake_get_implicit_key(  // !!OM
     psa_key_derivation_operation_t *output)
 {
     psa_status_t status;
-    psa_key_id_t key = 0;
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);

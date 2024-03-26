@@ -4917,7 +4917,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
 exit:
     if (status != PSA_SUCCESS) {
         psa_fail_key_creation(slot, driver);
-        *key = 0;
+        *key = MBEDTLS_SVC_KEY_ID_INIT;
     }
 
     psa_pake_abort(operation);

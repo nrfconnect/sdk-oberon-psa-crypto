@@ -1,8 +1,20 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.2.3
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.3>
+26-Mar-2024 (79d5e26)
+
+Oberon crypto software drivers require _ocrypto_ version 3.5.x.
+
+### Improvements
+- Add ability to identify Oberon PSA Crypto implementation during build.
+- Use MBEDTLS_SVC_KEY_ID_INIT instead of 0 for key initialization.
+- Update PSA Crypto API version to 1.2.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.2.2
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.2>
-
 5-Mar-2024 (75c7949)
 
 Oberon crypto software drivers require _ocrypto_ version 3.5.x.
@@ -19,7 +31,7 @@ Oberon crypto software drivers require _ocrypto_ version 3.5.x.
   - Removed special treatment of PSA_ERROR_INVALID_SIGNATURE for key derivation 
     operations. A verification failure in psa_key_derivation_verify_bytes() and 
     psa_key_derivation_verify_key() now puts the operation into an error state.
-    
+
 ### Improvements
 - Add tests for new PAKE extension version 1.2 of PSA Certified Crypto API.
 - Add random injection option in driver wrapper for PAKE tests to enable 
@@ -32,8 +44,7 @@ Oberon crypto software drivers require _ocrypto_ version 3.5.x.
 --------------------------------------------------------------------------------
 
 ## Oberon PSA Crypto 1.2.1
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.1
-
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.1
 25-Jan-2024 (7462663)
 
 Oberon crypto software drivers require _ocrypto_ version 3.5.x.
@@ -56,8 +67,7 @@ Oberon crypto software drivers require _ocrypto_ version 3.5.x.
 --------------------------------------------------------------------------------
 
 ## Oberon PSA Crypto 1.2.0
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.0>
-
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.0>
 2-Nov-2023 (9ba9ec6)
 
 Oberon crypto software drivers require _ocrypto_ version 3.5.x.
@@ -108,8 +118,7 @@ Oberon crypto software drivers require _ocrypto_ version 3.5.x.
 --------------------------------------------------------------------------------
 
 ## Oberon PSA Crypto 1.1.1
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.1.1>
-
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.1.1>
 26-Sep-2023 (d3c90ec)
 
 Oberon crypto software drivers require _ocrypto_ version 3.4.x.
@@ -131,8 +140,7 @@ Oberon crypto software drivers require _ocrypto_ version 3.4.x.
 --------------------------------------------------------------------------------
 
 ## Oberon PSA Crypto 1.1.0
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.1.0>
-
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.1.0>
 3-Aug-2023 (33b95ee)
 
 _Oberon drivers_ require _ocrypto_ version 3.3.x.
@@ -147,8 +155,7 @@ _Oberon drivers_ require _ocrypto_ version 3.3.x.
 --------------------------------------------------------------------------------
 
 ## Oberon PSA Crypto 1.0.8
-https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.0.8>
-
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.0.8>
 20-Jul-2023 (c8ad02f)
 
 Oberon crypto software drivers require _ocrypto_ version 3.3.x.

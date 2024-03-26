@@ -36,6 +36,11 @@
 extern "C" {
 #endif
 
+/* Identification of Oberon PSA Crypto Core */
+#ifndef PSA_CRYPTO_CORE_OBERON
+#define PSA_CRYPTO_CORE_OBERON
+#endif
+
 /* UID for secure storage seed */
 #define PSA_CRYPTO_ITS_RANDOM_SEED_UID 0xFFFFFF52
 

@@ -63,7 +63,7 @@ extern "C" {
 /**
  * The minor version of this implementation of the PSA Crypto API
  */
-#define PSA_CRYPTO_API_VERSION_MINOR 1
+#define PSA_CRYPTO_API_VERSION_MINOR 2
 
 /**@}*/
 
