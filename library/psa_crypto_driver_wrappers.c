@@ -2098,4 +2098,15 @@ psa_status_t psa_driver_wrapper_free_random(
     return PSA_SUCCESS;
 }
 
+psa_status_t psa_driver_wrapper_destroy_builtin_key(const psa_key_attributes_t *attributes)
+{
+    psa_key_location_t location = PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime);
+
+    switch (location) {
+    /* Add cases for drivers here */
+    }
+
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
 #endif /* MBEDTLS_PSA_CRYPTO_C */
