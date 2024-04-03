@@ -142,6 +142,9 @@ psa_status_t psa_driver_wrapper_derive_key(
     const uint8_t *input, size_t input_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length);
 
+psa_status_t psa_driver_wrapper_destroy_builtin_key(
+    const psa_key_attributes_t *attributes);
+
 /*
  * Cipher functions
  */
