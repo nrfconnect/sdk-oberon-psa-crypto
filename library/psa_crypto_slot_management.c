@@ -451,7 +451,7 @@ psa_status_t psa_validate_key_persistence(psa_key_lifetime_t lifetime)
         return PSA_SUCCESS;
     } else {
         /* Persistent keys require storage support */
-#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
+#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) || defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
         if (PSA_KEY_LIFETIME_IS_READ_ONLY(lifetime)) {
             return PSA_ERROR_INVALID_ARGUMENT;
         } else {

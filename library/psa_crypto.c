@@ -759,6 +759,13 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) */
 
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    if (psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))) {
+        psa_key_attributes_t attributes = {.core = slot->attr};
+        psa_driver_wrapper_destroy_builtin_key(&attributes);
+    }
+#endif /* defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) */
+
 exit:
     status = psa_wipe_key_slot(slot);
     /* Prioritize CORRUPTION_DETECTED from wiping over a storage error */
@@ -1035,7 +1042,7 @@ static psa_status_t psa_validate_key_attributes(
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     } else {
-        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 0)) {
+        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 1)) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     }
@@ -1181,8 +1188,13 @@ static psa_status_t psa_finish_key_creation(
     (void) slot;
     (void) driver;
 
+
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    && !psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))
+#endif
+    ) {
         /* Key material is saved in export representation in the slot, so
          * just pass the slot buffer for storage. */
         status = psa_save_persistent_key(&slot->attr,
