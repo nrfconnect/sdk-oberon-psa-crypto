@@ -883,7 +883,11 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
     }
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    && !psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))
+#endif
+    ) {
         /* Destroy the copy of the persistent key from storage.
          * The slot will still hold a copy of the key until the last reader
          * unregisters. */
@@ -894,6 +898,15 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
 
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) */
+
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    if (psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))) {
+        status = psa_driver_wrapper_destroy_builtin_key(&slot->attr);
+        if (overall_status == PSA_SUCCESS) {
+            overall_status = status;
+        }
+    }
+#endif /* defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) */
 
 exit:
     /* Unregister from reading the slot. If we are the last active reader
@@ -1166,7 +1179,7 @@ static psa_status_t psa_validate_key_attributes(
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     } else {
-        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 0)) {
+        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 1)) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     }
@@ -1317,7 +1330,11 @@ static psa_status_t psa_finish_key_creation(
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    && !psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))
+#endif
+    ) {
         /* Key material is saved in export representation in the slot, so
          * just pass the slot buffer for storage. */
         status = psa_save_persistent_key(&slot->attr,
@@ -4963,7 +4980,6 @@ psa_status_t psa_key_derivation_input_key(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot = NULL;
-    psa_key_attributes_t attributes;
 
     status = psa_get_and_lock_key_slot_with_policy(
         key, &slot, 0, operation->alg);
@@ -4985,12 +5001,8 @@ psa_status_t psa_key_derivation_input_key(
         operation->can_output_key = 1;
     }
 
-    attributes = (psa_key_attributes_t) {
-        .core = slot->attr
-    };
-
     status = psa_key_derivation_input_internal(operation,
-                                               step, &attributes,
+                                               step, &slot->attr,
                                                slot->key.data,
                                                slot->key.bytes);
 
