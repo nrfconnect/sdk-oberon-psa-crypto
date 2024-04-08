@@ -4122,6 +4122,7 @@ psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation,
  * that the input was passed as a buffer rather than via a key object.
  */
 static int psa_key_derivation_check_input_type(
+    psa_algorithm_t alg,
     psa_key_derivation_step_t step,
     psa_key_type_t key_type)
 {
@@ -4137,6 +4138,9 @@ static int psa_key_derivation_check_input_type(
                 return PSA_SUCCESS;
             }
             if (key_type == PSA_KEY_TYPE_NONE) {
+                return PSA_SUCCESS;
+            }
+            if (key_type == PSA_KEY_TYPE_AES && alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
                 return PSA_SUCCESS;
             }
             break;
@@ -4164,7 +4168,7 @@ static int psa_key_derivation_check_input_type(
 static psa_status_t psa_key_derivation_input_internal(
     psa_key_derivation_operation_t *operation,
     psa_key_derivation_step_t step,
-    psa_key_type_t key_type,
+    psa_key_attributes_t *attributes,
     const uint8_t *data,
     size_t data_length)
 {
@@ -4172,12 +4176,19 @@ static psa_status_t psa_key_derivation_input_internal(
     status = psa_key_derivation_check_state(operation, step);
     if (status != PSA_SUCCESS) goto exit;
 
-    status = psa_key_derivation_check_input_type(step, key_type);
+    status = psa_key_derivation_check_input_type(operation->alg, step, attributes ? attributes.type : PSA_KEY_TYPE_NONE);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
 
-    status = psa_driver_wrapper_key_derivation_input_bytes(operation, step, data, data_length);
+    if (attributes)
+    {
+        status = psa_driver_wrapper_key_derivation_input_key(operation, step, attributes, data, data_length);
+    }
+    else {
+        status = psa_driver_wrapper_key_derivation_input_bytes(operation, step, data, data_length);
+    }
+
     if (status != PSA_SUCCESS) goto exit;
 
     return PSA_SUCCESS;
@@ -4194,7 +4205,7 @@ psa_status_t psa_key_derivation_input_bytes(
     size_t data_length)
 {
     return psa_key_derivation_input_internal(operation, step,
-                                             PSA_KEY_TYPE_NONE,
+                                             NULL,
                                              data, data_length);
 }
 
@@ -4213,7 +4224,7 @@ psa_status_t psa_key_derivation_input_integer(
     status = psa_key_derivation_check_state(operation, step);
     if (status != PSA_SUCCESS) goto exit;
 
-    status = psa_key_derivation_check_input_type(step, PSA_KEY_TYPE_NONE);
+    status = psa_key_derivation_check_input_type(operation->alg, step, PSA_KEY_TYPE_NONE);
     if (status != PSA_SUCCESS) goto exit;
 
     if (PSA_ALG_IS_PBKDF2(operation->alg)) {
@@ -4245,8 +4256,9 @@ psa_status_t psa_key_derivation_input_key(
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot = NULL;
+    psa_key_attributes_t attributes;
 
-    status = psa_get_and_lock_transparent_key_slot_with_policy(
+    status = psa_get_and_lock_key_slot_with_policy(
         key, &slot, 0, operation->alg);
     if (status != PSA_SUCCESS) goto exit;
 
@@ -4266,8 +4278,12 @@ psa_status_t psa_key_derivation_input_key(
         operation->can_output_key = 1;
     }
 
+    attributes = (psa_key_attributes_t) {
+        .core = slot->attr
+    };
+
     status = psa_key_derivation_input_internal(operation,
-                                               step, slot->attr.type,
+                                               step, &attributes,
                                                slot->key.data,
                                                slot->key.bytes);
 
@@ -4319,7 +4335,7 @@ static psa_status_t psa_key_agreement_internal(psa_key_derivation_operation_t *o
      * the shared secret. A shared secret is permitted wherever a key
      * of type DERIVE is permitted. */
     status = psa_key_derivation_input_internal(operation, step,
-                                               PSA_KEY_TYPE_DERIVE,
+                                               NULL,
                                                shared_secret,
                                                shared_secret_length);
 exit:
