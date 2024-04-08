@@ -23,6 +23,7 @@
 
 #include "psa/crypto.h"
 #include "psa/crypto_driver_common.h"
+#include "psa/crypto_types.h"
 
 /*
  * Initialization and termination functions
@@ -430,11 +431,17 @@ psa_status_t psa_driver_wrapper_key_derivation_input_bytes(
     psa_key_derivation_step_t step,
     const uint8_t *data, size_t data_length);
 
+psa_status_t psa_driver_wrapper_key_derivation_input_key(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    psa_key_attributes_t *attributes,
+    const uint8_t *data, size_t data_length);
+
 psa_status_t psa_driver_wrapper_key_derivation_input_integer(
     psa_key_derivation_operation_t *operation,
     psa_key_derivation_step_t step,
     uint64_t value);
-    
+
 psa_status_t psa_driver_wrapper_key_derivation_output_bytes(
     psa_key_derivation_operation_t *operation,
     uint8_t *output, size_t output_length);
