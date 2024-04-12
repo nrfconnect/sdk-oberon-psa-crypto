@@ -26,6 +26,17 @@
 #ifndef MBEDTLS_BUILD_INFO_H
 #define MBEDTLS_BUILD_INFO_H
 
+/* This covers a corner case which needs PSA and Legacy crypto APIs at the same time */
+#ifdef CONFIG_NRF_SECURITY_LEGACY_AND_PSA
+#define MBEDTLS_PSA_CRYPTO_DRIVERS    // Needed for the driver wrappers
+#define MBEDTLS_PSA_CRYPTO_STORAGE_C  // Needed for supporting ITS
+#define PSA_ACCEL_GENERATE_RANDOM     // Kconfigs for PSA_NEED_* not used so manually enable it RNG
+#define PSA_ACCEL_GET_ENTROPY
+#define PSA_NEED_CC3XX_CTR_DRBG_DRIVER
+#include "oberon_config.h"            // The PSA_NEED symbols used from this file when not using Kconfigs
+#endif
+
+
 /*
  * This set of compile-time defines can be used to determine the version number
  * of the Mbed TLS library used. Run-time variables for the same can be found in
