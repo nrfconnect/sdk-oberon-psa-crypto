@@ -121,6 +121,11 @@ int psa_is_key_present_in_storage(const mbedtls_svc_key_id_t key)
  *
  * \retval #PSA_SUCCESS \emptydescription
  * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DOES_NOT_EXIST \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_NOT_PERMITTED \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
  * \retval #PSA_ERROR_ALREADY_EXISTS \emptydescription
  * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
  * \retval #PSA_ERROR_DATA_INVALID \emptydescription
@@ -139,7 +144,7 @@ static psa_status_t psa_crypto_storage_store(const mbedtls_svc_key_id_t key,
 
     status = psa_its_set(data_identifier, (uint32_t) data_length, data, 0);
     if (status != PSA_SUCCESS) {
-        return PSA_ERROR_DATA_INVALID;
+        return status;
     }
 
     status = psa_its_get_info(data_identifier, &data_identifier_info);
