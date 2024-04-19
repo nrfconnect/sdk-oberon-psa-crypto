@@ -678,7 +678,7 @@ psa_status_t mbedtls_psa_external_get_random(
  * This value is part of the library's ABI since changing it would invalidate
  * the values of built-in key identifiers in applications.
  */
-#define MBEDTLS_PSA_KEY_ID_BUILTIN_MIN          ((psa_key_id_t) 0x7fff0000)
+#define MBEDTLS_PSA_KEY_ID_BUILTIN_MIN          ((psa_key_id_t) 0x40000000)
 
 /** The maximum value for a key identifier that is built into the
  * implementation.
