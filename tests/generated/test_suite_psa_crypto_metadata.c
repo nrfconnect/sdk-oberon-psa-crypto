@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -1882,7 +1883,7 @@ int dep_check(int dep_id)
             break;
         case 14:
             {
-#if defined(MBEDTLS_CIPHER_C)
+#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1891,7 +1892,7 @@ int dep_check(int dep_id)
             break;
         case 15:
             {
-#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#if defined(PSA_WANT_KEY_TYPE_DES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1900,7 +1901,7 @@ int dep_check(int dep_id)
             break;
         case 16:
             {
-#if defined(PSA_WANT_KEY_TYPE_DES)
+#if defined(PSA_WANT_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1909,7 +1910,7 @@ int dep_check(int dep_id)
             break;
         case 17:
             {
-#if defined(PSA_WANT_ALG_CMAC)
+#if defined(PSA_WANT_ALG_STREAM_CIPHER)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1918,7 +1919,7 @@ int dep_check(int dep_id)
             break;
         case 18:
             {
-#if defined(PSA_WANT_ALG_STREAM_CIPHER)
+#if defined(PSA_WANT_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1927,7 +1928,7 @@ int dep_check(int dep_id)
             break;
         case 19:
             {
-#if defined(PSA_WANT_ALG_CTR)
+#if defined(PSA_WANT_ALG_CFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1936,7 +1937,7 @@ int dep_check(int dep_id)
             break;
         case 20:
             {
-#if defined(PSA_WANT_ALG_CFB)
+#if defined(PSA_WANT_ALG_OFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1945,7 +1946,7 @@ int dep_check(int dep_id)
             break;
         case 21:
             {
-#if defined(PSA_WANT_ALG_OFB)
+#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1954,7 +1955,7 @@ int dep_check(int dep_id)
             break;
         case 22:
             {
-#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
+#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1963,7 +1964,7 @@ int dep_check(int dep_id)
             break;
         case 23:
             {
-#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
+#if defined(PSA_WANT_ALG_CBC_PKCS7)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1972,7 +1973,7 @@ int dep_check(int dep_id)
             break;
         case 24:
             {
-#if defined(PSA_WANT_ALG_CBC_PKCS7)
+#if defined(PSA_WANT_ALG_XTS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1981,7 +1982,7 @@ int dep_check(int dep_id)
             break;
         case 25:
             {
-#if defined(PSA_WANT_ALG_XTS)
+#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1990,7 +1991,7 @@ int dep_check(int dep_id)
             break;
         case 26:
             {
-#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+#if defined(PSA_WANT_ALG_CCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1999,7 +2000,7 @@ int dep_check(int dep_id)
             break;
         case 27:
             {
-#if defined(PSA_WANT_ALG_CCM)
+#if defined(PSA_WANT_KEY_TYPE_ARIA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2008,7 +2009,7 @@ int dep_check(int dep_id)
             break;
         case 28:
             {
-#if defined(PSA_WANT_KEY_TYPE_ARIA)
+#if defined(PSA_WANT_KEY_TYPE_CAMELLIA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2017,7 +2018,7 @@ int dep_check(int dep_id)
             break;
         case 29:
             {
-#if defined(PSA_WANT_KEY_TYPE_CAMELLIA)
+#if defined(PSA_WANT_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2026,7 +2027,7 @@ int dep_check(int dep_id)
             break;
         case 30:
             {
-#if defined(PSA_WANT_ALG_GCM)
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2035,7 +2036,7 @@ int dep_check(int dep_id)
             break;
         case 31:
             {
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2044,7 +2045,7 @@ int dep_check(int dep_id)
             break;
         case 32:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+#if defined(PSA_WANT_ALG_RSA_PSS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2053,7 +2054,7 @@ int dep_check(int dep_id)
             break;
         case 33:
             {
-#if defined(PSA_WANT_ALG_RSA_PSS)
+#if defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2062,7 +2063,7 @@ int dep_check(int dep_id)
             break;
         case 34:
             {
-#if defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2071,7 +2072,7 @@ int dep_check(int dep_id)
             break;
         case 35:
             {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if defined(PSA_WANT_ALG_EDDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2080,7 +2081,7 @@ int dep_check(int dep_id)
             break;
         case 36:
             {
-#if defined(PSA_WANT_ALG_EDDSA)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2089,7 +2090,7 @@ int dep_check(int dep_id)
             break;
         case 37:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
+#if defined(PSA_WANT_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2098,7 +2099,7 @@ int dep_check(int dep_id)
             break;
         case 38:
             {
-#if defined(PSA_WANT_ALG_RSA_OAEP)
+#if defined(PSA_WANT_ALG_HKDF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2107,7 +2108,7 @@ int dep_check(int dep_id)
             break;
         case 39:
             {
-#if defined(PSA_WANT_ALG_HKDF)
+#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2116,7 +2117,7 @@ int dep_check(int dep_id)
             break;
         case 40:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
+#if defined(PSA_WANT_ALG_HKDF_EXPAND)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2125,7 +2126,7 @@ int dep_check(int dep_id)
             break;
         case 41:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXPAND)
+#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2134,7 +2135,7 @@ int dep_check(int dep_id)
             break;
         case 42:
             {
-#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
+#if defined(PSA_WANT_ALG_TLS12_PRF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2143,7 +2144,7 @@ int dep_check(int dep_id)
             break;
         case 43:
             {
-#if defined(PSA_WANT_ALG_TLS12_PRF)
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2152,7 +2153,7 @@ int dep_check(int dep_id)
             break;
         case 44:
             {
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+#if defined(PSA_WANT_ALG_FFDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2161,7 +2162,7 @@ int dep_check(int dep_id)
             break;
         case 45:
             {
-#if defined(PSA_WANT_ALG_FFDH)
+#if defined(PSA_WANT_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2170,7 +2171,7 @@ int dep_check(int dep_id)
             break;
         case 46:
             {
-#if defined(PSA_WANT_ALG_ECDH)
+#if defined(PSA_WANT_KEY_TYPE_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2179,7 +2180,7 @@ int dep_check(int dep_id)
             break;
         case 47:
             {
-#if defined(PSA_WANT_KEY_TYPE_HMAC)
+#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2188,7 +2189,7 @@ int dep_check(int dep_id)
             break;
         case 48:
             {
-#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2197,7 +2198,7 @@ int dep_check(int dep_id)
             break;
         case 49:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2206,15 +2207,6 @@ int dep_check(int dep_id)
             break;
         case 50:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 51:
-            {
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
@@ -2222,7 +2214,7 @@ int dep_check(int dep_id)
 #endif
             }
             break;
-        case 52:
+        case 51:
             {
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
@@ -2828,14 +2820,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -2858,7 +2848,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -2867,8 +2857,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -2888,6 +2879,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -3027,7 +3062,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -3103,7 +3138,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -3128,30 +3163,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -3184,6 +3222,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -3220,6 +3262,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

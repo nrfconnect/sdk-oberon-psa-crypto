@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -180,8 +181,6 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #include "psa_crypto_slot_management.h"
 #include "psa_crypto_storage.h"
 
-#include "mbedtls/md.h"
-
 #define PSA_KEY_STORAGE_MAGIC_HEADER "PSA\0KEY"
 #define PSA_KEY_STORAGE_MAGIC_HEADER_LENGTH (sizeof(PSA_KEY_STORAGE_MAGIC_HEADER))
 
@@ -199,7 +198,7 @@ typedef struct {
     uint8_t key_data[];
 } psa_persistent_key_storage_format;
 
-#line 47 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 45 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_format_storage_data_check(data_t *key_data,
                                data_t *expected_file_data,
                                int key_lifetime, int key_type, int key_bits,
@@ -219,7 +218,7 @@ void test_format_storage_data_check(data_t *key_data,
 
     TEST_CALLOC(file_data, file_data_length);
     psa_format_key_data_for_storage(key_data->x, key_data->len,
-                                    &attributes.core,
+                                    &attributes,
                                     file_data);
 
     TEST_MEMORY_COMPARE(expected_file_data->x, expected_file_data->len,
@@ -236,7 +235,7 @@ void test_format_storage_data_check_wrapper( void ** params )
 
     test_format_storage_data_check( &data0, &data2, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
-#line 78 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 76 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_parse_storage_data_check(data_t *file_data,
                               data_t *expected_key_data,
                               int expected_key_lifetime,
@@ -254,7 +253,7 @@ void test_parse_storage_data_check(data_t *file_data,
 
     status = psa_parse_key_data_from_storage(file_data->x, file_data->len,
                                              &key_data, &key_data_length,
-                                             &attributes.core);
+                                             &attributes);
 
     TEST_EQUAL(status, expected_status);
     if (status != PSA_SUCCESS) {
@@ -287,7 +286,7 @@ void test_parse_storage_data_check_wrapper( void ** params )
 
     test_parse_storage_data_check( &data0, &data2, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 123 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 121 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_save_large_persistent_key(int data_length_arg, int expected_status)
 {
     mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 42);
@@ -320,7 +319,7 @@ void test_save_large_persistent_key_wrapper( void ** params )
 
     test_save_large_persistent_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 152 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 150 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
                             int first_type_arg, data_t *first_data,
                             int second_type_arg, data_t *second_data)
@@ -377,7 +376,7 @@ void test_persistent_key_destroy_wrapper( void ** params )
 
     test_persistent_key_destroy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, &data7 );
 }
-#line 203 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 201 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_persistent_key_import(int owner_id_arg, int key_id_arg, int type_arg,
                            data_t *data, int restart, int expected_status)
 {
@@ -437,7 +436,7 @@ void test_persistent_key_import_wrapper( void ** params )
 
     test_persistent_key_import( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 258 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 256 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_import_export_persistent_key(data_t *data, int type_arg,
                                   int expected_bits,
                                   int restart, int key_not_exist)
@@ -514,7 +513,7 @@ void test_import_export_persistent_key_wrapper( void ** params )
 
     test_import_export_persistent_key( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 330 "tests/suites/test_suite_psa_crypto_persistent_key.function"
+#line 328 "tests/suites/test_suite_psa_crypto_persistent_key.function"
 void test_destroy_nonexistent(int id_arg, int expected_status_arg)
 {
     mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(1, id_arg);
@@ -735,7 +734,7 @@ int dep_check(int dep_id)
             break;
         case 3:
             {
-#if defined(MBEDTLS_PK_C)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -744,15 +743,6 @@ int dep_check(int dep_id)
             break;
         case 4:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 5:
-            {
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
@@ -760,7 +750,7 @@ int dep_check(int dep_id)
 #endif
             }
             break;
-        case 6:
+        case 5:
             {
 #if defined(PSA_WANT_KEY_TYPE_AES)
                 ret = DEPENDENCY_SUPPORTED;
@@ -1296,14 +1286,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -1326,7 +1314,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -1335,8 +1323,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -1356,6 +1345,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -1495,7 +1528,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -1571,7 +1604,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -1596,30 +1629,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -1652,6 +1688,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -1688,6 +1728,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

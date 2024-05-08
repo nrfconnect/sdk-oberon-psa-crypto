@@ -208,6 +208,7 @@ static psa_status_t oberon_parse_rsa_key(
 
     if (index != seq_end) return PSA_ERROR_INVALID_ARGUMENT;
     info->data_size = index;
+    if (index != key_length) return PSA_ERROR_INVALID_ARGUMENT; // trailing garbage
     return PSA_SUCCESS;
 }
 

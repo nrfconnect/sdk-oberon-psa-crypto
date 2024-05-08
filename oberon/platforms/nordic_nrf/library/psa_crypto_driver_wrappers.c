@@ -155,7 +155,7 @@ psa_status_t psa_driver_wrapper_sign_message(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -212,7 +212,7 @@ psa_status_t psa_driver_wrapper_verify_message(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -268,7 +268,7 @@ psa_status_t psa_driver_wrapper_sign_hash(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -324,7 +324,7 @@ psa_status_t psa_driver_wrapper_verify_hash(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -387,10 +387,10 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size_from_key_data(
     const psa_key_attributes_t *attributes,
     const uint8_t *data, size_t data_length, size_t *key_buffer_size)
 {
-    psa_key_type_t key_type = attributes->core.type;
+    psa_key_type_t key_type = attributes->type;
 
     *key_buffer_size = 0;
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         *key_buffer_size = demo_opaque_size_function(
@@ -425,11 +425,11 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size(
     const psa_key_attributes_t *attributes,
     size_t *key_buffer_size)
 {
-    psa_key_type_t key_type = attributes->core.type;
-    size_t key_bits = attributes->core.bits;
+    psa_key_type_t key_type = attributes->type;
+    size_t key_bits = attributes->bits;
 
     *key_buffer_size = 0;
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         *key_buffer_size = demo_opaque_size_function(
@@ -456,7 +456,7 @@ psa_status_t psa_driver_wrapper_generate_key(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -500,7 +500,7 @@ psa_status_t psa_driver_wrapper_import_key(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -542,7 +542,7 @@ psa_status_t psa_driver_wrapper_export_key(
     uint8_t *data, size_t data_size, size_t *data_length)
 
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -578,7 +578,7 @@ psa_status_t psa_driver_wrapper_export_public_key(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -629,7 +629,7 @@ psa_status_t psa_driver_wrapper_get_builtin_key(
     psa_key_attributes_t *attributes,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
         return tfm_builtin_key_loader_get_builtin_key(
@@ -653,7 +653,7 @@ psa_status_t psa_driver_wrapper_copy_key(
     uint8_t *target_key_buffer, size_t target_key_buffer_size,
     size_t *target_key_buffer_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_copy_key(
@@ -676,7 +676,7 @@ psa_status_t psa_driver_wrapper_derive_key(
     const uint8_t *input, size_t input_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER
@@ -712,7 +712,7 @@ psa_status_t psa_driver_wrapper_cipher_encrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -783,7 +783,7 @@ psa_status_t psa_driver_wrapper_cipher_decrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -847,7 +847,7 @@ psa_status_t psa_driver_wrapper_cipher_encrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -909,7 +909,7 @@ psa_status_t psa_driver_wrapper_cipher_decrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1332,7 +1332,7 @@ psa_status_t psa_driver_wrapper_aead_encrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1391,7 +1391,7 @@ psa_status_t psa_driver_wrapper_aead_decrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1447,7 +1447,7 @@ psa_status_t psa_driver_wrapper_aead_encrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1492,7 +1492,7 @@ psa_status_t psa_driver_wrapper_aead_decrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1744,7 +1744,7 @@ psa_status_t psa_driver_wrapper_asymmetric_encrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1798,7 +1798,7 @@ psa_status_t psa_driver_wrapper_asymmetric_decrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1854,7 +1854,7 @@ psa_status_t psa_driver_wrapper_mac_compute(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1902,7 +1902,7 @@ psa_status_t psa_driver_wrapper_mac_sign_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -1947,7 +1947,7 @@ psa_status_t psa_driver_wrapper_mac_verify_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
     case TFM_BUILTIN_KEY_LOADER_KEY_LOCATION:
@@ -2211,7 +2211,7 @@ psa_status_t psa_driver_wrapper_key_agreement(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_CC3XX_KEY_AGREEMENT_DRIVER
@@ -2257,7 +2257,7 @@ psa_status_t psa_driver_wrapper_pake_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_PAKE_DRIVER

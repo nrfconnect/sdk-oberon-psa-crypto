@@ -434,7 +434,7 @@ psa_status_t psa_driver_wrapper_key_derivation_input_integer(
     psa_key_derivation_operation_t *operation,
     psa_key_derivation_step_t step,
     uint64_t value);
-    
+
 psa_status_t psa_driver_wrapper_key_derivation_output_bytes(
     psa_key_derivation_operation_t *operation,
     uint8_t *output, size_t output_length);

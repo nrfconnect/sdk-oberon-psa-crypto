@@ -42,19 +42,19 @@ the _Mbed TLS_ README located in its `programs` directory:
 
 _Mbed TLS_ contains the SSL program examples and is required to run these samples
 on top of _Oberon PSA Crypto_. Download and unzip _Mbed TLS_ from the archive at
-<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.5.0>
+<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.0>
 or clone_Mbed TLS_ and
-check out version 3.5.0 as follows:
+check out version 3.6.0 as follows:
 
     cd path/to/new/folder
     git clone https://github.com/Mbed-TLS/mbedtls.git
-    git checkout v3.5.0
+    git checkout v3.6.0
 
 ### Build with CMake
 
-Provide the path to _ocrypto 3.5.x_ via _-DOCRYPTO_ROOT=path/to/ocrypto_.
+Provide the path to _ocrypto 3.6.x_ via _-DOCRYPTO_ROOT=path/to/ocrypto_.
 
-Provide the path to _Mbed TLS_ 3.5.0 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
+Provide the path to _Mbed TLS_ 3.6.0 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
 
 Build the source in a separate directory `build` from the command line:
 
@@ -64,7 +64,7 @@ Build the source in a separate directory `build` from the command line:
 
 ### Run the SSL example
 
-_Note: In Mbed TLS 3.5.0, `ssl_server2` and `ssl_client2` fail with the default 
+_Note: In Mbed TLS 3.6.0, `ssl_server2` and `ssl_client2` fail with the default 
 settings, hence they do not work in _Oberon PSA Crypto_ either. This will be 
 fixed in a future version when the TLS protocol implementation is more stable._
 
@@ -106,7 +106,7 @@ Run _PSA_ and SSL tests from same `build` directory:
 
 In existing projects that use the TLS protocol implementation from _Mbed TLS_,
 the crypto implementation can be replaced with the one from _Oberon PSA Crypto_.
-The migration requires projects building on _Mbed TLS_ 3.5.0.
+The migration requires projects building on _Mbed TLS_ 3.6.0.
 
 Configuration options are still limited and there are still build dependencies
 to some of the _Mbed TLS_ crypto code files even though the code is not used;
@@ -116,15 +116,11 @@ To use _Oberon PSA Crypto_ in an existing TLS project, perform the following
 steps:
 
 1. Add _Oberon PSA Crypto_ repo to your project in its own directory.
-2. In your project build files, replace the following list of code files from
+2. In your project build files, replace code files from
    `mbedtls` with the path to the equivalent files in _Oberon PSA Crypto_:
-    * `library/platform_util.c`
-    * `library/psa_crypto_client.c`
-    * `library/psa_crypto_driver_wrappers.c`
-    * `programs/ssl/library/psa_crypto_extra.c`
+    * `library/*.c`
     * `programs/ssl/library/md.c`
     * `programs/ssl/library/psa_util.c`
-    * `xxxxxxxxxxxxx.c`
 
 3. Add the _Oberon PSA Crypto_ include paths in the following order and make 
    sure they are searched before the equivalent include paths in `mbedtls`:
@@ -132,7 +128,6 @@ steps:
     * `oberon-psa-crypto/include`
     * `oberon-psa-crypto/library`
     * `oberon/drivers`
-    * `oberon/platform/demo/include`
     * `oberon/platform/demo/drivers`
 4. Add the _ocrypto_ include paths, e.g., for the `Generic` platform:
     * `include`
@@ -142,8 +137,8 @@ steps:
     * `oberon/platforms/demo/drivers/demo_entropy.c`
 6. Add _Oberon PSA Crypto_ sources to your build:
     * `oberon/drivers/oberon_aead.c`
-    * `oberon/drivers/oberon_asymmetric_encrypt.c
-    * `oberon/drivers/oberon_asymmetric_signature.c
+    * `oberon/drivers/oberon_asymmetric_encrypt.c`
+    * `oberon/drivers/oberon_asymmetric_signature.c`
     * `oberon/drivers/oberon_cipher.c`
     * `oberon/drivers/oberon_ctr_drbg.c`
     * `oberon/drivers/oberon_ec_keys.c`

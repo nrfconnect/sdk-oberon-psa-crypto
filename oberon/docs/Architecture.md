@@ -1,10 +1,10 @@
 # Architecture
 
 _Oberon PSA Crypto_ implements a refinement of the _PSA Crypto_ architecture,
-which Arm has created initially and has become a de-facto industry standard. This
-document first introduces the fundamental architecture of _PSA Crypto_, followed
-by a description of the variant of this architecture as implemented by _Oberon
-PSA Crypto_.
+which Arm has created initially and has become a de-facto industry standard
+managed by the _PSA Certified_ organization. This document first introduces the
+generic architecture of _PSA Crypto_, followed by a description of the variant
+of this architecture as implemented by _Oberon PSA Crypto_.
 
 ## PSA Crypto Architecture
 
@@ -19,7 +19,8 @@ _Figure 1 - Architecture of PSA Crypto_
 An application calls a _PSA Crypto_ implementation through the _PSA Certified
 Crypto API_. Thanks to the standardization of this API, an application can easily
 switch between different _PSA Crypto_ implementations that have different quality
-attributes.
+attributes. This makes it easier to reuse application code for new versions of a
+product, or across different products in a product line.
 
 For information on how to write application code that calls the _PSA Certified
 Crypto API_, please consult the documentation of the _PSA Certified_
@@ -28,7 +29,8 @@ organization.
 *Note: A protocol stack that uses cryptographic functions is considered part of
 the application and is not discussed separately. _Mbed TLS_ is an example of a
 (TLS) protocol stack that can use the _PSA Certified Crypto API_. Currently,
-_Mbed TLS_ also contains an _implementation_ of _PSA Crypto_.*
+_Mbed TLS_ also contains an _implementation_ of _PSA Crypto_. This is subject to
+change in the next major release of _Mbed TLS_.*
 
 A _PSA Crypto_ implementation may also support the _PSA Crypto Driver API_.
 Through this API, a _PSA Crypto_ implementation can delegate actual cryptographic
@@ -61,7 +63,8 @@ platforms_.*
 Today, inexpensive microcontrollers usually do not provide comprehensive hardware
 crypto accelerators for modern crypto algorithms. Often, they only support AES,
 and only a limited number of AES modes. Therefore, no _hardware drivers_ can be
-provided, and many applications will need a software fallback.
+provided, and many applications will need a software fallback for some or all of
+the cryptographic operations.
 
 _Oberon PSA Crypto_ provides _Oberon drivers_ as a software fallback that is
 footprint- and speed-optimized for inexpensive 32-bit microcontrollers. _Oberon
@@ -87,7 +90,7 @@ Within _Oberon PSA Crypto_, there are two major modules in addition to the
 _Oberon drivers_ that have already been discussed above: the _crypto core_ and
 the _driver wrappers_.
 
-The _crypto core_ provides the _PSA Certified Crypto API_ to applications. It
+The _crypto core_ exposes the _PSA Certified Crypto API_ to applications. It
 performs parameter validation, handles key management, and forwards calls to the
 _driver wrappers_.
 
@@ -107,7 +110,7 @@ architecture:
 _Figure 3 - Detailed Architecture of Oberon PSA Crypto_
 
 In _Figure 3_, the locations of the various APIs are illustrated. The upcalls of
-some _Oberon drivers_ into the _driver wrappers_ will later be discussed.
+some _Oberon drivers_ into the _driver wrappers_ will be discussed later.
 
 Read more about how to configure _Oberon PSA Crypto_ for an application and
 _target platform_, in [Crypto Configuration](Crypto_Configuration.md).

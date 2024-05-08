@@ -187,7 +187,7 @@ static psa_status_t oberon_read_zk_proof(
     uint8_t h[PSA_HASH_MAX_SIZE];
     size_t h_len;
 
-    if (input_length > sizeof op->r) return PSA_ERROR_INVALID_SIGNATURE;
+    if (input_length > sizeof op->r) return PSA_ERROR_INVALID_ARGUMENT;
     if (input_length < sizeof op->r) {
         memset(rp, 0, sizeof op->r - input_length);
         rp += sizeof op->r - input_length;

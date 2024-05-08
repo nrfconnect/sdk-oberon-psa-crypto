@@ -4,19 +4,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef PSA_CRYPTO_H
@@ -131,8 +119,9 @@ static psa_key_attributes_t psa_key_attributes_init(void);
  * value in the structure.
  * The persistent key will be written to storage when the attribute
  * structure is passed to a key creation function such as
- * psa_import_key(), psa_generate_key(),
- * psa_key_derivation_output_key() or psa_copy_key().
+ * psa_import_key(), psa_generate_key(), psa_generate_key_ext(),
+ * psa_key_derivation_output_key(), psa_key_derivation_output_key_ext()
+ * or psa_copy_key().
  *
  * This function may be declared as `static` (i.e. without external
  * linkage). This function may be provided as a function-like macro,
@@ -175,8 +164,9 @@ static void mbedtls_set_key_owner_id(psa_key_attributes_t *attributes,
  * value in the structure.
  * The persistent key will be written to storage when the attribute
  * structure is passed to a key creation function such as
- * psa_import_key(), psa_generate_key(),
- * psa_key_derivation_output_key() or psa_copy_key().
+ * psa_import_key(), psa_generate_key(), psa_generate_key_ext(),
+ * psa_key_derivation_output_key(), psa_key_derivation_output_key_ext()
+ * or psa_copy_key().
  *
  * This function may be declared as `static` (i.e. without external
  * linkage). This function may be provided as a function-like macro,
@@ -536,6 +526,11 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
  *
  * If a key is currently in use in a multipart operation, then destroying the
  * key will cause the multipart operation to fail.
+ *
+ * \warning    We can only guarantee that the the key material will
+ *             eventually be wiped from memory. With threading enabled
+ *             and during concurrent execution, copies of the key material may
+ *             still exist until all threads have finished using the key.
  *
  * \param key  Identifier of the key to erase. If this is \c 0, do nothing and
  *             return #PSA_SUCCESS.
@@ -3238,7 +3233,8 @@ static psa_key_derivation_operation_t psa_key_derivation_operation_init(void);
  *    psa_key_derivation_set_capacity(). You may do this before, in the middle
  *    of or after providing inputs. For some algorithms, this step is mandatory
  *    because the output depends on the maximum capacity.
- * -# To derive a key, call psa_key_derivation_output_key().
+ * -# To derive a key, call psa_key_derivation_output_key() or
+ *    psa_key_derivation_output_key_ext().
  *    To derive a byte string for a different purpose, call
  *    psa_key_derivation_output_bytes().
  *    Successive calls to these functions use successive output bytes
@@ -3461,7 +3457,8 @@ psa_status_t psa_key_derivation_input_integer(
  * \note Once all inputs steps are completed, the operations will allow:
  * - psa_key_derivation_output_bytes() if each input was either a direct input
  *   or  a key with #PSA_KEY_USAGE_DERIVE set;
- * - psa_key_derivation_output_key() if the input for step
+ * - psa_key_derivation_output_key() or psa_key_derivation_output_key_ext()
+ *   if the input for step
  *   #PSA_KEY_DERIVATION_INPUT_SECRET or #PSA_KEY_DERIVATION_INPUT_PASSWORD
  *   was from a key slot with #PSA_KEY_USAGE_DERIVE and each other input was
  *   either a direct input or a key with #PSA_KEY_USAGE_DERIVE set;
@@ -3709,6 +3706,11 @@ psa_status_t psa_key_derivation_output_bytes(
  * Future versions of this specification may include additional restrictions
  * on the derived key based on the attributes and strength of the secret key.
  *
+ * \note This function is equivalent to calling
+ *       psa_key_derivation_output_key_ext()
+ *       with the production parameters #PSA_KEY_PRODUCTION_PARAMETERS_INIT
+ *       and `params_data_length == 0` (i.e. `params->data` is empty).
+ *
  * \param[in] attributes    The attributes for the new key.
  *                          If the key type to be created is
  *                          #PSA_KEY_TYPE_PASSWORD_HASH then the algorithm in
@@ -3847,7 +3849,8 @@ psa_status_t psa_key_derivation_verify_bytes(
  *                          and the permitted algorithm must match the
  *                          operation. The value of this key was likely
  *                          computed by a previous call to
- *                          psa_key_derivation_output_key().
+ *                          psa_key_derivation_output_key() or
+ *                          psa_key_derivation_output_key_ext().
  *
  * \retval #PSA_SUCCESS \emptydescription
  * \retval #PSA_ERROR_INVALID_SIGNATURE
@@ -4014,6 +4017,10 @@ psa_status_t psa_generate_random(uint8_t *output,
  *   The modulus is a product of two probabilistic primes
  *   between 2^{n-1} and 2^n where n is the bit size specified in the
  *   attributes.
+ *
+ * \note This function is equivalent to calling psa_generate_key_ext()
+ *       with the production parameters #PSA_KEY_PRODUCTION_PARAMETERS_INIT
+ *       and `params_data_length == 0` (i.e. `params->data` is empty).
  *
  * \param[in] attributes    The attributes for the new key.
  * \param[out] key          On success, an identifier for the newly created

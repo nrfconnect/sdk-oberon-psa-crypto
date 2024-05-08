@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -163,6 +164,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #line 2 "tests/suites/test_suite_psa_crypto_init.function"
 #include <stdint.h>
 
+#include "psa_crypto_core.h"
 /* Some tests in this module configure entropy sources. */
 #include "psa_crypto_invasive.h"
 
@@ -274,9 +276,62 @@ static void custom_entropy_init(mbedtls_entropy_context *ctx)
 
 #endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
 
+#if defined MBEDTLS_THREADING_PTHREAD
+
+typedef struct {
+    int do_init;
+} thread_psa_init_ctx_t;
+
+static void *thread_psa_init_function(void *ctx)
+{
+    thread_psa_init_ctx_t *init_context = (thread_psa_init_ctx_t *) ctx;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    uint8_t random[10] = { 0 };
+
+    if (init_context->do_init) {
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    /* If this is a test only thread, then we can assume PSA is being started
+     * up on another thread and thus we cannot know whether the following tests
+     * will be successful or not. These checks are still useful, however even
+     * without checking the return codes as they may show up race conditions on
+     * the flags they check under TSAN.*/
+
+    /* Test getting if drivers are initialised. */
+    int can_do = psa_can_do_hash(PSA_ALG_NONE);
+
+    if (init_context->do_init) {
+        TEST_ASSERT(can_do == 1);
+    }
+
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+
+    /* Test getting global_data.rng_state. */
+    status = mbedtls_psa_crypto_configure_entropy_sources(NULL, NULL);
+
+    if (init_context->do_init) {
+        /* Bad state due to entropy sources already being setup in
+         * psa_crypto_init() */
+        TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    }
+#endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
+
+    /* Test using the PSA RNG ony if we know PSA is up and running. */
+    if (init_context->do_init) {
+        status = psa_generate_random(random, sizeof(random));
+
+        TEST_EQUAL(status, PSA_SUCCESS);
+    }
+
+exit:
+    return NULL;
+}
+#endif /* defined MBEDTLS_THREADING_PTHREAD */
+
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 123 "tests/suites/test_suite_psa_crypto_init.function"
+#line 177 "tests/suites/test_suite_psa_crypto_init.function"
 void test_create_nv_seed(void)
 {
     static unsigned char seed[ENTROPY_MIN_NV_SEED_SIZE];
@@ -293,7 +348,7 @@ void test_create_nv_seed_wrapper( void ** params )
 }
 #endif /* !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #endif /* MBEDTLS_ENTROPY_NV_SEED */
-#line 131 "tests/suites/test_suite_psa_crypto_init.function"
+#line 185 "tests/suites/test_suite_psa_crypto_init.function"
 void test_init_deinit(int count)
 {
     psa_status_t status;
@@ -314,7 +369,7 @@ void test_init_deinit_wrapper( void ** params )
 
     test_init_deinit( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 146 "tests/suites/test_suite_psa_crypto_init.function"
+#line 200 "tests/suites/test_suite_psa_crypto_init.function"
 void test_deinit_without_init(int count)
 {
     int i;
@@ -332,7 +387,74 @@ void test_deinit_without_init_wrapper( void ** params )
 
     test_deinit_without_init( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 158 "tests/suites/test_suite_psa_crypto_init.function"
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#line 212 "tests/suites/test_suite_psa_crypto_init.function"
+void test_psa_threaded_init(int arg_thread_count)
+{
+    thread_psa_init_ctx_t init_context;
+    thread_psa_init_ctx_t init_context_2;
+
+    size_t thread_count = (size_t) arg_thread_count;
+    mbedtls_test_thread_t *threads = NULL;
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+
+    init_context.do_init = 1;
+
+    /* Test initialising PSA and testing certain protected globals on multiple
+     * threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i],
+                                       thread_psa_init_function,
+                                       (void *) &init_context),
+            0);
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    PSA_DONE();
+
+    init_context_2.do_init = 0;
+
+    /* Test initialising PSA whilst also testing flags on other threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+
+        if (i & 1) {
+
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context),
+                0);
+        } else {
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context_2),
+                0);
+        }
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+exit:
+
+    PSA_DONE();
+
+    mbedtls_free(threads);
+}
+
+void test_psa_threaded_init_wrapper( void ** params )
+{
+
+    test_psa_threaded_init( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#endif /* MBEDTLS_THREADING_PTHREAD */
+#line 273 "tests/suites/test_suite_psa_crypto_init.function"
 void test_validate_module_init_generate_random(int count)
 {
     psa_status_t status;
@@ -354,7 +476,7 @@ void test_validate_module_init_generate_random_wrapper( void ** params )
 
     test_validate_module_init_generate_random( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 174 "tests/suites/test_suite_psa_crypto_init.function"
+#line 289 "tests/suites/test_suite_psa_crypto_init.function"
 void test_validate_module_init_key_based(int count)
 {
     psa_status_t status;
@@ -382,7 +504,7 @@ void test_validate_module_init_key_based_wrapper( void ** params )
     test_validate_module_init_key_based( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 195 "tests/suites/test_suite_psa_crypto_init.function"
+#line 310 "tests/suites/test_suite_psa_crypto_init.function"
 void test_custom_entropy_sources(int sources_arg, int expected_init_status_arg)
 {
     psa_status_t expected_init_status = expected_init_status_arg;
@@ -410,7 +532,7 @@ void test_custom_entropy_sources_wrapper( void ** params )
 }
 #endif /* !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 217 "tests/suites/test_suite_psa_crypto_init.function"
+#line 332 "tests/suites/test_suite_psa_crypto_init.function"
 void test_fake_entropy_source(int threshold,
                          int amount1,
                          int amount2,
@@ -462,7 +584,7 @@ void test_fake_entropy_source_wrapper( void ** params )
 #endif /* !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 262 "tests/suites/test_suite_psa_crypto_init.function"
+#line 377 "tests/suites/test_suite_psa_crypto_init.function"
 void test_entropy_from_nv_seed(int seed_size_arg,
                           int expected_init_status_arg)
 {
@@ -683,33 +805,40 @@ TestWrapper_t test_funcs[] =
 #endif
 /* Function Id: 3 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_validate_module_init_generate_random_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_THREADING_PTHREAD)
+    test_psa_threaded_init_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 4 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_validate_module_init_key_based_wrapper,
+    test_validate_module_init_generate_random_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 5 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-    test_custom_entropy_sources_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_validate_module_init_key_based_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 6 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-    test_fake_entropy_source_wrapper,
+    test_custom_entropy_sources_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 7 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+    test_fake_entropy_source_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 8 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ENTROPY_NV_SEED) && !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
     test_entropy_from_nv_seed_wrapper,
@@ -1160,14 +1289,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -1190,7 +1317,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -1199,8 +1326,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -1220,6 +1348,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -1359,7 +1531,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -1435,7 +1607,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -1460,30 +1632,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -1516,6 +1691,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -1552,6 +1731,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

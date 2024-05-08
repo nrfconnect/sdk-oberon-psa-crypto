@@ -7,6 +7,7 @@ set(PLATFORM demo CACHE STRING "Default generic 'demo' platform.")
 
 option(CONFIG_PSA_API_TESTS "Build PSA Certified APIs Architecture Test Suite" ON)
 option(CONFIG_MBEDTLS_PSA_TESTS "Build Mbed TLS tests" ON)
+option(CONFIG_MBEDTLS_THREADING "Build for multi-threading" ON)
 
 if(MSVC)
     set(CONFIG_PSA_API_TESTS OFF)
@@ -61,6 +62,7 @@ set(MBED_SOURCES
         ${CMAKE_SOURCE_DIR}/library/psa_crypto_storage.h
         ${CMAKE_SOURCE_DIR}/library/psa_crypto_storage.c
         ${CMAKE_SOURCE_DIR}/library/psa_its_file.c
+        ${CMAKE_SOURCE_DIR}/library/threading.c
 )
 
 # common sources and includes
@@ -89,6 +91,7 @@ message(STATUS "Options:")
 if(EXISTS ${CMAKE_SOURCE_DIR}/oberon/platforms/${PLATFORM}/CMakeLists.txt)
     message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS: ${CONFIG_MBEDTLS_PSA_TESTS}")
     message(STATUS " - CONFIG_PSA_API_TESTS:     ${CONFIG_PSA_API_TESTS}")
+    message(STATUS " - CONFIG_MBEDTLS_THREADING: ${CONFIG_MBEDTLS_THREADING}")
 else()
     set(CONFIG_MBEDTLS_PSA_TESTS OFF)
     message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS: SKIPPED, not available for ${PLATFORM}")
@@ -112,6 +115,7 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_PSA_API_TESTS)
                 test_suite_psa_crypto_generate_key.generated
                 test_suite_psa_crypto_hash
                 # test_suite_psa_crypto_init # n.a. - tests Mbed TLS entropy initialization only /* !!OM */
+                test_suite_psa_crypto_memory
                 test_suite_psa_crypto_metadata
                 test_suite_psa_crypto_not_supported.generated
                 test_suite_psa_crypto_not_supported.misc
@@ -125,6 +129,7 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_PSA_API_TESTS)
                 test_suite_psa_crypto_storage_format.current
                 test_suite_psa_crypto_storage_format.misc
                 test_suite_psa_crypto_storage_format.v0
+                # test_suite_psa_crypto_util                # n.a. - tests Mbed TLS specific funtions
                 test_suite_psa_its
         )
 
@@ -141,7 +146,7 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_PSA_API_TESTS)
                 ${CMAKE_SOURCE_DIR}/tests/src/asn1write_min.c       # forked from asn1write.c
                 ${CMAKE_SOURCE_DIR}/tests/src/psa_crypto_helpers.c
                 ${CMAKE_SOURCE_DIR}/tests/src/psa_exercise_key.c
-                ${CMAKE_SOURCE_DIR}/tests/src/helpers_min.c
+                ${CMAKE_SOURCE_DIR}/tests/src/helpers.c
         )
     endif()
 
@@ -176,6 +181,12 @@ if (CONFIG_PSA_API_TESTS AND "${PLATFORM}" STREQUAL "demo")
     project("${TARGET}" LANGUAGES C ASM)
     add_subdirectory(api-tests)
     add_executable(${PROJECT_NAME} api-tests/platform/targets/${PROJECT_NAME}/nspe/main.c)
+
+    if(CONFIG_MBEDTLS_THREADING)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_C)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_PTHREAD)
+        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/library/threading.c")
+    endif()
 
     target_link_libraries(${PROJECT_NAME} PUBLIC ocrypto)
 

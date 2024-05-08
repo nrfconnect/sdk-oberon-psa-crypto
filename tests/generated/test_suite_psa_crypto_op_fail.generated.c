@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -547,9 +548,9 @@ void test_key_agreement_fail(int key_type_arg, data_t *key_data,
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
     uint8_t public_key[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE] = { 0 };
-    size_t public_key_length = SIZE_MAX;
+    size_t public_key_length = 0;
     uint8_t output[PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE] = { 0 };
-    size_t length = SIZE_MAX;
+    size_t length = 0;
     psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
 
     PSA_INIT();
@@ -2242,7 +2243,7 @@ int dep_check(int dep_id)
             break;
         case 7:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_DH_FAMILY_RFC7919)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2251,7 +2252,7 @@ int dep_check(int dep_id)
             break;
         case 8:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2260,7 +2261,7 @@ int dep_check(int dep_id)
             break;
         case 9:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2269,7 +2270,7 @@ int dep_check(int dep_id)
             break;
         case 10:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2278,7 +2279,7 @@ int dep_check(int dep_id)
             break;
         case 11:
             {
-#if defined(PSA_WANT_ECC_FAMILY_BRAINPOOL_P_R1)
+#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2287,7 +2288,7 @@ int dep_check(int dep_id)
             break;
         case 12:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_ECC_FAMILY_BRAINPOOL_P_R1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2296,7 +2297,7 @@ int dep_check(int dep_id)
             break;
         case 13:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2305,7 +2306,7 @@ int dep_check(int dep_id)
             break;
         case 14:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2314,7 +2315,7 @@ int dep_check(int dep_id)
             break;
         case 15:
             {
-#if defined(PSA_WANT_ECC_FAMILY_MONTGOMERY)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2323,7 +2324,7 @@ int dep_check(int dep_id)
             break;
         case 16:
             {
-#if defined(PSA_WANT_ECC_FAMILY_SECP_K1)
+#if defined(PSA_WANT_ECC_FAMILY_MONTGOMERY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2332,7 +2333,7 @@ int dep_check(int dep_id)
             break;
         case 17:
             {
-#if defined(PSA_WANT_ECC_FAMILY_SECP_R1)
+#if defined(PSA_WANT_ECC_FAMILY_SECP_K1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2341,7 +2342,7 @@ int dep_check(int dep_id)
             break;
         case 18:
             {
-#if defined(PSA_WANT_ECC_FAMILY_SECP_R2)
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2350,7 +2351,7 @@ int dep_check(int dep_id)
             break;
         case 19:
             {
-#if defined(PSA_WANT_ECC_FAMILY_SECT_K1)
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R2)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2359,7 +2360,7 @@ int dep_check(int dep_id)
             break;
         case 20:
             {
-#if defined(PSA_WANT_ECC_FAMILY_SECT_R1)
+#if defined(PSA_WANT_ECC_FAMILY_SECT_K1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2368,7 +2369,7 @@ int dep_check(int dep_id)
             break;
         case 21:
             {
-#if defined(PSA_WANT_ECC_FAMILY_SECT_R2)
+#if defined(PSA_WANT_ECC_FAMILY_SECT_R1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2377,7 +2378,7 @@ int dep_check(int dep_id)
             break;
         case 22:
             {
-#if defined(PSA_WANT_ECC_FAMILY_TWISTED_EDWARDS)
+#if defined(PSA_WANT_ECC_FAMILY_SECT_R2)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2386,7 +2387,7 @@ int dep_check(int dep_id)
             break;
         case 23:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_ECC_FAMILY_TWISTED_EDWARDS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2395,7 +2396,7 @@ int dep_check(int dep_id)
             break;
         case 24:
             {
-#if defined(PSA_WANT_KEY_TYPE_HMAC)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2404,7 +2405,7 @@ int dep_check(int dep_id)
             break;
         case 25:
             {
-#if defined(PSA_WANT_KEY_TYPE_PASSWORD)
+#if defined(PSA_WANT_KEY_TYPE_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2413,7 +2414,7 @@ int dep_check(int dep_id)
             break;
         case 26:
             {
-#if defined(PSA_WANT_KEY_TYPE_PASSWORD_HASH)
+#if defined(PSA_WANT_KEY_TYPE_PASSWORD)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2422,7 +2423,7 @@ int dep_check(int dep_id)
             break;
         case 27:
             {
-#if defined(PSA_WANT_KEY_TYPE_PEPPER)
+#if defined(PSA_WANT_KEY_TYPE_PASSWORD_HASH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2431,7 +2432,7 @@ int dep_check(int dep_id)
             break;
         case 28:
             {
-#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
+#if defined(PSA_WANT_KEY_TYPE_PEPPER)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2440,7 +2441,7 @@ int dep_check(int dep_id)
             break;
         case 29:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2449,7 +2450,7 @@ int dep_check(int dep_id)
             break;
         case 30:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2458,7 +2459,7 @@ int dep_check(int dep_id)
             break;
         case 31:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2467,7 +2468,7 @@ int dep_check(int dep_id)
             break;
         case 32:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2476,7 +2477,7 @@ int dep_check(int dep_id)
             break;
         case 33:
             {
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2485,7 +2486,7 @@ int dep_check(int dep_id)
             break;
         case 34:
             {
-#if defined(PSA_WANT_ALG_GCM)
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2494,7 +2495,7 @@ int dep_check(int dep_id)
             break;
         case 35:
             {
-#if !defined(PSA_WANT_ALG_CCM)
+#if defined(PSA_WANT_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2503,7 +2504,7 @@ int dep_check(int dep_id)
             break;
         case 36:
             {
-#if defined(PSA_WANT_ALG_CBC_MAC)
+#if !defined(PSA_WANT_ALG_CCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2512,7 +2513,7 @@ int dep_check(int dep_id)
             break;
         case 37:
             {
-#if defined(PSA_WANT_ALG_CMAC)
+#if defined(PSA_WANT_ALG_CBC_MAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2521,7 +2522,7 @@ int dep_check(int dep_id)
             break;
         case 38:
             {
-#if defined(PSA_WANT_ALG_HMAC)
+#if defined(PSA_WANT_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2530,7 +2531,7 @@ int dep_check(int dep_id)
             break;
         case 39:
             {
-#if defined(PSA_WANT_ALG_MD5)
+#if defined(PSA_WANT_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2539,7 +2540,7 @@ int dep_check(int dep_id)
             break;
         case 40:
             {
-#if defined(PSA_WANT_ALG_RIPEMD160)
+#if defined(PSA_WANT_ALG_MD5)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2548,7 +2549,7 @@ int dep_check(int dep_id)
             break;
         case 41:
             {
-#if defined(PSA_WANT_ALG_SHA_1)
+#if defined(PSA_WANT_ALG_RIPEMD160)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2557,7 +2558,7 @@ int dep_check(int dep_id)
             break;
         case 42:
             {
-#if defined(PSA_WANT_ALG_SHA_224)
+#if defined(PSA_WANT_ALG_SHA_1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2566,7 +2567,7 @@ int dep_check(int dep_id)
             break;
         case 43:
             {
-#if defined(PSA_WANT_ALG_SHA_256)
+#if defined(PSA_WANT_ALG_SHA_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2575,7 +2576,7 @@ int dep_check(int dep_id)
             break;
         case 44:
             {
-#if defined(PSA_WANT_ALG_SHA_384)
+#if defined(PSA_WANT_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2584,7 +2585,7 @@ int dep_check(int dep_id)
             break;
         case 45:
             {
-#if defined(PSA_WANT_ALG_SHA_512)
+#if defined(PSA_WANT_ALG_SHA_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2593,7 +2594,7 @@ int dep_check(int dep_id)
             break;
         case 46:
             {
-#if !defined(PSA_WANT_ALG_CBC_MAC)
+#if defined(PSA_WANT_ALG_SHA_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2602,7 +2603,7 @@ int dep_check(int dep_id)
             break;
         case 47:
             {
-#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
+#if !defined(PSA_WANT_ALG_CBC_MAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2611,7 +2612,7 @@ int dep_check(int dep_id)
             break;
         case 48:
             {
-#if !defined(PSA_WANT_ALG_CBC_NO_PADDING)
+#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2620,7 +2621,7 @@ int dep_check(int dep_id)
             break;
         case 49:
             {
-#if defined(PSA_WANT_ALG_CBC_PKCS7)
+#if !defined(PSA_WANT_ALG_CBC_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2629,7 +2630,7 @@ int dep_check(int dep_id)
             break;
         case 50:
             {
-#if !defined(PSA_WANT_ALG_CBC_PKCS7)
+#if defined(PSA_WANT_ALG_CBC_PKCS7)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2638,7 +2639,7 @@ int dep_check(int dep_id)
             break;
         case 51:
             {
-#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+#if !defined(PSA_WANT_ALG_CBC_PKCS7)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2647,7 +2648,7 @@ int dep_check(int dep_id)
             break;
         case 52:
             {
-#if !defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2656,7 +2657,7 @@ int dep_check(int dep_id)
             break;
         case 53:
             {
-#if defined(PSA_WANT_ALG_CFB)
+#if !defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2665,7 +2666,7 @@ int dep_check(int dep_id)
             break;
         case 54:
             {
-#if !defined(PSA_WANT_ALG_CFB)
+#if defined(PSA_WANT_ALG_CFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2674,7 +2675,7 @@ int dep_check(int dep_id)
             break;
         case 55:
             {
-#if !defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+#if !defined(PSA_WANT_ALG_CFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2683,7 +2684,7 @@ int dep_check(int dep_id)
             break;
         case 56:
             {
-#if !defined(PSA_WANT_ALG_CMAC)
+#if !defined(PSA_WANT_ALG_CHACHA20_POLY1305)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2692,7 +2693,7 @@ int dep_check(int dep_id)
             break;
         case 57:
             {
-#if defined(PSA_WANT_ALG_CTR)
+#if !defined(PSA_WANT_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2701,7 +2702,7 @@ int dep_check(int dep_id)
             break;
         case 58:
             {
-#if !defined(PSA_WANT_ALG_CTR)
+#if defined(PSA_WANT_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2710,7 +2711,7 @@ int dep_check(int dep_id)
             break;
         case 59:
             {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_DSA)
+#if !defined(PSA_WANT_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2719,7 +2720,7 @@ int dep_check(int dep_id)
             break;
         case 60:
             {
-#if defined(PSA_WANT_ALG_SHA3_224)
+#if defined(PSA_WANT_ALG_DETERMINISTIC_DSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2728,7 +2729,7 @@ int dep_check(int dep_id)
             break;
         case 61:
             {
-#if defined(PSA_WANT_ALG_SHA3_256)
+#if defined(PSA_WANT_ALG_SHA3_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2737,7 +2738,7 @@ int dep_check(int dep_id)
             break;
         case 62:
             {
-#if defined(PSA_WANT_ALG_SHA3_384)
+#if defined(PSA_WANT_ALG_SHA3_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2746,7 +2747,7 @@ int dep_check(int dep_id)
             break;
         case 63:
             {
-#if defined(PSA_WANT_ALG_SHA3_512)
+#if defined(PSA_WANT_ALG_SHA3_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2755,7 +2756,7 @@ int dep_check(int dep_id)
             break;
         case 64:
             {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if defined(PSA_WANT_ALG_SHA3_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2764,7 +2765,7 @@ int dep_check(int dep_id)
             break;
         case 65:
             {
-#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2773,7 +2774,7 @@ int dep_check(int dep_id)
             break;
         case 66:
             {
-#if !defined(PSA_WANT_ALG_MD5)
+#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2782,7 +2783,7 @@ int dep_check(int dep_id)
             break;
         case 67:
             {
-#if !defined(PSA_WANT_ALG_RIPEMD160)
+#if !defined(PSA_WANT_ALG_MD5)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2791,7 +2792,7 @@ int dep_check(int dep_id)
             break;
         case 68:
             {
-#if !defined(PSA_WANT_ALG_SHA3_224)
+#if !defined(PSA_WANT_ALG_RIPEMD160)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2800,7 +2801,7 @@ int dep_check(int dep_id)
             break;
         case 69:
             {
-#if !defined(PSA_WANT_ALG_SHA3_256)
+#if !defined(PSA_WANT_ALG_SHA3_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2809,7 +2810,7 @@ int dep_check(int dep_id)
             break;
         case 70:
             {
-#if !defined(PSA_WANT_ALG_SHA3_384)
+#if !defined(PSA_WANT_ALG_SHA3_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2818,7 +2819,7 @@ int dep_check(int dep_id)
             break;
         case 71:
             {
-#if !defined(PSA_WANT_ALG_SHA3_512)
+#if !defined(PSA_WANT_ALG_SHA3_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2827,7 +2828,7 @@ int dep_check(int dep_id)
             break;
         case 72:
             {
-#if !defined(PSA_WANT_ALG_SHA_1)
+#if !defined(PSA_WANT_ALG_SHA3_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2836,7 +2837,7 @@ int dep_check(int dep_id)
             break;
         case 73:
             {
-#if !defined(PSA_WANT_ALG_SHA_224)
+#if !defined(PSA_WANT_ALG_SHA_1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2845,7 +2846,7 @@ int dep_check(int dep_id)
             break;
         case 74:
             {
-#if !defined(PSA_WANT_ALG_SHA_256)
+#if !defined(PSA_WANT_ALG_SHA_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2854,7 +2855,7 @@ int dep_check(int dep_id)
             break;
         case 75:
             {
-#if !defined(PSA_WANT_ALG_SHA_384)
+#if !defined(PSA_WANT_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2863,7 +2864,7 @@ int dep_check(int dep_id)
             break;
         case 76:
             {
-#if !defined(PSA_WANT_ALG_SHA_512)
+#if !defined(PSA_WANT_ALG_SHA_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2872,7 +2873,7 @@ int dep_check(int dep_id)
             break;
         case 77:
             {
-#if defined(PSA_WANT_ALG_DSA)
+#if !defined(PSA_WANT_ALG_SHA_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2881,7 +2882,7 @@ int dep_check(int dep_id)
             break;
         case 78:
             {
-#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
+#if defined(PSA_WANT_ALG_DSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2890,7 +2891,7 @@ int dep_check(int dep_id)
             break;
         case 79:
             {
-#if !defined(PSA_WANT_ALG_ECB_NO_PADDING)
+#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2899,7 +2900,7 @@ int dep_check(int dep_id)
             break;
         case 80:
             {
-#if defined(PSA_WANT_ALG_ECDH)
+#if !defined(PSA_WANT_ALG_ECB_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2908,7 +2909,7 @@ int dep_check(int dep_id)
             break;
         case 81:
             {
-#if !defined(PSA_WANT_ALG_ECDH)
+#if defined(PSA_WANT_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2917,7 +2918,7 @@ int dep_check(int dep_id)
             break;
         case 82:
             {
-#if defined(PSA_WANT_ALG_ECDSA)
+#if !defined(PSA_WANT_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2926,7 +2927,7 @@ int dep_check(int dep_id)
             break;
         case 83:
             {
-#if !defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2935,7 +2936,7 @@ int dep_check(int dep_id)
             break;
         case 84:
             {
-#if defined(PSA_WANT_ALG_ECDSA_ANY)
+#if !defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2944,7 +2945,7 @@ int dep_check(int dep_id)
             break;
         case 85:
             {
-#if !defined(PSA_WANT_ALG_ECDSA_ANY)
+#if defined(PSA_WANT_ALG_ECDSA_ANY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2953,7 +2954,7 @@ int dep_check(int dep_id)
             break;
         case 86:
             {
-#if defined(PSA_WANT_ALG_ED25519PH)
+#if !defined(PSA_WANT_ALG_ECDSA_ANY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2962,7 +2963,7 @@ int dep_check(int dep_id)
             break;
         case 87:
             {
-#if !defined(PSA_WANT_ALG_ED25519PH)
+#if defined(PSA_WANT_ALG_ED25519PH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2971,7 +2972,7 @@ int dep_check(int dep_id)
             break;
         case 88:
             {
-#if defined(PSA_WANT_ALG_ED448PH)
+#if !defined(PSA_WANT_ALG_ED25519PH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2980,7 +2981,7 @@ int dep_check(int dep_id)
             break;
         case 89:
             {
-#if !defined(PSA_WANT_ALG_ED448PH)
+#if defined(PSA_WANT_ALG_ED448PH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2989,7 +2990,7 @@ int dep_check(int dep_id)
             break;
         case 90:
             {
-#if defined(PSA_WANT_ALG_FFDH)
+#if !defined(PSA_WANT_ALG_ED448PH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2998,7 +2999,7 @@ int dep_check(int dep_id)
             break;
         case 91:
             {
-#if !defined(PSA_WANT_ALG_FFDH)
+#if defined(PSA_WANT_ALG_FFDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3007,7 +3008,7 @@ int dep_check(int dep_id)
             break;
         case 92:
             {
-#if !defined(PSA_WANT_ALG_GCM)
+#if !defined(PSA_WANT_ALG_FFDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3016,7 +3017,7 @@ int dep_check(int dep_id)
             break;
         case 93:
             {
-#if defined(PSA_WANT_ALG_HKDF)
+#if !defined(PSA_WANT_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3025,7 +3026,7 @@ int dep_check(int dep_id)
             break;
         case 94:
             {
-#if !defined(PSA_WANT_ALG_HKDF)
+#if defined(PSA_WANT_ALG_HKDF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3034,7 +3035,7 @@ int dep_check(int dep_id)
             break;
         case 95:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXPAND)
+#if !defined(PSA_WANT_ALG_HKDF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3043,7 +3044,7 @@ int dep_check(int dep_id)
             break;
         case 96:
             {
-#if !defined(PSA_WANT_ALG_HKDF_EXPAND)
+#if defined(PSA_WANT_ALG_HKDF_EXPAND)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3052,7 +3053,7 @@ int dep_check(int dep_id)
             break;
         case 97:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
+#if !defined(PSA_WANT_ALG_HKDF_EXPAND)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3061,7 +3062,7 @@ int dep_check(int dep_id)
             break;
         case 98:
             {
-#if !defined(PSA_WANT_ALG_HKDF_EXTRACT)
+#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3070,7 +3071,7 @@ int dep_check(int dep_id)
             break;
         case 99:
             {
-#if !defined(PSA_WANT_ALG_HMAC)
+#if !defined(PSA_WANT_ALG_HKDF_EXTRACT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3079,7 +3080,7 @@ int dep_check(int dep_id)
             break;
         case 100:
             {
-#if defined(PSA_WANT_ALG_JPAKE)
+#if !defined(PSA_WANT_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3088,7 +3089,7 @@ int dep_check(int dep_id)
             break;
         case 101:
             {
-#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
+#if defined(PSA_WANT_ALG_JPAKE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3097,7 +3098,7 @@ int dep_check(int dep_id)
             break;
         case 102:
             {
-#if defined(PSA_WANT_ALG_TLS12_PRF)
+#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3106,7 +3107,7 @@ int dep_check(int dep_id)
             break;
         case 103:
             {
-#if !defined(PSA_WANT_ALG_TLS12_PRF)
+#if defined(PSA_WANT_ALG_TLS12_PRF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3115,7 +3116,7 @@ int dep_check(int dep_id)
             break;
         case 104:
             {
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+#if !defined(PSA_WANT_ALG_TLS12_PRF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3124,7 +3125,7 @@ int dep_check(int dep_id)
             break;
         case 105:
             {
-#if !defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3133,7 +3134,7 @@ int dep_check(int dep_id)
             break;
         case 106:
             {
-#if defined(PSA_WANT_ALG_OFB)
+#if !defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3142,7 +3143,7 @@ int dep_check(int dep_id)
             break;
         case 107:
             {
-#if !defined(PSA_WANT_ALG_OFB)
+#if defined(PSA_WANT_ALG_OFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3151,7 +3152,7 @@ int dep_check(int dep_id)
             break;
         case 108:
             {
-#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
+#if !defined(PSA_WANT_ALG_OFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3160,7 +3161,7 @@ int dep_check(int dep_id)
             break;
         case 109:
             {
-#if !defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
+#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3169,7 +3170,7 @@ int dep_check(int dep_id)
             break;
         case 110:
             {
-#if defined(PSA_WANT_ALG_PBKDF2_HMAC)
+#if !defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3178,7 +3179,7 @@ int dep_check(int dep_id)
             break;
         case 111:
             {
-#if !defined(PSA_WANT_ALG_PBKDF2_HMAC)
+#if defined(PSA_WANT_ALG_PBKDF2_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3187,7 +3188,7 @@ int dep_check(int dep_id)
             break;
         case 112:
             {
-#if defined(PSA_WANT_ALG_PURE_EDDSA)
+#if !defined(PSA_WANT_ALG_PBKDF2_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3196,7 +3197,7 @@ int dep_check(int dep_id)
             break;
         case 113:
             {
-#if !defined(PSA_WANT_ALG_PURE_EDDSA)
+#if defined(PSA_WANT_ALG_PURE_EDDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3205,7 +3206,7 @@ int dep_check(int dep_id)
             break;
         case 114:
             {
-#if defined(PSA_WANT_ALG_RSA_OAEP)
+#if !defined(PSA_WANT_ALG_PURE_EDDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3214,7 +3215,7 @@ int dep_check(int dep_id)
             break;
         case 115:
             {
-#if !defined(PSA_WANT_ALG_RSA_OAEP)
+#if defined(PSA_WANT_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3223,7 +3224,7 @@ int dep_check(int dep_id)
             break;
         case 116:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
+#if !defined(PSA_WANT_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3232,7 +3233,7 @@ int dep_check(int dep_id)
             break;
         case 117:
             {
-#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3241,7 +3242,7 @@ int dep_check(int dep_id)
             break;
         case 118:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3250,7 +3251,7 @@ int dep_check(int dep_id)
             break;
         case 119:
             {
-#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3259,7 +3260,7 @@ int dep_check(int dep_id)
             break;
         case 120:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW)
+#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3268,7 +3269,7 @@ int dep_check(int dep_id)
             break;
         case 121:
             {
-#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3277,7 +3278,7 @@ int dep_check(int dep_id)
             break;
         case 122:
             {
-#if defined(PSA_WANT_ALG_RSA_PSS)
+#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3286,7 +3287,7 @@ int dep_check(int dep_id)
             break;
         case 123:
             {
-#if !defined(PSA_WANT_ALG_RSA_PSS)
+#if defined(PSA_WANT_ALG_RSA_PSS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3295,7 +3296,7 @@ int dep_check(int dep_id)
             break;
         case 124:
             {
-#if defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT)
+#if !defined(PSA_WANT_ALG_RSA_PSS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3304,7 +3305,7 @@ int dep_check(int dep_id)
             break;
         case 125:
             {
-#if !defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT)
+#if defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3313,7 +3314,7 @@ int dep_check(int dep_id)
             break;
         case 126:
             {
-#if !defined(PSA_WANT_ALG_SHAKE256_512)
+#if !defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3322,7 +3323,7 @@ int dep_check(int dep_id)
             break;
         case 127:
             {
-#if defined(PSA_WANT_ALG_SHAKE256_512)
+#if !defined(PSA_WANT_ALG_SHAKE256_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3331,7 +3332,7 @@ int dep_check(int dep_id)
             break;
         case 128:
             {
-#if !defined(PSA_WANT_ALG_SHA_512_224)
+#if defined(PSA_WANT_ALG_SHAKE256_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3340,7 +3341,7 @@ int dep_check(int dep_id)
             break;
         case 129:
             {
-#if defined(PSA_WANT_ALG_SHA_512_224)
+#if !defined(PSA_WANT_ALG_SHA_512_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3349,7 +3350,7 @@ int dep_check(int dep_id)
             break;
         case 130:
             {
-#if !defined(PSA_WANT_ALG_SHA_512_256)
+#if defined(PSA_WANT_ALG_SHA_512_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3358,7 +3359,7 @@ int dep_check(int dep_id)
             break;
         case 131:
             {
-#if defined(PSA_WANT_ALG_SHA_512_256)
+#if !defined(PSA_WANT_ALG_SHA_512_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3367,7 +3368,7 @@ int dep_check(int dep_id)
             break;
         case 132:
             {
-#if defined(PSA_WANT_ALG_STREAM_CIPHER)
+#if defined(PSA_WANT_ALG_SHA_512_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3376,7 +3377,7 @@ int dep_check(int dep_id)
             break;
         case 133:
             {
-#if !defined(PSA_WANT_ALG_STREAM_CIPHER)
+#if defined(PSA_WANT_ALG_STREAM_CIPHER)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3385,7 +3386,7 @@ int dep_check(int dep_id)
             break;
         case 134:
             {
-#if !defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
+#if !defined(PSA_WANT_ALG_STREAM_CIPHER)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3394,7 +3395,7 @@ int dep_check(int dep_id)
             break;
         case 135:
             {
-#if defined(PSA_WANT_ALG_XTS)
+#if !defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3402,6 +3403,15 @@ int dep_check(int dep_id)
             }
             break;
         case 136:
+            {
+#if defined(PSA_WANT_ALG_XTS)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 137:
             {
 #if !defined(PSA_WANT_ALG_XTS)
                 ret = DEPENDENCY_SUPPORTED;
@@ -3944,14 +3954,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -3974,7 +3982,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -3983,8 +3991,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -4004,6 +4013,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -4143,7 +4196,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -4219,7 +4272,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -4244,30 +4297,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -4300,6 +4356,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -4336,6 +4396,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

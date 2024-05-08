@@ -373,7 +373,7 @@ psa_status_t oberon_srp_abort(
 static int less_than(const uint8_t *a, const uint8_t *b, size_t len)
 {
     int i, c = 0;
-    for (i = len - 1; i >= 0; i--) {
+    for (i = (int)(len - 1); i >= 0; i--) {
         c = (c + (int)a[i] - (int)b[i]) >> 8;
     }
     return c;

@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -168,6 +169,8 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #include "mbedtls/oid.h"
 #include "common.h"
 
+#include "mbedtls/psa_util.h"
+
 /* For MBEDTLS_CTR_DRBG_MAX_REQUEST, knowing that psa_generate_random()
  * uses mbedtls_ctr_drbg internally. */
 #include "mbedtls/ctr_drbg.h"
@@ -175,7 +178,6 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #include "psa/crypto.h"
 #include "psa_crypto_slot_management.h"
 
-/* For psa_can_do_hash() */
 #include "psa_crypto_core.h"
 
 #include "test/asn1_helpers.h"
@@ -186,6 +188,10 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #define TEST_DRIVER_LOCATION PSA_CRYPTO_TEST_DRIVER_LOCATION
 #else
 #define TEST_DRIVER_LOCATION 0x7fffff
+#endif
+
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#include "mbedtls/threading.h"
 #endif
 
 /* If this comes up, it's a bug in the test code or in the test data. */
@@ -901,37 +907,37 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
             /* Server first round Output */
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_g1_len));
+                                       buffer_length - buffer0_off, &s_g1_len));
             TEST_EQUAL(s_g1_len, expected_size_key_share);
             s_g1_off = buffer0_off;
             buffer0_off += s_g1_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x1_pk_len));
+                                       buffer_length - buffer0_off, &s_x1_pk_len));
             TEST_EQUAL(s_x1_pk_len, expected_size_zk_public);
             s_x1_pk_off = buffer0_off;
             buffer0_off += s_x1_pk_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x1_pr_len));
+                                       buffer_length - buffer0_off, &s_x1_pr_len));
             TEST_LE_U(s_x1_pr_len, max_expected_size_zk_proof);
             s_x1_pr_off = buffer0_off;
             buffer0_off += s_x1_pr_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_g2_len));
+                                       buffer_length - buffer0_off, &s_g2_len));
             TEST_EQUAL(s_g2_len, expected_size_key_share);
             s_g2_off = buffer0_off;
             buffer0_off += s_g2_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2_pk_len));
+                                       buffer_length - buffer0_off, &s_x2_pk_len));
             TEST_EQUAL(s_x2_pk_len, expected_size_zk_public);
             s_x2_pk_off = buffer0_off;
             buffer0_off += s_x2_pk_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2_pr_len));
+                                       buffer_length - buffer0_off, &s_x2_pr_len));
             TEST_LE_U(s_x2_pr_len, max_expected_size_zk_proof);
             s_x2_pr_off = buffer0_off;
             buffer0_off += s_x2_pr_len;
@@ -1021,37 +1027,37 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
             /* Client first round Output */
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_g1_len));
+                                       buffer_length - buffer1_off, &c_g1_len));
             TEST_EQUAL(c_g1_len, expected_size_key_share);
             c_g1_off = buffer1_off;
             buffer1_off += c_g1_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x1_pk_len));
+                                       buffer_length - buffer1_off, &c_x1_pk_len));
             TEST_EQUAL(c_x1_pk_len, expected_size_zk_public);
             c_x1_pk_off = buffer1_off;
             buffer1_off += c_x1_pk_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x1_pr_len));
+                                       buffer_length - buffer1_off, &c_x1_pr_len));
             TEST_LE_U(c_x1_pr_len, max_expected_size_zk_proof);
             c_x1_pr_off = buffer1_off;
             buffer1_off += c_x1_pr_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_g2_len));
+                                       buffer_length - buffer1_off, &c_g2_len));
             TEST_EQUAL(c_g2_len, expected_size_key_share);
             c_g2_off = buffer1_off;
             buffer1_off += c_g2_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2_pk_len));
+                                       buffer_length - buffer1_off, &c_x2_pk_len));
             TEST_EQUAL(c_x2_pk_len, expected_size_zk_public);
             c_x2_pk_off = buffer1_off;
             buffer1_off += c_x2_pk_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2_pr_len));
+                                       buffer_length - buffer1_off, &c_x2_pr_len));
             TEST_LE_U(c_x2_pr_len, max_expected_size_zk_proof);
             c_x2_pr_off = buffer1_off;
             buffer1_off += c_x2_pr_len;
@@ -1199,19 +1205,19 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_a_len));
+                                       buffer_length - buffer0_off, &s_a_len));
             TEST_EQUAL(s_a_len, expected_size_key_share);
             s_a_off = buffer0_off;
             buffer0_off += s_a_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2s_pk_len));
+                                       buffer_length - buffer0_off, &s_x2s_pk_len));
             TEST_EQUAL(s_x2s_pk_len, expected_size_zk_public);
             s_x2s_pk_off = buffer0_off;
             buffer0_off += s_x2s_pk_len;
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2s_pr_len));
+                                       buffer_length - buffer0_off, &s_x2s_pr_len));
             TEST_LE_U(s_x2s_pr_len, max_expected_size_zk_proof);
             s_x2s_pr_off = buffer0_off;
             buffer0_off += s_x2s_pr_len;
@@ -1264,19 +1270,19 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_a_len));
+                                       buffer_length - buffer1_off, &c_a_len));
             TEST_EQUAL(c_a_len, expected_size_key_share);
             c_a_off = buffer1_off;
             buffer1_off += c_a_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2s_pk_len));
+                                       buffer_length - buffer1_off, &c_x2s_pk_len));
             TEST_EQUAL(c_x2s_pk_len, expected_size_zk_public);
             c_x2s_pk_off = buffer1_off;
             buffer1_off += c_x2s_pk_len;
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2s_pr_len));
+                                       buffer_length - buffer1_off, &c_x2s_pr_len));
             TEST_LE_U(c_x2s_pr_len, max_expected_size_zk_proof);
             c_x2s_pr_off = buffer1_off;
             buffer1_off += c_x2s_pr_len;
@@ -1413,7 +1419,265 @@ static void interruptible_signverify_get_minmax_completes(uint32_t max_ops,
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-#line 1264 "tests/suites/test_suite_psa_crypto.function"
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+static int rsa_test_e(mbedtls_svc_key_id_t key,
+                      size_t bits,
+                      const data_t *e_arg)
+{
+    uint8_t *exported = NULL;
+    size_t exported_size =
+        PSA_EXPORT_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_RSA_PUBLIC_KEY, bits);
+    size_t exported_length = SIZE_MAX;
+    int ok = 0;
+
+    TEST_CALLOC(exported, exported_size);
+    PSA_ASSERT(psa_export_public_key(key,
+                                     exported, exported_size,
+                                     &exported_length));
+    uint8_t *p = exported;
+    uint8_t *end = exported + exported_length;
+    size_t len;
+    /*   RSAPublicKey ::= SEQUENCE {
+     *      modulus            INTEGER,    -- n
+     *      publicExponent     INTEGER  }  -- e
+     */
+    TEST_EQUAL(0, mbedtls_asn1_get_tag(&p, end, &len,
+                                       MBEDTLS_ASN1_SEQUENCE |
+                                       MBEDTLS_ASN1_CONSTRUCTED));
+    TEST_ASSERT(mbedtls_test_asn1_skip_integer(&p, end, bits, bits, 1));
+    TEST_EQUAL(0, mbedtls_asn1_get_tag(&p, end, &len,
+                                       MBEDTLS_ASN1_INTEGER));
+    if (len >= 1 && p[0] == 0) {
+        ++p;
+        --len;
+    }
+    if (e_arg->len == 0) {
+        TEST_EQUAL(len, 3);
+        TEST_EQUAL(p[0], 1);
+        TEST_EQUAL(p[1], 0);
+        TEST_EQUAL(p[2], 1);
+    } else {
+        const uint8_t *expected = e_arg->x;
+        size_t expected_len = e_arg->len;
+        while (expected_len > 0 && *expected == 0) {
+            ++expected;
+            --expected_len;
+        }
+        TEST_MEMORY_COMPARE(p, len, expected, expected_len);
+    }
+    ok = 1;
+
+exit:
+    mbedtls_free(exported);
+    return ok;
+}
+#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE */
+
+//static int setup_key_production_parameters(  /* !!OM */
+//    psa_key_production_parameters_t **params, size_t *params_data_length,
+//    int flags_arg, const data_t *params_data)
+//{
+//    *params_data_length = params_data->len;
+//    /* If there are N bytes of padding at the end of
+//     * psa_key_production_parameters_t, then it's enough to allocate
+//     * MIN(sizeof(psa_key_production_parameters_t),
+//     *     offsetof(psa_key_production_parameters_t, data) + params_data_length).
+//     *
+//     * For simplicity, here, we allocate up to N more bytes than necessary.
+//     * In practice, the current layout of psa_key_production_parameters_t
+//     * makes padding extremely unlikely, so we don't worry about testing
+//     * that the library code doesn't try to access these extra N bytes.
+//     */
+//    *params = mbedtls_calloc(1, sizeof(**params) + *params_data_length);
+//    TEST_ASSERT(*params != NULL);
+//    (*params)->flags = (uint32_t) flags_arg;
+//    memcpy((*params)->data, params_data->x, params_data->len);
+//    return 1;
+//exit:
+//    return 0;
+//}
+
+#if defined(MBEDTLS_THREADING_PTHREAD)
+
+typedef struct same_key_context {
+    data_t *data;
+    mbedtls_svc_key_id_t key;
+    psa_key_attributes_t *attributes;
+    int type;
+    int bits;
+    /* The following two parameters are used to ensure that when multiple
+     * threads attempt to load/destroy the key, exactly one thread succeeds. */
+    int key_loaded;
+    mbedtls_threading_mutex_t MBEDTLS_PRIVATE(key_loaded_mutex);
+}
+same_key_context;
+
+/* Attempt to import the key in ctx. This handles any valid error codes
+ * and reports an error for any invalid codes. This function also insures
+ * that once imported by some thread, all threads can use the key. */
+void *thread_import_key(void *ctx)
+{
+    mbedtls_svc_key_id_t returned_key_id;
+    same_key_context *skc = (struct same_key_context *) ctx;
+    psa_key_attributes_t got_attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    /* Import the key, exactly one thread must succeed. */
+    psa_status_t status = psa_import_key(skc->attributes, skc->data->x,
+                                         skc->data->len, &returned_key_id);
+    switch (status) {
+        case PSA_SUCCESS:
+            if (mbedtls_mutex_lock(&skc->key_loaded_mutex) == 0) {
+                if (skc->key_loaded) {
+                    mbedtls_mutex_unlock(&skc->key_loaded_mutex);
+                    /* More than one thread has succeeded, report a failure. */
+                    TEST_FAIL("The same key has been loaded into the key store multiple times.");
+                }
+                skc->key_loaded = 1;
+                mbedtls_mutex_unlock(&skc->key_loaded_mutex);
+            }
+            break;
+        case PSA_ERROR_INSUFFICIENT_MEMORY:
+            /* If all of the key slots are reserved when a thread
+             * locks the mutex to reserve a new slot, it will return
+             * PSA_ERROR_INSUFFICIENT_MEMORY; this is correct behaviour.
+             * There is a chance for this to occur here when the number of
+             * threads running this function is larger than the number of
+             * free key slots. Each thread reserves an empty key slot,
+             * unlocks the mutex, then relocks it to finalize key creation.
+             * It is at that point where the thread sees that the key
+             * already exists, releases the reserved slot,
+             * and returns PSA_ERROR_ALREADY_EXISTS.
+             * There is no guarantee that the key is loaded upon this return
+             * code, so we can't test the key information. Just stop this
+             * thread from executing, note that this is not an error. */
+            goto exit;
+            break;
+        case PSA_ERROR_ALREADY_EXISTS:
+            /* The key has been loaded by a different thread. */
+            break;
+        default:
+            PSA_ASSERT(status);
+    }
+    /* At this point the key must exist, test the key information. */
+    status = psa_get_key_attributes(skc->key, &got_attributes);
+    if (status == PSA_ERROR_INSUFFICIENT_MEMORY) {
+        /* This is not a test failure. The following sequence of events
+         * causes this to occur:
+         * 1: This thread successfuly imports a persistent key skc->key.
+         * 2: N threads reserve an empty key slot in psa_import_key,
+         *    where N is equal to the number of free key slots.
+         * 3: A final thread attempts to reserve an empty key slot, kicking
+         *    skc->key (which has no registered readers) out of its slot.
+         * 4: This thread calls psa_get_key_attributes(skc->key,...):
+         *    it sees that skc->key is not in a slot, attempts to load it and
+         *    finds that there are no free slots.
+         * This thread returns PSA_ERROR_INSUFFICIENT_MEMORY.
+         *
+         * The PSA spec allows this behaviour, it is an unavoidable consequence
+         * of allowing persistent keys to be kicked out of the key store while
+         * they are still valid. */
+        goto exit;
+    }
+    PSA_ASSERT(status);
+    TEST_EQUAL(psa_get_key_type(&got_attributes), skc->type);
+    TEST_EQUAL(psa_get_key_bits(&got_attributes), skc->bits);
+
+exit:
+    /* Key attributes may have been returned by psa_get_key_attributes(),
+     * reset them as required. */
+    psa_reset_key_attributes(&got_attributes);
+    return NULL;
+}
+
+void *thread_use_and_destroy_key(void *ctx)
+{
+    same_key_context *skc = (struct same_key_context *) ctx;
+
+    /* Do something with the key according
+     * to its type and permitted usage. */
+    TEST_ASSERT(mbedtls_test_psa_exercise_key(skc->key,
+                                              skc->attributes->policy.usage,
+                                              skc->attributes->policy.alg, 1));
+
+    psa_status_t status = psa_destroy_key(skc->key);
+    if (status == PSA_SUCCESS) {
+        if (mbedtls_mutex_lock(&skc->key_loaded_mutex) == 0) {
+            /* Ensure that we are the only thread to succeed. */
+            if (skc->key_loaded != 1) {
+                mbedtls_mutex_unlock(&skc->key_loaded_mutex);
+                TEST_FAIL("The same key has been destroyed multiple times.");
+            }
+            skc->key_loaded = 0;
+            mbedtls_mutex_unlock(&skc->key_loaded_mutex);
+        }
+    } else {
+        TEST_EQUAL(status, PSA_ERROR_INVALID_HANDLE);
+    }
+
+exit:
+    return NULL;
+}
+
+typedef struct generate_key_context {
+    psa_key_type_t type;
+    psa_key_usage_t usage;
+    size_t bits;
+    psa_algorithm_t alg;
+    psa_status_t expected_status;
+    psa_key_attributes_t *attributes;
+    int is_large_key;
+    int reps;
+}
+generate_key_context;
+void *thread_generate_key(void *ctx)
+{
+    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t got_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    generate_key_context *gkc = (struct generate_key_context *) ctx;
+
+    /* If there are race conditions, it is likely the case that they do not
+     * arise every time the code runs. We repeat the code to increase the
+     * chance that any race conditions will be hit. */
+    for (int n = 0; n < gkc->reps; n++) {
+        /* Generate a key */
+        psa_status_t status = psa_generate_key(gkc->attributes, &key);
+
+        if (gkc->is_large_key > 0) {
+            TEST_ASSUME(status != PSA_ERROR_INSUFFICIENT_MEMORY);
+        }
+
+        TEST_EQUAL(status, gkc->expected_status);
+        if (gkc->expected_status != PSA_SUCCESS) {
+            PSA_ASSERT(psa_destroy_key(key));
+            goto exit;
+        }
+
+        /* Test the key information */
+        PSA_ASSERT(psa_get_key_attributes(key, &got_attributes));
+        TEST_EQUAL(psa_get_key_type(&got_attributes), gkc->type);
+        TEST_EQUAL(psa_get_key_bits(&got_attributes), gkc->bits);
+
+        /* Do something with the key according
+         * to its type and permitted usage. */
+        if (!mbedtls_test_psa_exercise_key(key, gkc->usage, gkc->alg, 0)) {
+            psa_destroy_key(key);
+            goto exit;
+        }
+        psa_reset_key_attributes(&got_attributes);
+
+        PSA_ASSERT(psa_destroy_key(key));
+    }
+exit:
+    /*
+     * Key attributes may have been returned by psa_get_key_attributes()
+     * thus reset them as required.
+     */
+    psa_reset_key_attributes(&got_attributes);
+    return NULL;
+}
+#endif /* MBEDTLS_THREADING_PTHREAD */
+
+#line 1527 "tests/suites/test_suite_psa_crypto.function"
 void test_psa_can_do_hash(void)
 {
     /* We can't test that this is specific to drivers until partial init has
@@ -1432,7 +1696,7 @@ void test_psa_can_do_hash_wrapper( void ** params )
 
     test_psa_can_do_hash(  );
 }
-#line 1276 "tests/suites/test_suite_psa_crypto.function"
+#line 1539 "tests/suites/test_suite_psa_crypto.function"
 void test_static_checks(void)
 {
     size_t max_truncated_mac_size =
@@ -1452,7 +1716,7 @@ void test_static_checks_wrapper( void ** params )
 
     test_static_checks(  );
 }
-#line 1289 "tests/suites/test_suite_psa_crypto.function"
+#line 1552 "tests/suites/test_suite_psa_crypto.function"
 void test_import_with_policy(int type_arg,
                         int usage_arg, int alg_arg,
                         int expected_status_arg)
@@ -1507,7 +1771,7 @@ void test_import_with_policy_wrapper( void ** params )
 
     test_import_with_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
-#line 1340 "tests/suites/test_suite_psa_crypto.function"
+#line 1603 "tests/suites/test_suite_psa_crypto.function"
 void test_import_with_data(data_t *data, int type_arg,
                       int attr_bits_arg,
                       int expected_status_arg)
@@ -1577,7 +1841,7 @@ void test_import_with_data_wrapper( void ** params )
 
     test_import_with_data( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
-#line 1400 "tests/suites/test_suite_psa_crypto.function"
+#line 1663 "tests/suites/test_suite_psa_crypto.function"
 
 void test_import_large_key(int type_arg, int byte_size_arg,
                       int expected_status_arg)
@@ -1640,7 +1904,7 @@ void test_import_large_key_wrapper( void ** params )
     test_import_large_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #if defined(MBEDTLS_ASN1_WRITE_C)
-#line 1458 "tests/suites/test_suite_psa_crypto.function"
+#line 1721 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -1692,7 +1956,7 @@ void test_import_rsa_made_up_wrapper( void ** params )
     test_import_rsa_made_up( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #endif /* MBEDTLS_ASN1_WRITE_C */
-#line 1500 "tests/suites/test_suite_psa_crypto.function"
+#line 1763 "tests/suites/test_suite_psa_crypto.function"
 void test_import_export(data_t *data,
                    int type_arg,
                    int usage_arg, int alg_arg,
@@ -1767,7 +2031,7 @@ void test_import_export(data_t *data,
      * this doesn't directly validate the implementation, but it still helps
      * by cross-validating the test data with the sanity check code. */
     if (!psa_key_lifetime_is_external(lifetime)) {
-        if (!mbedtls_test_psa_exercise_key(key, usage_arg, 0)) {
+        if (!mbedtls_test_psa_exercise_key(key, usage_arg, 0, 0)) {
             goto exit;
         }
     }
@@ -1818,7 +2082,7 @@ void test_import_export_wrapper( void ** params )
 
     test_import_export( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
-#line 1621 "tests/suites/test_suite_psa_crypto.function"
+#line 1884 "tests/suites/test_suite_psa_crypto.function"
 void test_import_export_public_key(data_t *data,
                               int type_arg,
                               int alg_arg,
@@ -1887,7 +2151,85 @@ void test_import_export_public_key_wrapper( void ** params )
 
     test_import_export_public_key( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, &data7 );
 }
-#line 1684 "tests/suites/test_suite_psa_crypto.function"
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
+#line 1949 "tests/suites/test_suite_psa_crypto.function"
+void test_concurrently_use_same_persistent_key(data_t *data,
+                                          int type_arg,
+                                          int bits_arg,
+                                          int alg_arg,
+                                          int thread_count_arg)
+{
+    size_t thread_count = (size_t) thread_count_arg;
+    mbedtls_test_thread_t *threads = NULL;
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 1);
+    same_key_context skc;
+    skc.data = data;
+    skc.key = key_id;
+    skc.type = type_arg;
+    skc.bits = bits_arg;
+    skc.key_loaded = 0;
+    mbedtls_mutex_init(&skc.key_loaded_mutex);
+    psa_key_usage_t usage = mbedtls_test_psa_usage_to_exercise(skc.type, alg_arg);
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_id(&attributes, key_id);
+    psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_PERSISTENT);
+    psa_set_key_usage_flags(&attributes, usage);
+    psa_set_key_algorithm(&attributes, alg_arg);
+    psa_set_key_type(&attributes, type_arg);
+    psa_set_key_bits(&attributes, bits_arg);
+    skc.attributes = &attributes;
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+
+    /* Test that when multiple threads import the same key,
+     * exactly one thread succeeds and the rest fail with valid errors.
+     * Also test that all threads can use the key as soon as it has been
+     * imported. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i], thread_import_key,
+                                       (void *) &skc), 0);
+    }
+
+    /* Join threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    /* Test that when multiple threads use and destroy a key no corruption
+     * occurs, and exactly one thread succeeds when destroying the key. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i], thread_use_and_destroy_key,
+                                       (void *) &skc), 0);
+    }
+
+    /* Join threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+    /* Ensure that one thread succeeded in destroying the key. */
+    TEST_ASSERT(!skc.key_loaded);
+exit:
+    psa_reset_key_attributes(&attributes);
+    mbedtls_mutex_free(&skc.key_loaded_mutex);
+    mbedtls_free(threads);
+    PSA_DONE();
+}
+
+void test_concurrently_use_same_persistent_key_wrapper( void ** params )
+{
+    data_t data0 = {(uint8_t *) params[0], ((mbedtls_test_argument_t *) params[1])->len};
+
+    test_concurrently_use_same_persistent_key( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
+}
+#endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
+#endif /* MBEDTLS_THREADING_PTHREAD */
+#line 2019 "tests/suites/test_suite_psa_crypto.function"
 void test_import_and_exercise_key(data_t *data,
                              int type_arg,
                              int bits_arg,
@@ -1916,7 +2258,7 @@ void test_import_and_exercise_key(data_t *data,
     TEST_EQUAL(psa_get_key_bits(&got_attributes), bits);
 
     /* Do something with the key according to its type and permitted usage. */
-    if (!mbedtls_test_psa_exercise_key(key, usage, alg)) {
+    if (!mbedtls_test_psa_exercise_key(key, usage, alg, 0)) {
         goto exit;
     }
 
@@ -1941,7 +2283,7 @@ void test_import_and_exercise_key_wrapper( void ** params )
 
     test_import_and_exercise_key( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
-#line 1733 "tests/suites/test_suite_psa_crypto.function"
+#line 2068 "tests/suites/test_suite_psa_crypto.function"
 void test_effective_key_attributes(int type_arg, int expected_type_arg,
                               int bits_arg, int expected_bits_arg,
                               int usage_arg, int expected_usage_arg,
@@ -1990,7 +2332,7 @@ void test_effective_key_attributes_wrapper( void ** params )
 
     test_effective_key_attributes( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 1778 "tests/suites/test_suite_psa_crypto.function"
+#line 2113 "tests/suites/test_suite_psa_crypto.function"
 void test_check_key_policy(int type_arg, int bits_arg,
                       int usage_arg, int alg_arg)
 {
@@ -2008,7 +2350,7 @@ void test_check_key_policy_wrapper( void ** params )
 
     test_check_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
-#line 1790 "tests/suites/test_suite_psa_crypto.function"
+#line 2125 "tests/suites/test_suite_psa_crypto.function"
 void test_key_attributes_init(void)
 {
     /* Test each valid way of initializing the object, except for `= {0}`, as
@@ -2050,7 +2392,7 @@ void test_key_attributes_init_wrapper( void ** params )
 
     test_key_attributes_init(  );
 }
-#line 1825 "tests/suites/test_suite_psa_crypto.function"
+#line 2160 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_key_policy(int policy_usage_arg,
                     int policy_alg_arg,
                     int key_type_arg,
@@ -2157,7 +2499,7 @@ void test_mac_key_policy_wrapper( void ** params )
 
     test_mac_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 1927 "tests/suites/test_suite_psa_crypto.function"
+#line 2262 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_key_policy(int policy_usage_arg,
                        int policy_alg,
                        int key_type,
@@ -2250,7 +2592,7 @@ void test_cipher_key_policy_wrapper( void ** params )
 
     test_cipher_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2015 "tests/suites/test_suite_psa_crypto.function"
+#line 2350 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_key_policy(int policy_usage_arg,
                      int policy_alg,
                      int key_type,
@@ -2346,12 +2688,13 @@ void test_aead_key_policy_wrapper( void ** params )
 
     test_aead_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint );
 }
-#line 2106 "tests/suites/test_suite_psa_crypto.function"
+#line 2441 "tests/suites/test_suite_psa_crypto.function"
 void test_asymmetric_encryption_key_policy(int policy_usage_arg,
                                       int policy_alg,
                                       int key_type,
                                       data_t *key_data,
-                                      int exercise_alg)
+                                      int exercise_alg,
+                                      int use_opaque_key)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -2367,6 +2710,11 @@ void test_asymmetric_encryption_key_policy(int policy_usage_arg,
     psa_set_key_usage_flags(&attributes, policy_usage);
     psa_set_key_algorithm(&attributes, policy_alg);
     psa_set_key_type(&attributes, key_type);
+
+    if (use_opaque_key) {
+        psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(
+                                 PSA_KEY_PERSISTENCE_VOLATILE, TEST_DRIVER_LOCATION));
+    }
 
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
@@ -2430,9 +2778,9 @@ void test_asymmetric_encryption_key_policy_wrapper( void ** params )
 {
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
-    test_asymmetric_encryption_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
+    test_asymmetric_encryption_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 2181 "tests/suites/test_suite_psa_crypto.function"
+#line 2522 "tests/suites/test_suite_psa_crypto.function"
 void test_asymmetric_signature_key_policy(int policy_usage_arg,
                                      int policy_alg,
                                      int key_type,
@@ -2532,7 +2880,7 @@ void test_asymmetric_signature_key_policy_wrapper( void ** params )
 
     test_asymmetric_signature_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 2270 "tests/suites/test_suite_psa_crypto.function"
+#line 2611 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_key_policy(int policy_usage,
                        int policy_alg,
                        int key_type,
@@ -2586,7 +2934,7 @@ void test_derive_key_policy_wrapper( void ** params )
 
     test_derive_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2319 "tests/suites/test_suite_psa_crypto.function"
+#line 2660 "tests/suites/test_suite_psa_crypto.function"
 void test_agreement_key_policy(int policy_usage,
                           int policy_alg,
                           int key_type_arg,
@@ -2611,7 +2959,7 @@ void test_agreement_key_policy(int policy_usage,
                               &key));
 
     PSA_ASSERT(psa_key_derivation_setup(&operation, exercise_alg));
-    status = mbedtls_test_psa_key_agreement_with_self(&operation, key);
+    status = mbedtls_test_psa_key_agreement_with_self(&operation, key, 0);
 
     TEST_EQUAL(status, expected_status);
 
@@ -2627,7 +2975,7 @@ void test_agreement_key_policy_wrapper( void ** params )
 
     test_agreement_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 2355 "tests/suites/test_suite_psa_crypto.function"
+#line 2696 "tests/suites/test_suite_psa_crypto.function"
 void test_key_policy_alg2(int key_type_arg, data_t *key_data,
                      int usage_arg, int alg_arg, int alg2_arg)
 {
@@ -2655,10 +3003,10 @@ void test_key_policy_alg2(int key_type_arg, data_t *key_data,
     TEST_EQUAL(psa_get_key_algorithm(&got_attributes), alg);
     TEST_EQUAL(psa_get_key_enrollment_algorithm(&got_attributes), alg2);
 
-    if (!mbedtls_test_psa_exercise_key(key, usage, alg)) {
+    if (!mbedtls_test_psa_exercise_key(key, usage, alg, 0)) {
         goto exit;
     }
-    if (!mbedtls_test_psa_exercise_key(key, usage, alg2)) {
+    if (!mbedtls_test_psa_exercise_key(key, usage, alg2, 0)) {
         goto exit;
     }
 
@@ -2679,7 +3027,7 @@ void test_key_policy_alg2_wrapper( void ** params )
 
     test_key_policy_alg2( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2402 "tests/suites/test_suite_psa_crypto.function"
+#line 2743 "tests/suites/test_suite_psa_crypto.function"
 void test_raw_agreement_key_policy(int policy_usage,
                               int policy_alg,
                               int key_type_arg,
@@ -2703,7 +3051,7 @@ void test_raw_agreement_key_policy(int policy_usage,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
-    status = mbedtls_test_psa_raw_key_agreement_with_self(exercise_alg, key);
+    status = mbedtls_test_psa_raw_key_agreement_with_self(exercise_alg, key, 0);
 
     TEST_EQUAL(status, expected_status);
 
@@ -2719,7 +3067,7 @@ void test_raw_agreement_key_policy_wrapper( void ** params )
 
     test_raw_agreement_key_policy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 2437 "tests/suites/test_suite_psa_crypto.function"
+#line 2778 "tests/suites/test_suite_psa_crypto.function"
 void test_copy_success(int source_usage_arg,
                   int source_alg_arg, int source_alg2_arg,
                   int source_lifetime_arg,
@@ -2799,10 +3147,10 @@ void test_copy_success(int source_usage_arg,
     }
 
     if (!psa_key_lifetime_is_external(target_lifetime)) {
-        if (!mbedtls_test_psa_exercise_key(target_key, expected_usage, expected_alg)) {
+        if (!mbedtls_test_psa_exercise_key(target_key, expected_usage, expected_alg, 0)) {
             goto exit;
         }
-        if (!mbedtls_test_psa_exercise_key(target_key, expected_usage, expected_alg2)) {
+        if (!mbedtls_test_psa_exercise_key(target_key, expected_usage, expected_alg2, 0)) {
             goto exit;
         }
     }
@@ -2827,7 +3175,7 @@ void test_copy_success_wrapper( void ** params )
 
     test_copy_success( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint );
 }
-#line 2540 "tests/suites/test_suite_psa_crypto.function"
+#line 2881 "tests/suites/test_suite_psa_crypto.function"
 void test_copy_fail(int source_usage_arg,
                int source_alg_arg, int source_alg2_arg,
                int source_lifetime_arg,
@@ -2884,7 +3232,7 @@ void test_copy_fail_wrapper( void ** params )
 
     test_copy_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint );
 }
-#line 2592 "tests/suites/test_suite_psa_crypto.function"
+#line 2933 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_operation_init(void)
 {
     const uint8_t input[1] = { 0 };
@@ -2920,7 +3268,7 @@ void test_hash_operation_init_wrapper( void ** params )
 
     test_hash_operation_init(  );
 }
-#line 2621 "tests/suites/test_suite_psa_crypto.function"
+#line 2962 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_setup(int alg_arg,
                 int expected_status_arg)
 {
@@ -2971,7 +3319,7 @@ void test_hash_setup_wrapper( void ** params )
 
     test_hash_setup( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 2668 "tests/suites/test_suite_psa_crypto.function"
+#line 3009 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_compute_fail(int alg_arg, data_t *input,
                        int output_size_arg, int expected_status_arg)
 {
@@ -3024,7 +3372,7 @@ void test_hash_compute_fail_wrapper( void ** params )
 
     test_hash_compute_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
-#line 2716 "tests/suites/test_suite_psa_crypto.function"
+#line 3057 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_compare_fail(int alg_arg, data_t *input,
                        data_t *reference_hash,
                        int expected_status_arg)
@@ -3068,7 +3416,7 @@ void test_hash_compare_fail_wrapper( void ** params )
 
     test_hash_compare_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2754 "tests/suites/test_suite_psa_crypto.function"
+#line 3095 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_compute_compare(int alg_arg, data_t *input,
                           data_t *expected_output)
 {
@@ -3179,7 +3527,7 @@ void test_hash_compute_compare_wrapper( void ** params )
     test_hash_compute_compare( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3 );
 }
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 2858 "tests/suites/test_suite_psa_crypto.function"
+#line 3199 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_bad_order(void)
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
@@ -3291,7 +3639,7 @@ void test_hash_bad_order_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_SHA_256 */
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 2963 "tests/suites/test_suite_psa_crypto.function"
+#line 3304 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_verify_bad_args(void)
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
@@ -3338,7 +3686,7 @@ void test_hash_verify_bad_args_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_SHA_256 */
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 3003 "tests/suites/test_suite_psa_crypto.function"
+#line 3344 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_finish_bad_args(void)
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
@@ -3367,7 +3715,7 @@ void test_hash_finish_bad_args_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_SHA_256 */
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 3025 "tests/suites/test_suite_psa_crypto.function"
+#line 3366 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_clone_source_state(void)
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
@@ -3419,7 +3767,7 @@ void test_hash_clone_source_state_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_SHA_256 */
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 3070 "tests/suites/test_suite_psa_crypto.function"
+#line 3411 "tests/suites/test_suite_psa_crypto.function"
 void test_hash_clone_target_state(void)
 {
     psa_algorithm_t alg = PSA_ALG_SHA_256;
@@ -3466,7 +3814,7 @@ void test_hash_clone_target_state_wrapper( void ** params )
     test_hash_clone_target_state(  );
 }
 #endif /* PSA_WANT_ALG_SHA_256 */
-#line 3111 "tests/suites/test_suite_psa_crypto.function"
+#line 3452 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_operation_init(void)
 {
     const uint8_t input[1] = { 0 };
@@ -3506,7 +3854,7 @@ void test_mac_operation_init_wrapper( void ** params )
 
     test_mac_operation_init(  );
 }
-#line 3144 "tests/suites/test_suite_psa_crypto.function"
+#line 3485 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_setup(int key_type_arg,
                data_t *key,
                int alg_arg,
@@ -3554,7 +3902,7 @@ void test_mac_setup_wrapper( void ** params )
 #if defined(PSA_WANT_KEY_TYPE_HMAC)
 #if defined(PSA_WANT_ALG_HMAC)
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 3184 "tests/suites/test_suite_psa_crypto.function"
+#line 3525 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_bad_order(void)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -3689,7 +4037,7 @@ void test_mac_bad_order_wrapper( void ** params )
 #endif /* PSA_WANT_ALG_SHA_256 */
 #endif /* PSA_WANT_ALG_HMAC */
 #endif /* PSA_WANT_KEY_TYPE_HMAC */
-#line 3311 "tests/suites/test_suite_psa_crypto.function"
+#line 3652 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_sign_verify_multi(int key_type_arg,
                            data_t *key_data,
                            int alg_arg,
@@ -3738,7 +4086,7 @@ void test_mac_sign_verify_multi_wrapper( void ** params )
 
     test_mac_sign_verify_multi( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, &data7 );
 }
-#line 3351 "tests/suites/test_suite_psa_crypto.function"
+#line 3692 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_sign(int key_type_arg,
               data_t *key_data,
               int alg_arg,
@@ -3831,7 +4179,7 @@ void test_mac_sign_wrapper( void ** params )
 
     test_mac_sign( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
-#line 3437 "tests/suites/test_suite_psa_crypto.function"
+#line 3778 "tests/suites/test_suite_psa_crypto.function"
 void test_mac_verify(int key_type_arg,
                 data_t *key_data,
                 int alg_arg,
@@ -3936,7 +4284,7 @@ void test_mac_verify_wrapper( void ** params )
 
     test_mac_verify( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
-#line 3535 "tests/suites/test_suite_psa_crypto.function"
+#line 3876 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_operation_init(void)
 {
     const uint8_t input[1] = { 0 };
@@ -3983,7 +4331,7 @@ void test_cipher_operation_init_wrapper( void ** params )
 
     test_cipher_operation_init(  );
 }
-#line 3575 "tests/suites/test_suite_psa_crypto.function"
+#line 3916 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_setup(int key_type_arg,
                   data_t *key,
                   int alg_arg,
@@ -4031,7 +4379,7 @@ void test_cipher_setup_wrapper( void ** params )
 }
 #if defined(PSA_WANT_KEY_TYPE_AES)
 #if defined(PSA_WANT_ALG_CBC_PKCS7)
-#line 3616 "tests/suites/test_suite_psa_crypto.function"
+#line 3957 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_bad_order(void)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -4212,7 +4560,7 @@ void test_cipher_bad_order_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_CBC_PKCS7 */
 #endif /* PSA_WANT_KEY_TYPE_AES */
-#line 3790 "tests/suites/test_suite_psa_crypto.function"
+#line 4131 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_encrypt_fail(int alg_arg,
                          int key_type_arg,
                          data_t *key_data,
@@ -4296,7 +4644,7 @@ void test_cipher_encrypt_fail_wrapper( void ** params )
 
     test_cipher_encrypt_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 3868 "tests/suites/test_suite_psa_crypto.function"
+#line 4209 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_encrypt_validate_iv_length(int alg, int key_type, data_t *key_data,
                                        data_t *input, int iv_length,
                                        int expected_result)
@@ -4336,7 +4684,7 @@ void test_cipher_encrypt_validate_iv_length_wrapper( void ** params )
 
     test_cipher_encrypt_validate_iv_length( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 3902 "tests/suites/test_suite_psa_crypto.function"
+#line 4243 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_alg_without_iv(int alg_arg, int key_type_arg, data_t *key_data,
                            data_t *plaintext, data_t *ciphertext)
 {
@@ -4460,7 +4808,7 @@ void test_cipher_alg_without_iv_wrapper( void ** params )
 
     test_cipher_alg_without_iv( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6 );
 }
-#line 4019 "tests/suites/test_suite_psa_crypto.function"
+#line 4360 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_bad_key(int alg_arg, int key_type_arg, data_t *key_data)
 {
     mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
@@ -4505,7 +4853,7 @@ void test_cipher_bad_key_wrapper( void ** params )
 
     test_cipher_bad_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2 );
 }
-#line 4059 "tests/suites/test_suite_psa_crypto.function"
+#line 4400 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_encrypt_validation(int alg_arg,
                                int key_type_arg,
                                data_t *key_data,
@@ -4591,7 +4939,7 @@ void test_cipher_encrypt_validation_wrapper( void ** params )
 
     test_cipher_encrypt_validation( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4 );
 }
-#line 4139 "tests/suites/test_suite_psa_crypto.function"
+#line 4480 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_encrypt_multipart(int alg_arg, int key_type_arg,
                               data_t *key_data, data_t *iv,
                               data_t *input,
@@ -4698,7 +5046,7 @@ void test_cipher_encrypt_multipart_wrapper( void ** params )
 
     test_cipher_encrypt_multipart( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, &data11, ((mbedtls_test_argument_t *) params[13])->sint );
 }
-#line 4238 "tests/suites/test_suite_psa_crypto.function"
+#line 4579 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_decrypt_multipart(int alg_arg, int key_type_arg,
                               data_t *key_data, data_t *iv,
                               data_t *input,
@@ -4806,7 +5154,7 @@ void test_cipher_decrypt_multipart_wrapper( void ** params )
 
     test_cipher_decrypt_multipart( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, &data11, ((mbedtls_test_argument_t *) params[13])->sint );
 }
-#line 4338 "tests/suites/test_suite_psa_crypto.function"
+#line 4679 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_decrypt_fail(int alg_arg,
                          int key_type_arg,
                          data_t *key_data,
@@ -4913,7 +5261,7 @@ void test_cipher_decrypt_fail_wrapper( void ** params )
 
     test_cipher_decrypt_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
-#line 4438 "tests/suites/test_suite_psa_crypto.function"
+#line 4779 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_decrypt(int alg_arg,
                     int key_type_arg,
                     data_t *key_data,
@@ -4976,7 +5324,7 @@ void test_cipher_decrypt_wrapper( void ** params )
 
     test_cipher_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, &data8 );
 }
-#line 4493 "tests/suites/test_suite_psa_crypto.function"
+#line 4834 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_verify_output(int alg_arg,
                           int key_type_arg,
                           data_t *key_data,
@@ -5039,7 +5387,7 @@ void test_cipher_verify_output_wrapper( void ** params )
 
     test_cipher_verify_output( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4 );
 }
-#line 4550 "tests/suites/test_suite_psa_crypto.function"
+#line 4891 "tests/suites/test_suite_psa_crypto.function"
 void test_cipher_verify_output_multipart(int alg_arg,
                                     int key_type_arg,
                                     data_t *key_data,
@@ -5101,7 +5449,8 @@ void test_cipher_verify_output_multipart(int alg_arg,
     PSA_ASSERT(psa_cipher_update(&operation1,
                                  input->x + first_part_size,
                                  input->len - first_part_size,
-                                 output1, output1_buffer_size,
+                                 output1 + output1_length,
+                                 output1_buffer_size - output1_length,
                                  &function_output_length));
     TEST_LE_U(function_output_length,
               PSA_CIPHER_UPDATE_OUTPUT_SIZE(key_type,
@@ -5147,7 +5496,8 @@ void test_cipher_verify_output_multipart(int alg_arg,
     PSA_ASSERT(psa_cipher_update(&operation2,
                                  output1 + first_part_size,
                                  output1_length - first_part_size,
-                                 output2, output2_buffer_size,
+                                 output2 + output2_length,
+                                 output2_buffer_size - output2_length,
                                  &function_output_length));
     TEST_LE_U(function_output_length,
               PSA_CIPHER_UPDATE_OUTPUT_SIZE(key_type,
@@ -5187,7 +5537,7 @@ void test_cipher_verify_output_multipart_wrapper( void ** params )
 
     test_cipher_verify_output_multipart( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 4692 "tests/suites/test_suite_psa_crypto.function"
+#line 5035 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_encrypt_decrypt(int key_type_arg, data_t *key_data,
                           int alg_arg,
                           data_t *nonce,
@@ -5290,7 +5640,7 @@ void test_aead_encrypt_decrypt_wrapper( void ** params )
 
     test_aead_encrypt_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 4787 "tests/suites/test_suite_psa_crypto.function"
+#line 5130 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_encrypt(int key_type_arg, data_t *key_data,
                   int alg_arg,
                   data_t *nonce,
@@ -5364,7 +5714,7 @@ void test_aead_encrypt_wrapper( void ** params )
 
     test_aead_encrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10 );
 }
-#line 4852 "tests/suites/test_suite_psa_crypto.function"
+#line 5195 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_decrypt(int key_type_arg, data_t *key_data,
                   int alg_arg,
                   data_t *nonce,
@@ -5447,7 +5797,7 @@ void test_aead_decrypt_wrapper( void ** params )
 
     test_aead_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10, ((mbedtls_test_argument_t *) params[12])->sint );
 }
-#line 4926 "tests/suites/test_suite_psa_crypto.function"
+#line 5269 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_encrypt(int key_type_arg, data_t *key_data,
                             int alg_arg,
                             data_t *nonce,
@@ -5553,7 +5903,7 @@ void test_aead_multipart_encrypt_wrapper( void ** params )
 
     test_aead_multipart_encrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, ((mbedtls_test_argument_t *) params[10])->sint, &data11 );
 }
-#line 5019 "tests/suites/test_suite_psa_crypto.function"
+#line 5362 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_decrypt(int key_type_arg, data_t *key_data,
                             int alg_arg,
                             data_t *nonce,
@@ -5659,7 +6009,7 @@ void test_aead_multipart_decrypt_wrapper( void ** params )
 
     test_aead_multipart_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, ((mbedtls_test_argument_t *) params[10])->sint, &data11 );
 }
-#line 5112 "tests/suites/test_suite_psa_crypto.function"
+#line 5455 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_generate_nonce(int key_type_arg, data_t *key_data,
                                    int alg_arg,
                                    int nonce_length,
@@ -5673,7 +6023,9 @@ void test_aead_multipart_generate_nonce(int key_type_arg, data_t *key_data,
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
     psa_aead_operation_t operation = PSA_AEAD_OPERATION_INIT;
-    uint8_t nonce_buffer[PSA_AEAD_NONCE_MAX_SIZE];
+    /* Some tests try to get more than the maximum nonce length,
+     * so allocate double. */
+    uint8_t nonce_buffer[PSA_AEAD_NONCE_MAX_SIZE * 2];
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_GENERIC_ERROR;
     psa_status_t expected_status = expected_status_arg;
@@ -5771,7 +6123,7 @@ void test_aead_multipart_generate_nonce_wrapper( void ** params )
 
     test_aead_multipart_generate_nonce( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, &data6, &data8, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 5214 "tests/suites/test_suite_psa_crypto.function"
+#line 5559 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_set_nonce(int key_type_arg, data_t *key_data,
                               int alg_arg,
                               int nonce_length_arg,
@@ -5901,7 +6253,7 @@ void test_aead_multipart_set_nonce_wrapper( void ** params )
 
     test_aead_multipart_set_nonce( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, &data6, &data8, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 5337 "tests/suites/test_suite_psa_crypto.function"
+#line 5682 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_update_buffer_test(int key_type_arg, data_t *key_data,
                                        int alg_arg,
                                        int output_size_arg,
@@ -5992,7 +6344,7 @@ void test_aead_multipart_update_buffer_test_wrapper( void ** params )
 
     test_aead_multipart_update_buffer_test( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, &data7, &data9, ((mbedtls_test_argument_t *) params[11])->sint );
 }
-#line 5420 "tests/suites/test_suite_psa_crypto.function"
+#line 5765 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_finish_buffer_test(int key_type_arg, data_t *key_data,
                                        int alg_arg,
                                        int finish_ciphertext_size_arg,
@@ -6090,7 +6442,7 @@ void test_aead_multipart_finish_buffer_test_wrapper( void ** params )
 
     test_aead_multipart_finish_buffer_test( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, &data6, &data8, &data10, ((mbedtls_test_argument_t *) params[12])->sint );
 }
-#line 5507 "tests/suites/test_suite_psa_crypto.function"
+#line 5852 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_verify(int key_type_arg, data_t *key_data,
                            int alg_arg,
                            data_t *nonce,
@@ -6202,7 +6554,7 @@ void test_aead_multipart_verify_wrapper( void ** params )
 
     test_aead_multipart_verify( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint );
 }
-#line 5607 "tests/suites/test_suite_psa_crypto.function"
+#line 5952 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_setup(int key_type_arg, data_t *key_data,
                           int alg_arg, int expected_status_arg)
 {
@@ -6246,7 +6598,7 @@ void test_aead_multipart_setup_wrapper( void ** params )
 
     test_aead_multipart_setup( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
-#line 5646 "tests/suites/test_suite_psa_crypto.function"
+#line 5991 "tests/suites/test_suite_psa_crypto.function"
 void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
                                int alg_arg,
                                data_t *nonce,
@@ -6553,7 +6905,7 @@ void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
                                         input_data->len),
                    PSA_ERROR_INVALID_ARGUMENT);
     } else {
-PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
+        PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
                                            PSA_AEAD_NONCE_MAX_SIZE,
                                            &nonce_length));
 
@@ -6619,11 +6971,11 @@ PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
     if (operation.alg == PSA_ALG_CCM) {
         // PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len)); /* !!OM-PCI-6 */ // set_length must be before set_nonce
 
-            TEST_EQUAL(psa_aead_set_lengths(&operation, UINT32_MAX,
+        TEST_EQUAL(psa_aead_set_lengths(&operation, UINT32_MAX,
                                         input_data->len),
                    PSA_ERROR_INVALID_ARGUMENT);
     } else {
-PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
+        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
         PSA_ASSERT(psa_aead_set_lengths(&operation, UINT32_MAX,
                                         input_data->len));
@@ -7082,7 +7434,7 @@ void test_aead_multipart_state_test_wrapper( void ** params )
 
     test_aead_multipart_state_test( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8 );
 }
-#line 6446 "tests/suites/test_suite_psa_crypto.function"
+#line 6791 "tests/suites/test_suite_psa_crypto.function"
 void test_signature_size(int type_arg,
                     int bits,
                     int alg_arg,
@@ -7103,7 +7455,7 @@ void test_signature_size_wrapper( void ** params )
 
     test_signature_size( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
-#line 6463 "tests/suites/test_suite_psa_crypto.function"
+#line 6808 "tests/suites/test_suite_psa_crypto.function"
 void test_sign_hash_deterministic(int key_type_arg, data_t *key_data,
                              int alg_arg, data_t *input_data,
                              data_t *output_data)
@@ -7166,7 +7518,7 @@ void test_sign_hash_deterministic_wrapper( void ** params )
     test_sign_hash_deterministic( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 6518 "tests/suites/test_suite_psa_crypto.function"
+#line 6863 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -7303,7 +7655,7 @@ void test_sign_hash_interruptible_wrapper( void ** params )
     test_sign_hash_interruptible( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
-#line 6647 "tests/suites/test_suite_psa_crypto.function"
+#line 6992 "tests/suites/test_suite_psa_crypto.function"
 void test_sign_hash_fail(int key_type_arg, data_t *key_data,
                     int alg_arg, data_t *input_data,
                     int signature_size_arg, int expected_status_arg)
@@ -7355,7 +7707,7 @@ void test_sign_hash_fail_wrapper( void ** params )
     test_sign_hash_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 6692 "tests/suites/test_suite_psa_crypto.function"
+#line 7037 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -7510,7 +7862,7 @@ void test_sign_hash_fail_interruptible_wrapper( void ** params )
     test_sign_hash_fail_interruptible( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
-#line 6840 "tests/suites/test_suite_psa_crypto.function"
+#line 7185 "tests/suites/test_suite_psa_crypto.function"
 void test_sign_verify_hash(int key_type_arg, data_t *key_data,
                       int alg_arg, data_t *input_data)
 {
@@ -7587,7 +7939,7 @@ void test_sign_verify_hash_wrapper( void ** params )
     test_sign_verify_hash( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4 );
 }
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 6910 "tests/suites/test_suite_psa_crypto.function"
+#line 7255 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -7766,7 +8118,7 @@ void test_sign_verify_hash_interruptible_wrapper( void ** params )
     test_sign_verify_hash_interruptible( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint );
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
-#line 7082 "tests/suites/test_suite_psa_crypto.function"
+#line 7427 "tests/suites/test_suite_psa_crypto.function"
 void test_verify_hash(int key_type_arg, data_t *key_data,
                  int alg_arg, data_t *hash_data,
                  data_t *signature_data)
@@ -7812,7 +8164,7 @@ void test_verify_hash_wrapper( void ** params )
     test_verify_hash( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 7114 "tests/suites/test_suite_psa_crypto.function"
+#line 7459 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -7952,7 +8304,7 @@ void test_verify_hash_interruptible_wrapper( void ** params )
     test_verify_hash_interruptible( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
-#line 7246 "tests/suites/test_suite_psa_crypto.function"
+#line 7591 "tests/suites/test_suite_psa_crypto.function"
 void test_verify_hash_fail(int key_type_arg, data_t *key_data,
                       int alg_arg, data_t *hash_data,
                       data_t *signature_data,
@@ -8000,7 +8352,7 @@ void test_verify_hash_fail_wrapper( void ** params )
     test_verify_hash_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 7280 "tests/suites/test_suite_psa_crypto.function"
+#line 7625 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -8141,7 +8493,7 @@ void test_verify_hash_fail_interruptible_wrapper( void ** params )
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 7412 "tests/suites/test_suite_psa_crypto.function"
+#line 7757 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -8304,7 +8656,7 @@ void test_interruptible_signverify_hash_state_test_wrapper( void ** params )
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 7567 "tests/suites/test_suite_psa_crypto.function"
+#line 7912 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -8380,8 +8732,7 @@ void test_interruptible_signverify_hash_edgecase_tests(int key_type_arg,
      * no reliance on external buffers. */
     psa_interruptible_set_max_ops(PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED);
 
-    input_buffer = mbedtls_calloc(1, input_data->len);
-    TEST_ASSERT(input_buffer != NULL);
+    TEST_CALLOC(input_buffer, input_data->len);
 
     memcpy(input_buffer, input_data->x, input_data->len);
 
@@ -8398,8 +8749,7 @@ void test_interruptible_signverify_hash_edgecase_tests(int key_type_arg,
 
     PSA_ASSERT(psa_sign_hash_abort(&sign_operation));
 
-    input_buffer = mbedtls_calloc(1, input_data->len);
-    TEST_ASSERT(input_buffer != NULL);
+    TEST_CALLOC(input_buffer, input_data->len);
 
     memcpy(input_buffer, input_data->x, input_data->len);
 
@@ -8424,6 +8774,7 @@ exit:
 
     psa_destroy_key(key);
     mbedtls_free(signature);
+    mbedtls_free(input_buffer);
     PSA_DONE();
 }
 
@@ -8436,7 +8787,7 @@ void test_interruptible_signverify_hash_edgecase_tests_wrapper( void ** params )
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
-#line 7691 "tests/suites/test_suite_psa_crypto.function"
+#line 8035 "tests/suites/test_suite_psa_crypto.function"
 
 
 
@@ -8638,7 +8989,7 @@ void test_interruptible_signverify_hash_ops_tests_wrapper( void ** params )
     test_interruptible_signverify_hash_ops_tests( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4 );
 }
 #endif /* MBEDTLS_ECP_RESTARTABLE */
-#line 7886 "tests/suites/test_suite_psa_crypto.function"
+#line 8230 "tests/suites/test_suite_psa_crypto.function"
 void test_sign_message_deterministic(int key_type_arg,
                                 data_t *key_data,
                                 int alg_arg,
@@ -8695,7 +9046,7 @@ void test_sign_message_deterministic_wrapper( void ** params )
 
     test_sign_message_deterministic( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
-#line 7936 "tests/suites/test_suite_psa_crypto.function"
+#line 8280 "tests/suites/test_suite_psa_crypto.function"
 void test_sign_message_fail(int key_type_arg,
                        data_t *key_data,
                        int alg_arg,
@@ -8749,7 +9100,7 @@ void test_sign_message_fail_wrapper( void ** params )
 
     test_sign_message_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 7984 "tests/suites/test_suite_psa_crypto.function"
+#line 8328 "tests/suites/test_suite_psa_crypto.function"
 void test_sign_verify_message(int key_type_arg,
                          data_t *key_data,
                          int alg_arg,
@@ -8818,7 +9169,7 @@ void test_sign_verify_message_wrapper( void ** params )
 
     test_sign_verify_message( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4 );
 }
-#line 8047 "tests/suites/test_suite_psa_crypto.function"
+#line 8391 "tests/suites/test_suite_psa_crypto.function"
 void test_verify_message(int key_type_arg,
                     data_t *key_data,
                     int alg_arg,
@@ -8859,7 +9210,7 @@ void test_verify_message_wrapper( void ** params )
 
     test_verify_message( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
-#line 8081 "tests/suites/test_suite_psa_crypto.function"
+#line 8425 "tests/suites/test_suite_psa_crypto.function"
 void test_verify_message_fail(int key_type_arg,
                          data_t *key_data,
                          int alg_arg,
@@ -8903,7 +9254,7 @@ void test_verify_message_fail_wrapper( void ** params )
 
     test_verify_message_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
-#line 8118 "tests/suites/test_suite_psa_crypto.function"
+#line 8462 "tests/suites/test_suite_psa_crypto.function"
 void test_asymmetric_encrypt(int key_type_arg,
                         data_t *key_data,
                         int alg_arg,
@@ -8994,7 +9345,7 @@ void test_asymmetric_encrypt_wrapper( void ** params )
 
     test_asymmetric_encrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
-#line 8202 "tests/suites/test_suite_psa_crypto.function"
+#line 8546 "tests/suites/test_suite_psa_crypto.function"
 void test_asymmetric_encrypt_decrypt(int key_type_arg,
                                 data_t *key_data,
                                 int alg_arg,
@@ -9083,7 +9434,7 @@ void test_asymmetric_encrypt_decrypt_wrapper( void ** params )
 
     test_asymmetric_encrypt_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
-#line 8278 "tests/suites/test_suite_psa_crypto.function"
+#line 8622 "tests/suites/test_suite_psa_crypto.function"
 void test_asymmetric_decrypt(int key_type_arg,
                         data_t *key_data,
                         int alg_arg,
@@ -9165,7 +9516,7 @@ void test_asymmetric_decrypt_wrapper( void ** params )
 
     test_asymmetric_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8 );
 }
-#line 8346 "tests/suites/test_suite_psa_crypto.function"
+#line 8690 "tests/suites/test_suite_psa_crypto.function"
 void test_asymmetric_decrypt_fail(int key_type_arg,
                              data_t *key_data,
                              int alg_arg,
@@ -9234,7 +9585,7 @@ void test_asymmetric_decrypt_fail_wrapper( void ** params )
 
     test_asymmetric_decrypt_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
-#line 8408 "tests/suites/test_suite_psa_crypto.function"
+#line 8752 "tests/suites/test_suite_psa_crypto.function"
 void test_key_derivation_init(void)
 {
     /* Test each valid way of initializing the object, except for `= {0}`, as
@@ -9270,7 +9621,7 @@ void test_key_derivation_init_wrapper( void ** params )
 
     test_key_derivation_init(  );
 }
-#line 8437 "tests/suites/test_suite_psa_crypto.function"
+#line 8781 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_setup(int alg_arg, int expected_status_arg)
 {
     psa_algorithm_t alg = alg_arg;
@@ -9292,8 +9643,8 @@ void test_derive_setup_wrapper( void ** params )
 
     test_derive_setup( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 8455 "tests/suites/test_suite_psa_crypto.function"
-void test_derive_set_capacity(int alg_arg, int capacity_arg,
+#line 8799 "tests/suites/test_suite_psa_crypto.function"
+void test_derive_set_capacity(int alg_arg, int64_t capacity_arg,
                          int expected_status_arg)
 {
     psa_algorithm_t alg = alg_arg;
@@ -9318,7 +9669,7 @@ void test_derive_set_capacity_wrapper( void ** params )
 
     test_derive_set_capacity( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 8477 "tests/suites/test_suite_psa_crypto.function"
+#line 8821 "tests/suites/test_suite_psa_crypto.function"
 void test_parse_binary_string_test(data_t *input, int output)
 {
     uint64_t value;
@@ -9334,7 +9685,7 @@ void test_parse_binary_string_test_wrapper( void ** params )
 
     test_parse_binary_string_test( &data0, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 8486 "tests/suites/test_suite_psa_crypto.function"
+#line 8830 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_input(int alg_arg,
                   int step_arg1, int key_type_arg1, data_t *input1,
                   int expected_status_arg1,
@@ -9384,7 +9735,7 @@ void test_derive_input(int alg_arg,
                 // When taking a private key as secret input, use key agreement
                 // to add the shared secret to the derivation
                 TEST_EQUAL(mbedtls_test_psa_key_agreement_with_self(
-                               &operation, keys[i]),
+                               &operation, keys[i], 0),
                            expected_statuses[i]);
             } else {
                 TEST_EQUAL(psa_key_derivation_input_key(&operation, steps[i],
@@ -9438,7 +9789,7 @@ void test_derive_input_wrapper( void ** params )
 
     test_derive_input( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, &data8, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, &data13, ((mbedtls_test_argument_t *) params[15])->sint, ((mbedtls_test_argument_t *) params[16])->sint, ((mbedtls_test_argument_t *) params[17])->sint );
 }
-#line 8583 "tests/suites/test_suite_psa_crypto.function"
+#line 8927 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_input_invalid_cost(int alg_arg, int64_t cost)
 {
     psa_algorithm_t alg = alg_arg;
@@ -9462,7 +9813,7 @@ void test_derive_input_invalid_cost_wrapper( void ** params )
 
     test_derive_input_invalid_cost( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 8603 "tests/suites/test_suite_psa_crypto.function"
+#line 8947 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_over_capacity(int alg_arg)
 {
     psa_algorithm_t alg = alg_arg;
@@ -9494,7 +9845,7 @@ void test_derive_over_capacity(int alg_arg)
     if (!mbedtls_test_psa_setup_key_derivation_wrap(&operation, key, alg,
                                                     input1, input1_length,
                                                     input2, input2_length,
-                                                    capacity)) {
+                                                    capacity, 0)) {
         goto exit;
     }
 
@@ -9518,7 +9869,7 @@ void test_derive_over_capacity_wrapper( void ** params )
 
     test_derive_over_capacity( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 8655 "tests/suites/test_suite_psa_crypto.function"
+#line 8999 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_actions_without_setup(void)
 {
     uint8_t output_buffer[16];
@@ -9552,7 +9903,7 @@ void test_derive_actions_without_setup_wrapper( void ** params )
 
     test_derive_actions_without_setup(  );
 }
-#line 8684 "tests/suites/test_suite_psa_crypto.function"
+#line 9028 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_output(int alg_arg,
                    int step1_arg, data_t *input1, int expected_status_arg1,
                    int step2_arg, data_t *input2, int expected_status_arg2,
@@ -9805,7 +10156,7 @@ void test_derive_output_wrapper( void ** params )
 
     test_derive_output( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, &data10, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, &data14, ((mbedtls_test_argument_t *) params[16])->sint, &data17, ((mbedtls_test_argument_t *) params[19])->sint, &data20, &data22, ((mbedtls_test_argument_t *) params[24])->sint, ((mbedtls_test_argument_t *) params[25])->sint, ((mbedtls_test_argument_t *) params[26])->sint );
 }
-#line 8926 "tests/suites/test_suite_psa_crypto.function"
+#line 9270 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_full(int alg_arg,
                  data_t *key_data,
                  data_t *input1,
@@ -9816,7 +10167,7 @@ void test_derive_full(int alg_arg,
     psa_algorithm_t alg = alg_arg;
     size_t requested_capacity = requested_capacity_arg;
     psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
-    unsigned char output_buffer[16];
+    unsigned char output_buffer[32];
     size_t expected_capacity = requested_capacity;
     size_t current_capacity;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -9833,7 +10184,7 @@ void test_derive_full(int alg_arg,
     if (!mbedtls_test_psa_setup_key_derivation_wrap(&operation, key, alg,
                                                     input1->x, input1->len,
                                                     input2->x, input2->len,
-                                                    requested_capacity)) {
+                                                    requested_capacity, 0)) {
         goto exit;
     }
 
@@ -9878,7 +10229,7 @@ void test_derive_full_wrapper( void ** params )
 }
 #if defined(PSA_WANT_ALG_SHA_256)
 #if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
-#line 8990 "tests/suites/test_suite_psa_crypto.function"
+#line 9334 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_ecjpake_to_pms(data_t *input, int expected_input_status_arg,
                            int derivation_step,
                            int capacity, int expected_capacity_status_arg,
@@ -9933,7 +10284,7 @@ void test_derive_ecjpake_to_pms_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS */
 #endif /* PSA_WANT_ALG_SHA_256 */
-#line 9037 "tests/suites/test_suite_psa_crypto.function"
+#line 9381 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_key_exercise(int alg_arg,
                          data_t *key_data,
                          data_t *input1,
@@ -9967,7 +10318,7 @@ void test_derive_key_exercise(int alg_arg,
     if (!mbedtls_test_psa_setup_key_derivation_wrap(&operation, base_key, alg,
                                                     input1->x, input1->len,
                                                     input2->x, input2->len,
-                                                    capacity)) {
+                                                    capacity, 0)) {
         goto exit;
     }
 
@@ -9984,7 +10335,7 @@ void test_derive_key_exercise(int alg_arg,
     TEST_EQUAL(psa_get_key_bits(&got_attributes), derived_bits);
 
     /* Exercise the derived key. */
-    if (!mbedtls_test_psa_exercise_key(derived_key, derived_usage, derived_alg)) {
+    if (!mbedtls_test_psa_exercise_key(derived_key, derived_usage, derived_alg, 0)) {
         goto exit;
     }
 
@@ -10009,7 +10360,7 @@ void test_derive_key_exercise_wrapper( void ** params )
 
     test_derive_key_exercise( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 9106 "tests/suites/test_suite_psa_crypto.function"
+#line 9450 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_key_export(int alg_arg,
                        data_t *key_data,
                        data_t *input1,
@@ -10044,7 +10395,7 @@ void test_derive_key_export(int alg_arg,
     if (!mbedtls_test_psa_setup_key_derivation_wrap(&operation, base_key, alg,
                                                     input1->x, input1->len,
                                                     input2->x, input2->len,
-                                                    capacity)) {
+                                                    capacity, 0)) {
         goto exit;
     }
 
@@ -10057,7 +10408,7 @@ void test_derive_key_export(int alg_arg,
     if (!mbedtls_test_psa_setup_key_derivation_wrap(&operation, base_key, alg,
                                                     input1->x, input1->len,
                                                     input2->x, input2->len,
-                                                    capacity)) {
+                                                    capacity, 0)) {
         goto exit;
     }
 
@@ -10101,7 +10452,7 @@ void test_derive_key_export_wrapper( void ** params )
 
     test_derive_key_export( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint );
 }
-#line 9191 "tests/suites/test_suite_psa_crypto.function"
+#line 9535 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_key_type(int alg_arg,
                      data_t *key_data,
                      data_t *input1,
@@ -10135,7 +10486,7 @@ void test_derive_key_type(int alg_arg,
             &operation, base_key, alg,
             input1->x, input1->len,
             input2->x, input2->len,
-            PSA_KEY_DERIVATION_UNLIMITED_CAPACITY) == 0) {
+            PSA_KEY_DERIVATION_UNLIMITED_CAPACITY, 0) == 0) {
         goto exit;
     }
 
@@ -10169,7 +10520,92 @@ void test_derive_key_type_wrapper( void ** params )
 
     test_derive_key_type( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, &data9 );
 }
-#line 9251 "tests/suites/test_suite_psa_crypto.function"
+#line 9595 "tests/suites/test_suite_psa_crypto.function"
+//void test_derive_key_ext(int alg_arg,  /* !!OM */
+//                    data_t *key_data,
+//                    data_t *input1,
+//                    data_t *input2,
+//                    int key_type_arg, int bits_arg,
+//                    int flags_arg,
+//                    data_t *params_data,
+//                    psa_status_t expected_status,
+//                    data_t *expected_export)
+//{
+//    mbedtls_svc_key_id_t base_key = MBEDTLS_SVC_KEY_ID_INIT;
+//    mbedtls_svc_key_id_t derived_key = MBEDTLS_SVC_KEY_ID_INIT;
+//    const psa_algorithm_t alg = alg_arg;
+//    const psa_key_type_t key_type = key_type_arg;
+//    const size_t bits = bits_arg;
+//    psa_key_production_parameters_t *params = NULL;
+//    size_t params_data_length = 0;
+//    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+//    const size_t export_buffer_size =
+//        PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, bits);
+//    uint8_t *export_buffer = NULL;
+//    psa_key_attributes_t base_attributes = PSA_KEY_ATTRIBUTES_INIT;
+//    psa_key_attributes_t derived_attributes = PSA_KEY_ATTRIBUTES_INIT;
+//    size_t export_length;
+//
+//    TEST_CALLOC(export_buffer, export_buffer_size);
+//    PSA_ASSERT(psa_crypto_init());
+//
+//    psa_set_key_usage_flags(&base_attributes, PSA_KEY_USAGE_DERIVE);
+//    psa_set_key_algorithm(&base_attributes, alg);
+//    psa_set_key_type(&base_attributes, PSA_KEY_TYPE_DERIVE);
+//    PSA_ASSERT(psa_import_key(&base_attributes, key_data->x, key_data->len,
+//                              &base_key));
+//
+//    if (mbedtls_test_psa_setup_key_derivation_wrap(
+//            &operation, base_key, alg,
+//            input1->x, input1->len,
+//            input2->x, input2->len,
+//            PSA_KEY_DERIVATION_UNLIMITED_CAPACITY, 0) == 0) {
+//        goto exit;
+//    }
+//
+//    psa_set_key_usage_flags(&derived_attributes, PSA_KEY_USAGE_EXPORT);
+//    psa_set_key_algorithm(&derived_attributes, 0);
+//    psa_set_key_type(&derived_attributes, key_type);
+//    psa_set_key_bits(&derived_attributes, bits);
+//    if (!setup_key_production_parameters(&params, &params_data_length,
+//                                         flags_arg, params_data)) {
+//        goto exit;
+//    }
+//
+//    TEST_EQUAL(psa_key_derivation_output_key_ext(&derived_attributes, &operation,
+//                                                 params, params_data_length,
+//                                                 &derived_key),
+//               expected_status);
+//
+//    if (expected_status == PSA_SUCCESS) {
+//        PSA_ASSERT(psa_export_key(derived_key,
+//                                  export_buffer, export_buffer_size,
+//                                  &export_length));
+//        TEST_MEMORY_COMPARE(export_buffer, export_length,
+//                            expected_export->x, expected_export->len);
+//    }
+//
+//exit:
+//    mbedtls_free(export_buffer);
+//    mbedtls_free(params);
+//    psa_key_derivation_abort(&operation);
+//    psa_destroy_key(base_key);
+//    psa_destroy_key(derived_key);
+//    PSA_DONE();
+//}
+
+void test_derive_key_ext_wrapper( void ** params )
+{
+    (void)params;  /* !!OM */
+    //data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
+    //data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
+    //data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
+    //data_t data10 = {(uint8_t *) params[10], ((mbedtls_test_argument_t *) params[11])->len};
+    //data_t data13 = {(uint8_t *) params[13], ((mbedtls_test_argument_t *) params[14])->len};
+
+    //test_derive_key_ext( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, &data10, ((mbedtls_test_argument_t *) params[12])->sint, &data13 );
+}
+#line 9670 "tests/suites/test_suite_psa_crypto.function"
 void test_derive_key(int alg_arg,
                 data_t *key_data, data_t *input1, data_t *input2,
                 int type_arg, int bits_arg,
@@ -10197,7 +10633,7 @@ void test_derive_key(int alg_arg,
     if (!mbedtls_test_psa_setup_key_derivation_wrap(&operation, base_key, alg,
                                                     input1->x, input1->len,
                                                     input2->x, input2->len,
-                                                    SIZE_MAX)) {
+                                                    SIZE_MAX, 0)) {
         goto exit;
     }
 
@@ -10232,7 +10668,7 @@ void test_derive_key_wrapper( void ** params )
 
     test_derive_key( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 9305 "tests/suites/test_suite_psa_crypto.function"
+#line 9724 "tests/suites/test_suite_psa_crypto.function"
 void test_key_agreement_setup(int alg_arg,
                          int our_key_type_arg, int our_key_alg_arg,
                          data_t *our_key_data, data_t *peer_key_data,
@@ -10284,7 +10720,7 @@ void test_key_agreement_setup_wrapper( void ** params )
 
     test_key_agreement_setup( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 9351 "tests/suites/test_suite_psa_crypto.function"
+#line 9770 "tests/suites/test_suite_psa_crypto.function"
 void test_raw_key_agreement(int alg_arg,
                        int our_key_type_arg, data_t *our_key_data,
                        data_t *peer_key_data,
@@ -10366,7 +10802,7 @@ void test_raw_key_agreement_wrapper( void ** params )
 
     test_raw_key_agreement( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6 );
 }
-#line 9426 "tests/suites/test_suite_psa_crypto.function"
+#line 9845 "tests/suites/test_suite_psa_crypto.function"
 void test_key_agreement_capacity(int alg_arg,
                             int our_key_type_arg, data_t *our_key_data,
                             data_t *peer_key_data,
@@ -10430,7 +10866,62 @@ void test_key_agreement_capacity_wrapper( void ** params )
 
     test_key_agreement_capacity( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 9484 "tests/suites/test_suite_psa_crypto.function"
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#line 9903 "tests/suites/test_suite_psa_crypto.function"
+//void test_ecc_conversion_functions(int grp_id_arg, int psa_family_arg, int bits_arg)  /* !!OM */
+//{
+//    mbedtls_ecp_group_id grp_id = grp_id_arg;
+//    psa_ecc_family_t ecc_family = psa_family_arg;
+//    size_t bits = bits_arg;
+//    size_t bits_tmp;
+//
+//    TEST_EQUAL(ecc_family, mbedtls_ecc_group_to_psa(grp_id, &bits_tmp));
+//    TEST_EQUAL(bits, bits_tmp);
+//    TEST_EQUAL(grp_id, mbedtls_ecc_group_from_psa(ecc_family, bits));
+//exit:
+//    ;
+//}
+
+void test_ecc_conversion_functions_wrapper( void ** params )
+{
+    (void)params;  /* !!OM */
+    //test_ecc_conversion_functions( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
+}
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#line 9917 "tests/suites/test_suite_psa_crypto.function"
+//void test_ecc_conversion_functions_fail(void)  /* !!OM */
+//{
+//    size_t bits;
+//
+//    /* Invalid legacy curve identifiers. */
+//    TEST_EQUAL(0, mbedtls_ecc_group_to_psa(MBEDTLS_ECP_DP_MAX, &bits));
+//    TEST_EQUAL(0, bits);
+//    TEST_EQUAL(0, mbedtls_ecc_group_to_psa(MBEDTLS_ECP_DP_NONE, &bits));
+//    TEST_EQUAL(0, bits);
+//
+//    /* Invalid PSA EC family. */
+//    TEST_EQUAL(MBEDTLS_ECP_DP_NONE, mbedtls_ecc_group_from_psa(0, 192));
+//    /* Invalid bit-size for a valid EC family. */
+//    TEST_EQUAL(MBEDTLS_ECP_DP_NONE, mbedtls_ecc_group_from_psa(PSA_ECC_FAMILY_SECP_R1, 512));
+//
+//    /* Twisted-Edward curves are not supported yet. */
+//    TEST_EQUAL(MBEDTLS_ECP_DP_NONE,
+//               mbedtls_ecc_group_from_psa(PSA_ECC_FAMILY_TWISTED_EDWARDS, 255));
+//    TEST_EQUAL(MBEDTLS_ECP_DP_NONE,
+//               mbedtls_ecc_group_from_psa(PSA_ECC_FAMILY_TWISTED_EDWARDS, 448));
+//exit:
+//    ;
+//}
+
+void test_ecc_conversion_functions_fail_wrapper( void ** params )
+{
+    (void)params;
+
+    //test_ecc_conversion_functions_fail(  );  /* !!OM */
+}
+#endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
+#line 9942 "tests/suites/test_suite_psa_crypto.function"
 void test_key_agreement_output(int alg_arg,
                           int our_key_type_arg, data_t *our_key_data,
                           data_t *peer_key_data,
@@ -10496,7 +10987,7 @@ void test_key_agreement_output_wrapper( void ** params )
 
     test_key_agreement_output( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, &data8 );
 }
-#line 9542 "tests/suites/test_suite_psa_crypto.function"
+#line 10000 "tests/suites/test_suite_psa_crypto.function"
 void test_generate_random(int bytes_arg)
 {
     size_t bytes = bytes_arg;
@@ -10546,7 +11037,63 @@ void test_generate_random_wrapper( void ** params )
 
     test_generate_random( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 9588 "tests/suites/test_suite_psa_crypto.function"
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#line 10048 "tests/suites/test_suite_psa_crypto.function"
+void test_concurrently_generate_keys(int type_arg,
+                                int bits_arg,
+                                int usage_arg,
+                                int alg_arg,
+                                int expected_status_arg,
+                                int is_large_key_arg,
+                                int arg_thread_count,
+                                int reps_arg)
+{
+    size_t thread_count = (size_t) arg_thread_count;
+    mbedtls_test_thread_t *threads = NULL;
+    generate_key_context gkc;
+    gkc.type = type_arg;
+    gkc.usage = usage_arg;
+    gkc.bits = bits_arg;
+    gkc.alg = alg_arg;
+    gkc.expected_status = expected_status_arg;
+    gkc.is_large_key = is_large_key_arg;
+    gkc.reps = reps_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_ASSERT(psa_crypto_init());
+
+    psa_set_key_usage_flags(&attributes, usage_arg);
+    psa_set_key_algorithm(&attributes, alg_arg);
+    psa_set_key_type(&attributes, type_arg);
+    psa_set_key_bits(&attributes, bits_arg);
+    gkc.attributes = &attributes;
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+
+    /* Split threads to generate key then destroy key. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i], thread_generate_key,
+                                       (void *) &gkc), 0);
+    }
+
+    /* Join threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+exit:
+    mbedtls_free(threads);
+    PSA_DONE();
+}
+
+void test_concurrently_generate_keys_wrapper( void ** params )
+{
+
+    test_concurrently_generate_keys( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
+}
+#endif /* MBEDTLS_THREADING_PTHREAD */
+#line 10099 "tests/suites/test_suite_psa_crypto.function"
 void test_generate_key(int type_arg,
                   int bits_arg,
                   int usage_arg,
@@ -10587,7 +11134,7 @@ void test_generate_key(int type_arg,
     TEST_EQUAL(psa_get_key_bits(&got_attributes), bits);
 
     /* Do something with the key according to its type and permitted usage. */
-    if (!mbedtls_test_psa_exercise_key(key, usage, alg)) {
+    if (!mbedtls_test_psa_exercise_key(key, usage, alg, 0)) {
         goto exit;
     }
 
@@ -10607,127 +11154,103 @@ void test_generate_key_wrapper( void ** params )
 
     test_generate_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
-#line 9645 "tests/suites/test_suite_psa_crypto.function"
-void test_generate_key_rsa(int bits_arg,
-                      data_t *e_arg,
-                      int expected_status_arg)
+#line 10156 "tests/suites/test_suite_psa_crypto.function"
+//void test_generate_key_ext(int type_arg,  /* !!OM */
+//                      int bits_arg,
+//                      int usage_arg,
+//                      int alg_arg,
+//                      int flags_arg,
+//                      data_t *params_data,
+//                      int expected_status_arg)
+//{
+//    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
+//    psa_key_type_t type = type_arg;
+//    psa_key_usage_t usage = usage_arg;
+//    size_t bits = bits_arg;
+//    psa_algorithm_t alg = alg_arg;
+//    psa_status_t expected_status = expected_status_arg;
+//    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+//    psa_key_production_parameters_t *params = NULL;
+//    size_t params_data_length = 0;
+//    psa_key_attributes_t got_attributes = PSA_KEY_ATTRIBUTES_INIT;
+//
+//    PSA_ASSERT(psa_crypto_init());
+//
+//    psa_set_key_usage_flags(&attributes, usage);
+//    psa_set_key_algorithm(&attributes, alg);
+//    psa_set_key_type(&attributes, type);
+//    psa_set_key_bits(&attributes, bits);
+//
+//    if (!setup_key_production_parameters(&params, &params_data_length,
+//                                         flags_arg, params_data)) {
+//        goto exit;
+//    }
+//
+//    /* Generate a key */
+//    psa_status_t status = psa_generate_key_ext(&attributes,
+//                                               params, params_data_length,
+//                                               &key);
+//
+//    TEST_EQUAL(status, expected_status);
+//    if (expected_status != PSA_SUCCESS) {
+//        goto exit;
+//    }
+//
+//    /* Test the key information */
+//    PSA_ASSERT(psa_get_key_attributes(key, &got_attributes));
+//    TEST_EQUAL(psa_get_key_type(&got_attributes), type);
+//    TEST_EQUAL(psa_get_key_bits(&got_attributes), bits);
+//
+//#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+//    if (type == PSA_KEY_TYPE_RSA_KEY_PAIR) {
+//        TEST_ASSERT(rsa_test_e(key, bits, params_data));
+//    }
+//#endif
+//
+//    /* Do something with the key according to its type and permitted usage. */
+//    if (!mbedtls_test_psa_exercise_key(key, usage, alg, 0)) {
+//        goto exit;
+//    }
+//
+//exit:
+//    /*
+//     * Key attributes may have been returned by psa_get_key_attributes()
+//     * thus reset them as required.
+//     */
+//    psa_reset_key_attributes(&got_attributes);
+//    mbedtls_free(params);
+//    psa_destroy_key(key);
+//    PSA_DONE();
+//}
+
+void test_generate_key_ext_wrapper( void ** params )
 {
-    mbedtls_svc_key_id_t key = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_key_type_t type = PSA_KEY_TYPE_RSA_KEY_PAIR;
-    size_t bits = bits_arg;
-    psa_key_usage_t usage = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
-    psa_algorithm_t alg = PSA_ALG_RSA_PKCS1V15_SIGN_RAW;
-    psa_status_t expected_status = expected_status_arg;
-    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    uint8_t *exported = NULL;
-    size_t exported_size =
-        PSA_EXPORT_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_RSA_PUBLIC_KEY, bits);
-    size_t exported_length = SIZE_MAX;
-    uint8_t *e_read_buffer = NULL;
-    int is_default_public_exponent = 0;
-    size_t e_read_size = PSA_KEY_DOMAIN_PARAMETERS_SIZE(type, bits);
-    size_t e_read_length = SIZE_MAX;
+    (void)params;  /* !!OM */
+    //data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
 
-    if (e_arg->len == 0 ||
-        (e_arg->len == 3 &&
-         e_arg->x[0] == 1 && e_arg->x[1] == 0 && e_arg->x[2] == 1)) {
-        is_default_public_exponent = 1;
-        e_read_size = 0;
-    }
-    TEST_CALLOC(e_read_buffer, e_read_size);
-    TEST_CALLOC(exported, exported_size);
-
-    PSA_ASSERT(psa_crypto_init());
-
-    psa_set_key_usage_flags(&attributes, usage);
-    psa_set_key_algorithm(&attributes, alg);
-    PSA_ASSERT(psa_set_key_domain_parameters(&attributes, type,
-                                             e_arg->x, e_arg->len));
-    psa_set_key_bits(&attributes, bits);
-
-    /* Generate a key */
-    TEST_EQUAL(psa_generate_key(&attributes, &key), expected_status);
-    if (expected_status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-    /* Test the key information */
-    PSA_ASSERT(psa_get_key_attributes(key, &attributes));
-    TEST_EQUAL(psa_get_key_type(&attributes), type);
-    TEST_EQUAL(psa_get_key_bits(&attributes), bits);
-    PSA_ASSERT(psa_get_key_domain_parameters(&attributes,
-                                             e_read_buffer, e_read_size,
-                                             &e_read_length));
-    if (is_default_public_exponent) {
-        TEST_EQUAL(e_read_length, 0);
-    } else {
-        TEST_MEMORY_COMPARE(e_read_buffer, e_read_length, e_arg->x, e_arg->len);
-    }
-
-    /* Do something with the key according to its type and permitted usage. */
-    if (!mbedtls_test_psa_exercise_key(key, usage, alg)) {
-        goto exit;
-    }
-
-    /* Export the key and check the public exponent. */
-    PSA_ASSERT(psa_export_public_key(key,
-                                     exported, exported_size,
-                                     &exported_length));
-    {
-        uint8_t *p = exported;
-        uint8_t *end = exported + exported_length;
-        size_t len;
-        /*   RSAPublicKey ::= SEQUENCE {
-         *      modulus            INTEGER,    -- n
-         *      publicExponent     INTEGER  }  -- e
-         */
-        TEST_EQUAL(0, mbedtls_asn1_get_tag(&p, end, &len,
-                                           MBEDTLS_ASN1_SEQUENCE |
-                                           MBEDTLS_ASN1_CONSTRUCTED));
-        TEST_ASSERT(mbedtls_test_asn1_skip_integer(&p, end, bits, bits, 1));
-        TEST_EQUAL(0, mbedtls_asn1_get_tag(&p, end, &len,
-                                           MBEDTLS_ASN1_INTEGER));
-        if (len >= 1 && p[0] == 0) {
-            ++p;
-            --len;
-        }
-        if (e_arg->len == 0) {
-            TEST_EQUAL(len, 3);
-            TEST_EQUAL(p[0], 1);
-            TEST_EQUAL(p[1], 0);
-            TEST_EQUAL(p[2], 1);
-        } else {
-            TEST_MEMORY_COMPARE(p, len, e_arg->x, e_arg->len);
-        }
-    }
-
-exit:
-    /*
-     * Key attributes may have been returned by psa_get_key_attributes() or
-     * set by psa_set_key_domain_parameters() thus reset them as required.
-     */
-    psa_reset_key_attributes(&attributes);
-
-    psa_destroy_key(key);
-    PSA_DONE();
-    mbedtls_free(e_read_buffer);
-    mbedtls_free(exported);
+    //test_generate_key_ext( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint );
 }
+#line 10226 "tests/suites/test_suite_psa_crypto.function"
+//void test_key_production_parameters_init(void)  /* !!OM */
+//{
+//    psa_key_production_parameters_t init = PSA_KEY_PRODUCTION_PARAMETERS_INIT;
+//    psa_key_production_parameters_t zero;
+//    memset(&zero, 0, sizeof(zero));
+//
+//    TEST_EQUAL(init.flags, 0);
+//    TEST_EQUAL(zero.flags, 0);
+//exit:
+//    ;
+//}
 
-void test_generate_key_rsa_wrapper( void ** params )
+void test_key_production_parameters_init_wrapper( void ** params )
 {
-    data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
+    (void)params;
 
-    test_generate_key_rsa( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint );
+    //test_key_production_parameters_init(  );  /* !!OM */
 }
-#endif /* PSA_WANT_ALG_RSA_PKCS1V15_SIGN */
-#endif /* PSA_WANT_ALG_RSA_PKCS1V15_CRYPT */
-#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 9753 "tests/suites/test_suite_psa_crypto.function"
+#line 10238 "tests/suites/test_suite_psa_crypto.function"
 void test_persistent_key_load_key_from_storage(data_t *data,
                                           int type_arg, int bits_arg,
                                           int usage_flags_arg, int alg_arg,
@@ -10850,7 +11373,7 @@ void test_persistent_key_load_key_from_storage(data_t *data,
     }
 
     /* Do something with the key according to its type and permitted usage. */
-    if (!mbedtls_test_psa_exercise_key(key, usage_flags, alg)) {
+    if (!mbedtls_test_psa_exercise_key(key, usage_flags, alg, 0)) {
         goto exit;
     }
 
@@ -10877,7 +11400,7 @@ void test_persistent_key_load_key_from_storage_wrapper( void ** params )
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 9896 "tests/suites/test_suite_psa_crypto.function"
+#line 10381 "tests/suites/test_suite_psa_crypto.function"
 void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
                    int primitive_arg, int hash_arg, int role_arg,
                    int test_input, data_t *pw_data,
@@ -11101,7 +11624,7 @@ void test_ecjpake_setup_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 10122 "tests/suites/test_suite_psa_crypto.function"
+#line 10607 "tests/suites/test_suite_psa_crypto.function"
 void test_ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
                            int client_input_first, int inject_error,
                            data_t *pw_data)
@@ -11179,7 +11702,7 @@ void test_ecjpake_rounds_inject_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 10175 "tests/suites/test_suite_psa_crypto.function"
+#line 10660 "tests/suites/test_suite_psa_crypto.function"
 void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
                     int derive_alg_arg, data_t *pw_data,
                     int client_input_first, int inj_err_type_arg)
@@ -11273,7 +11796,7 @@ void test_ecjpake_rounds_wrapper( void ** params )
     test_ecjpake_rounds( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint );
 }
 #endif /* PSA_WANT_ALG_JPAKE */
-#line 10266 "tests/suites/test_suite_psa_crypto.function"
+#line 10751 "tests/suites/test_suite_psa_crypto.function"
 void test_ecjpake_size_macros(void)
 {
     const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
@@ -12729,147 +13252,322 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 274:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_1);
+                *out_value = 48U + 1U;
             }
             break;
         case 275:
             {
-                *out_value = PSA_ERROR_INSUFFICIENT_DATA;
+                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_256) + 1;
             }
             break;
         case 276:
             {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_256) - 1;
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_512);
             }
             break;
         case 277:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH;
+                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_512) + 1;
             }
             break;
         case 278:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_DERIVE;
+                *out_value = 4294967295ULL * 16 + 1;
             }
             break;
         case 279:
             {
-                *out_value = PSA_KEY_TYPE_CATEGORY_MASK;
+                *out_value = SIZE_MAX;
             }
             break;
         case 280:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
+                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_256);
             }
             break;
         case 281:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R2);
+                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_512);
             }
             break;
         case 282:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_K1);
+                *out_value = 4294967295ULL * 16;
             }
             break;
         case 283:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R1);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_1);
             }
             break;
         case 284:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R2);
+                *out_value = PSA_ERROR_INSUFFICIENT_DATA;
             }
             break;
         case 285:
             {
-                *out_value = PSA_MAX_KEY_BITS;
+                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_256) - 1;
             }
             break;
         case 286:
             {
-                *out_value = PSA_MAX_KEY_BITS + 1;
+                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_512) - 1;
             }
             break;
         case 287:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_512));
+                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_512);
             }
             break;
         case 288:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(0));
+                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_256) - 1;
             }
             break;
         case 289:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(0, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_512);
             }
             break;
         case 290:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_512) - 1;
             }
             break;
         case 291:
             {
-                *out_value = MBEDTLS_CTR_DRBG_MAX_REQUEST;
+                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_256);
             }
             break;
         case 292:
             {
-                *out_value = MBEDTLS_CTR_DRBG_MAX_REQUEST + 1;
+                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_512);
             }
             break;
         case 293:
             {
-                *out_value = 2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1;
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_512);
             }
             break;
         case 294:
             {
-                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS;
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH;
             }
             break;
         case 295:
             {
-                *out_value = (MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8;
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_DERIVE;
             }
             break;
         case 296:
             {
-                *out_value = (2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8;
+                *out_value = PSA_KEY_TYPE_CATEGORY_MASK;
             }
             break;
         case 297:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
             }
             break;
         case 298:
             {
-                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS + 62;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R2);
             }
             break;
         case 299:
             {
-                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS + 63;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_K1);
             }
             break;
         case 300:
             {
-                *out_value = IMPORT_KEY;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R1);
             }
             break;
         case 301:
             {
-                *out_value = GENERATE_KEY;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R2);
             }
             break;
         case 302:
             {
+                *out_value = PSA_MAX_KEY_BITS;
+            }
+            break;
+        case 303:
+            {
+                *out_value = PSA_MAX_KEY_BITS + 1;
+            }
+            break;
+        case 304:
+            {
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_512));
+            }
+            break;
+        case 305:
+            {
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(0));
+            }
+            break;
+        case 306:
+            {
+                *out_value = PSA_ALG_KEY_AGREEMENT(0, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+            }
+            break;
+        case 307:
+            {
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+            }
+            break;
+        case 308:
+            {
+                *out_value = MBEDTLS_CTR_DRBG_MAX_REQUEST;
+            }
+            break;
+        case 309:
+            {
+                *out_value = MBEDTLS_CTR_DRBG_MAX_REQUEST + 1;
+            }
+            break;
+        case 310:
+            {
+                *out_value = 2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1;
+            }
+            break;
+        case 311:
+            {
+                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS;
+            }
+            break;
+        case 312:
+            {
+                *out_value = (MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8;
+            }
+            break;
+        case 313:
+            {
+                *out_value = (2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8;
+            }
+            break;
+        case 314:
+            {
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
+            }
+            break;
+        case 315:
+            {
+                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS + 62;
+            }
+            break;
+        case 316:
+            {
+                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS + 63;
+            }
+            break;
+        case 317:
+            {
+                *out_value = IMPORT_KEY;
+            }
+            break;
+        case 318:
+            {
+                *out_value = GENERATE_KEY;
+            }
+            break;
+        case 319:
+            {
                 *out_value = DERIVE_KEY;
+            }
+            break;
+        case 320:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP192R1;
+            }
+            break;
+        case 321:
+            {
+                *out_value = PSA_ECC_FAMILY_SECP_R1;
+            }
+            break;
+        case 322:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP224R1;
+            }
+            break;
+        case 323:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP256R1;
+            }
+            break;
+        case 324:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP384R1;
+            }
+            break;
+        case 325:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP521R1;
+            }
+            break;
+        case 326:
+            {
+                *out_value = MBEDTLS_ECP_DP_BP256R1;
+            }
+            break;
+        case 327:
+            {
+                *out_value = PSA_ECC_FAMILY_BRAINPOOL_P_R1;
+            }
+            break;
+        case 328:
+            {
+                *out_value = MBEDTLS_ECP_DP_BP384R1;
+            }
+            break;
+        case 329:
+            {
+                *out_value = MBEDTLS_ECP_DP_BP512R1;
+            }
+            break;
+        case 330:
+            {
+                *out_value = MBEDTLS_ECP_DP_CURVE25519;
+            }
+            break;
+        case 331:
+            {
+                *out_value = PSA_ECC_FAMILY_MONTGOMERY;
+            }
+            break;
+        case 332:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP192K1;
+            }
+            break;
+        case 333:
+            {
+                *out_value = PSA_ECC_FAMILY_SECP_K1;
+            }
+            break;
+        case 334:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP224K1;
+            }
+            break;
+        case 335:
+            {
+                *out_value = MBEDTLS_ECP_DP_SECP256K1;
+            }
+            break;
+        case 336:
+            {
+                *out_value = MBEDTLS_ECP_DP_CURVE448;
+            }
+            break;
+        case 337:
+            {
+                *out_value = MBEDTLS_ECP_DP_NONE;
             }
             break;
 #endif
@@ -12989,7 +13687,7 @@ int dep_check(int dep_id)
             break;
         case 9:
             {
-#if defined(MBEDTLS_RSA_C)
+#if defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -12998,7 +13696,7 @@ int dep_check(int dep_id)
             break;
         case 10:
             {
-#if defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13007,7 +13705,7 @@ int dep_check(int dep_id)
             break;
         case 11:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13016,7 +13714,7 @@ int dep_check(int dep_id)
             break;
         case 12:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13025,7 +13723,7 @@ int dep_check(int dep_id)
             break;
         case 13:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_ECC_SECP_R1_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13034,7 +13732,7 @@ int dep_check(int dep_id)
             break;
         case 14:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_224)
+#if defined(PSA_WANT_ECC_SECP_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13043,7 +13741,7 @@ int dep_check(int dep_id)
             break;
         case 15:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_256)
+#if defined(PSA_WANT_ECC_SECP_R1_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13052,7 +13750,7 @@ int dep_check(int dep_id)
             break;
         case 16:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_384)
+#if defined(PSA_WANT_ECC_SECP_R1_521)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13061,7 +13759,7 @@ int dep_check(int dep_id)
             break;
         case 17:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_521)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13070,7 +13768,7 @@ int dep_check(int dep_id)
             break;
         case 18:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13079,7 +13777,7 @@ int dep_check(int dep_id)
             break;
         case 19:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13088,7 +13786,7 @@ int dep_check(int dep_id)
             break;
         case 20:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
+#if defined(PSA_WANT_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13097,7 +13795,7 @@ int dep_check(int dep_id)
             break;
         case 21:
             {
-#if defined(PSA_WANT_ALG_ECDH)
+#if defined(PSA_WANT_ECC_MONTGOMERY_255)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13106,7 +13804,7 @@ int dep_check(int dep_id)
             break;
         case 22:
             {
-#if defined(PSA_WANT_ECC_MONTGOMERY_255)
+#if defined(PSA_WANT_ECC_MONTGOMERY_448)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13115,7 +13813,7 @@ int dep_check(int dep_id)
             break;
         case 23:
             {
-#if defined(PSA_WANT_ECC_MONTGOMERY_448)
+#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13124,7 +13822,7 @@ int dep_check(int dep_id)
             break;
         case 24:
             {
-#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13133,7 +13831,7 @@ int dep_check(int dep_id)
             break;
         case 25:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(PSA_WANT_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13142,7 +13840,7 @@ int dep_check(int dep_id)
             break;
         case 26:
             {
-#if defined(PSA_WANT_ALG_HMAC)
+#if defined(PSA_WANT_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13151,7 +13849,7 @@ int dep_check(int dep_id)
             break;
         case 27:
             {
-#if defined(PSA_WANT_ALG_SHA_256)
+#if defined(PSA_WANT_KEY_TYPE_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13160,7 +13858,7 @@ int dep_check(int dep_id)
             break;
         case 28:
             {
-#if defined(PSA_WANT_KEY_TYPE_HMAC)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13169,7 +13867,7 @@ int dep_check(int dep_id)
             break;
         case 29:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
+#if defined(PSA_WANT_ALG_FFDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13178,7 +13876,7 @@ int dep_check(int dep_id)
             break;
         case 30:
             {
-#if defined(MBEDTLS_PEM_PARSE_C)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13187,7 +13885,7 @@ int dep_check(int dep_id)
             break;
         case 31:
             {
-#if defined(PSA_WANT_ALG_FFDH)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13196,7 +13894,7 @@ int dep_check(int dep_id)
             break;
         case 32:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13205,7 +13903,7 @@ int dep_check(int dep_id)
             break;
         case 33:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_DH_RFC7919_2048)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13214,7 +13912,7 @@ int dep_check(int dep_id)
             break;
         case 34:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13223,7 +13921,7 @@ int dep_check(int dep_id)
             break;
         case 35:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
+#if defined(PSA_WANT_DH_RFC7919_3072)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13232,7 +13930,7 @@ int dep_check(int dep_id)
             break;
         case 36:
             {
-#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
+#if defined(PSA_WANT_DH_RFC7919_4096)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13241,7 +13939,7 @@ int dep_check(int dep_id)
             break;
         case 37:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+#if defined(PSA_WANT_DH_RFC7919_6144)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13250,7 +13948,7 @@ int dep_check(int dep_id)
             break;
         case 38:
             {
-#if defined(PSA_WANT_ALG_SHA_224)
+#if defined(PSA_WANT_DH_RFC7919_8192)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13259,7 +13957,7 @@ int dep_check(int dep_id)
             break;
         case 39:
             {
-#if defined(PSA_WANT_ALG_CMAC)
+#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13268,7 +13966,7 @@ int dep_check(int dep_id)
             break;
         case 40:
             {
-#if defined(PSA_WANT_ALG_CCM)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13277,7 +13975,7 @@ int dep_check(int dep_id)
             break;
         case 41:
             {
-#if defined(PSA_WANT_ALG_GCM)
+#if defined(PSA_WANT_ALG_SHA_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13286,7 +13984,7 @@ int dep_check(int dep_id)
             break;
         case 42:
             {
-#if defined(PSA_WANT_ALG_RSA_OAEP)
+#if defined(PSA_WANT_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13295,7 +13993,7 @@ int dep_check(int dep_id)
             break;
         case 43:
             {
-#if defined(PSA_WANT_ALG_RSA_PSS)
+#if defined(PSA_WANT_ALG_CCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13304,7 +14002,7 @@ int dep_check(int dep_id)
             break;
         case 44:
             {
-#if defined(PSA_WANT_ALG_SHA_384)
+#if defined(PSA_WANT_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13313,7 +14011,7 @@ int dep_check(int dep_id)
             break;
         case 45:
             {
-#if defined(PSA_WANT_ALG_HKDF)
+#if defined(PSA_WANT_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13322,7 +14020,7 @@ int dep_check(int dep_id)
             break;
         case 46:
             {
-#if defined(PSA_WANT_ALG_TLS12_PRF)
+#if defined(PSA_WANT_ALG_RSA_PSS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13331,7 +14029,7 @@ int dep_check(int dep_id)
             break;
         case 47:
             {
-#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
+#if defined(PSA_WANT_ALG_SHA_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13340,7 +14038,7 @@ int dep_check(int dep_id)
             break;
         case 48:
             {
-#if defined(PSA_WANT_ALG_SHA_1)
+#if defined(PSA_WANT_ALG_HKDF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13349,7 +14047,7 @@ int dep_check(int dep_id)
             break;
         case 49:
             {
-#if defined(PSA_WANT_ALG_SHA_512)
+#if defined(PSA_WANT_ALG_TLS12_PRF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13358,7 +14056,7 @@ int dep_check(int dep_id)
             break;
         case 50:
             {
-#if defined(PSA_WANT_ALG_MD5)
+#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13367,7 +14065,7 @@ int dep_check(int dep_id)
             break;
         case 51:
             {
-#if defined(PSA_WANT_ALG_RIPEMD160)
+#if defined(PSA_WANT_ALG_SHA_1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13376,7 +14074,7 @@ int dep_check(int dep_id)
             break;
         case 52:
             {
-#if !defined(PSA_WANT_ALG_MD5)
+#if defined(PSA_WANT_ALG_SHA_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13385,7 +14083,7 @@ int dep_check(int dep_id)
             break;
         case 53:
             {
-#if defined(PSA_WANT_KEY_TYPE_DES)
+#if defined(PSA_WANT_ALG_MD5)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13394,7 +14092,7 @@ int dep_check(int dep_id)
             break;
         case 54:
             {
-#if defined(MBEDTLS_AES_C)
+#if defined(PSA_WANT_ALG_RIPEMD160)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13403,7 +14101,7 @@ int dep_check(int dep_id)
             break;
         case 55:
             {
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
+#if !defined(PSA_WANT_ALG_MD5)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13412,7 +14110,7 @@ int dep_check(int dep_id)
             break;
         case 56:
             {
-#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
+#if defined(PSA_WANT_KEY_TYPE_DES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13421,7 +14119,7 @@ int dep_check(int dep_id)
             break;
         case 57:
             {
-#if defined(PSA_WANT_ALG_CBC_PKCS7)
+#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13430,7 +14128,7 @@ int dep_check(int dep_id)
             break;
         case 58:
             {
-#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13439,7 +14137,7 @@ int dep_check(int dep_id)
             break;
         case 59:
             {
-#if defined(PSA_WANT_ALG_STREAM_CIPHER)
+#if defined(PSA_WANT_ALG_CBC_PKCS7)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13448,7 +14146,7 @@ int dep_check(int dep_id)
             break;
         case 60:
             {
-#if defined(MBEDTLS_DES_C)
+#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13457,7 +14155,7 @@ int dep_check(int dep_id)
             break;
         case 61:
             {
-#if defined(MBEDTLS_CCM_C)
+#if defined(PSA_WANT_ALG_STREAM_CIPHER)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13475,7 +14173,7 @@ int dep_check(int dep_id)
             break;
         case 63:
             {
-#if defined(MBEDTLS_GCM_C)
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13484,7 +14182,7 @@ int dep_check(int dep_id)
             break;
         case 64:
             {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13493,7 +14191,7 @@ int dep_check(int dep_id)
             break;
         case 65:
             {
-#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if !defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13502,7 +14200,7 @@ int dep_check(int dep_id)
             break;
         case 66:
             {
-#if !defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13511,7 +14209,7 @@ int dep_check(int dep_id)
             break;
         case 67:
             {
-#if defined(MBEDTLS_PK_PARSE_C)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13520,7 +14218,7 @@ int dep_check(int dep_id)
             break;
         case 68:
             {
-#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13529,7 +14227,7 @@ int dep_check(int dep_id)
             break;
         case 69:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
+#if defined(PSA_WANT_ALG_PBKDF2_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13538,7 +14236,7 @@ int dep_check(int dep_id)
             break;
         case 70:
             {
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13547,7 +14245,7 @@ int dep_check(int dep_id)
             break;
         case 71:
             {
-#if defined(PSA_WANT_ALG_PBKDF2_HMAC)
+#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13556,7 +14254,7 @@ int dep_check(int dep_id)
             break;
         case 72:
             {
-#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
+#if defined(PSA_WANT_ALG_HKDF_EXPAND)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13565,7 +14263,7 @@ int dep_check(int dep_id)
             break;
         case 73:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
+#if (SIZE_MAX>=0xffffffffffffffff)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13574,7 +14272,7 @@ int dep_check(int dep_id)
             break;
         case 74:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXPAND)
+#if !defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13583,7 +14281,7 @@ int dep_check(int dep_id)
             break;
         case 75:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_256)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13592,7 +14290,7 @@ int dep_check(int dep_id)
             break;
         case 76:
             {
-#if defined(MBEDTLS_ECP_LIGHT)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>128)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13601,7 +14299,7 @@ int dep_check(int dep_id)
             break;
         case 77:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_384)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1032)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13610,7 +14308,7 @@ int dep_check(int dep_id)
             break;
         case 78:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_521)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1024)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13619,7 +14317,7 @@ int dep_check(int dep_id)
             break;
         case 79:
             {
-#if !defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>=256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13628,7 +14326,7 @@ int dep_check(int dep_id)
             break;
         case 80:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=2048)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13637,7 +14335,7 @@ int dep_check(int dep_id)
             break;
         case 81:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>128)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13646,7 +14344,7 @@ int dep_check(int dep_id)
             break;
         case 82:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1032)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13655,7 +14353,7 @@ int dep_check(int dep_id)
             break;
         case 83:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1024)
+#if (INT_MAX>=0x7fffffff)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13664,7 +14362,7 @@ int dep_check(int dep_id)
             break;
         case 84:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>=256)
+#if !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13673,7 +14371,7 @@ int dep_check(int dep_id)
             break;
         case 85:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=2048)
+#if (INT_MAX<=0x7fffffff)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13682,7 +14380,7 @@ int dep_check(int dep_id)
             break;
         case 86:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE)
+#if (INT_MAX<=0xffffffffffffffff)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13691,7 +14389,7 @@ int dep_check(int dep_id)
             break;
         case 87:
             {
-#if defined(MBEDTLS_PK_C)
+#if !defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13700,7 +14398,52 @@ int dep_check(int dep_id)
             break;
         case 88:
             {
+#if defined(MBEDTLS_THREADING_PTHREAD)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 89:
+            {
 #if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>=512)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 90:
+            {
+#if defined(PSA_WANT_ECC_SECP_R1_192)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 91:
+            {
+#if defined(PSA_WANT_ECC_SECP_K1_192)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 92:
+            {
+#if defined(PSA_WANT_ECC_SECP_K1_224)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 93:
+            {
+#if defined(PSA_WANT_ECC_SECP_K1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13799,747 +14542,789 @@ TestWrapper_t test_funcs[] =
 #endif
 /* Function Id: 8 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_import_and_exercise_key_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_THREADING_PTHREAD) && defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
+    test_concurrently_use_same_persistent_key_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 9 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_effective_key_attributes_wrapper,
+    test_import_and_exercise_key_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 10 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_check_key_policy_wrapper,
+    test_effective_key_attributes_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 11 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_key_attributes_init_wrapper,
+    test_check_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 12 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_mac_key_policy_wrapper,
+    test_key_attributes_init_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 13 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_cipher_key_policy_wrapper,
+    test_mac_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 14 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_aead_key_policy_wrapper,
+    test_cipher_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 15 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_asymmetric_encryption_key_policy_wrapper,
+    test_aead_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 16 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_asymmetric_signature_key_policy_wrapper,
+    test_asymmetric_encryption_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 17 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_derive_key_policy_wrapper,
+    test_asymmetric_signature_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 18 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_agreement_key_policy_wrapper,
+    test_derive_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 19 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_key_policy_alg2_wrapper,
+    test_agreement_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 20 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_raw_agreement_key_policy_wrapper,
+    test_key_policy_alg2_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 21 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_copy_success_wrapper,
+    test_raw_agreement_key_policy_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 22 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_copy_fail_wrapper,
+    test_copy_success_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 23 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_hash_operation_init_wrapper,
+    test_copy_fail_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 24 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_hash_setup_wrapper,
+    test_hash_operation_init_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 25 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_hash_compute_fail_wrapper,
+    test_hash_setup_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 26 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_hash_compare_fail_wrapper,
+    test_hash_compute_fail_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 27 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_hash_compute_compare_wrapper,
+    test_hash_compare_fail_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 28 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256)
-    test_hash_bad_order_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_hash_compute_compare_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 29 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256)
-    test_hash_verify_bad_args_wrapper,
+    test_hash_bad_order_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 30 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256)
-    test_hash_finish_bad_args_wrapper,
+    test_hash_verify_bad_args_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 31 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256)
-    test_hash_clone_source_state_wrapper,
+    test_hash_finish_bad_args_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 32 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256)
-    test_hash_clone_target_state_wrapper,
+    test_hash_clone_source_state_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 33 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_mac_operation_init_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256)
+    test_hash_clone_target_state_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 34 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_mac_setup_wrapper,
+    test_mac_operation_init_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 35 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_mac_setup_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 36 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_KEY_TYPE_HMAC) && defined(PSA_WANT_ALG_HMAC) && defined(PSA_WANT_ALG_SHA_256)
     test_mac_bad_order_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 36 */
+/* Function Id: 37 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_mac_sign_verify_multi_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 37 */
+/* Function Id: 38 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_mac_sign_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 38 */
+/* Function Id: 39 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_mac_verify_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 39 */
+/* Function Id: 40 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_operation_init_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 40 */
+/* Function Id: 41 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_setup_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 41 */
+/* Function Id: 42 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_CBC_PKCS7)
     test_cipher_bad_order_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 42 */
+/* Function Id: 43 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_encrypt_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 43 */
+/* Function Id: 44 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_encrypt_validate_iv_length_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 44 */
+/* Function Id: 45 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_alg_without_iv_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 45 */
+/* Function Id: 46 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_bad_key_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 46 */
+/* Function Id: 47 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_encrypt_validation_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 47 */
+/* Function Id: 48 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_encrypt_multipart_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 48 */
+/* Function Id: 49 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_decrypt_multipart_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 49 */
+/* Function Id: 50 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_decrypt_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 50 */
+/* Function Id: 51 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_decrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 51 */
+/* Function Id: 52 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_verify_output_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 52 */
+/* Function Id: 53 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_cipher_verify_output_multipart_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 53 */
+/* Function Id: 54 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_encrypt_decrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 54 */
+/* Function Id: 55 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_encrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 55 */
+/* Function Id: 56 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_decrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 56 */
+/* Function Id: 57 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_encrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 57 */
+/* Function Id: 58 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_decrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 58 */
+/* Function Id: 59 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_generate_nonce_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 59 */
+/* Function Id: 60 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_set_nonce_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 60 */
+/* Function Id: 61 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_update_buffer_test_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 61 */
+/* Function Id: 62 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_finish_buffer_test_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 62 */
+/* Function Id: 63 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_verify_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 63 */
+/* Function Id: 64 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_setup_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 64 */
+/* Function Id: 65 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_aead_multipart_state_test_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 65 */
+/* Function Id: 66 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_signature_size_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 66 */
+/* Function Id: 67 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_sign_hash_deterministic_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 67 */
+/* Function Id: 68 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_sign_hash_interruptible_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 68 */
+/* Function Id: 69 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_sign_hash_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 69 */
+/* Function Id: 70 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_sign_hash_fail_interruptible_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 70 */
+/* Function Id: 71 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_sign_verify_hash_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 71 */
+/* Function Id: 72 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_sign_verify_hash_interruptible_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 72 */
+/* Function Id: 73 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_verify_hash_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 73 */
+/* Function Id: 74 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_verify_hash_interruptible_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 74 */
+/* Function Id: 75 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_verify_hash_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 75 */
+/* Function Id: 76 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_verify_hash_fail_interruptible_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 76 */
+/* Function Id: 77 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_interruptible_signverify_hash_state_test_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 77 */
+/* Function Id: 78 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_interruptible_signverify_hash_edgecase_tests_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 78 */
+/* Function Id: 79 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_ECP_RESTARTABLE)
     test_interruptible_signverify_hash_ops_tests_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 79 */
+/* Function Id: 80 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_sign_message_deterministic_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 80 */
+/* Function Id: 81 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_sign_message_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 81 */
+/* Function Id: 82 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_sign_verify_message_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 82 */
+/* Function Id: 83 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_verify_message_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 83 */
+/* Function Id: 84 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_verify_message_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 84 */
+/* Function Id: 85 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_asymmetric_encrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 85 */
+/* Function Id: 86 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_asymmetric_encrypt_decrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 86 */
+/* Function Id: 87 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_asymmetric_decrypt_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 87 */
+/* Function Id: 88 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_asymmetric_decrypt_fail_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 88 */
+/* Function Id: 89 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_key_derivation_init_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 89 */
+/* Function Id: 90 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_setup_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 90 */
+/* Function Id: 91 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_set_capacity_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 91 */
+/* Function Id: 92 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_parse_binary_string_test_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 92 */
+/* Function Id: 93 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_input_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 93 */
+/* Function Id: 94 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_input_invalid_cost_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 94 */
+/* Function Id: 95 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_over_capacity_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 95 */
+/* Function Id: 96 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_actions_without_setup_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 96 */
+/* Function Id: 97 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_output_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 97 */
+/* Function Id: 98 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_full_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 98 */
+/* Function Id: 99 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_SHA_256) && defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
     test_derive_ecjpake_to_pms_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 99 */
+/* Function Id: 100 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_key_exercise_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 100 */
+/* Function Id: 101 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_key_export_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 101 */
+/* Function Id: 102 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_derive_key_type_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 102 */
-
-#if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_derive_key_wrapper,
-#else
-    NULL,
-#endif
 /* Function Id: 103 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_key_agreement_setup_wrapper,
+    test_derive_key_ext_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 104 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_raw_key_agreement_wrapper,
+    test_derive_key_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 105 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_key_agreement_capacity_wrapper,
+    test_key_agreement_setup_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 106 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_key_agreement_output_wrapper,
+    test_raw_key_agreement_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 107 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
-    test_generate_random_wrapper,
+    test_key_agreement_capacity_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 108 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    test_ecc_conversion_functions_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 109 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    test_ecc_conversion_functions_fail_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 110 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_key_agreement_output_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 111 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_generate_random_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 112 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_THREADING_PTHREAD)
+    test_concurrently_generate_keys_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 113 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_generate_key_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 109 */
+/* Function Id: 114 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE) && defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT) && defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
-    test_generate_key_rsa_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_generate_key_ext_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 110 */
+/* Function Id: 115 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_key_production_parameters_init_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 116 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
     test_persistent_key_load_key_from_storage_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 111 */
+/* Function Id: 117 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_JPAKE)
     test_ecjpake_setup_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 112 */
+/* Function Id: 118 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_JPAKE)
     test_ecjpake_rounds_inject_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 113 */
+/* Function Id: 119 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_WANT_ALG_JPAKE)
     test_ecjpake_rounds_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 114 */
+/* Function Id: 120 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
     test_ecjpake_size_macros_wrapper,
@@ -14990,14 +15775,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -15020,7 +15803,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -15029,8 +15812,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -15050,6 +15834,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -15189,7 +16017,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -15265,7 +16093,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -15290,30 +16118,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -15346,6 +16177,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -15382,6 +16217,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

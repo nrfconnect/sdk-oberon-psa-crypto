@@ -51,7 +51,7 @@ int send_message_err(psa_pake_operation_t *from, psa_pake_operation_t *to, psa_p
         if (n == 2) { // wrong input size
             TEST_ASSERT(psa_pake_input(to, step, data, length + 8) == PSA_ERROR_INVALID_ARGUMENT);
         } else if (n == 3) { // wrong proof size
-            TEST_ASSERT(psa_pake_input(to, step, data, length + 8) == PSA_ERROR_INVALID_SIGNATURE);
+            TEST_ASSERT(psa_pake_input(to, step, data, length + 8) == PSA_ERROR_INVALID_ARGUMENT);
         } else if (n == 4) { // wrong proof data
             data[0]++;
             TEST_ASSERT(psa_pake_input(to, step, data, length) == PSA_ERROR_INVALID_SIGNATURE);

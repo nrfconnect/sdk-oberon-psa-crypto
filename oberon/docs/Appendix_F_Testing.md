@@ -13,7 +13,6 @@ In addition, _Oberon microsystems_ also runs these PSA-related _Mbed TLS_ tests:
 - `test_suite_psa_crypto`
 - `test_suite_psa_crypto_attributes`
 - `test_suite_psa_crypto_driver_wrappers`
-- `test_suite_psa_crypto_entropy`
 - `test_suite_psa_crypto_generate_key.generated`
 - `test_suite_psa_crypto_hash`
 - `test_suite_psa_crypto_metadata`
@@ -26,6 +25,10 @@ In addition, _Oberon microsystems_ also runs these PSA-related _Mbed TLS_ tests:
 - `test_suite_psa_crypto_storage_format.misc`
 - `test_suite_psa_crypto_storage_format.v0`
 - `test_suite_psa_its`
+
+For testing, _Oberon PSA Crypto_ is built for a set of configurations and for 
+variants with and without multi-threading support based on the POSIX mutex 
+reference implementation.
 
 _Driver developers_ and _platform integrators_ should run the same tests with
 suitable test configurations of _Oberon PSA Crypto_. See the

@@ -3,31 +3,17 @@
  *  interface. This file contains the context structures for 'primitive'
  *  operations, i.e. those operations which do not rely on other contexts.
  *
- *  Warning: This file will be auto-generated in the future.
- *
  * \note This file may not be included directly. Applications must
  * include psa/crypto.h.
  *
- * \note This header and its content is not part of the Mbed TLS API and
+ * \note This header and its content are not part of the Mbed TLS API and
  * applications must not depend on it. Its main purpose is to define the
  * multi-part state objects of the PSA drivers included in the cryptographic
- * library. The definition of these objects are then used by crypto_struct.h
+ * library. The definitions of these objects are then used by crypto_struct.h
  * to define the implementation-defined types of PSA multi-part state objects.
  */
 /*  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 /*

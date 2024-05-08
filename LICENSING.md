@@ -25,7 +25,7 @@ This specification is licensed under _CC SA-BY 4.0_.
 ### PSA Crypto Driver API
 
 _PSA Crypto Driver API_ (Arm proposal):
-<https://github.com/Mbed-TLS/mbedtls/blob/v3.5.1/docs/proposed/psa-driver-interface.md>
+<https://github.com/Mbed-TLS/mbedtls/blob/v3.6.0/docs/proposed/psa-driver-interface.md>
 
 This specification has been published as part of _Mbed TLS_ and the same licenses
 apply, see below.

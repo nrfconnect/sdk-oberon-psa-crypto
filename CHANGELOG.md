@@ -1,5 +1,34 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.3.0
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.0>
+8-May-2024 (c18f101)
+
+Oberon crypto software drivers require _ocrypto_ version 3.5.x
+
+### New Features
+- Align with Mbed TLS 3.6.0.
+- Unify `crypto.h` for API usage with or without isolation boundary
+  (adopted from Mbed TLS 3.6).
+- Add optional thread safety to Oberon PSA core by reusing Mbed TLS mutex
+  abstraction (software drivers are already thread-safe). Multi-threading
+  support can be enabled via define `MBEDTLS_THREADING_C`
+  (adopted from Mbed TLS 3.6).
+- Add CMake option to run tests on host with multi-threading option.
+
+### Improvements
+- Cleanup PSA key attributes
+  (adopted from Mbed TLS 3.6).
+- Add new Mbed TLS PSA tests and align with Mbed TLS test updates
+  (adopted from Mbed TLS 3.6).
+- Align Mbed TLS error return codes in drivers
+  (adopted from Mbed TLS 3.6).
+- Limit key derivation capacity for 64-bit ISA.
+- Adjust test support for TLS/SSL protocol test suite.
+- Improve key import parameter checks.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.2.3
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.2.3>
 26-Mar-2024 (79d5e26)

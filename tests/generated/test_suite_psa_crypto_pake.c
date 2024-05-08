@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -206,7 +207,7 @@ typedef enum {
     ERR_INJECT_EXTRA_INPUT,
     ERR_INJECT_EXTRA_OUTPUT_AT_END,
     ERR_INJECT_EXTRA_INPUT_AT_END,
-    /* erros issued from the .data file */
+    /* errors issued from the .data file */
     ERR_IN_SETUP,
     ERR_IN_SET_USER,
     ERR_IN_SET_PEER,
@@ -309,7 +310,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
             /* Server first round Output */
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_g1_len));
+                                       buffer_length - buffer0_off, &s_g1_len));
             TEST_EQUAL(s_g1_len, expected_size_key_share);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_SERVER_KEY_SHARE_PART1,
@@ -318,7 +319,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x1_pk_len));
+                                       buffer_length - buffer0_off, &s_x1_pk_len));
             TEST_EQUAL(s_x1_pk_len, expected_size_zk_public);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_SERVER_ZK_PUBLIC_PART1,
@@ -327,7 +328,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x1_pr_len));
+                                       buffer_length - buffer0_off, &s_x1_pr_len));
             TEST_LE_U(s_x1_pr_len, max_expected_size_zk_proof);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_SERVER_ZK_PROOF_PART1,
@@ -336,7 +337,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_g2_len));
+                                       buffer_length - buffer0_off, &s_g2_len));
             TEST_EQUAL(s_g2_len, expected_size_key_share);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_SERVER_KEY_SHARE_PART2,
@@ -345,7 +346,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2_pk_len));
+                                       buffer_length - buffer0_off, &s_x2_pk_len));
             TEST_EQUAL(s_x2_pk_len, expected_size_zk_public);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_SERVER_ZK_PUBLIC_PART2,
@@ -354,7 +355,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2_pr_len));
+                                       buffer_length - buffer0_off, &s_x2_pr_len));
             TEST_LE_U(s_x2_pr_len, max_expected_size_zk_proof);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_SERVER_ZK_PROOF_PART2,
@@ -365,7 +366,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
             DO_ROUND_CONDITIONAL_CHECK_FAILURE(
                 ERR_INJECT_EXTRA_OUTPUT,
                 psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
-                                buffer0 + s_g2_off, 512 - s_g2_off, &extra_output_len));
+                                buffer0 + s_g2_off, buffer_length - s_g2_off, &extra_output_len));
             (void) extra_output_len;
             /*
              * When injecting errors in inputs, the implementation is
@@ -422,7 +423,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
             /* Client first round Output */
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_g1_len));
+                                       buffer_length - buffer1_off, &c_g1_len));
             TEST_EQUAL(c_g1_len, expected_size_key_share);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_CLIENT_KEY_SHARE_PART1,
@@ -431,7 +432,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x1_pk_len));
+                                       buffer_length - buffer1_off, &c_x1_pk_len));
             TEST_EQUAL(c_x1_pk_len, expected_size_zk_public);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_CLIENT_ZK_PUBLIC_PART1,
@@ -440,7 +441,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x1_pr_len));
+                                       buffer_length - buffer1_off, &c_x1_pr_len));
             TEST_LE_U(c_x1_pr_len, max_expected_size_zk_proof);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_CLIENT_ZK_PROOF_PART1,
@@ -449,7 +450,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_g2_len));
+                                       buffer_length - buffer1_off, &c_g2_len));
             TEST_EQUAL(c_g2_len, expected_size_key_share);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_CLIENT_KEY_SHARE_PART2,
@@ -458,7 +459,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2_pk_len));
+                                       buffer_length - buffer1_off, &c_x2_pk_len));
             TEST_EQUAL(c_x2_pk_len, expected_size_zk_public);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_CLIENT_ZK_PUBLIC_PART2,
@@ -467,7 +468,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2_pr_len));
+                                       buffer_length - buffer1_off, &c_x2_pr_len));
             TEST_LE_U(c_x2_pr_len, max_expected_size_zk_proof);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND1_CLIENT_ZK_PROOF_PART2,
@@ -553,7 +554,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_a_len));
+                                       buffer_length - buffer0_off, &s_a_len));
             TEST_EQUAL(s_a_len, expected_size_key_share);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND2_SERVER_KEY_SHARE,
@@ -562,7 +563,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2s_pk_len));
+                                       buffer_length - buffer0_off, &s_x2s_pk_len));
             TEST_EQUAL(s_x2s_pk_len, expected_size_zk_public);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND2_SERVER_ZK_PUBLIC,
@@ -571,7 +572,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(server, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer0 + buffer0_off,
-                                       512 - buffer0_off, &s_x2s_pr_len));
+                                       buffer_length - buffer0_off, &s_x2s_pr_len));
             TEST_LE_U(s_x2s_pr_len, max_expected_size_zk_proof);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND2_SERVER_ZK_PROOF,
@@ -607,7 +608,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_a_len));
+                                       buffer_length - buffer1_off, &c_a_len));
             TEST_EQUAL(c_a_len, expected_size_key_share);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND2_CLIENT_KEY_SHARE,
@@ -616,7 +617,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PUBLIC,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2s_pk_len));
+                                       buffer_length - buffer1_off, &c_x2s_pk_len));
             TEST_EQUAL(c_x2s_pk_len, expected_size_zk_public);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND2_CLIENT_ZK_PUBLIC,
@@ -625,7 +626,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
 
             PSA_ASSERT(psa_pake_output(client, PSA_PAKE_STEP_ZK_PROOF,
                                        buffer1 + buffer1_off,
-                                       512 - buffer1_off, &c_x2s_pr_len));
+                                       buffer_length - buffer1_off, &c_x2s_pr_len));
             TEST_LE_U(c_x2s_pr_len, max_expected_size_zk_proof);
             DO_ROUND_CONDITIONAL_INJECT(
                 ERR_INJECT_ROUND2_CLIENT_ZK_PROOF,
@@ -637,7 +638,7 @@ static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
                 DO_ROUND_CONDITIONAL_CHECK_FAILURE(
                     ERR_INJECT_EXTRA_OUTPUT_AT_END,
                     psa_pake_output(client, PSA_PAKE_STEP_KEY_SHARE,
-                                    buffer1 + c_a_off, 512 - c_a_off,
+                                    buffer1 + c_a_off, buffer_length - c_a_off,
                                     &extra_output_at_end_len));
                 (void) extra_output_at_end_len;
             }
@@ -762,7 +763,7 @@ static psa_status_t psa_pake_get_implicit_key(  // !!OM
         goto exit;                                                          \
     }
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 587 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 589 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
                    int primitive_arg, int hash_arg, char *user_arg, char *peer_arg,
                    int test_input,
@@ -953,7 +954,7 @@ void test_ecjpake_setup_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 772 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 774 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
                            int client_input_first,
                            data_t *pw_data,
@@ -1019,7 +1020,7 @@ void test_ecjpake_rounds_inject_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 834 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 836 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
                     int derive_alg_arg, data_t *pw_data,
                     int client_input_first, int destroy_key,
@@ -1122,7 +1123,7 @@ void test_ecjpake_rounds_wrapper( void ** params )
     test_ecjpake_rounds( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint );
 }
 #endif /* PSA_WANT_ALG_JPAKE */
-#line 934 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 936 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_ecjpake_size_macros(void)
 {
     const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
@@ -1174,7 +1175,7 @@ void test_ecjpake_size_macros_wrapper( void ** params )
     test_ecjpake_size_macros(  );
 }
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 978 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 980 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_pake_input_getters_password(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
@@ -1245,7 +1246,7 @@ void test_pake_input_getters_password_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 1043 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 1045 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_pake_input_getters_cipher_suite(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
@@ -1287,7 +1288,7 @@ void test_pake_input_getters_cipher_suite_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 1077 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 1079 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_pake_input_getters_user(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
@@ -1358,7 +1359,7 @@ void test_pake_input_getters_user_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
-#line 1140 "tests/suites/test_suite_psa_crypto_pake.function"
+#line 1142 "tests/suites/test_suite_psa_crypto_pake.function"
 void test_pake_input_getters_peer(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
@@ -2383,14 +2384,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -2413,7 +2412,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -2422,8 +2421,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -2443,6 +2443,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -2582,7 +2626,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -2658,7 +2702,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -2683,30 +2727,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -2739,6 +2786,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -2775,6 +2826,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

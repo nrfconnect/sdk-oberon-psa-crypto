@@ -316,7 +316,10 @@ psa_status_t oberon_import_ec_key(
         switch (bits) {
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_MONTGOMERY_255) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_MONTGOMERY_255)
-        case 255: break;
+        case 255:
+            if (type == PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_MONTGOMERY) &&
+                (data[31] & 0x80) != 0) return PSA_ERROR_INVALID_ARGUMENT;
+            break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_MONTGOMERY_255 ||
           PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_MONTGOMERY_255 */
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_MONTGOMERY_448) || \
@@ -362,7 +365,10 @@ psa_status_t oberon_import_ec_key(
           PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_TWISTED_EDWARDS_255 */
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_TWISTED_EDWARDS_448) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_TWISTED_EDWARDS_448)
-        case 448: break;
+        case 448:
+            if (type == PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS) &&
+                (data[56] & 0x7F) != 0) return PSA_ERROR_INVALID_ARGUMENT;
+            break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_TWISTED_EDWARDS_448 ||
           PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_TWISTED_EDWARDS_448 */
         default: return PSA_ERROR_NOT_SUPPORTED;

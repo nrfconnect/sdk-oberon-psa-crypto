@@ -203,9 +203,9 @@ PSA ECC_KEY_PAIR(SECP_K1) 192-bit
 depends_on:15:25
 0:exp:19:int:192:exp:1
 
-PSA ECC_KEY_PAIR(SECP_K1) 224-bit
-depends_on:15:26
-0:exp:19:int:224:exp:1
+PSA ECC_KEY_PAIR(SECP_K1) 225-bit
+depends_on:15:26:10
+0:exp:19:int:225:exp:1
 
 PSA ECC_KEY_PAIR(SECP_K1) 256-bit
 depends_on:15:27
@@ -214,15 +214,15 @@ depends_on:15:27
 PSA ECC_PUBLIC_KEY(SECP_K1) 192-bit
 0:exp:20:int:192:exp:14
 
-PSA ECC_PUBLIC_KEY(SECP_K1) 224-bit
-0:exp:20:int:224:exp:14
+PSA ECC_PUBLIC_KEY(SECP_K1) 225-bit
+0:exp:20:int:225:exp:14
 
 PSA ECC_PUBLIC_KEY(SECP_K1) 256-bit
 0:exp:20:int:256:exp:14
 
-PSA ECC_KEY_PAIR(SECP_R1) 225-bit
-depends_on:15:28:10
-0:exp:21:int:225:exp:1
+PSA ECC_KEY_PAIR(SECP_R1) 224-bit
+depends_on:15:28
+0:exp:21:int:224:exp:1
 
 PSA ECC_KEY_PAIR(SECP_R1) 256-bit
 depends_on:15:29
@@ -236,8 +236,8 @@ PSA ECC_KEY_PAIR(SECP_R1) 521-bit
 depends_on:15:31
 0:exp:21:int:521:exp:1
 
-PSA ECC_PUBLIC_KEY(SECP_R1) 225-bit
-0:exp:22:int:225:exp:14
+PSA ECC_PUBLIC_KEY(SECP_R1) 224-bit
+0:exp:22:int:224:exp:14
 
 PSA ECC_PUBLIC_KEY(SECP_R1) 256-bit
 0:exp:22:int:256:exp:14
@@ -354,23 +354,23 @@ PSA ECC_PUBLIC_KEY(TWISTED_EDWARDS) 448-bit
 0:exp:32:int:448:exp:14
 
 PSA DH_KEY_PAIR(RFC7919) 2048-bit
-depends_on:47:48:10
+depends_on:47:48
 0:exp:33:int:2048:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 3072-bit
-depends_on:47:49:10
+depends_on:47:49
 0:exp:33:int:3072:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 4096-bit
-depends_on:47:50:10
+depends_on:47:50
 0:exp:33:int:4096:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 6144-bit
-depends_on:47:51:10
+depends_on:47:51
 0:exp:33:int:6144:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 8192-bit
-depends_on:47:52:10
+depends_on:47:52
 0:exp:33:int:8192:exp:1
 
 PSA DH_PUBLIC_KEY(RFC7919) 2048-bit

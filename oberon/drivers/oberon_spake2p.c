@@ -294,7 +294,7 @@ static psa_status_t oberon_read_confirm(
     status = oberon_get_confirmation(op, op->KconfVP, op->XY, conf);
     if (status) return status;
 
-    if (input_length != op->mac_len) return PSA_ERROR_INVALID_SIGNATURE;
+    if (input_length != op->mac_len) return PSA_ERROR_INVALID_ARGUMENT;
     if (oberon_ct_compare(input, conf, op->mac_len)) return PSA_ERROR_INVALID_SIGNATURE;
 
     return PSA_SUCCESS;

@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -297,7 +298,6 @@ void test_transient_slot_lifecycle(int owner_id_arg,
 
 #if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
     {
-        psa_key_handle_t handle;
         mbedtls_svc_key_id_t key_with_invalid_owner =
             mbedtls_svc_key_id_make(owner_id + 1,
                                     MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key));
@@ -305,8 +305,8 @@ void test_transient_slot_lifecycle(int owner_id_arg,
         TEST_ASSERT(mbedtls_key_owner_id_equal(
                         owner_id,
                         MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(key)));
-        TEST_EQUAL(psa_open_key(key_with_invalid_owner, &handle),
-                   PSA_ERROR_DOES_NOT_EXIST);
+        TEST_EQUAL(psa_get_key_attributes(key_with_invalid_owner, &attributes),
+                   PSA_ERROR_INVALID_HANDLE);
     }
 #endif
 
@@ -350,7 +350,7 @@ void test_transient_slot_lifecycle_wrapper( void ** params )
     test_transient_slot_lifecycle( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint );
 }
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 193 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 192 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_persistent_slot_lifecycle(int lifetime_arg, int owner_id_arg, int id_arg,
                                int usage_arg, int alg_arg, int alg2_arg,
                                int type_arg, data_t *key_data,
@@ -512,7 +512,7 @@ void test_persistent_slot_lifecycle_wrapper( void ** params )
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 348 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 347 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_create_existent(int lifetime_arg, int owner_id_arg, int id_arg,
                      int reopen_policy_arg)
 {
@@ -591,7 +591,7 @@ void test_create_existent_wrapper( void ** params )
     test_create_existent( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
-#line 422 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 421 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_open_fail(int id_arg,
                int expected_status_arg)
 {
@@ -613,7 +613,7 @@ void test_open_fail_wrapper( void ** params )
 
     test_open_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 440 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 439 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_create_fail(int lifetime_arg, int id_arg,
                  int expected_status_arg)
 {
@@ -636,7 +636,7 @@ void test_create_fail(int lifetime_arg, int id_arg,
          * PSA key attributes APIs thus accessing to the attributes
          * directly.
          */
-        attributes.core.id = id;
+        attributes.id = id;
     } else {
         psa_set_key_id(&attributes, id);
     }
@@ -656,7 +656,7 @@ void test_create_fail_wrapper( void ** params )
 
     test_create_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 479 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 478 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_copy_across_lifetimes(int source_lifetime_arg, int source_owner_id_arg,
                            int source_id_arg, int source_usage_arg,
                            int source_alg_arg, int source_alg2_arg,
@@ -789,7 +789,7 @@ void test_copy_across_lifetimes_wrapper( void ** params )
 
     test_copy_across_lifetimes( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, &data7, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint, ((mbedtls_test_argument_t *) params[16])->sint, ((mbedtls_test_argument_t *) params[17])->sint );
 }
-#line 607 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 606 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_copy_to_occupied(int source_lifetime_arg, int source_id_arg,
                       int source_usage_arg, int source_alg_arg,
                       int source_type_arg, data_t *source_material,
@@ -906,7 +906,7 @@ void test_copy_to_occupied_wrapper( void ** params )
 
     test_copy_to_occupied( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, &data12 );
 }
-#line 718 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 717 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_invalid_handle(int handle_construction,
                     int close_status_arg)
 {
@@ -939,19 +939,12 @@ void test_invalid_handle(int handle_construction,
              * MBEDTLS_SVC_KEY_ID_GET_KEY_ID( valid_handle ) is a volatile
              * key identifier as the imported key is a volatile key. Volatile
              * key identifiers are in the range from PSA_KEY_ID_VOLATILE_MIN
-             * to PSA_KEY_ID_VOLATILE_MAX included. Thus pick a key identifier
-             * in the range from PSA_KEY_ID_VOLATILE_MIN to
-             * PSA_KEY_ID_VOLATILE_MAX different from
-             * MBEDTLS_SVC_KEY_ID_GET_KEY_ID( valid_handle ) to build an
-             * unopened and thus invalid identifier.
+             * to PSA_KEY_ID_VOLATILE_MAX included. It is very unlikely that
+             * all IDs are used up to the last one, so pick
+             * PSA_KEY_ID_VOLATILE_MAX to build an unopened and thus invalid
+             * identifier.
              */
-
-            if (MBEDTLS_SVC_KEY_ID_GET_KEY_ID(valid_handle) ==
-                PSA_KEY_ID_VOLATILE_MIN) {
-                key_id = PSA_KEY_ID_VOLATILE_MIN + 1;
-            } else {
-                key_id = MBEDTLS_SVC_KEY_ID_GET_KEY_ID(valid_handle) - 1;
-            }
+            key_id = PSA_KEY_ID_VOLATILE_MAX;
 
             invalid_handle =
                 mbedtls_svc_key_id_make(0, key_id);
@@ -998,7 +991,7 @@ void test_invalid_handle_wrapper( void ** params )
 
     test_invalid_handle( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 806 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 798 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_many_transient_keys(int max_keys_arg)
 {
     mbedtls_svc_key_id_t *keys = NULL;
@@ -1052,7 +1045,7 @@ void test_many_transient_keys_wrapper( void ** params )
     test_many_transient_keys( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 855 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 847 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_key_slot_eviction_to_import_new_key(int lifetime_arg)
 {
     psa_key_lifetime_t lifetime = (psa_key_lifetime_t) lifetime_arg;
@@ -1134,7 +1127,7 @@ void test_key_slot_eviction_to_import_new_key_wrapper( void ** params )
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 931 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 923 "tests/suites/test_suite_psa_crypto_slot_management.function"
 void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
 {
     psa_status_t status;
@@ -1146,11 +1139,16 @@ void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
     mbedtls_svc_key_id_t persistent_key2 = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_svc_key_id_t returned_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     mbedtls_svc_key_id_t *keys = NULL;
+    mbedtls_psa_stats_t psa_key_slots_stats;
+    size_t available_key_slots = 0;
 
     TEST_ASSERT(MBEDTLS_PSA_KEY_SLOT_COUNT >= 1);
 
-    TEST_CALLOC(keys, MBEDTLS_PSA_KEY_SLOT_COUNT);
     PSA_ASSERT(psa_crypto_init());
+    mbedtls_psa_get_stats(&psa_key_slots_stats);
+    available_key_slots = psa_key_slots_stats.empty_slots;
+
+    TEST_CALLOC(keys, available_key_slots);
 
     psa_set_key_usage_flags(&attributes,
                             PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_COPY);
@@ -1169,10 +1167,10 @@ void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
     TEST_ASSERT(mbedtls_svc_key_id_equal(returned_key_id, persistent_key));
 
     /*
-     * Create MBEDTLS_PSA_KEY_SLOT_COUNT volatile keys
+     * Create the maximum available number of volatile keys
      */
     psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_VOLATILE);
-    for (i = 0; i < MBEDTLS_PSA_KEY_SLOT_COUNT; i++) {
+    for (i = 0; i < available_key_slots; i++) {
         PSA_ASSERT(psa_import_key(&attributes,
                                   (uint8_t *) &i, sizeof(i),
                                   &keys[i]));
@@ -1191,18 +1189,18 @@ void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
      * Check we can export the volatile key created last and that it has the
      * expected value. Then, destroy it.
      */
-    PSA_ASSERT(psa_export_key(keys[MBEDTLS_PSA_KEY_SLOT_COUNT - 1],
+    PSA_ASSERT(psa_export_key(keys[available_key_slots - 1],
                               exported, sizeof(exported),
                               &exported_length));
-    i = MBEDTLS_PSA_KEY_SLOT_COUNT - 1;
+    i = available_key_slots - 1;
     TEST_MEMORY_COMPARE(exported, exported_length, (uint8_t *) &i, sizeof(i));
-    PSA_ASSERT(psa_destroy_key(keys[MBEDTLS_PSA_KEY_SLOT_COUNT - 1]));
+    PSA_ASSERT(psa_destroy_key(keys[available_key_slots - 1]));
 
     /*
      * Check that we can now access the persistent key again.
      */
     PSA_ASSERT(psa_get_key_attributes(persistent_key, &attributes));
-    TEST_ASSERT(mbedtls_svc_key_id_equal(attributes.core.id,
+    TEST_ASSERT(mbedtls_svc_key_id_equal(attributes.id,
                                          persistent_key));
 
     /*
@@ -1219,7 +1217,7 @@ void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
      * Check we can export the remaining volatile keys and that they have the
      * expected values.
      */
-    for (i = 0; i < (MBEDTLS_PSA_KEY_SLOT_COUNT - 1); i++) {
+    for (i = 0; i < (available_key_slots - 1); i++) {
         PSA_ASSERT(psa_export_key(keys[i],
                                   exported, sizeof(exported),
                                   &exported_length));
@@ -2213,14 +2211,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -2243,7 +2239,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -2252,8 +2248,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -2273,6 +2270,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -2412,7 +2453,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -2488,7 +2529,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -2513,30 +2554,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -2569,6 +2613,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -2605,6 +2653,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

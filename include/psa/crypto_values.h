@@ -21,19 +21,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 /*
@@ -295,6 +283,11 @@
  * to read from a resource. */
 #define PSA_ERROR_INSUFFICIENT_DATA     ((psa_status_t)-143)
 
+/** This can be returned if a function can no longer operate correctly.
+ * For example, if an essential initialization operation failed or
+ * a mutex operation failed. */
+#define PSA_ERROR_SERVICE_FAILURE       ((psa_status_t)-144)
+
 /** The key identifier is not valid. See also :ref:\`key-handles\`.
  */
 #define PSA_ERROR_INVALID_HANDLE        ((psa_status_t)-136)
@@ -424,7 +417,7 @@
     ((type) | PSA_KEY_TYPE_CATEGORY_FLAG_PAIR)
 /** The public key type corresponding to a key pair type.
  *
- * You may also pass a key pair type as \p type, it will be left unchanged.
+ * You may also pass a public key type as \p type, it will be left unchanged.
  *
  * \param type      A public key type or key pair type.
  *
@@ -541,6 +534,10 @@
  */
 #define PSA_KEY_TYPE_CHACHA20                       ((psa_key_type_t) 0x2004)
 
+/** Key for the XChaCha20 stream cipher or the XChacha20-Poly1305 AEAD algorithm.
+ */
+#define PSA_KEY_TYPE_XCHACHA20                      ((psa_key_type_t) 0x2007)
+
 /** RSA public key.
  *
  * The size of an RSA key is the bit size of the modulus.
@@ -610,13 +607,17 @@
  * They are defined in _Standards for Efficient Cryptography_,
  * _SEC 2: Recommended Elliptic Curve Domain Parameters_.
  * https://www.secg.org/sec2-v2.pdf
+ *
+ * \note For secp224k1, the bit-size is 225 (size of a private value).
+ *
+ * \note Mbed TLS only supports secp192k1 and secp256k1.
  */
 #define PSA_ECC_FAMILY_SECP_K1           ((psa_ecc_family_t) 0x17)
 
 /** SEC random curves over prime fields.
  *
  * This family comprises the following curves:
- * secp192k1, secp224r1, secp256r1, secp384r1, secp521r1.
+ * secp192r1, secp224r1, secp256r1, secp384r1, secp521r1.
  * They are defined in _Standards for Efficient Cryptography_,
  * _SEC 2: Recommended Elliptic Curve Domain Parameters_.
  * https://www.secg.org/sec2-v2.pdf
@@ -1760,6 +1761,13 @@
      0)
 
 /** RSA PKCS#1 v1.5 encryption.
+ *
+ * \warning     Calling psa_asymmetric_decrypt() with this algorithm as a
+ *              parameter is considered an inherently dangerous function
+ *              (CWE-242). Unless it is used in a side channel free and safe
+ *              way (eg. implementing the TLS protocol as per 7.4.7.1 of
+ *              RFC 5246), the calling code is vulnerable.
+ *
  */
 #define PSA_ALG_RSA_PKCS1V15_CRYPT              ((psa_algorithm_t) 0x07000200)
 

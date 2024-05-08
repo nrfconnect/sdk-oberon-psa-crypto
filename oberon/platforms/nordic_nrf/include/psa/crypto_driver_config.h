@@ -1,10 +1,19 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
- * Copyright (c) since 2020 Oberon microsystems AG
+ *  Copyright Oberon microsystems AG, Switzerland
+ *  SPDX-License-Identifier: Apache-2.0
  *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
-
 
 #ifndef PSA_CRYPTO_DRIVER_CONFIG_H
 #define PSA_CRYPTO_DRIVER_CONFIG_H
@@ -17,7 +26,10 @@
 #endif
 
 #include "cc3xx_psa_config.h"
+#if defined(PSA_USE_DEMO_ENTROPY_DRIVER) || \
+    defined(PSA_USE_DEMO_HARDWARE_DRIVER) || \
+    defined(PSA_USE_DEMO_OPAQUE_DRIVER)
 #include "demo_driver_config.h"
-
+#endif
 
 #endif /* PSA_CRYPTO_DRIVER_CONFIG_H */

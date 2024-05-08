@@ -12,8 +12,8 @@ hardware crypto accelerators.
 
 The library is compatible with the _PSA Certified Crypto API_ version as
 specified in
-[PSA Certified Crypto API 1.1.2 and PAKE extension 1.1 Beta 1](https://arm-software.github.io/psa-api/crypto/),
-and to Arm's _Mbed TLS_ 3.5.0.
+[PSA Certified Crypto API 1.2.1 and PAKE extension 1.2 Final 1](https://arm-software.github.io/psa-api/crypto/),
+and to Arm's _Mbed TLS_ 3.6.0.
 
 The supported crypto feature set is documented in
 [Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
@@ -120,6 +120,22 @@ Build the source in a separate directory `build` from the command line:
 Supported platforms with demonstration drivers, configurations, and includes
 are located in path `oberon/platforms` and can be provided to CMake via
 `-DPLATFORM=folder_name`.
+
+Multi-threading support can be enabled with define `MBEDTLS_THREADING_C` in
+`mbedtls_config.h`.
+
+### Build with Tests
+By default, _Oberon PSA Crypto_ is build for a set of configurations, with 
+PSA-related _Mbed TLS_ tests, a _PSA Certified APIs Architecture Test Suite_, 
+and in variants with and without multi-threading support based on the POSIX 
+mutex reference implemenentation.
+
+To select for which tests Oberon PSA Crypto is built, the following CMAKE 
+options are provided:
+
+- PSA-related _Mbed TLS_ tests: `-DCONFIG_MBEDTLS_PSA_TESTS=ON/OFF`
+- _PSA Certified APIs Architecture Test Suite_: `DCONFIG_PSA_API_TESTS=ON/OFF`
+- Multi-threading support: `-DCONFIG_MBEDTLS_THREADING=ON/OFF`
 
 ### Run Tests
 

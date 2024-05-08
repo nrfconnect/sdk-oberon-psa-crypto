@@ -22,6 +22,7 @@ set(src_tls
         ${MBEDTLS_ROOT}/library/oid.c
         ${MBEDTLS_ROOT}/library/pem.c
         ${MBEDTLS_ROOT}/library/pk.c
+        ${MBEDTLS_ROOT}/library/pk_ecc.c
         ${MBEDTLS_ROOT}/library/pk_wrap.c
         ${MBEDTLS_ROOT}/library/pkparse.c
         ${MBEDTLS_ROOT}/library/pkwrite.c
@@ -49,7 +50,6 @@ set(src_tls_helpers
         ${MBEDTLS_ROOT}/programs/ssl/ssl_test_lib.c
         ${MBEDTLS_ROOT}/programs/test/query_config.h
         ${MBEDTLS_ROOT}/programs/test/query_config.c
-        ${CMAKE_SOURCE_DIR}/programs/ssl/library/psa_crypto_extra.c
 )
 
 set(src_mbedtls_legacy
@@ -83,15 +83,16 @@ set(src_mbedtls_legacy
         ${MBEDTLS_ROOT}/library/rsa.c
         ${MBEDTLS_ROOT}/library/rsa_alt_helpers.c
         ${MBEDTLS_ROOT}/library/sha1.c
+        ${MBEDTLS_ROOT}/library/sha3.c
         ${MBEDTLS_ROOT}/library/sha256.c
         ${MBEDTLS_ROOT}/library/sha512.c
 )
 
 if (CONFIG_MBEDTLS_SSL_TESTS)
 
-    if(NOT EXISTS "${MBEDTLS_ROOT}/library/ecp_curves_new.c")
+    if(NOT EXISTS "${MBEDTLS_ROOT}/library/pk_ecc.c")
         message(FATAL_ERROR
-                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.5.0.")
+                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.0.")
     endif()
 
     message(STATUS "CONFIG_MBEDTLS_SSL_TESTS: ${CONFIG_MBEDTLS_SSL_TESTS}")

@@ -47,6 +47,7 @@
 #include <test/random.h>
 #include <test/bignum_helpers.h>
 #include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
 
 #include <errno.h>
 #include <limits.h>
@@ -245,77 +246,6 @@ static int is_accelerated_rsa(psa_algorithm_t alg)
     (void) alg;
     return 0;
 }
-
-/* Whether the algorithm is implemented as a builtin, i.e. not accelerated,
- * and calls mbedtls_md() functions that require the hash algorithm to
- * also be built-in. */
-static int is_builtin_calling_md(psa_algorithm_t alg)
-{
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PSS)
-    if (PSA_ALG_IS_RSA_PSS(alg))
-#if defined(MBEDTLS_MD_C)
-    { return 1; }
-#else
-    { return 0; }
-#endif
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_OAEP)
-    if (PSA_ALG_IS_RSA_OAEP(alg))
-#if defined(MBEDTLS_MD_C)
-    { return 1; }
-#else
-    { return 0; }
-#endif
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)
-    if (PSA_ALG_IS_DETERMINISTIC_ECDSA(alg)) {
-        return 1;
-    }
-#endif
-    (void) alg;
-    return 0;
-}
-
-static int has_builtin_hash(psa_algorithm_t alg)
-{
-#if !defined(MBEDTLS_MD5_C)
-    if (alg == PSA_ALG_MD5) {
-        return 0;
-    }
-#endif
-#if !defined(MBEDTLS_RIPEMD160_C)
-    if (alg == PSA_ALG_RIPEMD160) {
-        return 0;
-    }
-#endif
-#if !defined(MBEDTLS_SHA1_C)
-    if (alg == PSA_ALG_SHA_1) {
-        return 0;
-    }
-#endif
-#if !defined(MBEDTLS_SHA224_C)
-    if (alg == PSA_ALG_SHA_224) {
-        return 0;
-    }
-#endif
-#if !defined(MBEDTLS_SHA256_C)
-    if (alg == PSA_ALG_SHA_256) {
-        return 0;
-    }
-#endif
-#if !defined(MBEDTLS_SHA384_C)
-    if (alg == PSA_ALG_SHA_384) {
-        return 0;
-    }
-#endif
-#if !defined(MBEDTLS_SHA512_C)
-    if (alg == PSA_ALG_SHA_512) {
-        return 0;
-    }
-#endif
-    (void) alg;
-    return 1;
-}
 #endif
 
 /* Mbed TLS doesn't support certain combinations of key type and algorithm
@@ -356,22 +286,9 @@ static int can_exercise(const psa_key_attributes_t *attributes)
         return 0;
     }
 #endif
+
     if (is_accelerated_rsa(alg) &&
         (hash_alg == PSA_ALG_RIPEMD160 || hash_alg == PSA_ALG_SHA_384)) {
-        return 0;
-    }
-#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_OAEP)
-    if (PSA_ALG_IS_RSA_OAEP(alg) &&
-        (hash_alg == PSA_ALG_RIPEMD160 || hash_alg == PSA_ALG_SHA_384)) {
-        return 0;
-    }
-#endif
-
-    /* The built-in implementation of asymmetric algorithms that use a
-     * hash internally only dispatch to the internal md module, not to
-     * PSA. Until this is supported, don't try to actually perform
-     * operations when the operation is built-in and the hash isn't.  */
-    if (is_builtin_calling_md(alg) && !has_builtin_hash(hash_alg)) {
         return 0;
     }
 #endif /* MBEDTLS_TEST_LIBTESTDRIVER1 */
@@ -434,7 +351,7 @@ static int test_read_key(const psa_key_attributes_t *expected_attributes,
         TEST_ASSERT(mbedtls_test_psa_exercise_key(
                         key_id,
                         psa_get_key_usage_flags(expected_attributes),
-                        psa_get_key_algorithm(expected_attributes)));
+                        psa_get_key_algorithm(expected_attributes), 0));
     }
 
 
@@ -458,7 +375,7 @@ exit:
     return ok;
 }
 
-#line 306 "tests/suites/test_suite_psa_crypto_storage_format.function"
+#line 222 "tests/suites/test_suite_psa_crypto_storage_format.function"
 void test_key_storage_save(int lifetime_arg, int type_arg, int bits_arg,
                       int usage_arg, int alg_arg, int alg2_arg,
                       data_t *material,
@@ -509,7 +426,7 @@ void test_key_storage_save_wrapper( void ** params )
 
     test_key_storage_save( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, &data6, &data8 );
 }
-#line 351 "tests/suites/test_suite_psa_crypto_storage_format.function"
+#line 267 "tests/suites/test_suite_psa_crypto_storage_format.function"
 void test_key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
                       int usage_arg, int alg_arg, int alg2_arg,
                       data_t *material,
@@ -1169,14 +1086,12 @@ static void write_outcome_entry(FILE *outcome_file,
  * \param missing_unmet_dependencies Non-zero if there was a problem tracking
  *                                   all unmet dependencies, 0 otherwise.
  * \param ret                        The test dispatch status (DISPATCH_xxx).
- * \param info                       A pointer to the test info structure.
  */
 static void write_outcome_result(FILE *outcome_file,
                                  size_t unmet_dep_count,
                                  int unmet_dependencies[],
                                  int missing_unmet_dependencies,
-                                 int ret,
-                                 const mbedtls_test_info_t *info)
+                                 int ret)
 {
     if (outcome_file == NULL) {
         return;
@@ -1199,7 +1114,7 @@ static void write_outcome_result(FILE *outcome_file,
                 }
                 break;
             }
-            switch (info->result) {
+            switch (mbedtls_test_get_result()) {
                 case MBEDTLS_TEST_RESULT_SUCCESS:
                     mbedtls_fprintf(outcome_file, "PASS;");
                     break;
@@ -1208,8 +1123,9 @@ static void write_outcome_result(FILE *outcome_file,
                     break;
                 default:
                     mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
-                                    info->filename, info->line_no,
-                                    info->test);
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
                     break;
             }
             break;
@@ -1229,6 +1145,50 @@ static void write_outcome_result(FILE *outcome_file,
     mbedtls_fprintf(outcome_file, "\n");
     fflush(outcome_file);
 }
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
 
 /**
  * \brief       Desktop implementation of execute_tests().
@@ -1368,7 +1328,7 @@ int execute_tests(int argc, const char **argv)
                 break;
             }
             mbedtls_fprintf(stdout, "%s%.66s",
-                            mbedtls_test_info.result == MBEDTLS_TEST_RESULT_FAILED ?
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
                             "\n" : "", buf);
             mbedtls_fprintf(stdout, " ");
             for (i = strlen(buf) + 1; i < 67; i++) {
@@ -1444,7 +1404,7 @@ int execute_tests(int argc, const char **argv)
             write_outcome_result(outcome_file,
                                  unmet_dep_count, unmet_dependencies,
                                  missing_unmet_dependencies,
-                                 ret, &mbedtls_test_info);
+                                 ret);
             if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
                 total_skipped++;
                 mbedtls_fprintf(stdout, "----");
@@ -1469,30 +1429,33 @@ int execute_tests(int argc, const char **argv)
                 unmet_dep_count = 0;
                 missing_unmet_dependencies = 0;
             } else if (ret == DISPATCH_TEST_SUCCESS) {
-                if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
                     mbedtls_fprintf(stdout, "PASS\n");
-                } else if (mbedtls_test_info.result == MBEDTLS_TEST_RESULT_SKIPPED) {
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
                     mbedtls_fprintf(stdout, "----\n");
                     total_skipped++;
                 } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
                     total_errors++;
                     mbedtls_fprintf(stdout, "FAILED\n");
                     mbedtls_fprintf(stdout, "  %s\n  at ",
-                                    mbedtls_test_info.test);
-                    if (mbedtls_test_info.step != (unsigned long) (-1)) {
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
                         mbedtls_fprintf(stdout, "step %lu, ",
-                                        mbedtls_test_info.step);
+                                        mbedtls_test_get_step());
                     }
                     mbedtls_fprintf(stdout, "line %d, %s",
-                                    mbedtls_test_info.line_no,
-                                    mbedtls_test_info.filename);
-                    if (mbedtls_test_info.line1[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line1);
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
-                    if (mbedtls_test_info.line2[0] != 0) {
-                        mbedtls_fprintf(stdout, "\n  %s",
-                                        mbedtls_test_info.line2);
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
                     }
                 }
                 fflush(stdout);
@@ -1525,6 +1488,10 @@ int execute_tests(int argc, const char **argv)
 
     mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
                     total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
@@ -1561,6 +1528,21 @@ int main(int argc, const char *argv[])
     mbedtls_test_hook_error_add = &mbedtls_test_err_add_check;
 #endif
 #endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from tests/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
 
     int ret = mbedtls_test_platform_setup();
     if (ret != 0) {

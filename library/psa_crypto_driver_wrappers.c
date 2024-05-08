@@ -114,7 +114,7 @@ psa_status_t psa_driver_wrapper_sign_message(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
@@ -160,7 +160,7 @@ psa_status_t psa_driver_wrapper_verify_message(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
@@ -203,7 +203,7 @@ psa_status_t psa_driver_wrapper_sign_hash(
     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
@@ -245,7 +245,7 @@ psa_status_t psa_driver_wrapper_verify_hash(
     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
     const uint8_t *signature, size_t signature_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
@@ -296,10 +296,10 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size_from_key_data(
     const psa_key_attributes_t *attributes,
     const uint8_t *data, size_t data_length, size_t *key_buffer_size)
 {
-    psa_key_type_t key_type = attributes->core.type;
+    psa_key_type_t key_type = attributes->type;
 
     *key_buffer_size = 0;
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         *key_buffer_size = demo_opaque_size_function(
@@ -334,11 +334,11 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size(
     const psa_key_attributes_t *attributes,
     size_t *key_buffer_size)
 {
-    psa_key_type_t key_type = attributes->core.type;
-    size_t key_bits = attributes->core.bits;
+    psa_key_type_t key_type = attributes->type;
+    size_t key_bits = attributes->bits;
 
     *key_buffer_size = 0;
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         *key_buffer_size = demo_opaque_size_function(
@@ -359,7 +359,7 @@ psa_status_t psa_driver_wrapper_generate_key(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER
@@ -395,7 +395,7 @@ psa_status_t psa_driver_wrapper_import_key(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER
@@ -434,7 +434,7 @@ psa_status_t psa_driver_wrapper_export_key(
     uint8_t *data, size_t data_size, size_t *data_length)
 
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         return psa_export_key_internal(
             attributes, key_buffer, key_buffer_size,
@@ -467,7 +467,7 @@ psa_status_t psa_driver_wrapper_export_public_key(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER
@@ -509,7 +509,7 @@ psa_status_t psa_driver_wrapper_get_builtin_key(
     psa_key_attributes_t *attributes,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     default:
         (void)slot_number;
         (void)key_buffer;
@@ -526,7 +526,7 @@ psa_status_t psa_driver_wrapper_copy_key(
     uint8_t *target_key_buffer, size_t target_key_buffer_size,
     size_t *target_key_buffer_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_copy_key(
@@ -549,7 +549,7 @@ psa_status_t psa_driver_wrapper_derive_key(
     const uint8_t *input, size_t input_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER
@@ -585,7 +585,7 @@ psa_status_t psa_driver_wrapper_cipher_encrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
@@ -644,7 +644,7 @@ psa_status_t psa_driver_wrapper_cipher_decrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
@@ -697,7 +697,7 @@ psa_status_t psa_driver_wrapper_cipher_encrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
@@ -748,7 +748,7 @@ psa_status_t psa_driver_wrapper_cipher_decrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
@@ -1103,7 +1103,7 @@ psa_status_t psa_driver_wrapper_aead_encrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_AEAD_DRIVER
@@ -1149,7 +1149,7 @@ psa_status_t psa_driver_wrapper_aead_decrypt(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_AEAD_DRIVER
@@ -1192,7 +1192,7 @@ psa_status_t psa_driver_wrapper_aead_encrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_AEAD_DRIVER
@@ -1226,7 +1226,7 @@ psa_status_t psa_driver_wrapper_aead_decrypt_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_AEAD_DRIVER
@@ -1422,7 +1422,7 @@ psa_status_t psa_driver_wrapper_asymmetric_encrypt(
     const uint8_t *salt, size_t salt_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_ENCRYPTION_DRIVER
@@ -1461,7 +1461,7 @@ psa_status_t psa_driver_wrapper_asymmetric_decrypt(
     const uint8_t *salt, size_t salt_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_ENCRYPTION_DRIVER
@@ -1504,7 +1504,7 @@ psa_status_t psa_driver_wrapper_mac_compute(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_MAC_DRIVER
@@ -1541,7 +1541,7 @@ psa_status_t psa_driver_wrapper_mac_sign_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_MAC_DRIVER
@@ -1575,7 +1575,7 @@ psa_status_t psa_driver_wrapper_mac_verify_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_MAC_DRIVER
@@ -1804,7 +1804,7 @@ psa_status_t psa_driver_wrapper_key_agreement(
     const uint8_t *peer_key, size_t peer_key_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_AGREEMENT_DRIVER
@@ -1841,7 +1841,7 @@ psa_status_t psa_driver_wrapper_pake_setup(
 {
     psa_status_t status;
 
-    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->core.lifetime)) {
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_PAKE_DRIVER
