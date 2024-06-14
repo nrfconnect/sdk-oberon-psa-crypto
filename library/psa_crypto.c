@@ -762,7 +762,10 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
 #if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
     if (psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))) {
         psa_key_attributes_t attributes = {.core = slot->attr};
-        psa_driver_wrapper_destroy_builtin_key(&attributes);
+        status = psa_driver_wrapper_destroy_builtin_key(&attributes);
+        if (overall_status == PSA_SUCCESS) {
+            overall_status = status;
+        }
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) */
 
