@@ -32,7 +32,14 @@
 #define MBEDTLS_PSA_CRYPTO_STORAGE_C  // Needed for supporting ITS
 #define PSA_ACCEL_GENERATE_RANDOM     // Kconfigs for PSA_NEED_* not used so manually enable it RNG
 #define PSA_ACCEL_GET_ENTROPY
+
+#ifdef CONFIG_NRF_CC3XX_PLATFORM
 #define PSA_NEED_CC3XX_CTR_DRBG_DRIVER
+#elif defined(CONFIG_NRF_SECURITY_LEGACY_AND_PSA) && defined(CONFIG_SOC_SERIES_NRF54LX)
+#define PSA_CRYPTO_DRIVER_CRACEN // Needed to include the cracen_psa.h
+#define PSA_NEED_CRACEN_CTR_DRBG_DRIVER
+#endif
+
 #include "oberon_config.h"            // The PSA_NEED symbols used from this file when not using Kconfigs
 #endif
 
