@@ -214,4 +214,14 @@
 #error "PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS defined, but not all prerequisites"
 #endif
 
+#if defined(PSA_WANT_ALG_CTR_DRBG) && \
+    !defined(PSA_WANT_GENERATE_RANDOM)
+#error "PSA_WANT_ALG_CTR_DRBG defined, but not all prerequisites"
+#endif
+
+#if defined(PSA_WANT_ALG_HMAC_DRBG) && \
+    !defined(PSA_WANT_GENERATE_RANDOM)
+#error "PSA_WANT_ALG_HMAC_DRBG defined, but not all prerequisites"
+#endif
+
 #endif /* MBEDTLS_CHECK_CRYPTO_CONFIG_H */
