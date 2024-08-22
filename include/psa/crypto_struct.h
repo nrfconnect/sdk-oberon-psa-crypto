@@ -289,6 +289,10 @@ typedef uint16_t psa_key_bits_t;
  * conditionals. */
 #define PSA_MAX_KEY_BITS 0xfff8
 
+/* Reserved key attribute init used when MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER *
+ * Is enabled (changes the parameters of the initalization) */
+#define MBEDTLS_KEY_ATTRIBUTE_RESERVED_INIT (int32_t) 0
+
 struct psa_key_attributes_s {
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
     psa_key_slot_number_t MBEDTLS_PRIVATE(slot_number);
@@ -310,18 +314,40 @@ struct psa_key_attributes_s {
      * struct
      */
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(id);
+#if !defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+    /* Reserved field added to enforce ABI-compliance */
+    int32_t  MBEDTLS_PRIVATE(reserved);
+#endif /* !MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
 };
+
+/* This will assert if there has ben an incompatible change in psa_key_attributes_s */
+_Static_assert(sizeof(psa_key_attributes_s) == 32, "Unexpected struct size.");
 
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
 #define PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER 0, 0,
 #else
 #define PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER
 #endif
+
+/* There is a difference in the initialization of the psa_key_attributes_s 
+ * dependent on MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER being set or not,
+ * ensuring we can have ABI compliance in this structure type.
+ */
+#if defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
 #define PSA_KEY_ATTRIBUTES_INIT { PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER \
                                       PSA_KEY_TYPE_NONE, 0,            \
                                       PSA_KEY_LIFETIME_VOLATILE,       \
                                       PSA_KEY_POLICY_INIT,             \
                                       MBEDTLS_SVC_KEY_ID_INIT }
+#else
+#define PSA_KEY_ATTRIBUTES_INIT { PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER     \
+                                      PSA_KEY_TYPE_NONE, 0,                \
+                                      PSA_KEY_LIFETIME_VOLATILE,           \
+                                      PSA_KEY_POLICY_INIT,                 \
+                                      MBEDTLS_SVC_KEY_ID_INIT,             \
+                                      MBEDTLS_KEY_ATTRIBUTE_RESERVED_INIT}
+#endif /* MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
+
 
 static inline struct psa_key_attributes_s psa_key_attributes_init(void)
 {
