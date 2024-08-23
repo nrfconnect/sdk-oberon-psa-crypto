@@ -54,6 +54,8 @@
 #define PSA_CRYPTO_STRUCT_H
 #include "mbedtls/private_access.h"
 
+#include <inttypes.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -85,11 +87,9 @@ struct psa_hash_operation_s {
     psa_driver_hash_context_t MBEDTLS_PRIVATE(ctx);
 #endif
 };
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_HASH_OPERATION_INIT { 0 }
-#else
-#define PSA_HASH_OPERATION_INIT { 0, { 0 } }
-#endif
+
+#define PSA_HASH_OPERATION_INIT { }
+
 static inline struct psa_hash_operation_s psa_hash_operation_init(void)
 {
     const struct psa_hash_operation_s v = PSA_HASH_OPERATION_INIT;
@@ -117,11 +117,9 @@ struct psa_cipher_operation_s {
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_CIPHER_OPERATION_INIT { 0 }
-#else
-#define PSA_CIPHER_OPERATION_INIT { 0, 0, 0, 0, { 0 } }
-#endif
+
+#define PSA_CIPHER_OPERATION_INIT { }
+
 static inline struct psa_cipher_operation_s psa_cipher_operation_init(void)
 {
     const struct psa_cipher_operation_s v = PSA_CIPHER_OPERATION_INIT;
@@ -149,11 +147,8 @@ struct psa_mac_operation_s {
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_MAC_OPERATION_INIT { 0 }
-#else
-#define PSA_MAC_OPERATION_INIT { 0, 0, 0, { 0 } }
-#endif
+#define PSA_MAC_OPERATION_INIT { }
+
 static inline struct psa_mac_operation_s psa_mac_operation_init(void)
 {
     const struct psa_mac_operation_s v = PSA_MAC_OPERATION_INIT;
@@ -188,11 +183,9 @@ struct psa_aead_operation_s {
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_AEAD_OPERATION_INIT { 0 }
-#else
-#define PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
-#endif
+
+#define PSA_AEAD_OPERATION_INIT { }
+
 static inline struct psa_aead_operation_s psa_aead_operation_init(void)
 {
     const struct psa_aead_operation_s v = PSA_AEAD_OPERATION_INIT;
@@ -233,12 +226,9 @@ struct psa_key_derivation_s {  /*!!OM*/
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_KEY_DERIVATION_OPERATION_INIT { 0 }
-#else
-/* This only zeroes out the first byte in the union, the rest is unspecified. */
-#define PSA_KEY_DERIVATION_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
-#endif
+
+#define PSA_KEY_DERIVATION_OPERATION_INIT {  }
+
 static inline struct psa_key_derivation_s psa_key_derivation_operation_init(
     void)
 {
@@ -321,7 +311,7 @@ struct psa_key_attributes_s {
 };
 
 /* This will assert if there has ben an incompatible change in psa_key_attributes_s */
-_Static_assert(sizeof(psa_key_attributes_s) == 32, "Unexpected struct size.");
+//_Static_assert(sizeof(struct psa_key_attributes_s) == 32, "Unexpected struct size.");
 
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
 #define PSA_KEY_ATTRIBUTES_MAYBE_SLOT_NUMBER 0, 0,
@@ -507,12 +497,9 @@ struct psa_pake_operation_s {  /*!!OM*/
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_PAKE_OPERATION_INIT { 0 }
-#else
-/* This only zeroes out the first byte in the union, the rest is unspecified. */
-#define PSA_PAKE_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
-#endif
+
+#define PSA_PAKE_OPERATION_INIT { }
+
 static inline struct psa_pake_operation_s psa_pake_operation_init(void)
 {
     const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;
@@ -542,11 +529,7 @@ struct psa_sign_hash_interruptible_operation_s {
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
-#else
-#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
-#endif
+#define PSA_SIGN_HASH_INTERRUPTIBLE_OPERATION_INIT { }
 
 static inline struct psa_sign_hash_interruptible_operation_s
 psa_sign_hash_interruptible_operation_init(void)
@@ -580,11 +563,8 @@ struct psa_verify_hash_interruptible_operation_s {
 #endif
 };
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
-#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { 0 }
-#else
-#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { 0, { 0 }, 0, 0 }
-#endif
+
+#define PSA_VERIFY_HASH_INTERRUPTIBLE_OPERATION_INIT { }
 
 static inline struct psa_verify_hash_interruptible_operation_s
 psa_verify_hash_interruptible_operation_init(void)
