@@ -4329,7 +4329,7 @@ static psa_status_t psa_key_derivation_input_internal(
     status = psa_key_derivation_check_state(operation, step);
     if (status != PSA_SUCCESS) goto exit;
 
-    status = psa_key_derivation_check_input_type(operation->alg, step, attributes ? attributes.type : PSA_KEY_TYPE_NONE);
+    status = psa_key_derivation_check_input_type(operation->alg, step, attributes ? attributes->type : PSA_KEY_TYPE_NONE);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
