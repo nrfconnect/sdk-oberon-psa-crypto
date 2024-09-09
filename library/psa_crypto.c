@@ -5693,6 +5693,7 @@ exit:
 /* Module setup */
 /****************************************************************/
 
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
     void (* entropy_init)(mbedtls_entropy_context *ctx),
     void (* entropy_free)(mbedtls_entropy_context *ctx))
@@ -5701,6 +5702,7 @@ psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
     (void)entropy_free;
     return PSA_SUCCESS;
 }
+#endif
 
 void mbedtls_psa_crypto_free(void)
 {
