@@ -399,8 +399,6 @@ psa_status_t oberon_spake2p_set_context(
     oberon_spake2p_operation_t *operation,
     const uint8_t *context, size_t context_len)
 {
-    if (context_len == 0) return PSA_SUCCESS;
-
     // add context to TT
     return oberon_update_hash_with_prefix(
         &operation->hash_op,

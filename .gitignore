@@ -34,6 +34,7 @@ massif-*
 
 # Microsoft CMake extension for Visual Studio Code generates a build directory by default
 build/
+build_Test/
 
 # Generated documentation:
 /apidoc
@@ -63,3 +64,4 @@ cmake-build-debug
 
 # Visual Studio Code
 .vscode/*
+export/*

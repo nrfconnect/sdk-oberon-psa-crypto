@@ -436,15 +436,20 @@ exit:
     return 0;
 }
 
+// !!OM: suppress warnings if feature not configured
+#if PSA_ASYMMETRIC_DECRYPT_OUTPUT_MAX_SIZE > 32
+    #define BUFFER_SIZE PSA_ASYMMETRIC_DECRYPT_OUTPUT_MAX_SIZE
+#else
+    #define BUFFER_SIZE 33
+#endif
+
 static int exercise_asymmetric_encryption_key(mbedtls_svc_key_id_t key,
                                               psa_key_usage_t usage,
                                               psa_algorithm_t alg,
                                               int key_destroyable)
 {
-    unsigned char plaintext[PSA_ASYMMETRIC_DECRYPT_OUTPUT_MAX_SIZE] =
-        "Hello, world...";
-    unsigned char ciphertext[PSA_ASYMMETRIC_ENCRYPT_OUTPUT_MAX_SIZE] =
-        "(wabblewebblewibblewobblewubble)";
+    unsigned char plaintext[BUFFER_SIZE] = "Hello, world...";
+    unsigned char ciphertext[BUFFER_SIZE] = "(wabblewebblewibblewobblewubble)";
     size_t ciphertext_length = sizeof(ciphertext);
     size_t plaintext_length = 16;
     psa_status_t status = PSA_SUCCESS;

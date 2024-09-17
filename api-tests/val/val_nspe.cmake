@@ -1,5 +1,5 @@
 #/** @file
-# * Copyright (c) 2019-2020, Arm Limited or its affiliates. All rights reserved.
+# * Copyright (c) 2019-2023, Arm Limited or its affiliates. All rights reserved.
 # * SPDX-License-Identifier : Apache-2.0
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
 
 # Listing all the sources from val
 list(APPEND VAL_SRC_C_NSPE
+	${PSA_ROOT_DIR}/val/nspe/val_platform.c
 	${PSA_ROOT_DIR}/val/nspe/val_entry.c
 	${PSA_ROOT_DIR}/val/nspe/val_dispatcher.c
 	${PSA_ROOT_DIR}/val/nspe/val_framework.c
@@ -26,6 +27,7 @@ list(APPEND VAL_SRC_C_NSPE
 	${PSA_ROOT_DIR}/val/common/val_target.c
 	${PSA_ROOT_DIR}/val/nspe/val_attestation.c
 	${PSA_ROOT_DIR}/val/nspe/val_storage.c
+	${PSA_ROOT_DIR}/val/nspe/val_platform.c
 )
 
 # Create VAL NSPE library
@@ -56,8 +58,4 @@ target_include_directories(${PSA_TARGET_VAL_NSPE_LIB} PRIVATE
 if(${WATCHDOG_AVAILABLE} EQUAL 1)
 	target_compile_definitions(${PSA_TARGET_VAL_NSPE_LIB} PRIVATE WATCHDOG_AVAILABLE)
 endif()
-target_compile_definitions(${PSA_TARGET_VAL_NSPE_LIB}
-	PRIVATE
-		VAL_NSPE_BUILD
-		$<$<STREQUAL:${TARGET},tgt_dev_apis_tfm_an521>:TGT_DEV_APIS_TFM_AN521>
-)
+target_compile_definitions(${PSA_TARGET_VAL_NSPE_LIB} PRIVATE VAL_NSPE_BUILD)

@@ -1,6 +1,6 @@
 # README
 
-## Oberon PSA Crypto Repo
+## Oberon PSA Crypto
 
 _Oberon PSA Crypto_ is a software library developed by _Oberon microsystems_.
 It implements the _PSA Certified Crypto API_ specification, which aims at
@@ -81,7 +81,7 @@ The following file contains the current software version:
 
 - `VERSION`
 
-## Migrate from Mbed TLS crypto code
+## Migrate from Mbed TLS Crypto Code
 
  If you want to migrate from _Mbed TLS_ to _Oberon PSA Crypto_, please
  see
@@ -125,12 +125,13 @@ Multi-threading support can be enabled with define `MBEDTLS_THREADING_C` in
 `mbedtls_config.h`.
 
 ### Build with Tests
-By default, _Oberon PSA Crypto_ is build for a set of configurations, with 
-PSA-related _Mbed TLS_ tests, a _PSA Certified APIs Architecture Test Suite_, 
-and in variants with and without multi-threading support based on the POSIX 
+
+By default, _Oberon PSA Crypto_ is built for a set of configurations, with
+PSA-related _Mbed TLS_ tests, a _PSA Certified APIs Architecture Test Suite_,
+and in variants with and without multi-threading support based on the POSIX
 mutex reference implemenentation.
 
-To select for which tests Oberon PSA Crypto is built, the following CMAKE 
+To select for which tests _Oberon PSA Crypto_ is built, the following CMAKE
 options are provided:
 
 - PSA-related _Mbed TLS_ tests: `-DCONFIG_MBEDTLS_PSA_TESTS=ON/OFF`
@@ -174,7 +175,7 @@ pages. It starts with the
 and can be read sequentially. A number of appendices give additional information
 on special topics.
 
-## Bug tracking and security vulnerabilities
+## Bug Tracking and Security Vulnerabilities
 
 _Oberon PSA Crypto_ bugs and security vulnerabilities are tracked in document
 [Bug Tracking](oberon/docs/Appendix_E_Bug_Tracking.md).

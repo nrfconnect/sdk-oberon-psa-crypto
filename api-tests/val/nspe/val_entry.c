@@ -1,5 +1,5 @@
 /** @file
- * Copyright (c) 2018-2019, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2018-2023, Arm Limited or its affiliates. All rights reserved.
  * SPDX-License-Identifier : Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +19,7 @@
 #include "val_framework.h"
 #include "val_peripherals.h"
 #include "val_dispatcher.h"
-
-#ifdef TGT_DEV_APIS_TFM_AN521
-int intermediate_boot = 0;
-#define NVMEM_USED_SIZE 16
-#endif
+#include "val_platform.h"
 
 /**
     @brief    - PSA C main function, does VAL init and calls test dispatcher
@@ -35,25 +31,18 @@ int32_t val_entry(void)
     test_id_t       test_id;
     int32_t         status;
 
-    status = val_uart_init();
+    /* Init platform specific informations*/
+    status = val_platform_init();
     if (VAL_ERROR(status))
     {
         goto exit;
     }
 
-#ifdef TGT_DEV_APIS_TFM_AN521
-    int32_t         init_value[NVMEM_USED_SIZE] = {0};
-
-    if (!intermediate_boot)
+    status = val_uart_init();
+    if (VAL_ERROR(status))
     {
-        status = val_nvmem_write(VAL_NVMEM_OFFSET(NV_BOOT), init_value, NVMEM_USED_SIZE);
-        if (VAL_ERROR(status))
-        {
-            val_print(PRINT_ERROR, "\n\tNVMEM initialization error", 0);
-            goto exit;
-        }
+        goto exit;
     }
-#endif
 
     status = val_get_last_run_test_id(&test_id);
     if (VAL_ERROR(status))

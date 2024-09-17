@@ -76,8 +76,8 @@ PSA Crypto_ releases.
 - [Appendix F: Testing](Appendix_F_Testing.md) provides information useful for
 testing _Oberon PSA Crypto_.
 
-- [Appendix G: Glossary](Appendix_G_Glossary.md) provides a glossary that briefly
-explains the most important terms used in the documentation.
+- [Appendix G: Glossary](Appendix_G_Glossary.md) briefly explains the most
+important terms used in the documentation.
 
 Developer resources:
 

@@ -22,7 +22,8 @@ static const uint8_t zero[PSA_HASH_MAX_SIZE] = { 0 };
 
 
 #if defined(PSA_NEED_OBERON_HKDF) || defined(PSA_NEED_OBERON_PBKDF2_HMAC) || defined(PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128) || \
-    defined(PSA_NEED_OBERON_SP800_108_COUNTER_HMAC) || defined(PSA_NEED_OBERON_SP800_108_COUNTER_CMAC)
+    defined(PSA_NEED_OBERON_SP800_108_COUNTER_HMAC) || defined(PSA_NEED_OBERON_SP800_108_COUNTER_CMAC) || \
+    defined(PSA_NEED_OBERON_TLS12_PRF) || defined(PSA_NEED_OBERON_TLS12_PSK_TO_MS)
 static psa_status_t oberon_setup_mac(
     oberon_key_derivation_operation_t *operation,
     const uint8_t *key, size_t key_length)

@@ -1,7 +1,7 @@
 /** @file
  * Copyright (c) 2023, Arm Limited or its affiliates. All rights reserved.
- * Copyright 2023 NXP
  * SPDX-License-Identifier : Apache-2.0
+ * Copyright 2023 NXP
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,3 +32,13 @@ __attribute__((weak)) bool_t pal_is_test_enabled(test_id_t test_id)
 	return 1;
 }
 
+/**
+ *   @brief    - initialize anything relavent to a platform
+ *               like any key initialization for crypto operations and etc
+ *               this is optional Api to implement
+ *   @return   - TRUE/FALSE
+**/
+__attribute__((weak)) unsigned int pal_platform_init(void)
+{
+	return (unsigned int)PAL_STATUS_SUCCESS;
+}

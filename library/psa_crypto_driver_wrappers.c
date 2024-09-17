@@ -557,7 +557,7 @@ psa_status_t psa_driver_wrapper_derive_key(
             attributes, input, input_length,
             key_buffer, key_buffer_size, key_buffer_length);
 #endif /* PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER */
-        break;
+        return PSA_ERROR_NOT_SUPPORTED;
 
         /* Add cases for opaque drivers here */
 
@@ -796,7 +796,6 @@ psa_status_t psa_driver_wrapper_cipher_set_iv(
     const uint8_t *iv, size_t iv_length)
 {
     switch (operation->id) {
-
 
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     case HARDWARE_DEMO_DRIVER_ID:

@@ -38,7 +38,7 @@ static psa_status_t hmac_drbg_hmac(
     psa_status_t status;
     size_t len;
     psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
-    psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
     psa_set_key_bits(&attr, PSA_BYTES_TO_BITS(KEY_LEN));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
 

@@ -1,5 +1,35 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.3.1
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.1>
+17-Sep-2024 (a23ae97)
+
+Oberon crypto software drivers require _ocrypto_ version 3.5.x.
+
+### Compatibility
+- PSA Certified Crypto API 1.2.1 and PAKE extension 1.2 Final 1.
+- PSA Certified APIs Architecture Test Suite v1.6.
+- Aligned with PSA Crypto core from Mbed TLS 3.6.0.
+
+### Improvements
+- EC-JPAKE: when setting a role other than PSA_PAKE_ROLE_NONE, the error
+  PSA_ERROR_INVALID_ARGUMENT will be returned.
+- SPAKE2+: implemented specification additions in the cases if no context is
+  set, and if a zero-length context is set, according to
+  [PR214](https://github.com/ARM-software/psa-api/pull/214)
+- Updated PSA API tests to PSA Certified APIs Architecture Test Suite v1.6.
+
+### Bug Fixes
+- Bug 13: MAC setup function not enabled in Oberon drivers
+  if PSA_ALG_IS_TLS12_PSK_TO_MS or PSA_ALG_IS_TLS12_PRF.
+
+### Contributions
+Part of the changes are based on the following patches contributed by Nordic:
+- Bug 13: enabled MAC setup function in Oberon drivers if PSA_ALG_IS_TLS12_PSK_TO_MS
+  or PSA_ALG_IS_TLS12_PRF based on PR16.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.3.0
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.0>
 8-May-2024 (c18f101)

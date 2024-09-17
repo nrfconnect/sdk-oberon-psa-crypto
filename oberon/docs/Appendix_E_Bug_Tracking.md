@@ -12,6 +12,7 @@ the PAKE implementation based on beta API specifications).
 
 | Bug ID | Fixed in Release | Title                                                     | Description                                                                                                                                                |
 | ------:|:---------------- |:--------------------------------------------------------- |:---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|     13 | 1.3.1            | MAC setup function not enabled in all cases.              | MAC setup function in Oberon drivers not enabled if PSA_ALG_IS_TLS12_PSK_TO_MS or PSA_ALG_IS_TLS12_PRF.                                                    |
 |     12 | 1.2.1            | Wrong Spake2+ TT hash calculation.                        | Wrong Spake2+ TT hash calculation in get key share step.                                                                                                   |
 |     11 | 1.2.1            | RSA sign falsely depends on ECC configuration.            | RSA sign falsely requires setting `PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC` in crypto_config.                                                                 |
 |     10 | 1.2.0            | Size macros are wrong for RSA key size greater than 4096  | Macros `PSA_*_MAX_SIZE` return wrong values for RSA key size greater than 4096.                                                                            |

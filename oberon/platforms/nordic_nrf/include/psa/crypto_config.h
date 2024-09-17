@@ -17,6 +17,7 @@
  * (\c PSA_WANT_ALG_xxx). Mechanisms with additional parameters may involve
  * additional symbols.
  */
+
 /*
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later

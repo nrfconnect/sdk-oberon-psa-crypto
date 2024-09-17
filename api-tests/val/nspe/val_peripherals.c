@@ -1,5 +1,5 @@
 /** @file
- * Copyright (c) 2018-2020, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2018-2023, Arm Limited or its affiliates. All rights reserved.
  * SPDX-License-Identifier : Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -217,7 +217,7 @@ val_status_t val_nvmem_read(uint32_t offset, void *buffer, int size)
                - size      : Number of bytes
     @return    - val_status_t
 */
-val_status_t val_nvmem_write(uint32_t offset, void *buffer, int size)
+val_status_t val_nvmem_write(uint32_t offset, const void *buffer, int size)
 {
    memory_desc_t   *memory_desc;
    val_status_t    status = VAL_STATUS_SUCCESS;

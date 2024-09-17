@@ -4516,7 +4516,7 @@ psa_status_t psa_pake_set_role(psa_pake_operation_t *operation,
 
 #ifdef PSA_WANT_ALG_JPAKE
     if (PSA_ALG_IS_JPAKE(operation->alg)) {
-        if (role > PSA_PAKE_ROLE_SECOND) return PSA_ERROR_INVALID_ARGUMENT;
+        if (role != PSA_PAKE_ROLE_NONE) return PSA_ERROR_INVALID_ARGUMENT;
     } else
 #endif
 #if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || defined(PSA_WANT_ALG_SPAKE2P_CMAC) || \
@@ -4623,7 +4623,7 @@ psa_status_t psa_pake_set_peer(psa_pake_operation_t *operation,
     } else
 #endif
 #if defined(PSA_WANT_ALG_SPAKE2P_HMAC) || defined(PSA_WANT_ALG_SPAKE2P_CMAC) || defined(PSA_WANT_ALG_SPAKE2P_MATTER)
-        if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
+    if (PSA_ALG_IS_SPAKE2P(operation->alg)) {
         if (!operation->role_set) {
             status = PSA_ERROR_BAD_STATE;
             goto exit;

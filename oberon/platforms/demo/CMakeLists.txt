@@ -26,7 +26,7 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
     endif()
 
     foreach(THREADING ${THREADING_CONFIG})
-        if(CONFIG_MBEDTLS_THREADING AND ${THREADING} STREQUAL "multi") 
+        if(CONFIG_MBEDTLS_THREADING AND (${THREADING} STREQUAL "multi"))
             file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config_oberon*.h")
         else()
             file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config*.h")
@@ -36,7 +36,6 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
         set(VARIANTS std pake_inject)
         foreach(VARIANT ${VARIANTS})
             # create projects for each crypto_config
-            # file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config*.h")
             foreach(CRYPTO_CONFIG_H ${config_files})
                 get_filename_component(TEST_CONFIG "${CRYPTO_CONFIG_H}" NAME_WE)
                 message(STATUS "Config: ${TEST_CONFIG}")
@@ -88,9 +87,9 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
                 foreach(SUITE_FILE ${TEST_SUITES})
                     get_filename_component(SUITE "${SUITE_FILE}" NAME)
 
-                    if(${VARIANT} STREQUAL "pake_inject" AND ${SUITE} STREQUAL "pake_test" OR 
-                        NOT(${VARIANT} STREQUAL "pake_inject") AND NOT(${SUITE} STREQUAL "pake_test"))
-                        
+                    if((${VARIANT} STREQUAL "pake_inject" AND ${SUITE} STREQUAL "pake_test") OR 
+                        (NOT(${VARIANT} STREQUAL "pake_inject") AND NOT(${SUITE} STREQUAL "pake_test")))
+    
                         project("${TEST_CONFIG}-${SUITE}-${VARIANT}-${THREADING}")
                         message(STATUS "Add test suite ${SUITE}")
                         add_executable(${PROJECT_NAME})
