@@ -21,7 +21,7 @@
  * NOTICE: This file has been modified by Oberon microsystems AG.
  */
 
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #if defined(MBEDTLS_ASN1_WRITE_C)
 
