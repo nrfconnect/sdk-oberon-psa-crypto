@@ -26,7 +26,7 @@
 #include "psa/build_info.h"
 
 #include "psa/crypto.h"
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #include "mbedtls/entropy.h"
 

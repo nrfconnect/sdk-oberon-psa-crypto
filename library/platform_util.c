@@ -20,7 +20,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"
