@@ -56,6 +56,16 @@
 #error "PSA_WANT_ALG_GCM defined, but not all prerequisites"
 #endif
 
+#if defined(PSA_WANT_ALG_AES_KW) && \
+    !(defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_ECB_NO_PADDING))
+#error "PSA_WANT_ALG_AES_KW defined, but not all prerequisites"
+#endif
+
+#if defined(PSA_WANT_ALG_AES_KWP) && \
+    !(defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_ECB_NO_PADDING))
+#error "PSA_WANT_ALG_AES_KWP defined, but not all prerequisites"
+#endif
+
 #if defined(PSA_WANT_ALG_STREAM_CIPHER) && \
     !(defined(PSA_WANT_KEY_TYPE_CHACHA20))
 #error "PSA_WANT_ALG_STREAM_CIPHER defined, but not all prerequisites"

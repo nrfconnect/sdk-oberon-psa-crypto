@@ -1,5 +1,26 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.3.2
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.2>
+26-Sep-2024 (27422de)
+
+Oberon crypto software drivers require _ocrypto_ version 3.5.x.
+
+### Compatibility
+- PSA Certified Crypto API 1.2.1 and PAKE extension 1.2 Final 1.
+- PSA Certified APIs Architecture Test Suite v1.6.
+- Aligned with PSA Crypto core from Mbed TLS 3.6.0.
+
+### New Features
+- Add support for AES key wrapping, according to proposal
+  [PSA API Issue 50](https://github.com/ARM-software/psa-api/issues/50#issuecomment-1772551575).
+  - Currently, only `PSA_KEY_FORMAT_DEFAULT` and only `PSA_ALG_AES_KW` and
+    `PSA_ALG_AES_KWP` are supported.
+  - Warning: this is an _experimental feature_ - the API is not yet final, and the
+    implementation may be changed or removed entirely anytime.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.3.1
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.1>
 17-Sep-2024 (a23ae97)
@@ -82,13 +103,15 @@ Oberon crypto software drivers require _ocrypto_ version 3.5.x.
 - Implement new PAKE extension version 1.2 of PSA Certified Crypto API.
 - Implement PAKE PSA driver API according to new PAKE extension.
 - Implement SRP-6 according to new PSA Certified Crypto 1.2 PAKE extension.
-- Implement PSA Certified Crypto API 1.2 policy changes for key derivation verify 
+  - Warning: this is an _experimental feature_ - the API is not yet final, and the
+    implementation may be changed anytime.
+- Implement PSA Certified Crypto API 1.2 policy changes for key derivation verify
   functions:
-  - Changed policy for psa_key_derivation_verify_bytes() and 
+  - Changed policy for psa_key_derivation_verify_bytes() and
     psa_key_derivation_verify_key(), so that these functions are also permitted when
     an input key has the PSA_KEY_USAGE_DERIVE usage flag.
-  - Removed special treatment of PSA_ERROR_INVALID_SIGNATURE for key derivation 
-    operations. A verification failure in psa_key_derivation_verify_bytes() and 
+  - Removed special treatment of PSA_ERROR_INVALID_SIGNATURE for key derivation
+    operations. A verification failure in psa_key_derivation_verify_bytes() and
     psa_key_derivation_verify_key() now puts the operation into an error state.
 
 ### Improvements

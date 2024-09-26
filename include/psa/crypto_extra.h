@@ -1921,6 +1921,155 @@ static inline void psa_pake_cs_set_key_confirmation(
 }
 
 
+/* Key Wrapping Interface */
+
+#define PSA_ALG_CATEGORY_KEY_WRAP  ((psa_algorithm_t) 0x0B000000)
+
+ /** Whether the specified algorithm is a key wrap algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a key wrap algorithm, 0 otherwise.
+ */
+#define PSA_ALG_IS_KEY_WRAP(alg)   \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_KEY_WRAP)
+
+/** The AES Key Wrap algorithm.
+ *
+ * This is AES-KW as defined by NIST-SP-800-38F and RFC3394.
+ * For AES-KW, the size of the input key must be >= 16 and a multiple of 8.
+ */
+#define PSA_ALG_AES_KW             ((psa_algorithm_t) 0x0B400100)
+
+/** The AES Key Wrap with padding algorithm.
+ *
+ * This is AES-KWP as defined by NIST-SP-800-38F and RFC5649.
+ */
+#define PSA_ALG_AES_KWP            ((psa_algorithm_t) 0x0B400200)
+
+/** Encoding of key data formats.
+ *
+ * A key data format is used when a key is converted from or to an
+ * external data format.
+ * #PSA_KEY_FORMAT_DEFAULT is used for the standard key export format.
+ */
+typedef uint16_t psa_key_data_format_t;
+
+/** The default key format.
+ *
+ * This is the default key format used when a key is exported with
+ * psa_export_key().
+ */
+#define PSA_KEY_FORMAT_DEFAULT     ((psa_key_data_format_t) 0)
+
+/** Whether the key may be used to wrap another key.
+ *
+ * This flag allows the key to be used as a wrapping key for a key wrapping
+ * operation, if otherwise permitted by the key's type and policy.
+ */
+#define PSA_KEY_USAGE_WRAP            ((psa_key_usage_t) 0x00010000)
+
+/** Whether the key may be used to unwrap an encoded key.
+ *
+ * This flag allows the key to be used as a wrapping key for a key unwrapping
+ * operation, if otherwise permitted by the key's type and policy.
+ */
+#define PSA_KEY_USAGE_UNWRAP          ((psa_key_usage_t) 0x00020000)
+
+/** Export a key in a wrapped format.
+ *
+ * The output of this function can be passed to psa_unwrap_key() to
+ * create an equivalent object.
+ *
+ * The key to be wrapped is first converted to the specified format and then
+ * encrypted using the given key wrapping algorithm.
+ *
+ * \param key               Identifier of the key to be wrapped. It must allow
+ *                          the usage #PSA_KEY_USAGE_EXPORT.
+ * \param wrapping_key      Identifier of the key to wrap the input key. It
+ *                          must allow the usage #PSA_KEY_USAGE_WRAP.
+ * \param alg               The key wrapping algorithm to use
+ *                          (\c PSA_ALG_XXX value such that
+ *                          #PSA_ALG_IS_KEY_WRAP(\p alg) is true).
+ * \param format            The format of the key. Use #PSA_KEY_FORMAT_DEFAULT
+ *                          for the standard export format.
+ * \param[out] data         Buffer where the wrapped key data is to be written.
+ * \param data_size         Size of the \p data buffer in bytes.
+ * \param[out] data_length  On success, the number of bytes
+ *                          that make up the wrapped data.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_INVALID_HANDLE \emptydescription
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         \p key does not have the #PSA_KEY_USAGE_EXPORT flag.
+ *         \p wrapping_key does not have the #PSA_KEY_USAGE_WRAP flag.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         \p alg or \p format is not supported. 
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         \p key is not compatible with \p alg.
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         The size of the \p data buffer is too small.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE \emptydescription
+ */
+psa_status_t psa_wrap_key(
+    psa_key_id_t key,
+    psa_key_id_t wrapping_key,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    uint8_t *data,
+    size_t data_size,
+    size_t *data_length);
+
+/** Import a key in a wrapped format.
+ *
+ * This function supports wrapped keys as output from psa_wrap_key().
+ * The wrapped key is expected to be in the format specified.
+ *
+ * \param attributes        The attributes for the new key.
+ * \param wrapping_key      Identifier of the key to unwrap the input key. It
+ *                          must allow the usage #PSA_KEY_USAGE_UNWRAP.
+ * \param alg               The key wrapping algorithm to use
+ *                          (\c PSA_ALG_XXX value such that
+ *                          #PSA_ALG_IS_KEY_WRAP(\p alg) is true).
+ * \param format            The format of the key. Use #PSA_KEY_FORMAT_DEFAULT
+ *                          for the standard export format.
+ * \param data              Buffer containing the wrapped key data.
+ * \param data_length       Size of the \p data buffer in bytes.
+ * \param[out] key          On success, an identifier for the newly created
+ *                          key. #PSA_KEY_ID_NULL on failure.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_INVALID_HANDLE \emptydescription
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         \p wrapping_key does not have the #PSA_KEY_USAGE_UNWRAP flag.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         \p alg or \p format is not supported. 
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The wrapped data is not correctly formatted.
+ * \retval #PSA_ERROR_INVALID_SIGNATURE
+ *         Authentication of the wrapped key data failed.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE \emptydescription
+ */
+psa_status_t psa_unwrap_key(
+    const psa_key_attributes_t *attributes,
+    psa_key_id_t wrapping_key,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    const uint8_t *data,
+    size_t data_length,
+    psa_key_id_t *key);
+
+
 #ifdef __cplusplus
 }
 #endif

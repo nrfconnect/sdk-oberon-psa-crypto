@@ -19,6 +19,7 @@ directive is given, and - where applicable - the supported key types:
 | AES-CMAC                          | PSA_WANT_ALG_CMAC                                                                | PSA_WANT_KEY_TYPE_AES      |
 | ChaCha20 (cipher)                 | PSA_WANT_ALG_STREAM_CIPHER                                                       | PSA_WANT_KEY_TYPE_CHACHA20 |
 | AES (cipher)                      | PSA_WANT_ALG_CTR/CCM_STAR_NO_TAG/ECB_NO_PADDING/CBC_NO_PADDING/CCM/GCM/CBC_PKCS7 | PSA_WANT_KEY_TYPE_AES      |
+| AES (key wrapping) 1)             | PSA_WANT_ALG_KW/KWP                                                              | PSA_WANT_KEY_TYPE_AES      |
 | AES (AEAD)                        | PSA_WANT_ALG_CCM/GCM                                                             | PSA_WANT_KEY_TYPE_AES      |
 | ChaCha20-Poly1305 (AEAD)          | PSA_WANT_ALG_CHACHA20_POLY1305                                                   | PSA_WANT_KEY_TYPE_CHACHA20 |
 | HKDF                              | PSA_WANT_ALG_HKDF/HKDF_EXTRACT/HKDF_EXPAND                                       | PSA_WANT_KEY_TYPE_DERIVE   |
@@ -28,23 +29,25 @@ directive is given, and - where applicable - the supported key types:
 | PBKDF2-AES-CMAC-PRF128            | PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128                                             | PSA_WANT_KEY_TYPE_AES      |
 | SP800-108-COUNTER-HMAC            | PSA_WANT_ALG_SP800_108_COUNTER_HMAC                                              | PSA_WANT_KEY_TYPE_HMAC     |
 | SP800-108-COUNTER-CMAC            | PSA_WANT_ALG_SP800_108_COUNTER_CMAC                                              | PSA_WANT_KEY_TYPE_AES      |
-| RSA (encryption)                  | PSA_WANT_ALG_RSA_PKCS1V15_CRYPT/OEAP                                             | 1)                         |
-| ECDSA (NIST curves)               | PSA_WANT_ALG_ECDSA                                                               | 2)                         |
-| Deterministic ECDSA (NIST curves) | PSA_WANT_ALG_DETERMINISTIC_ECDSA                                                 | 2)                         |
-| EdDSA (Twisted Edwards curves)    | PSA_WANT_ALG_PURE_EDDSA                                                          | 2)                         |
-| EdDSA pre-hashed                  | PSA_WANT_ALG_ED25519PH/ED448PH                                                   | 2)                         |
-| RSA (signature)                   | PSA_WANT_ALG_RSA_PKCS1V15_SIGN/PSS                                               | 1)                         |
-| ECDH (NIST and Montgomery curves) | PSA_WANT_ALG_ECDH                                                                | 2)                         |
+| RSA (encryption)                  | PSA_WANT_ALG_RSA_PKCS1V15_CRYPT/OEAP                                             | 2)                         |
+| ECDSA (NIST curves)               | PSA_WANT_ALG_ECDSA                                                               | 3)                         |
+| Deterministic ECDSA (NIST curves) | PSA_WANT_ALG_DETERMINISTIC_ECDSA                                                 | 3)                         |
+| EdDSA (Twisted Edwards curves)    | PSA_WANT_ALG_PURE_EDDSA                                                          | 3)                         |
+| EdDSA pre-hashed                  | PSA_WANT_ALG_ED25519PH/ED448PH                                                   | 3)                         |
+| RSA (signature)                   | PSA_WANT_ALG_RSA_PKCS1V15_SIGN/PSS                                               | 2)                         |
+| ECDH (NIST and Montgomery curves) | PSA_WANT_ALG_ECDH                                                                | 3)                         |
 | EC-JPAKE                          | PSA_WANT_ALG_JPAKE                                                               | TLS12_ECJPAKE_TO_PMS       |
-| SPAKE2+                           | PSA_WANT_ALG_SPAKE2P_HMAC/CMAC/MATTER                                            | 3)                         |
-| SRP-6                             | PSA_WANT_ALG_SRP_6                                                               | 4)                         |
+| SPAKE2+                           | PSA_WANT_ALG_SPAKE2P_HMAC/CMAC/MATTER                                            | 4)                         |
+| SRP-6                             | PSA_WANT_ALG_SRP_6                                                               | 5)                         |
 | CTR-DRBG                          | PSA_WANT_GENERATE_RANDOM + PSA_USE_CTR_DRBG_DRIVER                               | -                          |
 | HMAC-DRBG                         | PSA_WANT_GENERATE_RANDOM + PSA_USE_HMAC_DRBG_DRIVER                              | -                          |
 
-1) PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC/IMPORT/EXPORT
-2) PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC/IMPORT/EXPORT/GENERATE/DERIVE
-3) PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE
-4) PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE
+1) AES key wrapping with/without padding are experimental features based on
+[PSA issue 50](https://github.com/ARM-software/psa-api/issues/50#issuecomment-1772551575).
+2) PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC/IMPORT/EXPORT
+3) PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC/IMPORT/EXPORT/GENERATE/DERIVE
+4) PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE
+5) PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE
 
 By defining these directives, the application developer provides the C
 preprocessor with the information that is necessary to include only the wanted
@@ -57,6 +60,7 @@ _PSA Certified Crypto API_ standard by adding appropriate drivers.
 
 Some algorithms support different key sizes. For them, the appropriate C define
 directives are given:
+
 | Algorithm                         | Supported Key Sizes in Bits              | Directives                                               |
 |:--------------------------------- |:---------------------------------------- |:-------------------------------------------------------- |
 | SHA1                              | na                                       | -                                                        |

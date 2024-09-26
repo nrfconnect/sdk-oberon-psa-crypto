@@ -32,6 +32,8 @@ set(OBERON_SOURCES
         oberon_key_derivation.h
         oberon_key_management.c
         oberon_key_management.h
+        oberon_key_wrap.c
+        oberon_key_wrap.h
         oberon_mac.c
         oberon_mac.h
         oberon_pake.c

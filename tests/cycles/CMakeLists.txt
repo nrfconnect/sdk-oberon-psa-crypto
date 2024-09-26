@@ -215,6 +215,8 @@ set(OBERON_SOURCES
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_derivation.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_management.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_management.h
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_wrap.c
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_wrap.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_mac.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_mac.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_pake.c

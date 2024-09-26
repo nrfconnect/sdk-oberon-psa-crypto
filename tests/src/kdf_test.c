@@ -428,7 +428,12 @@ static int test_key_derivation_verify(
         psa_set_key_algorithm(&key_attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
         psa_set_key_type(&key_attr, PSA_KEY_TYPE_DERIVE);
         TEST_ASSERT(psa_import_key(&key_attr, key_data, sizeof key_data, &key_id) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_id) == PSA_SUCCESS);
+        if ((key_usage & (PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_VERIFY_DERIVATION)) == 0) {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_id) == expected);
+            res = 1; goto exit;
+        } else {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_id) == PSA_SUCCESS);
+        }
     } else {
         TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
     }
@@ -438,7 +443,12 @@ static int test_key_derivation_verify(
         psa_set_key_algorithm(&info_attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
         psa_set_key_type(&info_attr, PSA_KEY_TYPE_RAW_DATA);
         TEST_ASSERT(psa_import_key(&info_attr, key_data, sizeof key_data, &info_key) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_INFO, info_key) == PSA_SUCCESS);
+        if ((info_usage & (PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_VERIFY_DERIVATION)) == 0) {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_INFO, info_key) == expected);
+            res = 1; goto exit;
+        } else {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_INFO, info_key) == PSA_SUCCESS);
+        }
     } else {
         TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_INFO, key_data, sizeof key_data) == PSA_SUCCESS);
     }
@@ -536,6 +546,8 @@ int main(void)
     TEST_ASSERT(test_key_derivation_verify(0,                               0,                               0,                               0, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               0, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               0,                               0, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_EXPORT,            0,                               0, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_EXPORT,            0,                               0,                               0, PSA_ERROR_NOT_PERMITTED));
     // output_key
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            0, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               PSA_KEY_USAGE_DERIVE,            0, PSA_SUCCESS));
@@ -544,6 +556,8 @@ int main(void)
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_DERIVE,            0, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               PSA_KEY_USAGE_DERIVE,            0, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 0, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_EXPORT,            PSA_KEY_USAGE_DERIVE,            0, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_EXPORT,            0,                               PSA_KEY_USAGE_DERIVE,            0, PSA_ERROR_NOT_PERMITTED));
     // verify_bytes
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               0,                               1, PSA_SUCCESS));
@@ -552,6 +566,8 @@ int main(void)
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            0,                               1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            0,                               1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               0,                               1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_EXPORT,            0,                               1, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_EXPORT,            0,                               0,                               1, PSA_ERROR_NOT_PERMITTED));
     // verify_key
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
@@ -561,6 +577,9 @@ int main(void)
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_EXPORT,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_EXPORT,            0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               PSA_KEY_USAGE_EXPORT,            1, PSA_ERROR_NOT_PERMITTED));
 #endif // PSA_WANT_ALG_HKDF
 
     return 0;

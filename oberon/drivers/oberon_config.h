@@ -1921,6 +1921,17 @@
     #define PSA_NEED_OBERON_KEY_TYPE_SRP_6_KEY_PAIR_EXPORT_3072 1
 #endif
 
+/* Oberon Key Wrap Driver */
+
+#if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_AES_KW) && !defined(PSA_ACCEL_ALG_AES_KW)
+#define PSA_NEED_OBERON_KEY_WRAP_DRIVER 1
+#define PSA_NEED_OBERON_AES_KW 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_AES_KWP) && !defined(PSA_ACCEL_ALG_AES_KWP)
+#define PSA_NEED_OBERON_KEY_WRAP_DRIVER 1
+#define PSA_NEED_OBERON_AES_KWP 1
+#endif
+
 /* Oberon Random Driver */
 
 #if defined(PSA_WANT_GENERATE_RANDOM)

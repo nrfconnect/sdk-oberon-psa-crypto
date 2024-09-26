@@ -53,6 +53,10 @@
 #ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
 #include "oberon_hmac_drbg.h"
 #endif
+#ifdef PSA_NEED_OBERON_KEY_WRAP_DRIVER
+#include "oberon_key_wrap.h"
+#endif
+
 
 #ifdef PSA_NEED_ENTROPY_DEMO_DRIVER
 #include "demo_entropy.h"
@@ -674,7 +678,7 @@ psa_status_t psa_driver_wrapper_derive_key(
             attributes, input, input_length,
             key_buffer, key_buffer_size, key_buffer_length);
 #endif /* PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER */
-        break;
+        return PSA_ERROR_NOT_SUPPORTED;
 
         /* Add cases for opaque drivers here */
 
@@ -2426,6 +2430,124 @@ psa_status_t psa_driver_wrapper_pake_abort(
 
     default:
         return PSA_SUCCESS;
+    }
+}
+
+/*
+ * Key wrapping functions.
+ */
+
+psa_status_t psa_driver_wrapper_wrap_key(
+    const psa_key_attributes_t *key_attributes,
+    const uint8_t *key_data, size_t key_size,
+    const psa_key_attributes_t *wrapping_key_attributes,
+    const uint8_t *wrapping_key_data, size_t wrapping_key_size,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    uint8_t *data, size_t data_size, size_t *data_length)
+{
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(wrapping_key_attributes->lifetime)) {
+    case PSA_KEY_LOCATION_LOCAL_STORAGE:
+        /* Add cases for transparent drivers here */
+#ifdef PSA_NEED_OBERON_KEY_WRAP_DRIVER
+        return oberon_wrap_key(
+            key_attributes, key_data, key_size,
+            wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
+            alg, format,
+            data, data_size, data_length);
+#endif /* PSA_NEED_OBERON_KEY_WRAP_DRIVER */
+        return PSA_ERROR_NOT_SUPPORTED;
+
+        /* Add cases for opaque drivers here */
+
+    default:
+        /* Key is declared with a lifetime not known to us */
+        (void)key_attributes;
+        (void)key_data;
+        (void)key_size;
+        (void)wrapping_key_data;
+        (void)wrapping_key_size;
+        (void)alg;
+        (void)format;
+        (void)data;
+        (void)data_size;
+        (void)data_length;
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+}
+
+psa_status_t psa_driver_wrapper_unwrap_key(
+    const psa_key_attributes_t *attributes,
+    const psa_key_attributes_t *wrapping_key_attributes,
+    const uint8_t *wrapping_key_data, size_t wrapping_key_size,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    const uint8_t *data, size_t data_length,
+    uint8_t *key, size_t key_size, size_t *key_length)
+{
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(wrapping_key_attributes->lifetime)) {
+    case PSA_KEY_LOCATION_LOCAL_STORAGE:
+        /* Add cases for transparent drivers here */
+#ifdef PSA_NEED_OBERON_KEY_WRAP_DRIVER
+        return oberon_unwrap_key(
+            attributes,
+            wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
+            alg, format,
+            data, data_length,
+            key, key_size, key_length);
+#endif /* PSA_NEED_OBERON_KEY_WRAP_DRIVER */
+        return PSA_ERROR_NOT_SUPPORTED;
+
+        /* Add cases for opaque drivers here */
+
+    default:
+        /* Key is declared with a lifetime not known to us */
+        (void)attributes;
+        (void)key_size;
+        (void)wrapping_key_data;
+        (void)wrapping_key_size;
+        (void)alg;
+        (void)format;
+        (void)data;
+        (void)data_length;
+        (void)key;
+        (void)key_size;
+        (void)key_length;
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+}
+
+psa_status_t psa_driver_wrapper_get_wrapped_key_size(
+    const psa_key_attributes_t *attributes,
+    const psa_key_attributes_t *wrapping_key_attributes,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    const uint8_t *data, size_t data_length,
+    size_t *key_size)
+{
+    switch (PSA_KEY_LIFETIME_GET_LOCATION(wrapping_key_attributes->lifetime)) {
+    case PSA_KEY_LOCATION_LOCAL_STORAGE:
+        /* Add cases for transparent drivers here */
+#ifdef PSA_NEED_OBERON_KEY_WRAP_DRIVER
+        return oberon_get_wrapped_key_size(
+            attributes, wrapping_key_attributes,
+            alg, format,
+            data, data_length,
+            key_size);
+#endif /* PSA_NEED_OBERON_KEY_WRAP_DRIVER */
+        return PSA_ERROR_NOT_SUPPORTED;
+
+        /* Add cases for opaque drivers here */
+
+    default:
+        /* Key is declared with a lifetime not known to us */
+        (void)attributes;
+        (void)alg;
+        (void)format;
+        (void)data;
+        (void)data_length;
+        (void)key_size;
+        return PSA_ERROR_INVALID_ARGUMENT;
     }
 }
 

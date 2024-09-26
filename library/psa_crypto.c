@@ -1086,7 +1086,9 @@ static psa_status_t psa_validate_key_policy(const psa_key_policy_t *policy)
                            PSA_KEY_USAGE_SIGN_HASH |
                            PSA_KEY_USAGE_VERIFY_HASH |
                            PSA_KEY_USAGE_VERIFY_DERIVATION |
-                           PSA_KEY_USAGE_DERIVE)) != 0) {
+                           PSA_KEY_USAGE_DERIVE |
+                           PSA_KEY_USAGE_WRAP |
+                           PSA_KEY_USAGE_UNWRAP)) != 0) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -4998,6 +5000,134 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation)
     status = psa_driver_wrapper_pake_abort(operation);
 
     memset(operation, 0, sizeof(*operation));
+
+    return status;
+}
+
+
+/****************************************************************/
+/* Key Wrapping */
+/****************************************************************/
+
+psa_status_t psa_wrap_key(
+    psa_key_id_t key,
+    psa_key_id_t wrapping_key,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    uint8_t *data,
+    size_t data_size,
+    size_t *data_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *w_slot = NULL;
+    psa_key_slot_t *k_slot = NULL;
+
+    if (!PSA_ALG_IS_KEY_WRAP(alg)) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(
+        wrapping_key, &w_slot, PSA_KEY_USAGE_WRAP, alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(
+        key, &k_slot, PSA_KEY_USAGE_EXPORT, alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_driver_wrapper_wrap_key(
+        &k_slot->attr, k_slot->key.data, k_slot->key.bytes,
+        &w_slot->attr, w_slot->key.data, w_slot->key.bytes,
+        alg, format,
+        data, data_size, data_length);
+
+exit:
+    unlock_status = psa_unregister_read_under_mutex(w_slot);
+    if (status == PSA_SUCCESS) {
+        status = unlock_status;
+    }
+
+    unlock_status = psa_unregister_read_under_mutex(k_slot);
+    if (status == PSA_SUCCESS) {
+        status = unlock_status;
+    }
+
+    return status;
+}
+
+psa_status_t psa_unwrap_key(
+    const psa_key_attributes_t *attributes,
+    psa_key_id_t wrapping_key,
+    psa_algorithm_t alg,
+    psa_key_data_format_t format,
+    const uint8_t *data,
+    size_t data_length,
+    psa_key_id_t *key)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    size_t storage_size;
+    psa_key_slot_t *w_slot = NULL;
+    psa_key_slot_t *k_slot = NULL;
+    psa_se_drv_table_entry_t *driver = NULL;
+
+    if (!PSA_ALG_IS_KEY_WRAP(alg)) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    status = psa_get_and_lock_key_slot_with_policy(
+        wrapping_key, &w_slot, PSA_KEY_USAGE_UNWRAP, alg);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_start_key_creation(
+        PSA_KEY_CREATION_IMPORT, attributes, &k_slot, &driver);
+    if (status != PSA_SUCCESS) goto exit;
+
+    switch (alg) {
+    case PSA_ALG_AES_KW:
+    case PSA_ALG_AES_KWP:
+        if (data_length < 8) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+        storage_size = data_length - 8;
+        break;
+    default:
+        storage_size = data_length;
+        break;
+    }
+
+    status = psa_allocate_buffer_to_slot(k_slot, storage_size);
+    if (status != PSA_SUCCESS) goto exit;
+
+    status = psa_driver_wrapper_unwrap_key(
+        attributes,
+        &w_slot->attr, w_slot->key.data, w_slot->key.bytes,
+        alg, format,
+        data, data_length,
+        k_slot->key.data, k_slot->key.bytes, &k_slot->key.bytes);
+    if (status != PSA_SUCCESS) goto exit;
+
+    status = psa_finish_key_creation(k_slot, driver, key);
+
+exit:
+    unlock_status = psa_unregister_read_under_mutex(w_slot);
+    if (status == PSA_SUCCESS) {
+        status = unlock_status;
+    }
+
+    if (status != PSA_SUCCESS) {
+        psa_fail_key_creation(k_slot, driver);
+        *key = MBEDTLS_SVC_KEY_ID_INIT;
+    }
 
     return status;
 }

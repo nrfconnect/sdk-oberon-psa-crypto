@@ -159,6 +159,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
             set(OBERON_TEST_SUITES
                     pake_test
                     kdf_test
+                    key_wrap_test
             )
 
             # define Mbed TLS helper sources originating from Mbed TLS test, modified and unmodified
@@ -222,6 +223,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
         "oberon/drivers/oberon_aead.h"
         "oberon/drivers/oberon_mac.h"
         "oberon/drivers/oberon_key_derivation.h"
+        "oberon/drivers/oberon_key_wrap.h"
         "oberon/drivers/oberon_pake.h"
         "oberon/drivers/oberon_jpake.h"
         "oberon/drivers/oberon_spake2p.h"
