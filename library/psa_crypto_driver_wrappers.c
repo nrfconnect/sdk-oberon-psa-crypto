@@ -22,7 +22,7 @@
  * NOTICE: This file has been modified by Oberon microsystems AG.
  */
 
-#include "common.h"
+#include "oberon_psa_common.h"
 #include "psa/crypto.h"
 #include "psa_crypto_core.h"
 #include "psa_crypto_driver_wrappers.h"

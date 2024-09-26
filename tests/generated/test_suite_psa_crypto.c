@@ -167,7 +167,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #include "mbedtls/asn1.h"
 #include "mbedtls/asn1write.h"
 #include "mbedtls/oid.h"
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #include "mbedtls/psa_util.h"
 

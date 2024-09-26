@@ -10,7 +10,7 @@
  * NOTICE: This file has been modified by Oberon microsystems AG.
  */
 
-#include "common.h"
+#include "oberon_psa_common.h"
 #include "psa_crypto_core_common.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
