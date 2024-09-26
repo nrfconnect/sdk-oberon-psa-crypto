@@ -165,7 +165,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #line 2 "tests/suites/test_suite_psa_crypto_memory.function"
 #include <stdint.h>
 
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #include "psa/crypto.h"
 

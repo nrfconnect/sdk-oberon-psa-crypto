@@ -13,7 +13,7 @@
 #define _POSIX_C_SOURCE 200112L
 #endif
 
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #if defined(MBEDTLS_THREADING_C)
 

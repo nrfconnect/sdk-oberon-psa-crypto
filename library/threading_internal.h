@@ -11,7 +11,7 @@
 #ifndef MBEDTLS_THREADING_INTERNAL_H
 #define MBEDTLS_THREADING_INTERNAL_H
 
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #include <mbedtls/threading.h>
 

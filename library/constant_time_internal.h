@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "common.h"
+#include "oberon_psa_common.h"
 
 #if defined(MBEDTLS_BIGNUM_C)
 #include "mbedtls/bignum.h"
