@@ -84,26 +84,26 @@ static uint8_t psa_get_initialized(void)
 {
     uint8_t initialized;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_rngdata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE)*/
 
     initialized = global_data.rng_state == RNG_SEEDED;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_rngdata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE)*/
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE)*/
 
     initialized =
         (initialized && (global_data.initialized == PSA_CRYPTO_SUBSYSTEM_ALL_INITIALISED));
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     return initialized;
 }
@@ -112,15 +112,15 @@ static uint8_t psa_get_drivers_initialized(void)
 {
     uint8_t initialized;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     initialized = (global_data.initialized & PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED) != 0;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     return initialized;
 }
@@ -813,7 +813,7 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
         return status;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* We cannot unlock between setting the state to PENDING_DELETION
      * and destroying the key in storage, as otherwise another thread
      * could load the key into a new slot and the key will not be
@@ -889,7 +889,7 @@ exit:
         overall_status = status;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* Don't overwrite existing errors if the unlock fails. */
     status = overall_status;
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
@@ -1207,12 +1207,12 @@ static psa_status_t psa_start_key_creation(
         return status;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_lock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
     status = psa_reserve_free_key_slot(&volatile_key_id, p_slot);
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
@@ -1280,7 +1280,7 @@ static psa_status_t psa_finish_key_creation(
     (void) slot;
     (void) driver;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_lock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
@@ -1308,7 +1308,7 @@ static psa_status_t psa_finish_key_creation(
         }
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
@@ -1336,7 +1336,7 @@ static void psa_fail_key_creation(psa_key_slot_t *slot,
         return;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* If the lock operation fails we still wipe the slot.
      * Operations will no longer work after a failed lock,
      * but we still need to wipe the slot of confidential data. */
@@ -1345,7 +1345,7 @@ static void psa_fail_key_creation(psa_key_slot_t *slot,
 
     psa_wipe_key_slot(slot);
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_key_slot_mutex);
 #endif
 }
@@ -5377,9 +5377,9 @@ psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
 void mbedtls_psa_crypto_free(void)
 {
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     /* Nothing to do to free transaction. */
     if (global_data.initialized & PSA_CRYPTO_SUBSYSTEM_TRANSACTION_INITIALIZED) {
@@ -5391,13 +5391,13 @@ void mbedtls_psa_crypto_free(void)
         global_data.initialized &= ~PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_rngdata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (global_data.rng_state != RNG_NOT_INITIALIZED) {
         psa_driver_wrapper_free_random(&global_data.rng);
@@ -5405,13 +5405,13 @@ void mbedtls_psa_crypto_free(void)
     global_data.rng_state = RNG_NOT_INITIALIZED;
     mbedtls_platform_zeroize(&global_data.rng, sizeof(global_data.rng));
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_rngdata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     /* Terminate drivers */
     if (global_data.initialized & PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED) {
@@ -5419,9 +5419,9 @@ void mbedtls_psa_crypto_free(void)
         global_data.initialized &= ~PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
 }
 
@@ -5463,9 +5463,9 @@ psa_status_t psa_crypto_init(void)
 
     /* Init drivers */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (!(global_data.initialized & PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED)) {
         /* Init drivers */
@@ -5475,10 +5475,10 @@ psa_status_t psa_crypto_init(void)
         global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
         &mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (status != PSA_SUCCESS) {
         goto exit;
@@ -5486,9 +5486,9 @@ psa_status_t psa_crypto_init(void)
 
     /* Init key slots */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (!(global_data.initialized & PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED)) {
         status = psa_initialize_key_slots();
@@ -5497,10 +5497,10 @@ psa_status_t psa_crypto_init(void)
         global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
         &mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (status != PSA_SUCCESS) {
         goto exit;
@@ -5508,24 +5508,24 @@ psa_status_t psa_crypto_init(void)
 
     /* Init RNG */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     driver_wrappers_initialized =
         (global_data.initialized & PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED);
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
         &mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     /* Need to use separate mutex here, as initialisation can require
     * testing of init flags, which requires locking the global data
     * mutex. */
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_rngdata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     /* Initialize and seed the random generator. */
     if (global_data.rng_state == RNG_NOT_INITIALIZED && driver_wrappers_initialized) {
@@ -5533,10 +5533,10 @@ psa_status_t psa_crypto_init(void)
         global_data.rng_state = RNG_SEEDED;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
         &mbedtls_threading_psa_rngdata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (status != PSA_SUCCESS) {
         goto exit;
@@ -5544,9 +5544,9 @@ psa_status_t psa_crypto_init(void)
 
     /* Init transactions */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     if (!(global_data.initialized & PSA_CRYPTO_SUBSYSTEM_TRANSACTION_INITIALIZED)) {
 #if defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS)
@@ -5568,10 +5568,10 @@ psa_status_t psa_crypto_init(void)
 #endif /* defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS) */
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
         &mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
 exit:
     if (status != PSA_SUCCESS) {

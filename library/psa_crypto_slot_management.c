@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/platform.h"
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
 #include "mbedtls/threading.h"
 #endif
 
@@ -38,15 +38,15 @@ static uint8_t psa_get_key_slots_initialized(void)
 {
     uint8_t initialized;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     initialized = global_data.key_slots_initialized;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     mbedtls_mutex_unlock(&mbedtls_threading_psa_globaldata_mutex);
-#endif /* defined(MBEDTLS_THREADING_C) */
+#endif /* defined(PSA_CRYPTO_THREAD_SAFE) */
 
     return initialized;
 }
@@ -368,7 +368,7 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
         return PSA_ERROR_BAD_STATE;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* We need to set status as success, otherwise CORRUPTION_DETECTED
      * would be returned if the lock fails. */
     status = PSA_SUCCESS;
@@ -385,7 +385,7 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
      */
     status = psa_get_and_lock_key_slot_in_memory(key, p_slot);
     if (status != PSA_ERROR_DOES_NOT_EXIST) {
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
         PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                                   &mbedtls_threading_key_slot_mutex));
 #endif
@@ -399,7 +399,7 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
 
     status = psa_reserve_free_key_slot(&volatile_key_id, p_slot);
     if (status != PSA_SUCCESS) {
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
         PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                                   &mbedtls_threading_key_slot_mutex));
 #endif
@@ -440,7 +440,7 @@ psa_status_t psa_get_and_lock_key_slot(mbedtls_svc_key_id_t key,
     status = PSA_ERROR_INVALID_HANDLE;
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C || MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
@@ -484,7 +484,7 @@ psa_status_t psa_unregister_read(psa_key_slot_t *slot)
 psa_status_t psa_unregister_read_under_mutex(psa_key_slot_t *slot)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* We need to set status as success, otherwise CORRUPTION_DETECTED
      * would be returned if the lock fails. */
     status = PSA_SUCCESS;
@@ -492,7 +492,7 @@ psa_status_t psa_unregister_read_under_mutex(psa_key_slot_t *slot)
                               &mbedtls_threading_key_slot_mutex));
 #endif
     status = psa_unregister_read(slot);
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
@@ -580,7 +580,7 @@ psa_status_t psa_close_key(psa_key_handle_t handle)
         return PSA_SUCCESS;
     }
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* We need to set status as success, otherwise CORRUPTION_DETECTED
      * would be returned if the lock fails. */
     status = PSA_SUCCESS;
@@ -592,7 +592,7 @@ psa_status_t psa_close_key(psa_key_handle_t handle)
         if (status == PSA_ERROR_DOES_NOT_EXIST) {
             status = PSA_ERROR_INVALID_HANDLE;
         }
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
         PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                                   &mbedtls_threading_key_slot_mutex));
 #endif
@@ -604,7 +604,7 @@ psa_status_t psa_close_key(psa_key_handle_t handle)
     } else {
         status = psa_unregister_read(slot);
     }
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
@@ -617,7 +617,7 @@ psa_status_t psa_purge_key(mbedtls_svc_key_id_t key)
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot;
 
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     /* We need to set status as success, otherwise CORRUPTION_DETECTED
      * would be returned if the lock fails. */
     status = PSA_SUCCESS;
@@ -626,7 +626,7 @@ psa_status_t psa_purge_key(mbedtls_svc_key_id_t key)
 #endif
     status = psa_get_and_lock_key_slot_in_memory(key, &slot);
     if (status != PSA_SUCCESS) {
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
         PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                                   &mbedtls_threading_key_slot_mutex));
 #endif
@@ -639,7 +639,7 @@ psa_status_t psa_purge_key(mbedtls_svc_key_id_t key)
     } else {
         status = psa_unregister_read(slot);
     }
-#if defined(MBEDTLS_THREADING_C)
+#if defined(PSA_CRYPTO_THREAD_SAFE)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
