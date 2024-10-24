@@ -14,6 +14,7 @@
 #include "oberon_rsa.h"
 #include "oberon_spake2p.h"
 #include "oberon_srp.h"
+#include "oberon_wpa3_sae.h"
 
 
 psa_status_t oberon_export_public_key(
@@ -106,6 +107,14 @@ psa_status_t oberon_import_key(
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SRP_6_KEY_PAIR_IMPORT */
 
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+        return oberon_import_wpa3_sae_pt_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT */
+
     {
         (void)data;
         (void)data_length;
@@ -163,6 +172,14 @@ psa_status_t oberon_derive_key(
             key, key_size, key_length);
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+        return oberon_derive_wpa3_sae_pt_key(
+            attributes, input, input_length,
+            key, key_size, key_length);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT */
 
     {
         (void)input;

@@ -1737,6 +1737,14 @@
     #define PSA_NEED_OBERON_SRP_PASSWORD_HASH 1
 #endif
 
+#if defined(PSA_WANT_ALG_WPA3_SAE_PT) && !defined(PSA_ACCEL_WPA3_SAE_PT)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for WPA3_SAE_PT"
+    #endif
+    #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
+    #define PSA_NEED_OBERON_WPA3_SAE_PT 1
+#endif
+
 #if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC)
     #if defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_SP800_108_COUNTER_HMA_SHA_1)
         #ifdef PSA_HW_DRIVERS_ONLY
@@ -1854,6 +1862,19 @@
     #endif
 #endif
 
+#if defined(PSA_WANT_ALG_WPA3_SAE)
+    #if (defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_WPA3_SAE_SECP_R1_256_SHA_256)) || \
+        (defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_WPA3_SAE_SECP_R1_256_SHA_384)) || \
+        (defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_WPA3_SAE_SECP_R1_256_SHA_512))
+        #define PSA_NEED_OBERON_PAKE_DRIVER 1
+        #define PSA_NEED_OBERON_WPA3_SAE 1
+        #define PSA_NEED_OBERON_WPA3_SAE_SECP_R1_256 1
+    #endif
+    #if defined(PSA_HW_DRIVERS_ONLY) && defined(PSA_NEED_OBERON_WPA3_SAE)
+    #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for WPA3_SAE_SECP_R1_256"
+    #endif
+#endif
+
 #if defined(PSA_WANT_ECC_SECP_R1_256)
     #if defined(PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_SPAKE2P_PUBLIC_KEY_SECP_R1_256)
         #ifdef PSA_HW_DRIVERS_ONLY
@@ -1893,6 +1914,16 @@
         #define PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE 1
         #define PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE_SECP 1
         #define PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE_SECP_R1_256 1
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_WPA3_SAE_PT) &&                                                          \
+        !defined(PSA_ACCEL_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256)
+        #ifdef PSA_HW_DRIVERS_ONLY
+            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_WPA3_SAE_PT_SECP_R1_256"
+        #endif
+        #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT 1
+        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP 1
+        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256 1
     #endif
 #endif // defined(PSA_WANT_ECC_SECP_R1_256)
 

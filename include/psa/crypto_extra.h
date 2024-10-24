@@ -664,6 +664,64 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
                          ((type) & PSA_KEY_TYPE_SRP_GROUP_MASK) : \
                          0))
 
+#define PSA_KEY_TYPE_WPA3_SAE_PT_BASE          ((psa_key_type_t) 0x7800)
+#define PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK       ((psa_key_type_t) 0x00ff)
+
+/** WPA3-SAE-PT key.
+ *
+ * The key is used to store the out of band calculated group element
+ * used in the Hash-To-Element variant of WPA3-SAE. It can be used as
+ * input to the WPA3-SAE PAKE instead of a password key.
+ *
+ * \param group A value of type ::psa_ec_family_t or ::psa_dh_family_t
+ *              that identifies the group to be used.
+ */
+#define PSA_KEY_TYPE_WPA3_SAE_PT(group) \
+    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_PT_BASE | (group)))
+
+ /** Whether a key type is a WPA3-SAE-PT. */
+#define PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)                    \
+    (((type) & ~PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) ==         \
+     PSA_KEY_TYPE_WPA3_SAE_PT_BASE)
+ /** Extract the group from a WPA3-SAE key type. */
+#define PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(type)            \
+    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type) ? \
+      ((type) & PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) :          \
+      0))
+
+#define PSA_ALG_WPA3_SAE_PT_BASE          ((psa_algorithm_t) 0x08800400)
+/** The WPA3-SAE password to PT KDF.
+ * It takes the password p, a salt (uuid), and optionally a password id.
+ * 
+ * This key derivation algorithm uses the following inputs, which must be
+ * provided in the following order:
+ * - #PSA_KEY_DERIVATION_INPUT_SALT for the uuid.
+ * - #PSA_KEY_DERIVATION_INPUT_SECRET for the password.
+ * - optionally; #PSA_KEY_DERIVATION_INPUT_INFO for the password id.
+ * The output has to be read as a key of type PSA_KEY_TYPE_WPA3_SAE_PT.
+ *
+ * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
+ *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
+ *
+ * \return              The corresponding counter-mode KDF algorithm.
+ * \return              Unspecified if \p hash_alg is not a supported
+ *                      hash algorithm.
+ */
+#define PSA_ALG_WPA3_SAE_PT(hash_alg)                            \
+    (PSA_ALG_WPA3_SAE_PT_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+/** Whether the specified algorithm is a key derivation algorithm constructed
+ * using #PSA_ALG_WPA3_SAE_PT(\p hash_alg).
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a key derivation algorithm constructed using #PSA_ALG_WPA3_SAE_PT(),
+ *         0 otherwise. This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_WPA3_SAE_PT(alg)                         \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_PT_BASE)
+
 #define PSA_ALG_CATEGORY_PAKE                   ((psa_algorithm_t) 0x0a000000)
 
 /** Whether the specified algorithm is a password-authenticated key exchange.
@@ -902,14 +960,14 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * the shared secret as an input to a key derivation operation to produce
  * additional cryptographic keys.
  */
-#define PSA_ALG_IS_SPAKE2P_HMAC_BASE            ((psa_algorithm_t) 0x0a000400)
-#define PSA_ALG_SPAKE2P_HMAC(hash_alg) (PSA_ALG_IS_SPAKE2P_HMAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
-#define PSA_ALG_IS_SPAKE2P_CMAC_BASE            ((psa_algorithm_t) 0x0a000500)
-#define PSA_ALG_SPAKE2P_CMAC(hash_alg) (PSA_ALG_IS_SPAKE2P_CMAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_SPAKE2P_HMAC_BASE               ((psa_algorithm_t) 0x0a000400)
+#define PSA_ALG_SPAKE2P_HMAC(hash_alg) (PSA_ALG_SPAKE2P_HMAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_SPAKE2P_CMAC_BASE               ((psa_algorithm_t) 0x0a000500)
+#define PSA_ALG_SPAKE2P_CMAC(hash_alg) (PSA_ALG_SPAKE2P_CMAC_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
 #define PSA_ALG_SPAKE2P_MATTER                  ((psa_algorithm_t) 0x0A000609)
-#define PSA_ALG_IS_SPAKE2P(alg) (((alg) & ~0x000003ff) == PSA_ALG_IS_SPAKE2P_HMAC_BASE)
-#define PSA_ALG_IS_SPAKE2P_HMAC(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_IS_SPAKE2P_HMAC_BASE)
-#define PSA_ALG_IS_SPAKE2P_CMAC(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_IS_SPAKE2P_CMAC_BASE)
+#define PSA_ALG_IS_SPAKE2P(alg) (((alg) & ~0x000003ff) == PSA_ALG_SPAKE2P_HMAC_BASE)
+#define PSA_ALG_IS_SPAKE2P_HMAC(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_SPAKE2P_HMAC_BASE)
+#define PSA_ALG_IS_SPAKE2P_CMAC(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_SPAKE2P_CMAC_BASE)
 
  /** The Secure Remote Passwort key exchange (SRP) algorithm.
  *
@@ -992,6 +1050,97 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 #define PSA_ALG_SRP_6_BASE                      ((psa_algorithm_t) 0x0a000300)
 #define PSA_ALG_SRP_6(hash_alg) (PSA_ALG_SRP_6_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
 #define PSA_ALG_IS_SRP_6(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_SRP_6_BASE)
+
+/** The WPA3-SAE key exchange algorithm.
+ *
+ * This is WPA3-SAE as defined by "IEEE Std 802.11-REVme/D7.0 2024, 
+ * chapter 12.4", including the Hash-To-Element (H2E) variant.
+ * It is instantiated with the following parameters:
+ *
+ * - The group is defined over a finite field or an elliptic curve.
+ * - A cryptographic hash function.
+ *
+ * For WPA3-SAE selected by the AKM suites 8 and 9, use the
+ * PSA_ALG_WPA3_SAE_FIXED() algorithm, parameterized by the required hash
+ * algorithm.
+ * For WPA3-SAE selected by the AKM suites 24 and 25 (SAE using group-dependent
+ * hash), use the PSA_ALG_WPA3_SAE_GDH() algorithm, parameterized by the
+ * required hash algorithm.
+ * 
+ * To select these parameters and set up the cipher suite, call these functions:
+ *
+ * \code
+ * psa_pake_cipher_suite_t cipher_suite = PSA_PAKE_CIPHER_SUITE_INIT;
+ * psa_pake_cs_set_algorithm(cipher_suite, PSA_ALG_WPA3_SAE_FIXED(hash));
+ * psa_pake_cs_set_primitive(&cipher_suite,
+ *                           PSA_PAKE_PRIMITIVE(type, family, bits));
+ * \endcode
+ *
+ * After initializing a WPA3-SAE operation, call:
+ *
+ * \code
+ * psa_pake_setup(operation, password, cipher_suite);
+ * psa_pake_set_user(operation, ...);
+ * psa_pake_set_peer(operation, ...);
+ * \endcode
+ * 
+ * For basic SAE the password must be of type #PSA_KEY_TYPE_PASSWORD,
+ * for SAE-H2E the password must be of type #PSA_KEY_TYPE_WPA3_SAE_PT.
+ *
+ * \c psa_pake_set_role() must not be called because WPA3-SAE is a symmetric PAKE.
+ * 
+ * For a key exchange first call the following functions in any order:
+ * \code
+ * // send commit message
+ * psa_pake_output(operation, #PSA_PAKE_STEP_COMMIT, ...);
+ * // receive commit message
+ * psa_pake_input(operation, #PSA_PAKE_STEP_COMMIT, ...);
+ * \endcode
+ *
+ * If the Hash-To-Element variant is used and a list of rejected groups
+ * is available, it must be provided as a salt:
+ *
+ * \code
+ * // input salt
+ * psa_pake_input(operation, #PSA_PAKE_STEP_SALT, ...);
+ * \endcode
+ *
+ * Then call the following functions in any order:
+ * \code
+ * // set send-confirm counter
+ * psa_pake_input(operation, #PSA_PAKE_STEP_SEND_CONFIRM, ...);
+ * // send confirm message
+ * psa_pake_output(operation, #PSA_PAKE_STEP_CONFIRM, ...);
+ * // receive confirm message
+ * psa_pake_input(operation, #PSA_PAKE_STEP_CONFIRM, ...);
+ * // get key id (optional)
+ * psa_pake_output(operation, #PSA_PAKE_STEP_KEYID, ...);
+ * \endcode
+ * 
+ * Remarks:
+ * \c psa_pake_input(#PSA_PAKE_STEP_SEND_CONFIRM) must be called before
+ * \c psa_pake_output(#PSA_PAKE_STEP_CONFIRM) to set the send-confirm counter.
+ * The #PSA_PAKE_STEP_SEND_CONFIRM and #PSA_PAKE_STEP_CONFIRM steps may be used
+ * multiple times to handle repeated confirm messages with varying counts.
+ *
+ * Finally get the shared secret: 
+ *
+ * \code
+ * // get secret
+ * psa_pake_get_shared_key();
+ * \endcode
+ *
+ * The shared secret produced by WPA3-SAE is pseudorandom.
+ * It can be used directly as an encryption key or as input to a key derivation
+ * operation.
+ */
+#define PSA_ALG_WPA3_SAE_FIXED_BASE             ((psa_algorithm_t) 0x0a000800)
+#define PSA_ALG_WPA3_SAE_FIXED(hash_alg) (PSA_ALG_WPA3_SAE_FIXED_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_WPA3_SAE_GDH_BASE               ((psa_algorithm_t) 0x0a000900)
+#define PSA_ALG_WPA3_SAE_GDH(hash_alg) (PSA_ALG_WPA3_SAE_GDH_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_IS_WPA3_SAE(alg) (((alg) & ~0x000001ff) == PSA_ALG_WPA3_SAE_FIXED_BASE)
+#define PSA_ALG_IS_WPA3_SAE_FIXED(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_FIXED_BASE)
+#define PSA_ALG_IS_WPA3_SAE_GDH(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_GDH_BASE)
 
 /** @} */
 
@@ -1198,7 +1347,11 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * the same as the output of the MAC algorithm specified in the cipher suite.
  *
  * For PSA_ALG_SRP_6, the format for both input and output at this step is
- * the same as the output of the Hash algorithm specified.
+ * the same as the output of the hash algorithm specified.
+ *
+ * For WPA3_SAE algorithms, the format for both input and output at this step
+ * is a 2 byte little-endian "send-confirm" counter followed by the output of
+ * the hash algorithm specified.
  */
 #define PSA_PAKE_STEP_CONFIRM                   ((psa_pake_step_t)0x04)
 
@@ -1207,6 +1360,28 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * The format for both input and output at this step is plain binary data.
  */
 #define PSA_PAKE_STEP_SALT                      ((psa_pake_step_t)0x05)
+
+/** The WPA3-SAE commit step.
+ *
+ * The format for both input and output at this step is a 2 byte number
+ * specifying the group used followed by a scalar and an element of the
+ * specified group.
+ */
+#define PSA_PAKE_STEP_COMMIT                    ((psa_pake_step_t)0x06)
+
+/** The WPA3-SAE send-confirm input step.
+ *
+ * The format for the input at this step is a 2 byte little-endian number
+ * specifying the send-confirm counter to be used in the following confirm
+ * output step.
+ */
+#define PSA_PAKE_STEP_SEND_CONFIRM              ((psa_pake_step_t)0x07)
+
+/** The WPA3-SAE key id output step.
+ *
+ * The format of the output at this step is a 16 byte key id (PMKID).
+ */
+#define PSA_PAKE_STEP_KEYID                     ((psa_pake_step_t)0x08)
 
 /** Retrieve the PAKE algorithm from a PAKE cipher suite.
  *
@@ -1803,10 +1978,14 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
         PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) : \
      output_step == PSA_PAKE_STEP_ZK_PROOF ? \
         PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) : \
+     output_step == PSA_PAKE_STEP_COMMIT ? \
+        PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) * 3 + 2 : \
      output_step == PSA_PAKE_STEP_CONFIRM ? \
         PSA_ALG_IS_SPAKE2P_CMAC(alg) ? \
             PSA_MAC_LENGTH(PSA_KEY_TYPE_AES, 128, PSA_ALG_CMAC) : \
-            PSA_HASH_LENGTH(alg) : \
+            PSA_HASH_LENGTH(alg) + (PSA_ALG_IS_WPA3_SAE(alg) ? 2 : 0) : \
+     output_step == PSA_PAKE_STEP_KEYID ? \
+        16u : \
      0u)
 
 /** A sufficient input buffer size for psa_pake_input().
@@ -1837,12 +2016,16 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
         PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) : \
      input_step == PSA_PAKE_STEP_ZK_PROOF ? \
         PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) : \
+     input_step == PSA_PAKE_STEP_COMMIT ? \
+        PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) * 3 + 2 : \
      input_step == PSA_PAKE_STEP_CONFIRM ? \
         PSA_ALG_IS_SPAKE2P_CMAC(alg) ? \
             PSA_MAC_LENGTH(PSA_KEY_TYPE_AES, 128, PSA_ALG_CMAC) : \
-            PSA_HASH_LENGTH(alg) : \
+            PSA_HASH_LENGTH(alg) + (PSA_ALG_IS_WPA3_SAE(alg) ? 2 : 0) : \
      input_step == PSA_PAKE_STEP_SALT ? \
         64u : \
+     input_step == PSA_PAKE_STEP_SEND_CONFIRM ? \
+        2u : \
      0u)
 
 /** Output buffer size for psa_pake_output() for any of the supported PAKE
@@ -1858,7 +2041,11 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 #ifdef PSA_WANT_ALG_SRP_6
 #define PSA_PAKE_OUTPUT_MAX_SIZE PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #else
+#ifdef PSA_WANT_ALG_WPA3_SAE
+#define PSA_PAKE_OUTPUT_MAX_SIZE (PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS) * 3 + 2)
+#else
 #define PSA_PAKE_OUTPUT_MAX_SIZE PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+#endif
 #endif
 
 /** Input buffer size for psa_pake_input() for any of the supported PAKE
@@ -1874,7 +2061,11 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 #ifdef PSA_WANT_ALG_SRP_6
 #define PSA_PAKE_INPUT_MAX_SIZE PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #else
+#ifdef PSA_WANT_ALG_WPA3_SAE
+#define PSA_PAKE_INPUT_MAX_SIZE (PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS) * 3 + 2)
+#else
 #define PSA_PAKE_INPUT_MAX_SIZE PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+#endif
 #endif
 
 static inline psa_algorithm_t psa_pake_cs_get_algorithm(
@@ -1947,21 +2138,6 @@ static inline void psa_pake_cs_set_key_confirmation(
  */
 #define PSA_ALG_AES_KWP            ((psa_algorithm_t) 0x0B400200)
 
-/** Encoding of key data formats.
- *
- * A key data format is used when a key is converted from or to an
- * external data format.
- * #PSA_KEY_FORMAT_DEFAULT is used for the standard key export format.
- */
-typedef uint16_t psa_key_data_format_t;
-
-/** The default key format.
- *
- * This is the default key format used when a key is exported with
- * psa_export_key().
- */
-#define PSA_KEY_FORMAT_DEFAULT     ((psa_key_data_format_t) 0)
-
 /** Whether the key may be used to wrap another key.
  *
  * This flag allows the key to be used as a wrapping key for a key wrapping
@@ -1981,18 +2157,15 @@ typedef uint16_t psa_key_data_format_t;
  * The output of this function can be passed to psa_unwrap_key() to
  * create an equivalent object.
  *
- * The key to be wrapped is first converted to the specified format and then
- * encrypted using the given key wrapping algorithm.
+ * The key to be wrapped is encrypted using the given key wrapping algorithm.
  *
- * \param key               Identifier of the key to be wrapped. It must allow
- *                          the usage #PSA_KEY_USAGE_EXPORT.
  * \param wrapping_key      Identifier of the key to wrap the input key. It
  *                          must allow the usage #PSA_KEY_USAGE_WRAP.
  * \param alg               The key wrapping algorithm to use
  *                          (\c PSA_ALG_XXX value such that
  *                          #PSA_ALG_IS_KEY_WRAP(\p alg) is true).
- * \param format            The format of the key. Use #PSA_KEY_FORMAT_DEFAULT
- *                          for the standard export format.
+ * \param key               Identifier of the key to be wrapped. It must allow
+ *                          the usage #PSA_KEY_USAGE_EXPORT.
  * \param[out] data         Buffer where the wrapped key data is to be written.
  * \param data_size         Size of the \p data buffer in bytes.
  * \param[out] data_length  On success, the number of bytes
@@ -2004,7 +2177,7 @@ typedef uint16_t psa_key_data_format_t;
  *         \p key does not have the #PSA_KEY_USAGE_EXPORT flag.
  *         \p wrapping_key does not have the #PSA_KEY_USAGE_WRAP flag.
  * \retval #PSA_ERROR_NOT_SUPPORTED
- *         \p alg or \p format is not supported. 
+ *         \p alg is not supported. 
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         \p key is not compatible with \p alg.
  * \retval #PSA_ERROR_BUFFER_TOO_SMALL
@@ -2017,10 +2190,9 @@ typedef uint16_t psa_key_data_format_t;
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
 psa_status_t psa_wrap_key(
-    psa_key_id_t key,
     psa_key_id_t wrapping_key,
     psa_algorithm_t alg,
-    psa_key_data_format_t format,
+    psa_key_id_t key,
     uint8_t *data,
     size_t data_size,
     size_t *data_length);
@@ -2028,7 +2200,6 @@ psa_status_t psa_wrap_key(
 /** Import a key in a wrapped format.
  *
  * This function supports wrapped keys as output from psa_wrap_key().
- * The wrapped key is expected to be in the format specified.
  *
  * \param attributes        The attributes for the new key.
  * \param wrapping_key      Identifier of the key to unwrap the input key. It
@@ -2036,8 +2207,6 @@ psa_status_t psa_wrap_key(
  * \param alg               The key wrapping algorithm to use
  *                          (\c PSA_ALG_XXX value such that
  *                          #PSA_ALG_IS_KEY_WRAP(\p alg) is true).
- * \param format            The format of the key. Use #PSA_KEY_FORMAT_DEFAULT
- *                          for the standard export format.
  * \param data              Buffer containing the wrapped key data.
  * \param data_length       Size of the \p data buffer in bytes.
  * \param[out] key          On success, an identifier for the newly created
@@ -2048,7 +2217,7 @@ psa_status_t psa_wrap_key(
  * \retval #PSA_ERROR_NOT_PERMITTED
  *         \p wrapping_key does not have the #PSA_KEY_USAGE_UNWRAP flag.
  * \retval #PSA_ERROR_NOT_SUPPORTED
- *         \p alg or \p format is not supported. 
+ *         \p alg is not supported. 
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The wrapped data is not correctly formatted.
  * \retval #PSA_ERROR_INVALID_SIGNATURE
@@ -2064,7 +2233,6 @@ psa_status_t psa_unwrap_key(
     const psa_key_attributes_t *attributes,
     psa_key_id_t wrapping_key,
     psa_algorithm_t alg,
-    psa_key_data_format_t format,
     const uint8_t *data,
     size_t data_length,
     psa_key_id_t *key);

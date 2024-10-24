@@ -13,9 +13,7 @@
  * library. The definitions of these objects are then used by crypto_struct.h
  * to define the implementation-defined types of PSA multi-part state objects.
  */
-
-/*
- *  Copyright The Mbed TLS Contributors
+/*  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 

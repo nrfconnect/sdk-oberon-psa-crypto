@@ -231,6 +231,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
         "oberon/drivers/oberon_ctr_drbg.h"
         "oberon/drivers/oberon_hmac_drbg.h"
         "oberon/drivers/oberon_helpers.h"
+        "oberon/drivers/oberon_wpa3_sae.h"
         DESTINATION "include/oberon"
     )
     install(FILES

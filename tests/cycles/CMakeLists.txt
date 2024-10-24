@@ -68,6 +68,7 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_ge448.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ge25519.h"
         "${OCRYPTO_ROOT}/src/ocrypto_ge448.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_hmac_sha256.c"
         "${OCRYPTO_ROOT}/src/ocrypto_load_store.h"
         "${OCRYPTO_ROOT}/src/ocrypto_mod25519.c"
         "${OCRYPTO_ROOT}/src/ocrypto_mod25519.h"
@@ -113,6 +114,7 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_wideint_inv.h"
         "${OCRYPTO_ROOT}/src/ocrypto_wideint_mul.c"
         "${OCRYPTO_ROOT}/src/ocrypto_wideint_mul.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_wpa3_sae_p256.c"
 )
 
 set(OCRYPTO_PLATFORM_SOURCES
@@ -227,6 +229,8 @@ set(OBERON_SOURCES
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_spake2p.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_srp.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_srp.h
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.c
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.h
 )
 
 # Demo drivers

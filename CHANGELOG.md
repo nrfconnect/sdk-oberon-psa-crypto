@@ -1,5 +1,33 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.3.3
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.3>
+24-Oct-2024 (d36ed1d)
+
+Oberon crypto software drivers require _ocrypto_ version 3.6.x.
+
+### Compatibility
+- PSA Certified Crypto API 1.2.1 and PAKE extension 1.2 Final 1.
+- PSA Certified APIs Architecture Test Suite v1.6.
+- Aligned with PSA Crypto core from Mbed TLS 3.6.0.
+
+### New Features
+- Add support for WPA3-SAE based on IEEE standard specification 
+  [P802.11-REVme/D7.0, Part 11, Aug 2024](https://ieeexplore.ieee.org/document/10638490)
+  - WPA3-SAE (original)
+  - WPA3-SAE with H2E
+  - Warning: this is an _experimental feature_ - the API is not yet final, and the
+    implementation may be changed or removed entirely anytime.
+
+### Breaking Changes
+- Change AES key wrapping, to align with revision of Arm proposal:
+  [PSA API Issue 50](https://github.com/ARM-software/psa-api/issues/50#issuecomment-2401779444)
+  - Remove arguments `format` and `options`.
+  - Warning: this is an _experimental feature_ - the API is not yet final, and the
+    implementation may be changed or removed entirely anytime.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.3.2
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.2>
 26-Sep-2024 (27422de)

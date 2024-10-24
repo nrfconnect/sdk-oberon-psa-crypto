@@ -22,6 +22,9 @@
 #ifdef PSA_NEED_OBERON_SRP_6
 #include "oberon_srp.h"
 #endif
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+#include "oberon_wpa3_sae.h"
+#endif
 
 
 #ifdef __cplusplus
@@ -41,6 +44,9 @@ typedef struct {
 #endif
 #ifdef PSA_NEED_OBERON_SRP_6
         oberon_srp_operation_t oberon_srp_ctx;
+#endif
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+        oberon_wpa3_sae_operation_t oberon_wpa3_sae_ctx;
 #endif
     } ctx;
 } oberon_pake_operation_t;

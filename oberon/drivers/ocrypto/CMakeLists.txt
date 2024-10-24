@@ -52,6 +52,7 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_ge448.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ge25519.h"
         "${OCRYPTO_ROOT}/src/ocrypto_ge448.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_hmac_sha256.c"
         "${OCRYPTO_ROOT}/src/ocrypto_load_store.h"
         "${OCRYPTO_ROOT}/src/ocrypto_mod25519.c"
         "${OCRYPTO_ROOT}/src/ocrypto_mod25519.h"
@@ -97,6 +98,7 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_wideint_inv.h"
         "${OCRYPTO_ROOT}/src/ocrypto_wideint_mul.c"
         "${OCRYPTO_ROOT}/src/ocrypto_wideint_mul.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_wpa3_sae_p256.c"
         )
 
 set(OCRYPTO_PLATFORM_SOURCES

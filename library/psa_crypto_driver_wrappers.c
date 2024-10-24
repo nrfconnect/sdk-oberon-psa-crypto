@@ -2,20 +2,9 @@
  *  Functions to delegate cryptographic operations to an available
  *  and appropriate accelerator.
  */
-/*  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+/*
+ *  Copyright The Mbed TLS Contributors
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 /*
@@ -2030,12 +2019,11 @@ psa_status_t psa_driver_wrapper_pake_abort(
  * Key wrapping functions.
  */
 psa_status_t psa_driver_wrapper_wrap_key(
-    const psa_key_attributes_t *key_attributes,
-    const uint8_t *key_data, size_t key_size,
     const psa_key_attributes_t *wrapping_key_attributes,
     const uint8_t *wrapping_key_data, size_t wrapping_key_size,
     psa_algorithm_t alg,
-    psa_key_data_format_t format,
+    const psa_key_attributes_t *key_attributes,
+    const uint8_t *key_data, size_t key_size,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
     switch (PSA_KEY_LIFETIME_GET_LOCATION(wrapping_key_attributes->lifetime)) {
@@ -2043,9 +2031,9 @@ psa_status_t psa_driver_wrapper_wrap_key(
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_WRAP_DRIVER
         return oberon_wrap_key(
-            key_attributes, key_data, key_size,
             wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
-            alg, format,
+            alg,
+            key_attributes, key_data, key_size,
             data, data_size, data_length);
 #endif /* PSA_NEED_OBERON_KEY_WRAP_DRIVER */
         return PSA_ERROR_NOT_SUPPORTED;
@@ -2060,7 +2048,6 @@ psa_status_t psa_driver_wrapper_wrap_key(
         (void)wrapping_key_data;
         (void)wrapping_key_size;
         (void)alg;
-        (void)format;
         (void)data;
         (void)data_size;
         (void)data_length;
@@ -2073,7 +2060,6 @@ psa_status_t psa_driver_wrapper_unwrap_key(
     const psa_key_attributes_t *wrapping_key_attributes,
     const uint8_t *wrapping_key_data, size_t wrapping_key_size,
     psa_algorithm_t alg,
-    psa_key_data_format_t format,
     const uint8_t *data, size_t data_length,
     uint8_t *key, size_t key_size, size_t *key_length)
 {
@@ -2084,7 +2070,7 @@ psa_status_t psa_driver_wrapper_unwrap_key(
         return oberon_unwrap_key(
             attributes,
             wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
-            alg, format,
+            alg,
             data, data_length,
             key, key_size, key_length);
 #endif /* PSA_NEED_OBERON_KEY_WRAP_DRIVER */
@@ -2099,7 +2085,6 @@ psa_status_t psa_driver_wrapper_unwrap_key(
         (void)wrapping_key_data;
         (void)wrapping_key_size;
         (void)alg;
-        (void)format;
         (void)data;
         (void)data_length;
         (void)key;

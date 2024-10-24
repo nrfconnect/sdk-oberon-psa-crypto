@@ -76,6 +76,10 @@
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
 #define PSA_WANT_ALG_SP800_108_COUNTER_HMAC     1
 #define PSA_WANT_ALG_SP800_108_COUNTER_CMAC     1
+#define PSA_WANT_ALG_AES_KW                     1
+#define PSA_WANT_ALG_AES_KWP                    1
+#define PSA_WANT_ALG_WPA3_SAE                   1
+#define PSA_WANT_ALG_WPA3_SAE_PT                1
 
 #define PSA_WANT_ECC_MONTGOMERY_255             1
 #define PSA_WANT_ECC_MONTGOMERY_448             1
@@ -99,6 +103,7 @@
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY    1
 #define PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_WPA3_SAE_PT           1
 
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC    1
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1

@@ -46,6 +46,14 @@ psa_status_t oberon_pake_setup(
             cipher_suite);
     } else
 #endif /* PSA_NEED_OBERON_SRP_6 */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_setup(
+            &operation->ctx.oberon_wpa3_sae_ctx,
+            attributes, password, password_length,
+            cipher_suite);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)attributes;
         (void)password;
@@ -104,6 +112,12 @@ psa_status_t oberon_pake_set_user(
             &operation->ctx.oberon_srp_ctx, user_id, user_id_len);
     } else
 #endif /* PSA_NEED_OBERON_SRP_6 */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_set_user(
+            &operation->ctx.oberon_wpa3_sae_ctx, user_id, user_id_len);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
         (void)user_id;
@@ -128,6 +142,12 @@ psa_status_t oberon_pake_set_peer(
             &operation->ctx.oberon_spake2p_ctx, peer_id, peer_id_len);
     } else
 #endif /* PSA_NEED_OBERON_SPAKE2P */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_set_peer(
+            &operation->ctx.oberon_wpa3_sae_ctx, peer_id, peer_id_len);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
         (void)peer_id;
@@ -177,6 +197,12 @@ psa_status_t oberon_pake_output(
             &operation->ctx.oberon_srp_ctx, step, output, output_size, output_length);
     } else
 #endif /* PSA_NEED_OBERON_SRP_6 */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_output(
+            &operation->ctx.oberon_wpa3_sae_ctx, step, output, output_size, output_length);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
         (void)step;
@@ -210,6 +236,12 @@ psa_status_t oberon_pake_input(
             &operation->ctx.oberon_srp_ctx, step, input, input_length);
     } else
 #endif /* PSA_NEED_OBERON_SRP_6 */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_input(
+            &operation->ctx.oberon_wpa3_sae_ctx, step, input, input_length);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
         (void)step;
@@ -242,6 +274,12 @@ psa_status_t oberon_pake_get_shared_key(
             &operation->ctx.oberon_srp_ctx, key, key_size, key_length);
     } else
 #endif /* PSA_NEED_OBERON_SRP_6 */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_get_shared_key(
+            &operation->ctx.oberon_wpa3_sae_ctx, key, key_size, key_length);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
         (void)attributes;
@@ -273,6 +311,12 @@ psa_status_t oberon_pake_abort(
             &operation->ctx.oberon_srp_ctx);
     } else
 #endif /* PSA_NEED_OBERON_SRP_6 */
+#ifdef PSA_NEED_OBERON_WPA3_SAE
+    if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
+        return oberon_wpa3_sae_abort(
+            &operation->ctx.oberon_wpa3_sae_ctx);
+    } else
+#endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
         return PSA_ERROR_BAD_STATE;

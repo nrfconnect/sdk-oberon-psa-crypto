@@ -78,12 +78,11 @@ static psa_status_t unwrapping_function(psa_cipher_operation_t *op, uint8_t a[16
 
 
 psa_status_t oberon_wrap_key(
-    const psa_key_attributes_t *key_attributes,
-    const uint8_t *key_data, size_t key_size,
     const psa_key_attributes_t *wrapping_key_attributes,
     const uint8_t *wrapping_key_data, size_t wrapping_key_size,
     psa_algorithm_t alg,
-    psa_key_data_format_t format,
+    const psa_key_attributes_t *key_attributes,
+    const uint8_t *key_data, size_t key_size,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
 #if defined(PSA_NEED_OBERON_AES_KW) || defined(PSA_NEED_OBERON_AES_KWP)
@@ -101,7 +100,6 @@ psa_status_t oberon_wrap_key(
 #ifdef PSA_NEED_OBERON_AES_KW
     case PSA_ALG_AES_KW:
         if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
-        if (format != PSA_KEY_FORMAT_DEFAULT) return PSA_ERROR_NOT_SUPPORTED;
         if (key_size < 16 ||
 #if SIZE_MAX > 0x1FFFFFFFFFFFFF8
             key_size > 0x1FFFFFFFFFFFFF8 ||
@@ -130,7 +128,6 @@ psa_status_t oberon_wrap_key(
 #ifdef PSA_NEED_OBERON_AES_KWP
     case PSA_ALG_AES_KWP:
         if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
-        if (format != PSA_KEY_FORMAT_DEFAULT) return PSA_ERROR_NOT_SUPPORTED;
         if (key_size == 0 ||
 #if SIZE_MAX > 0xFFFFFFFF
             key_size > 0xFFFFFFFF ||
@@ -177,7 +174,6 @@ psa_status_t oberon_wrap_key(
         (void)wrapping_key_attributes;
         (void)wrapping_key_data;
         (void)wrapping_key_size;
-        (void)format;
         (void)data;
         (void)data_size;
         (void)data_length;
@@ -196,7 +192,6 @@ psa_status_t oberon_unwrap_key(
     const psa_key_attributes_t *wrapping_key_attributes,
     const uint8_t *wrapping_key_data, size_t wrapping_key_size,
     psa_algorithm_t alg,
-    psa_key_data_format_t format,
     const uint8_t *data, size_t data_length,
     uint8_t *key, size_t key_size, size_t *key_length)
 {
@@ -215,7 +210,6 @@ psa_status_t oberon_unwrap_key(
 #ifdef PSA_NEED_OBERON_AES_KW
     case PSA_ALG_AES_KW:
         if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
-        if (format != PSA_KEY_FORMAT_DEFAULT) return PSA_ERROR_NOT_SUPPORTED;
         if (data_length < 24 ||
 #if SIZE_MAX > 0x200000000000000
             data_length > 0x200000000000000 ||
@@ -246,7 +240,6 @@ psa_status_t oberon_unwrap_key(
 #ifdef PSA_NEED_OBERON_AES_KWP
     case PSA_ALG_AES_KWP:
         if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
-        if (format != PSA_KEY_FORMAT_DEFAULT) return PSA_ERROR_NOT_SUPPORTED;
         if (data_length < 16 ||
 #if SIZE_MAX > 0x100000008
             data_length > 0x100000008 ||
@@ -289,7 +282,6 @@ psa_status_t oberon_unwrap_key(
         (void)wrapping_key_attributes;
         (void)wrapping_key_data;
         (void)wrapping_key_size;
-        (void)format;
         (void)data;
         (void)data_length;
         (void)key;
