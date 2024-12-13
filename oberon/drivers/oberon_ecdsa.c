@@ -296,7 +296,6 @@ psa_status_t oberon_ecdsa_sign_message(
 #ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255
         case 255:
             if (alg == PSA_ALG_ED25519PH) return PSA_ERROR_NOT_SUPPORTED;
-
             if (key_length != ocrypto_ed25519_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
             if (signature_size < ocrypto_ed25519_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
             *signature_length = ocrypto_ed25519_BYTES;
@@ -306,9 +305,8 @@ psa_status_t oberon_ecdsa_sign_message(
 #endif
 #ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448
         case 448:
-			if (alg == PSA_ALG_ED448PH) return PSA_ERROR_NOT_SUPPORTED;
-
-			if (key_length != ocrypto_ed448_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
+            if (alg == PSA_ALG_ED448PH) return PSA_ERROR_NOT_SUPPORTED;
+            if (key_length != ocrypto_ed448_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
             if (signature_size < ocrypto_ed448_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
             *signature_length = ocrypto_ed448_BYTES;
             ocrypto_ed448_public_key(pub_key, key); // calculate public key
@@ -489,7 +487,6 @@ psa_status_t oberon_ecdsa_verify_message(
 #ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255
         case 255:
             if (alg == PSA_ALG_ED25519PH) return PSA_ERROR_NOT_SUPPORTED;
-
             if (key_length != ocrypto_ed25519_PUBLIC_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
             if (signature_length != ocrypto_ed25519_BYTES) return PSA_ERROR_INVALID_SIGNATURE;
             if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
@@ -501,7 +498,7 @@ psa_status_t oberon_ecdsa_verify_message(
 #endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255 */
 #ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448
         case 448:
-			if (alg == PSA_ALG_ED448PH) return PSA_ERROR_NOT_SUPPORTED;
+            if (alg == PSA_ALG_ED448PH) return PSA_ERROR_NOT_SUPPORTED;
             if (key_length != ocrypto_ed448_PUBLIC_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
             if (signature_length != ocrypto_ed448_BYTES) return PSA_ERROR_INVALID_SIGNATURE;
             if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
