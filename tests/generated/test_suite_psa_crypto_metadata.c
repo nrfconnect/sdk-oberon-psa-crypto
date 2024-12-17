@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -243,17 +243,17 @@ static int restore_output(FILE *out_stream, int dup_fd)
  * Unconditionally mask flag into the ambient variable
  * classification_flags_tested.
  */
-#define TEST_CLASSIFICATION_MACRO(cond, flag, alg, flags)     \
+#define TEST_CLASSIFICATION_MACRO(cond, flag, alg, flags)       \
     do                                                          \
     {                                                           \
-        if (cond)                                              \
+        if (cond)                                               \
         {                                                       \
-            if ((flags) & (flag))                          \
-            TEST_ASSERT(PSA_##flag(alg));               \
+            if ((flags) & (flag))                               \
+            TEST_ASSERT(PSA_##flag(alg));                       \
             else                                                \
-            TEST_ASSERT(!PSA_##flag(alg));             \
+            TEST_ASSERT(!PSA_##flag(alg));                      \
         }                                                       \
-        classification_flags_tested |= (flag);                \
+        classification_flags_tested |= (flag);                  \
     }                                                           \
     while (0)
 
@@ -269,7 +269,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
  * The expected parity is even so that 0 is considered a valid encoding.
  *
  * Return a nonzero value if value has even parity and 0 otherwise. */
-int has_even_parity(uint32_t value)
+static int has_even_parity(uint32_t value)
 {
     value ^= value >> 16;
     value ^= value >> 8;
@@ -279,7 +279,7 @@ int has_even_parity(uint32_t value)
 #define TEST_PARITY(value)                    \
     TEST_ASSERT(has_even_parity(value))
 
-void algorithm_classification(psa_algorithm_t alg, unsigned flags)
+static void algorithm_classification(psa_algorithm_t alg, unsigned flags)
 {
     unsigned classification_flags_tested = 0;
     TEST_CLASSIFICATION_MACRO(1, ALG_IS_VENDOR_DEFINED, alg, flags);
@@ -318,7 +318,7 @@ void algorithm_classification(psa_algorithm_t alg, unsigned flags)
 exit:;
 }
 
-void key_type_classification(psa_key_type_t type, unsigned flags)
+static void key_type_classification(psa_key_type_t type, unsigned flags)
 {
     unsigned classification_flags_tested = 0;
 
@@ -355,9 +355,9 @@ void key_type_classification(psa_key_type_t type, unsigned flags)
 exit:;
 }
 
-void mac_algorithm_core(psa_algorithm_t alg, int classification_flags,
-                        psa_key_type_t key_type, size_t key_bits,
-                        size_t length)
+static void mac_algorithm_core(psa_algorithm_t alg, int classification_flags,
+                               psa_key_type_t key_type, size_t key_bits,
+                               size_t length)
 {
     /* Algorithm classification */
     TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
@@ -381,9 +381,9 @@ void mac_algorithm_core(psa_algorithm_t alg, int classification_flags,
 exit:;
 }
 
-void aead_algorithm_core(psa_algorithm_t alg, int classification_flags,
-                         psa_key_type_t key_type, size_t key_bits,
-                         size_t tag_length)
+static void aead_algorithm_core(psa_algorithm_t alg, int classification_flags,
+                                psa_key_type_t key_type, size_t key_bits,
+                                size_t tag_length)
 {
     /* Algorithm classification */
     TEST_ASSERT(!PSA_ALG_IS_HASH(alg));
@@ -404,7 +404,7 @@ exit:;
 }
 
 #line 251 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_hash_algorithm(int alg_arg, int length_arg)
+static void test_hash_algorithm(int alg_arg, int length_arg)
 {
     psa_algorithm_t alg = alg_arg;
     size_t length = length_arg;
@@ -448,13 +448,13 @@ exit:
     ;
 }
 
-void test_hash_algorithm_wrapper( void ** params )
+static void test_hash_algorithm_wrapper( void ** params )
 {
 
     test_hash_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 295 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_mac_algorithm(int alg_arg, int classification_flags,
+static void test_mac_algorithm(int alg_arg, int classification_flags,
                    int length_arg,
                    int key_type_arg, int key_bits_arg)
 {
@@ -534,13 +534,13 @@ exit:
     ;
 }
 
-void test_mac_algorithm_wrapper( void ** params )
+static void test_mac_algorithm_wrapper( void ** params )
 {
 
     test_mac_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
 #line 375 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_hmac_algorithm(int alg_arg,
+static void test_hmac_algorithm(int alg_arg,
                     int length_arg,
                     int block_size_arg)
 {
@@ -567,13 +567,13 @@ exit:
     ;
 }
 
-void test_hmac_algorithm_wrapper( void ** params )
+static void test_hmac_algorithm_wrapper( void ** params )
 {
 
     test_hmac_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #line 402 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_cipher_algorithm(int alg_arg, int classification_flags)
+static void test_cipher_algorithm(int alg_arg, int classification_flags)
 {
     psa_algorithm_t alg = alg_arg;
 
@@ -592,13 +592,13 @@ exit:
     ;
 }
 
-void test_cipher_algorithm_wrapper( void ** params )
+static void test_cipher_algorithm_wrapper( void ** params )
 {
 
     test_cipher_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 421 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_aead_algorithm(int alg_arg, int classification_flags,
+static void test_aead_algorithm(int alg_arg, int classification_flags,
                     int tag_length_arg,
                     int key_type_arg, int key_bits_arg)
 {
@@ -679,13 +679,13 @@ exit:
     ;
 }
 
-void test_aead_algorithm_wrapper( void ** params )
+static void test_aead_algorithm_wrapper( void ** params )
 {
 
     test_aead_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
 #line 502 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_asymmetric_signature_algorithm(int alg_arg, int classification_flags)
+static void test_asymmetric_signature_algorithm(int alg_arg, int classification_flags)
 {
     psa_algorithm_t alg = alg_arg;
 
@@ -704,13 +704,13 @@ exit:
     ;
 }
 
-void test_asymmetric_signature_algorithm_wrapper( void ** params )
+static void test_asymmetric_signature_algorithm_wrapper( void ** params )
 {
 
     test_asymmetric_signature_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 521 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_asymmetric_signature_wildcard(int alg_arg, int classification_flags)
+static void test_asymmetric_signature_wildcard(int alg_arg, int classification_flags)
 {
     classification_flags |= ALG_IS_WILDCARD;
     classification_flags |= ALG_IS_SIGN_HASH;
@@ -723,13 +723,13 @@ exit:
     ;
 }
 
-void test_asymmetric_signature_wildcard_wrapper( void ** params )
+static void test_asymmetric_signature_wildcard_wrapper( void ** params )
 {
 
     test_asymmetric_signature_wildcard( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 534 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_asymmetric_encryption_algorithm(int alg_arg, int classification_flags)
+static void test_asymmetric_encryption_algorithm(int alg_arg, int classification_flags)
 {
     psa_algorithm_t alg = alg_arg;
 
@@ -748,13 +748,13 @@ exit:
     ;
 }
 
-void test_asymmetric_encryption_algorithm_wrapper( void ** params )
+static void test_asymmetric_encryption_algorithm_wrapper( void ** params )
 {
 
     test_asymmetric_encryption_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 553 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_key_derivation_algorithm(int alg_arg, int classification_flags)
+static void test_key_derivation_algorithm(int alg_arg, int classification_flags)
 {
     psa_algorithm_t alg = alg_arg;
     psa_algorithm_t ecdh_alg = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, alg);
@@ -781,13 +781,13 @@ exit:
     ;
 }
 
-void test_key_derivation_algorithm_wrapper( void ** params )
+static void test_key_derivation_algorithm_wrapper( void ** params )
 {
 
     test_key_derivation_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 580 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_key_agreement_algorithm(int alg_arg, int classification_flags,
+static void test_key_agreement_algorithm(int alg_arg, int classification_flags,
                              int ka_alg_arg, int kdf_alg_arg)
 {
     psa_algorithm_t alg = alg_arg;
@@ -815,13 +815,13 @@ exit:
     ;
 }
 
-void test_key_agreement_algorithm_wrapper( void ** params )
+static void test_key_agreement_algorithm_wrapper( void ** params )
 {
 
     test_key_agreement_algorithm( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
 #line 608 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_pake_algorithm(int alg_arg)
+static void test_pake_algorithm(int alg_arg)
 {
     psa_algorithm_t alg = alg_arg;
 
@@ -840,13 +840,13 @@ exit:
 }
 
 
-void test_pake_algorithm_wrapper( void ** params )
+static void test_pake_algorithm_wrapper( void ** params )
 {
 
     test_pake_algorithm( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #line 626 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_key_type(int type_arg, int classification_flags)
+static void test_key_type(int type_arg, int classification_flags)
 {
     psa_key_type_t type = type_arg;
 
@@ -875,13 +875,13 @@ exit:
     ;
 }
 
-void test_key_type_wrapper( void ** params )
+static void test_key_type_wrapper( void ** params )
 {
 
     test_key_type( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 655 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_block_cipher_key_type(int type_arg, int block_size_arg)
+static void test_block_cipher_key_type(int type_arg, int block_size_arg)
 {
     psa_key_type_t type = type_arg;
     size_t block_size = block_size_arg;
@@ -899,13 +899,13 @@ exit:
     ;
 }
 
-void test_block_cipher_key_type_wrapper( void ** params )
+static void test_block_cipher_key_type_wrapper( void ** params )
 {
 
     test_block_cipher_key_type( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 673 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_stream_cipher_key_type(int type_arg)
+static void test_stream_cipher_key_type(int type_arg)
 {
     psa_key_type_t type = type_arg;
 
@@ -918,7 +918,7 @@ exit:
     ;
 }
 
-void test_stream_cipher_key_type_wrapper( void ** params )
+static void test_stream_cipher_key_type_wrapper( void ** params )
 {
 
     test_stream_cipher_key_type( ((mbedtls_test_argument_t *) params[0])->sint );
@@ -926,7 +926,7 @@ void test_stream_cipher_key_type_wrapper( void ** params )
 #if defined(PSA_KEY_TYPE_ECC_PUBLIC_KEY)
 #if defined(PSA_KEY_TYPE_ECC_KEY_PAIR)
 #line 686 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_ecc_key_family(int curve_arg)
+static void test_ecc_key_family(int curve_arg)
 {
     psa_ecc_family_t curve = curve_arg;
     psa_key_type_t public_type = PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve);
@@ -943,7 +943,7 @@ exit:
     ;
 }
 
-void test_ecc_key_family_wrapper( void ** params )
+static void test_ecc_key_family_wrapper( void ** params )
 {
 
     test_ecc_key_family( ((mbedtls_test_argument_t *) params[0])->sint );
@@ -953,7 +953,7 @@ void test_ecc_key_family_wrapper( void ** params )
 #if defined(PSA_KEY_TYPE_DH_PUBLIC_KEY)
 #if defined(PSA_KEY_TYPE_DH_KEY_PAIR)
 #line 703 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_dh_key_family(int group_arg)
+static void test_dh_key_family(int group_arg)
 {
     psa_dh_family_t group = group_arg;
     psa_key_type_t public_type = PSA_KEY_TYPE_DH_PUBLIC_KEY(group);
@@ -970,7 +970,7 @@ exit:
     ;
 }
 
-void test_dh_key_family_wrapper( void ** params )
+static void test_dh_key_family_wrapper( void ** params )
 {
 
     test_dh_key_family( ((mbedtls_test_argument_t *) params[0])->sint );
@@ -978,7 +978,7 @@ void test_dh_key_family_wrapper( void ** params )
 #endif /* PSA_KEY_TYPE_DH_KEY_PAIR */
 #endif /* PSA_KEY_TYPE_DH_PUBLIC_KEY */
 #line 720 "tests/suites/test_suite_psa_crypto_metadata.function"
-void test_lifetime(int lifetime_arg, int classification_flags,
+static void test_lifetime(int lifetime_arg, int classification_flags,
               int persistence_arg, int location_arg)
 {
     psa_key_lifetime_t lifetime = lifetime_arg;
@@ -998,7 +998,7 @@ exit:
     ;
 }
 
-void test_lifetime_wrapper( void ** params )
+static void test_lifetime_wrapper( void ** params )
 {
 
     test_lifetime( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
@@ -1025,7 +1025,7 @@ void test_lifetime_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -1745,7 +1745,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -2391,7 +2391,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -2429,7 +2429,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -2457,7 +2457,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -2481,7 +2481,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -2529,7 +2529,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -2882,7 +2882,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -2934,7 +2934,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_metadata.datax";
@@ -3267,7 +3267,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

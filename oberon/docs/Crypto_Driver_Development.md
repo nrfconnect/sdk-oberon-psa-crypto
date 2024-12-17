@@ -45,10 +45,10 @@ The `PSA_NEED_XXX` and `PSA_ACCEL_XXX` directives supported by _Oberon PSA Crypt
 are listed in
 [Appendix B: Crypto Configuration Directives](Appendix_B_Crypto_Configuration_Directives.md).
 
-*Note: The JSON configuration files as defined in the _PSA Crypto_ specification
-are not used by _Oberon PSA Crypto_. If a _hardware driver_ comes without a
-_hardware driver crypto configuration_ header file as described above, it must
-be provided by the _platform integrator_.*
+*Note: The JSON configuration files as defined by _Mbed TLS_ are not used in
+_Oberon PSA Crypto_. If a _hardware driver_ comes without a
+_hardware driver crypto configuration_ header file as described above, such a
+header file must be provided by the _platform integrator_.*
 
 ## Oberon Driver Crypto Configuration
 

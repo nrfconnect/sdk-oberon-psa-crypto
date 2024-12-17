@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -199,7 +199,7 @@ typedef struct {
 } psa_persistent_key_storage_format;
 
 #line 45 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_format_storage_data_check(data_t *key_data,
+static void test_format_storage_data_check(data_t *key_data,
                                data_t *expected_file_data,
                                int key_lifetime, int key_type, int key_bits,
                                int key_usage, int key_alg, int key_alg2)
@@ -216,6 +216,9 @@ void test_format_storage_data_check(data_t *key_data,
     psa_set_key_algorithm(&attributes, key_alg);
     psa_set_key_enrollment_algorithm(&attributes, key_alg2);
 
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    TEST_ASSUME(file_data_length <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE - 16);
+#endif
     TEST_CALLOC(file_data, file_data_length);
     psa_format_key_data_for_storage(key_data->x, key_data->len,
                                     &attributes,
@@ -228,7 +231,7 @@ exit:
     mbedtls_free(file_data);
 }
 
-void test_format_storage_data_check_wrapper( void ** params )
+static void test_format_storage_data_check_wrapper( void ** params )
 {
     data_t data0 = {(uint8_t *) params[0], ((mbedtls_test_argument_t *) params[1])->len};
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
@@ -236,7 +239,7 @@ void test_format_storage_data_check_wrapper( void ** params )
     test_format_storage_data_check( &data0, &data2, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
 #line 76 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_parse_storage_data_check(data_t *file_data,
+static void test_parse_storage_data_check(data_t *file_data,
                               data_t *expected_key_data,
                               int expected_key_lifetime,
                               int expected_key_type,
@@ -246,14 +249,21 @@ void test_parse_storage_data_check(data_t *file_data,
                               int expected_key_alg2,
                               int expected_status)
 {
-    uint8_t *key_data = NULL;
     size_t key_data_length = 0;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status;
 
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    uint8_t key_data[MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE];
+    status = psa_parse_key_data_from_storage_static(file_data->x, file_data->len,
+                                                    key_data, &key_data_length,
+                                                    &attributes);
+#else
+    uint8_t *key_data = NULL;
     status = psa_parse_key_data_from_storage(file_data->x, file_data->len,
                                              &key_data, &key_data_length,
                                              &attributes);
+#endif
 
     TEST_EQUAL(status, expected_status);
     if (status != PSA_SUCCESS) {
@@ -276,10 +286,14 @@ void test_parse_storage_data_check(data_t *file_data,
                         key_data, key_data_length);
 
 exit:
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    ;
+#else
     mbedtls_free(key_data);
+#endif
 }
 
-void test_parse_storage_data_check_wrapper( void ** params )
+static void test_parse_storage_data_check_wrapper( void ** params )
 {
     data_t data0 = {(uint8_t *) params[0], ((mbedtls_test_argument_t *) params[1])->len};
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
@@ -287,13 +301,16 @@ void test_parse_storage_data_check_wrapper( void ** params )
     test_parse_storage_data_check( &data0, &data2, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint );
 }
 #line 121 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_save_large_persistent_key(int data_length_arg, int expected_status)
+static void test_save_large_persistent_key(int data_length_arg, int expected_status)
 {
     mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 42);
     uint8_t *data = NULL;
     size_t data_length = data_length_arg;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    TEST_ASSUME(data_length <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE - 16);
+#endif
     TEST_CALLOC(data, data_length);
 
     PSA_ASSERT(psa_crypto_init());
@@ -314,13 +331,13 @@ exit:
     psa_destroy_persistent_key(key_id);
 }
 
-void test_save_large_persistent_key_wrapper( void ** params )
+static void test_save_large_persistent_key_wrapper( void ** params )
 {
 
     test_save_large_persistent_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 150 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
+static void test_persistent_key_destroy(int owner_id_arg, int key_id_arg, int restart,
                             int first_type_arg, data_t *first_data,
                             int second_type_arg, data_t *second_data)
 {
@@ -369,7 +386,7 @@ exit:
     psa_destroy_persistent_key(key_id);
 }
 
-void test_persistent_key_destroy_wrapper( void ** params )
+static void test_persistent_key_destroy_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
     data_t data7 = {(uint8_t *) params[7], ((mbedtls_test_argument_t *) params[8])->len};
@@ -377,7 +394,7 @@ void test_persistent_key_destroy_wrapper( void ** params )
     test_persistent_key_destroy( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, &data7 );
 }
 #line 201 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_persistent_key_import(int owner_id_arg, int key_id_arg, int type_arg,
+static void test_persistent_key_import(int owner_id_arg, int key_id_arg, int type_arg,
                            data_t *data, int restart, int expected_status)
 {
     mbedtls_svc_key_id_t key_id =
@@ -430,14 +447,14 @@ exit:
     PSA_DONE();
 }
 
-void test_persistent_key_import_wrapper( void ** params )
+static void test_persistent_key_import_wrapper( void ** params )
 {
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
     test_persistent_key_import( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
 #line 256 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_import_export_persistent_key(data_t *data, int type_arg,
+static void test_import_export_persistent_key(data_t *data, int type_arg,
                                   int expected_bits,
                                   int restart, int key_not_exist)
 {
@@ -449,6 +466,9 @@ void test_import_export_persistent_key(data_t *data, int type_arg,
     size_t exported_length;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    TEST_ASSUME(export_size <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE - 16);
+#endif
     TEST_CALLOC(exported, export_size);
 
     PSA_ASSERT(psa_crypto_init());
@@ -507,14 +527,14 @@ exit:
     psa_destroy_persistent_key(key_id);
 }
 
-void test_import_export_persistent_key_wrapper( void ** params )
+static void test_import_export_persistent_key_wrapper( void ** params )
 {
     data_t data0 = {(uint8_t *) params[0], ((mbedtls_test_argument_t *) params[1])->len};
 
     test_import_export_persistent_key( &data0, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
 #line 328 "tests/suites/test_suite_psa_crypto_persistent_key.function"
-void test_destroy_nonexistent(int id_arg, int expected_status_arg)
+static void test_destroy_nonexistent(int id_arg, int expected_status_arg)
 {
     mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(1, id_arg);
     psa_status_t expected_status = expected_status_arg;
@@ -527,7 +547,7 @@ exit:
     PSA_DONE();
 }
 
-void test_destroy_nonexistent_wrapper( void ** params )
+static void test_destroy_nonexistent_wrapper( void ** params )
 {
 
     test_destroy_nonexistent( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
@@ -555,7 +575,7 @@ void test_destroy_nonexistent_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -695,7 +715,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -857,7 +877,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -895,7 +915,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -923,7 +943,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -947,7 +967,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -995,7 +1015,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -1348,7 +1368,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -1400,7 +1420,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_persistent_key.datax";
@@ -1733,7 +1753,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

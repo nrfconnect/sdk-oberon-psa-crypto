@@ -9,7 +9,7 @@ This directory contains documentation for developers and system integrators, see
 
 - `drivers`
 This directory contains platform-agnostic _Oberon drivers_ that implement
-cryptographic operations using the _ocrypto_ library.
+cryptographic operations, most of them using the _ocrypto_ library.
 
 - `platforms`
 This directory contains platform-specific configuration examples and example

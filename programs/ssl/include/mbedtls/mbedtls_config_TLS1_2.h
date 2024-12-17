@@ -1130,7 +1130,7 @@
  *           MBEDTLS_ECP_DP_SECP256R1_ENABLED
  *
  * \warning If SHA-256 is provided only by a PSA driver, you must call
- * psa_crypto_init() before the first hanshake (even if
+ * psa_crypto_init() before the first handshake (even if
  * MBEDTLS_USE_PSA_CRYPTO is disabled).
  *
  * This enables the following ciphersuites (if other requisites are
@@ -1425,6 +1425,23 @@
  *
  */
 //#define MBEDTLS_PSA_CRYPTO_SPM
+
+/**
+ * \def MBEDTLS_PSA_KEY_STORE_DYNAMIC
+ *
+ * Dynamically resize the PSA key store to accommodate any number of
+ * volatile keys (until the heap memory is exhausted).
+ *
+ * If this option is disabled, the key store has a fixed size
+ * #MBEDTLS_PSA_KEY_SLOT_COUNT for volatile keys and loaded persistent keys
+ * together.
+ *
+ * This option has no effect when #MBEDTLS_PSA_CRYPTO_C is disabled.
+ *
+ * Module:  library/psa_crypto.c
+ * Requires: MBEDTLS_PSA_CRYPTO_C
+ */
+//#define MBEDTLS_PSA_KEY_STORE_DYNAMIC
 
 /**
  * Uncomment to enable p256-m. This is an alternative implementation of
@@ -2637,7 +2654,7 @@
  * The CTR_DRBG generator uses AES-256 by default.
  * To use AES-128 instead, enable \c MBEDTLS_CTR_DRBG_USE_128_BIT_KEY above.
  *
- * AES support can either be achived through builtin (MBEDTLS_AES_C) or PSA.
+ * AES support can either be achieved through builtin (MBEDTLS_AES_C) or PSA.
  * Builtin is the default option when MBEDTLS_AES_C is defined otherwise PSA
  * is used.
  *
@@ -3151,7 +3168,7 @@
  *
  * This module is required for the PKCS #7 parsing modules.
  */
-//#define MBEDTLS_PKCS7_C
+//#define MBEDTLS_PKCS7_C /* !!OM */
 
 /**
  * \def MBEDTLS_PKCS12_C
@@ -3261,6 +3278,26 @@
  * Requires: MBEDTLS_FS_IO
  */
 #define MBEDTLS_PSA_ITS_FILE_C
+
+/**
+ * \def MBEDTLS_PSA_STATIC_KEY_SLOTS
+ *
+ * Statically preallocate memory to store keys' material in PSA instead
+ * of allocating it dynamically when required. This allows builds without a
+ * heap, if none of the enabled cryptographic implementations or other features
+ * require it.
+ * This feature affects both volatile and persistent keys which means that
+ * it's not possible to persistently store a key which is larger than
+ * #MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE.
+ *
+ * \note This feature comes with a (potentially) higher RAM usage since:
+ *       - All the key slots are allocated no matter if they are used or not.
+ *       - Each key buffer's length is #MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE bytes.
+ *
+ * Requires: MBEDTLS_PSA_CRYPTO_C
+ *
+ */
+#define MBEDTLS_PSA_STATIC_KEY_SLOTS /* !!OM */
 
 /**
  * \def MBEDTLS_RIPEMD160_C
@@ -4046,6 +4083,19 @@
  * 32 keys.
  */
 //#define MBEDTLS_PSA_KEY_SLOT_COUNT 32
+
+/**
+ * \def MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
+ *
+ * Define the size (in bytes) of each static key buffer when
+ * #MBEDTLS_PSA_STATIC_KEY_SLOTS is set. If not
+ * explicitly defined then it's automatically guessed from available PSA keys
+ * enabled in the build through PSA_WANT_xxx symbols.
+ * If required by the application this parameter can be set to higher values
+ * in order to store larger objects (ex: raw keys), but please note that this
+ * will increase RAM usage.
+ */
+//#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE       256
 
 /* RSA OPTIONS */
 //#define MBEDTLS_RSA_GEN_KEY_MIN_BITS            1024 /**<  Minimum RSA key size that can be generated in bits (Minimum possible value is 128 bits) */

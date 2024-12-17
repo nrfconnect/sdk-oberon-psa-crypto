@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -176,6 +176,19 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #include "psa/internal_trusted_storage.h"
 #endif
 
+/* Same in library/psa_crypto.c */
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF_EXTRACT) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF_EXPAND)
+#define BUILTIN_ALG_ANY_HKDF 1
+#endif
+#if defined(BUILTIN_ALG_ANY_HKDF) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_TLS12_PRF) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_TLS12_PSK_TO_MS) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_TLS12_ECJPAKE_TO_PMS) || \
+    defined(PSA_HAVE_SOFT_PBKDF2)
+#define AT_LEAST_ONE_BUILTIN_KDF
+#endif
 
 /****************************************************************/
 /* Test driver helpers */
@@ -186,11 +199,11 @@ static int restore_output(FILE *out_stream, int dup_fd)
 
 /** The location and lifetime used for tests that use a single driver. */
 #define TEST_DRIVER_LOCATION 1
-#define TEST_SE_PERSISTENT_LIFETIME                             \
+#define TEST_SE_PERSISTENT_LIFETIME                            \
     (PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(           \
          PSA_KEY_PERSISTENCE_DEFAULT, TEST_DRIVER_LOCATION))
 
-#define TEST_SE_VOLATILE_LIFETIME                               \
+#define TEST_SE_VOLATILE_LIFETIME                              \
     (PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(           \
          PSA_KEY_PERSISTENCE_VOLATILE, TEST_DRIVER_LOCATION))
 
@@ -204,13 +217,13 @@ static int restore_output(FILE *out_stream, int dup_fd)
  *
  * Use this macro to assert on guarantees provided by the core.
  */
-#define DRIVER_ASSERT_RETURN(TEST)                        \
-    do {                                                    \
-        if (!(TEST))                                       \
-        {                                                    \
-            mbedtls_test_fail( #TEST, __LINE__, __FILE__);   \
-            return PSA_ERROR_DETECTED_BY_DRIVER;           \
-        }                                                    \
+#define DRIVER_ASSERT_RETURN(TEST)                            \
+    do {                                                      \
+        if (!(TEST))                                          \
+        {                                                     \
+            mbedtls_test_fail( #TEST, __LINE__, __FILE__);    \
+            return PSA_ERROR_DETECTED_BY_DRIVER;              \
+        }                                                     \
     } while (0)
 
 /** Like #TEST_ASSERT for use in a driver method, with cleanup.
@@ -220,14 +233,14 @@ static int restore_output(FILE *out_stream, int dup_fd)
  *
  * Use this macro to assert on guarantees provided by the core.
  */
-#define DRIVER_ASSERT(TEST)                               \
-    do {                                                    \
-        if (!(TEST))                                       \
-        {                                                    \
-            mbedtls_test_fail( #TEST, __LINE__, __FILE__);   \
+#define DRIVER_ASSERT(TEST)                                   \
+    do {                                                      \
+        if (!(TEST))                                          \
+        {                                                     \
+            mbedtls_test_fail( #TEST, __LINE__, __FILE__);    \
             status = PSA_ERROR_DETECTED_BY_DRIVER;            \
             goto exit;                                        \
-        }                                                    \
+        }                                                     \
     } while (0)
 
 /** Like #PSA_ASSERT for a PSA API call that calls a driver underneath.
@@ -241,16 +254,16 @@ static int restore_output(FILE *out_stream, int dup_fd)
  * case, the test driver code is expected to have called mbedtls_test_fail()
  * already, so we make sure not to overwrite the failure information.
  */
-#define PSA_ASSERT_VIA_DRIVER(expr, expected_status)                  \
-    do {                                                                \
-        psa_status_t PSA_ASSERT_VIA_DRIVER_status = (expr);           \
-        if (PSA_ASSERT_VIA_DRIVER_status == PSA_ERROR_DETECTED_BY_DRIVER) \
-        goto exit;                                                  \
-        if (PSA_ASSERT_VIA_DRIVER_status != (expected_status))       \
-        {                                                               \
+#define PSA_ASSERT_VIA_DRIVER(expr, expected_status)                           \
+    do {                                                                       \
+        psa_status_t PSA_ASSERT_VIA_DRIVER_status = (expr);                    \
+        if (PSA_ASSERT_VIA_DRIVER_status == PSA_ERROR_DETECTED_BY_DRIVER)      \
+        goto exit;                                                             \
+        if (PSA_ASSERT_VIA_DRIVER_status != (expected_status))                 \
+        {                                                                      \
             mbedtls_test_fail( #expr, __LINE__, __FILE__);                     \
-            goto exit;                                                  \
-        }                                                               \
+            goto exit;                                                         \
+        }                                                                      \
     } while (0)
 
 
@@ -749,7 +762,7 @@ exit:
  * If this changes, the storage format version must change.
  * See psa_get_se_driver_its_file_uid() in psa_crypto_se.c.
  */
-psa_storage_uid_t file_uid_for_location(psa_key_location_t location)
+static psa_storage_uid_t file_uid_for_location(psa_key_location_t location)
 {
     if (location > PSA_MAX_SE_LOCATION) {
         return 0;
@@ -883,7 +896,7 @@ static int smoke_test_key(mbedtls_svc_key_id_t key)
                                         buffer, sizeof(buffer), NULL, 0,
                                         buffer, sizeof(buffer), &length));
 
-#if defined(PSA_WANT_ALG_SHA_256)
+#if defined(PSA_WANT_ALG_SHA_256) && defined(MBEDTLS_PSA_BUILTIN_ALG_HKDF)
     /* Try the key in a plain key derivation. */
     PSA_ASSERT(psa_key_derivation_setup(&derivation_operation,
                                         PSA_ALG_HKDF(PSA_ALG_SHA_256)));
@@ -916,7 +929,9 @@ static int smoke_test_key(mbedtls_svc_key_id_t key)
                          alg, key, buffer, length,
                          buffer, sizeof(buffer), &length));
     }
-#endif /* PSA_WANT_ALG_SHA_256 */
+#else
+    (void) derivation_operation;
+#endif /* PSA_WANT_ALG_SHA_256 && MBEDTLS_PSA_BUILTIN_ALG_HKDF */
 
     ok = 1;
 
@@ -945,8 +960,8 @@ static void psa_purge_storage(void)
     }
 }
 
-#line 793 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_register_one(int location, int version, int expected_status_arg)
+#line 808 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_register_one(int location, int version, int expected_status_arg)
 {
     psa_status_t expected_status = expected_status_arg;
     psa_drv_se_t driver;
@@ -963,13 +978,13 @@ exit:
     PSA_DONE();
 }
 
-void test_register_one_wrapper( void ** params )
+static void test_register_one_wrapper( void ** params )
 {
 
     test_register_one( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 812 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_register_twice(int count)
+#line 827 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_register_twice(int count)
 {
     psa_drv_se_t driver;
     psa_key_location_t location;
@@ -992,13 +1007,13 @@ exit:
     PSA_DONE();
 }
 
-void test_register_twice_wrapper( void ** params )
+static void test_register_twice_wrapper( void ** params )
 {
 
     test_register_twice( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 837 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_register_max(void)
+#line 852 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_register_max(void)
 {
     psa_drv_se_t driver;
     psa_key_location_t location;
@@ -1020,14 +1035,14 @@ exit:
     PSA_DONE();
 }
 
-void test_register_max_wrapper( void ** params )
+static void test_register_max_wrapper( void ** params )
 {
     (void)params;
 
     test_register_max(  );
 }
-#line 861 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_key_creation_import_export(int lifetime_arg, int min_slot, int restart)
+#line 876 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_key_creation_import_export(int lifetime_arg, int min_slot, int restart)
 {
     psa_drv_se_t driver;
     psa_drv_se_key_management_t key_management;
@@ -1155,13 +1170,13 @@ exit:
     psa_purge_storage();
 }
 
-void test_key_creation_import_export_wrapper( void ** params )
+static void test_key_creation_import_export_wrapper( void ** params )
 {
 
     test_key_creation_import_export( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 991 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_key_creation_in_chosen_slot(int slot_arg,
+#line 1006 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_key_creation_in_chosen_slot(int slot_arg,
                                  int restart,
                                  int expected_status_arg)
 {
@@ -1252,14 +1267,14 @@ exit:
     psa_purge_storage();
 }
 
-void test_key_creation_in_chosen_slot_wrapper( void ** params )
+static void test_key_creation_in_chosen_slot_wrapper( void ** params )
 {
 
     test_key_creation_in_chosen_slot( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #if defined(AT_LEAST_ONE_BUILTIN_KDF)
-#line 1084 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_import_key_smoke(int type_arg, int alg_arg,
+#line 1099 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_import_key_smoke(int type_arg, int alg_arg,
                       data_t *key_material)
 {
     psa_key_type_t type = type_arg;
@@ -1335,15 +1350,15 @@ exit:
     psa_purge_storage();
 }
 
-void test_import_key_smoke_wrapper( void ** params )
+static void test_import_key_smoke_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
 
     test_import_key_smoke( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2 );
 }
 #endif /* AT_LEAST_ONE_BUILTIN_KDF */
-#line 1162 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_generate_key_not_supported(int type_arg, int bits_arg)
+#line 1177 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_generate_key_not_supported(int type_arg, int bits_arg)
 {
     psa_key_type_t type = type_arg;
     size_t bits = bits_arg;
@@ -1381,14 +1396,14 @@ exit:
     psa_purge_storage();
 }
 
-void test_generate_key_not_supported_wrapper( void ** params )
+static void test_generate_key_not_supported_wrapper( void ** params )
 {
 
     test_generate_key_not_supported( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #if defined(AT_LEAST_ONE_BUILTIN_KDF)
-#line 1202 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_generate_key_smoke(int type_arg, int bits_arg, int alg_arg)
+#line 1217 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_generate_key_smoke(int type_arg, int bits_arg, int alg_arg)
 {
     psa_key_type_t type = type_arg;
     psa_key_bits_t bits = bits_arg;
@@ -1463,14 +1478,14 @@ exit:
     psa_purge_storage();
 }
 
-void test_generate_key_smoke_wrapper( void ** params )
+static void test_generate_key_smoke_wrapper( void ** params )
 {
 
     test_generate_key_smoke( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #endif /* AT_LEAST_ONE_BUILTIN_KDF */
-#line 1279 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_sign_verify(int flow,
+#line 1294 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_sign_verify(int flow,
                  int type_arg, int alg_arg,
                  int bits_arg, data_t *key_material,
                  data_t *input)
@@ -1638,15 +1653,15 @@ exit:
     psa_purge_storage();
 }
 
-void test_sign_verify_wrapper( void ** params )
+static void test_sign_verify_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
     data_t data6 = {(uint8_t *) params[6], ((mbedtls_test_argument_t *) params[7])->len};
 
     test_sign_verify( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6 );
 }
-#line 1449 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
-void test_register_key_smoke_test(int lifetime_arg,
+#line 1464 "tests/suites/test_suite_psa_crypto_se_driver_hal.function"
+static void test_register_key_smoke_test(int lifetime_arg,
                              int owner_id_arg,
                              int id_arg,
                              int validate,
@@ -1731,7 +1746,7 @@ exit:
            sizeof(validate_slot_number_directions));
 }
 
-void test_register_key_smoke_test_wrapper( void ** params )
+static void test_register_key_smoke_test_wrapper( void ** params )
 {
 
     test_register_key_smoke_test( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
@@ -1758,7 +1773,7 @@ void test_register_key_smoke_test_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -1951,7 +1966,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 36:
             {
-                *out_value = PSA_KEY_ID_VOLATILE_MIN-1;
+                *out_value = PSA_KEY_ID_VENDOR_MAX;
             }
             break;
         case 37:
@@ -2003,7 +2018,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -2159,7 +2174,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -2197,7 +2212,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -2225,7 +2240,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -2249,7 +2264,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -2297,7 +2312,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -2650,7 +2665,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -2702,7 +2717,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_se_driver_hal.datax";
@@ -3035,7 +3050,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

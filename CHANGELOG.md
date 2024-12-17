@@ -1,5 +1,40 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.3.4
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.4>
+17-Dec-2024 (74d1408)
+
+Oberon crypto software drivers require _ocrypto_ version 3.6.x.
+
+### Compatibility
+- PSA Certified Crypto API 1.2.1 and PAKE extension 1.2 Final 1.
+- PSA Certified APIs Architecture Test Suite v1.7.
+- Aligned with PSA Crypto core from Mbed TLS 3.6.1 and 3.6.2.
+
+### New Features
+- Add heapless configuration option to PSA Crypto core.
+  - The heapless implementation is based on Mbed TLS' mbedtls-3.6 development
+    branch from November 2024. 
+  - In order to be aligned with the PSA Crypto core from Mbed TLS, the
+    heapless feature is configured by defining `MBEDTLS_PSA_STATIC_KEY_SLOTS`
+    in configuration file _mbedtls_config.h_. 
+  - The buffer size that will be statically allocated for key slots is
+    configured with `MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE` in configuration
+    file _psa/crypto_config.h_.
+  - Default configuration is heapless, i.e., `MBEDTLS_PSA_STATIC_KEY_SLOTS` is
+    defined.
+
+### Breaking Changes
+- Align experimental AES key wrapping with
+  [PR #224](https://github.com/ARM-software/psa-api/pull/224).
+- Change experimental AES key wrapping to use oberon prefix,
+  because Arm deprectated their proposal.
+
+### Improvements
+- Move to PSA Certified APIs Architecture Test Suite v1.7.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.3.3
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.3>
 24-Oct-2024 (d36ed1d)

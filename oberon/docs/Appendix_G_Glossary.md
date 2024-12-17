@@ -56,7 +56,7 @@ _Oberon PSA Crypto_. It implements the _PSA Crypto Driver API_ so that it can be
 treated by the _driver wrappers_ in the same way as a _hardware driver_. It
 provides a fallback implementation for _target platforms_ that do not support
 hardware crypto acceleration for all required algorithms, key types, or key
-sizes. It uses _Oberon microsystem's_ _ocrypto_ for the actual cryptographic
+sizes. It may use _Oberon microsystems'_ _ocrypto_ for the actual cryptographic
 functions, may implement some cryptographic functions on its own, and may
 delegate part of its processing to other _crypto drivers_ through the API of
 the _driver wrappers_ (see _driver chaining_).

@@ -13,6 +13,10 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+/*
+ * NOTICE: This file has been modified by Oberon microsystems AG.
+ */
+
 #ifndef PSA_CRYPTO_EXTRA_H
 #define PSA_CRYPTO_EXTRA_H
 #include "mbedtls/private_access.h"
@@ -2135,8 +2139,9 @@ static inline void psa_pake_cs_set_key_confirmation(
 /** The AES Key Wrap with padding algorithm.
  *
  * This is AES-KWP as defined by NIST-SP-800-38F and RFC5649.
+ * The S bit is set to indicate acceptance of non-aligned key sizes.
  */
-#define PSA_ALG_AES_KWP            ((psa_algorithm_t) 0x0B400200)
+#define PSA_ALG_AES_KWP            ((psa_algorithm_t) 0x0BC00200)
 
 /** Whether the key may be used to wrap another key.
  *
@@ -2152,9 +2157,43 @@ static inline void psa_pake_cs_set_key_confirmation(
  */
 #define PSA_KEY_USAGE_UNWRAP          ((psa_key_usage_t) 0x00020000)
 
+ /** A sufficient output buffer size for oberon_psa_wrap_key().
+ *
+ * If the size of the output buffer is at least this large, it is guaranteed
+ * that oberon_psa_wrap_key() will not fail due to an insufficient output buffer
+ * size. The actual size of the output might be smaller in any given call.
+ *
+ * See also #OBERON_PSA_WRAP_KEY_PAIR_MAX_SIZE
+ *
+ * \param wrap_key_type A wrap key type that is compatible with algorithm
+ *                      \p alg.
+ * \param alg           A key wrap algorithm (\c PSA_ALG_XXX value such that
+ *                      #PSA_ALG_IS_KEY_WRAP(\p alg) is true).
+ * \param key_type      An input key type that is compatible with algorithm
+ *                      \p alg.
+ * \param key_bits      The size of the input key in bits.
+ * \return              A sufficient output buffer size for the specified
+ *                      key wrap algorithm, wrap_key_type, key_type, and
+ *                      key_bits. If the parameters are not recognized or
+ *                      incompatible, return 0.
+ */
+#define OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(wrap_key_type, alg, key_type, key_bits) \
+    ((alg) == PSA_ALG_AES_KW ? PSA_BITS_TO_BYTES(key_bits) + 8u : \
+     (alg) == PSA_ALG_AES_KWP ? ((PSA_BITS_TO_BYTES(key_bits) + 7u) & ~7u) + 8u : 0u)
+
+ /** Sufficient output buffer size for wrapping any asymmetric key pair.
+ *
+ * This macro expands to a compile-time constant integer. This value is
+ * a sufficient buffer size when calling oberon_psa_wrap_key() to wrap any
+ * asymmetric key pair, regardless of the exact key type and key size.
+ *
+ * See also #OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(\p key_type, \p key_bits).
+ */
+#define OBERON_PSA_WRAP_KEY_PAIR_MAX_SIZE (((PSA_EXPORT_KEY_PAIR_MAX_SIZE + 7u) & ~7u) + 8u)
+
 /** Export a key in a wrapped format.
  *
- * The output of this function can be passed to psa_unwrap_key() to
+ * The output of this function can be passed to oberon_psa_unwrap_key() to
  * create an equivalent object.
  *
  * The key to be wrapped is encrypted using the given key wrapping algorithm.
@@ -2189,7 +2228,7 @@ static inline void psa_pake_cs_set_key_confirmation(
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
-psa_status_t psa_wrap_key(
+psa_status_t oberon_psa_wrap_key(
     psa_key_id_t wrapping_key,
     psa_algorithm_t alg,
     psa_key_id_t key,
@@ -2199,7 +2238,7 @@ psa_status_t psa_wrap_key(
 
 /** Import a key in a wrapped format.
  *
- * This function supports wrapped keys as output from psa_wrap_key().
+ * This function supports wrapped keys as output from oberon_psa_wrap_key().
  *
  * \param attributes        The attributes for the new key.
  * \param wrapping_key      Identifier of the key to unwrap the input key. It
@@ -2229,7 +2268,7 @@ psa_status_t psa_wrap_key(
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
-psa_status_t psa_unwrap_key(
+psa_status_t oberon_psa_unwrap_key(
     const psa_key_attributes_t *attributes,
     psa_key_id_t wrapping_key,
     psa_algorithm_t alg,

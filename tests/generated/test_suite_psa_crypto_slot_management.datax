@@ -157,72 +157,88 @@ depends_on:8
 
 Create failure: invalid key id (implementation range)
 depends_on:8
-4:exp:6:exp:22:exp:24
+4:exp:6:exp:28:exp:24
 
 Open not supported
 depends_on:9:10
-3:int:1:exp:28
+3:int:1:exp:29
 
 Create not supported
 depends_on:9
-4:exp:6:int:1:exp:28
+4:exp:6:int:1:exp:29
 
 Copy volatile to volatile
-5:exp:27:int:0x10:int:0:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:27:int:0x10:int:0:exp:30:int:0:int:0:exp:30:int:0:int:0
+5:exp:27:int:0x10:int:0:exp:30:int:0:int:0:exp:0:hex:"4142434445":exp:27:int:0x10:int:0:exp:31:int:0:int:0:exp:31:int:0:int:0
 
 Copy volatile to persistent
 depends_on:8
-5:exp:27:int:0x100:int:0:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x100:int:1:exp:30:int:0:int:0:exp:30:int:0:int:0
+5:exp:27:int:0x100:int:0:exp:30:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x100:int:1:exp:31:int:0:int:0:exp:31:int:0:int:0
 
 Copy persistent to volatile
 depends_on:8
-5:exp:6:int:0x1000:int:1:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:27:int:0x1000:int:0:exp:30:int:0:int:0:exp:30:int:0:int:0
+5:exp:6:int:0x1000:int:1:exp:30:int:0:int:0:exp:0:hex:"4142434445":exp:27:int:0x1000:int:0:exp:31:int:0:int:0:exp:31:int:0:int:0
 
 Copy persistent to persistent
 depends_on:8
-5:exp:6:int:0x10000:int:1:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x10000:int:2:exp:30:int:0:int:0:exp:30:int:0:int:0
+5:exp:6:int:0x10000:int:1:exp:30:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x10000:int:2:exp:31:int:0:int:0:exp:31:int:0:int:0
 
 Copy persistent to persistent, same id but different owner
 depends_on:8:11
-5:exp:6:int:0x10000:int:1:exp:29:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x10001:int:1:exp:30:int:0:int:0:exp:30:int:0:int:0
+5:exp:6:int:0x10000:int:1:exp:30:int:0:int:0:exp:0:hex:"4142434445":exp:6:int:0x10001:int:1:exp:31:int:0:int:0:exp:31:int:0:int:0
 
 Copy persistent to persistent with enrollment algorithm
 depends_on:12:13:14:8
-5:exp:6:int:0x100000:int:1:exp:29:exp:31:exp:32:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:0x100000:int:2:exp:30:exp:31:exp:32:exp:30:exp:31:exp:32
+5:exp:6:int:0x100000:int:1:exp:30:exp:32:exp:33:exp:34:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:0x100000:int:2:exp:31:exp:32:exp:33:exp:31:exp:32:exp:33
 
 Copy volatile to occupied
 depends_on:12:13:14:8
-6:exp:27:int:0:exp:29:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:2:exp:30:exp:32:exp:33:hex:"606162636465666768696a6b6c6d6e6f"
+6:exp:27:int:0:exp:30:exp:32:exp:34:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:2:exp:31:exp:33:exp:34:hex:"606162636465666768696a6b6c6d6e6f"
 
 Copy persistent to occupied
 depends_on:12:13:14:8
-6:exp:6:int:1:exp:29:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:2:exp:30:exp:32:exp:33:hex:"606162636465666768696a6b6c6d6e6f"
+6:exp:6:int:1:exp:30:exp:32:exp:34:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:2:exp:31:exp:33:exp:34:hex:"606162636465666768696a6b6c6d6e6f"
 
 Copy persistent to same
 depends_on:13:14:8
-6:exp:6:int:1:exp:29:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:1:exp:30:exp:31:exp:33:hex:"404142434445464748494a4b4c4d4e4f"
+6:exp:6:int:1:exp:30:exp:32:exp:34:hex:"404142434445464748494a4b4c4d4e4f":exp:6:int:1:exp:31:exp:32:exp:34:hex:"404142434445464748494a4b4c4d4e4f"
 
 invalid handle: 0
-7:exp:34:exp:35
+7:exp:35:exp:36
 
 invalid handle: never opened
-7:exp:36:exp:37
+7:exp:37:exp:38
 
 invalid handle: already closed
-7:exp:38:exp:37
+7:exp:39:exp:38
 
 invalid handle: huge
-7:exp:39:exp:37
+7:exp:40:exp:38
 
-Open many transient keys
-8:int:42
+Key slot count: maximum
+8:exp:41
+
+Key slot count: dynamic: more than MBEDTLS_PSA_KEY_SLOT_COUNT
+depends_on:15
+8:exp:42
+
+Key slot count: try to overfill, destroy first
+9:int:0
+
+Key slot count: try to overfill, destroy second
+9:int:1
+
+Key slot count: try to overfill, destroy next-to-last
+9:int:-2
+
+Key slot count: try to overfill, destroy last
+9:int:-1
 
 Key slot eviction to import a new persistent key
-9:exp:6
+10:exp:6
 
 Key slot eviction to import a new volatile key
-9:exp:27
+10:exp:27
 
 Non reusable key slots integrity in case of key slot starvation
-10
+11
 

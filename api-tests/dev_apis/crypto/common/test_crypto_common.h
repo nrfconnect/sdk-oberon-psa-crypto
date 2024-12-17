@@ -39,12 +39,16 @@
 #define AEAD_CIPHERTEXT_LEN_4          40
 #define AEAD_CIPHERTEXT_LEN_5          16
 #define AEAD_CIPHERTEXT_LEN_6          40
+#define AEAD_CIPHERTEXT_LEN_7          32
 
 #define INPUT_SALT_LEN                 4
 #define INPUT_INFO_LEN                 4
 #define INPUT_SEED_LEN                 4
 #define INPUT_LABEL_LEN                5
 #define INPUT_PASSWORD_LEN             8
+#define USER_ID_LEN                    4
+#define PEER_ID_LEN                    4
+#define CONTEXT_LEN                    7
 
 /* min and max finding macro */
 #ifndef MIN
@@ -92,6 +96,7 @@ extern const uint8_t aead_ciphertext_3[AEAD_CIPHERTEXT_LEN_3];
 extern const uint8_t aead_ciphertext_4[AEAD_CIPHERTEXT_LEN_4];
 extern const uint8_t aead_ciphertext_5[AEAD_CIPHERTEXT_LEN_5];
 extern const uint8_t aead_ciphertext_6[AEAD_CIPHERTEXT_LEN_6];
+extern const uint8_t aead_ciphertext_7[AEAD_CIPHERTEXT_LEN_7];
 
 extern const uint8_t hash_input;
 extern const uint8_t input_bytes_data[INPUT_BYTES_DATA_LEN];
@@ -101,6 +106,9 @@ extern const uint8_t input_seed[INPUT_SEED_LEN];
 extern const uint8_t input_label[INPUT_LABEL_LEN];
 extern const uint8_t input_password[INPUT_PASSWORD_LEN];
 extern uint64_t input_rounds;
+extern const uint8_t userid[USER_ID_LEN];
+extern const uint8_t peerid[PEER_ID_LEN];
+extern const uint8_t context[CONTEXT_LEN];
 
 extern const unsigned char iv[];
 
@@ -130,6 +138,9 @@ extern const uint8_t hmac_sha224_invalid[];
 extern const uint8_t hmac_sha256[];
 extern const uint8_t hmac_sha512[];
 extern const uint8_t cmac_aes_128[];
+
+extern const uint8_t spake2p_key_pair[];
+extern const uint8_t spake2p_pub_key[];
 
 extern uint8_t expected_output[BUFFER_SIZE];
 

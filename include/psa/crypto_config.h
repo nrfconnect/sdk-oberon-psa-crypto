@@ -144,6 +144,7 @@
 
 // Moved from mbedtls_config.h
 #define MBEDTLS_PSA_KEY_SLOT_COUNT              16
+#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE 3000
 
 
 /* Driver usage configuration */

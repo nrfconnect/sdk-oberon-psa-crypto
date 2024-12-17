@@ -438,4 +438,11 @@ uint64_t mbedtls_test_parse_binary_string(data_t *bin_string);
 #define AES_PSA_DONE()   PSA_DONE()
 #endif /* MBEDTLS_AES_C */
 
+ /** The number of volatile keys that PSA crypto uses internally.
+ *
+ * We expect that many volatile keys to be in use after a successful
+ * psa_crypto_init().
+ */
+#define MBEDTLS_TEST_PSA_INTERNAL_KEYS  0
+
 #endif /* PSA_CRYPTO_HELPERS_H */

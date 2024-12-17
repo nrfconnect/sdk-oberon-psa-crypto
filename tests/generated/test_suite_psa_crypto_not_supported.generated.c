@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -169,7 +169,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #define INVALID_KEY_ID mbedtls_svc_key_id_make(0, 0xfedcba98)
 
 #line 16 "tests/suites/test_suite_psa_crypto_not_supported.function"
-void test_import_not_supported(int key_type, data_t *key_material)
+static void test_import_not_supported(int key_type, data_t *key_material)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = INVALID_KEY_ID;
@@ -187,14 +187,14 @@ exit:
     PSA_DONE();
 }
 
-void test_import_not_supported_wrapper( void ** params )
+static void test_import_not_supported_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
 
     test_import_not_supported( ((mbedtls_test_argument_t *) params[0])->sint, &data1 );
 }
 #line 36 "tests/suites/test_suite_psa_crypto_not_supported.function"
-void test_generate_not_supported(int key_type, int bits)
+static void test_generate_not_supported(int key_type, int bits)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = INVALID_KEY_ID;
@@ -211,7 +211,7 @@ exit:
     PSA_DONE();
 }
 
-void test_generate_not_supported_wrapper( void ** params )
+static void test_generate_not_supported_wrapper( void ** params )
 {
 
     test_generate_not_supported( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
@@ -238,7 +238,7 @@ void test_generate_not_supported_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -413,7 +413,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -1422,7 +1422,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1460,7 +1460,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1488,7 +1488,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -1512,7 +1512,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -1560,7 +1560,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -1913,7 +1913,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -1965,7 +1965,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_not_supported.generated.datax";
@@ -2298,7 +2298,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

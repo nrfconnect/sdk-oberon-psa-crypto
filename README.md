@@ -13,7 +13,7 @@ hardware crypto accelerators.
 The library is compatible with the _PSA Certified Crypto API_ version as
 specified in
 [PSA Certified Crypto API 1.2.1 and PAKE extension 1.2 Final 1](https://arm-software.github.io/psa-api/crypto/),
-and to Arm's _Mbed TLS_ 3.6.0.
+and to Arm's _Mbed TLS_ 3.6.2.
 
 The supported crypto feature set is documented in
 [Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).

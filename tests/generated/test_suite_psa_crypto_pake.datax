@@ -66,7 +66,7 @@ PSA PAKE: invalid input
 depends_on:0:1:2
 0:exp:0:exp:1:exp:2:exp:3:exp:4:char*:"client":char*:"server":int:1:exp:25:exp:8
 
-PSA PAKE: unkown input step
+PSA PAKE: unknown input step
 depends_on:0:1:2
 0:exp:0:exp:1:exp:2:exp:3:exp:4:char*:"client":char*:"server":int:1:exp:26:exp:8
 
@@ -86,7 +86,7 @@ PSA PAKE: invalid output  !!OM-PCI-26 -> PSA_ERROR_BAD_STATE
 depends_on:0:1:2
 0:exp:0:exp:1:exp:2:exp:3:exp:4:char*:"client":char*:"server":int:0:exp:25:exp:6
 
-PSA PAKE: unkown output step
+PSA PAKE: unknown output step
 depends_on:0:1:2
 0:exp:0:exp:1:exp:2:exp:3:exp:4:char*:"client":char*:"server":int:0:exp:26:exp:8
 
@@ -203,19 +203,19 @@ depends_on:0:1:2
 1:exp:0:exp:3:exp:4:int:0:hex:"abcdef":exp:55:exp:38:int:1
 
 PSA PAKE: inject ERR_INJECT_EXTRA_OUTPUT
-depends_on:5:1:2
+depends_on:0:1:2
 1:exp:0:exp:3:exp:4:int:0:hex:"abcdef":exp:56:exp:6:int:0
 
 PSA PAKE: inject ERR_INJECT_EXTRA_INPUT
-depends_on:5:1:2
+depends_on:0:1:2
 1:exp:0:exp:3:exp:4:int:1:hex:"abcdef":exp:57:exp:6:int:0
 
 PSA PAKE: inject ERR_INJECT_EXTRA_OUTPUT_AT_END
-depends_on:5:1:2
+depends_on:0:1:2
 1:exp:0:exp:3:exp:4:int:1:hex:"abcdef":exp:58:exp:6:int:1
 
 PSA PAKE: inject ERR_INJECT_EXTRA_INPUT_AT_END
-depends_on:5:1:2
+depends_on:0:1:2
 1:exp:0:exp:3:exp:4:int:0:hex:"abcdef":exp:59:exp:6:int:1
 
 PSA PAKE: ecjpake size macros

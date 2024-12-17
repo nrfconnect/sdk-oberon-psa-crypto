@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -169,7 +169,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
 
 /** The location and lifetime used for tests that use a single driver. */
 #define TEST_DRIVER_LOCATION 1
-#define TEST_SE_PERSISTENT_LIFETIME                             \
+#define TEST_SE_PERSISTENT_LIFETIME                            \
     (PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(           \
          PSA_KEY_PERSISTENCE_DEFAULT, TEST_DRIVER_LOCATION))
 
@@ -325,11 +325,11 @@ static psa_status_t mock_import(psa_drv_se_context_t *drv_context,
     return mock_import_data.return_value;
 }
 
-psa_status_t mock_export(psa_drv_se_context_t *context,
-                         psa_key_slot_number_t slot_number,
-                         uint8_t *p_data,
-                         size_t data_size,
-                         size_t *p_data_length)
+static psa_status_t mock_export(psa_drv_se_context_t *context,
+                                psa_key_slot_number_t slot_number,
+                                uint8_t *p_data,
+                                size_t data_size,
+                                size_t *p_data_length)
 {
     (void) context;
     (void) p_data;
@@ -342,11 +342,11 @@ psa_status_t mock_export(psa_drv_se_context_t *context,
     return mock_export_data.return_value;
 }
 
-psa_status_t mock_export_public(psa_drv_se_context_t *context,
-                                psa_key_slot_number_t slot_number,
-                                uint8_t *p_data,
-                                size_t data_size,
-                                size_t *p_data_length)
+static psa_status_t mock_export_public(psa_drv_se_context_t *context,
+                                       psa_key_slot_number_t slot_number,
+                                       uint8_t *p_data,
+                                       size_t data_size,
+                                       size_t *p_data_length)
 {
     (void) context;
     (void) p_data;
@@ -359,14 +359,14 @@ psa_status_t mock_export_public(psa_drv_se_context_t *context,
     return mock_export_public_data.return_value;
 }
 
-psa_status_t mock_sign(psa_drv_se_context_t *context,
-                       psa_key_slot_number_t key_slot,
-                       psa_algorithm_t alg,
-                       const uint8_t *p_hash,
-                       size_t hash_length,
-                       uint8_t *p_signature,
-                       size_t signature_size,
-                       size_t *p_signature_length)
+static psa_status_t mock_sign(psa_drv_se_context_t *context,
+                              psa_key_slot_number_t key_slot,
+                              psa_algorithm_t alg,
+                              const uint8_t *p_hash,
+                              size_t hash_length,
+                              uint8_t *p_signature,
+                              size_t signature_size,
+                              size_t *p_signature_length)
 {
     (void) context;
     (void) p_hash;
@@ -382,13 +382,13 @@ psa_status_t mock_sign(psa_drv_se_context_t *context,
     return mock_sign_data.return_value;
 }
 
-psa_status_t mock_verify(psa_drv_se_context_t *context,
-                         psa_key_slot_number_t key_slot,
-                         psa_algorithm_t alg,
-                         const uint8_t *p_hash,
-                         size_t hash_length,
-                         const uint8_t *p_signature,
-                         size_t signature_length)
+static psa_status_t mock_verify(psa_drv_se_context_t *context,
+                                psa_key_slot_number_t key_slot,
+                                psa_algorithm_t alg,
+                                const uint8_t *p_hash,
+                                size_t hash_length,
+                                const uint8_t *p_signature,
+                                size_t signature_length)
 {
     (void) context;
     (void) p_hash;
@@ -403,11 +403,11 @@ psa_status_t mock_verify(psa_drv_se_context_t *context,
     return mock_verify_data.return_value;
 }
 
-psa_status_t mock_allocate(psa_drv_se_context_t *drv_context,
-                           void *persistent_data,
-                           const psa_key_attributes_t *attributes,
-                           psa_key_creation_method_t method,
-                           psa_key_slot_number_t *key_slot)
+static psa_status_t mock_allocate(psa_drv_se_context_t *drv_context,
+                                  void *persistent_data,
+                                  const psa_key_attributes_t *attributes,
+                                  psa_key_creation_method_t method,
+                                  psa_key_slot_number_t *key_slot)
 {
     (void) drv_context;
     (void) persistent_data;
@@ -421,9 +421,9 @@ psa_status_t mock_allocate(psa_drv_se_context_t *drv_context,
     return mock_allocate_data.return_value;
 }
 
-psa_status_t mock_destroy(psa_drv_se_context_t *context,
-                          void *persistent_data,
-                          psa_key_slot_number_t slot_number)
+static psa_status_t mock_destroy(psa_drv_se_context_t *context,
+                                 void *persistent_data,
+                                 psa_key_slot_number_t slot_number)
 {
     (void) context;
     (void) persistent_data;
@@ -435,7 +435,7 @@ psa_status_t mock_destroy(psa_drv_se_context_t *context,
 }
 
 #line 282 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_init(int location_arg,
+static void test_mock_init(int location_arg,
                int expected_register_status_arg,
                int driver_status_arg,
                int expected_psa_status_arg,
@@ -471,13 +471,13 @@ exit:
     mock_teardown();
 }
 
-void test_mock_init_wrapper( void ** params )
+static void test_mock_init_wrapper( void ** params )
 {
 
     test_mock_init( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
 #line 320 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_import(int mock_alloc_return_value,
+static void test_mock_import(int mock_alloc_return_value,
                  int mock_import_return_value,
                  int bits,
                  int expected_result)
@@ -543,13 +543,13 @@ exit:
     mock_teardown();
 }
 
-void test_mock_import_wrapper( void ** params )
+static void test_mock_import_wrapper( void ** params )
 {
 
     test_mock_import( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
 #line 388 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_export(int mock_export_return_value, int expected_result)
+static void test_mock_export(int mock_export_return_value, int expected_result)
 {
     psa_drv_se_t driver;
     psa_drv_se_key_management_t key_management;
@@ -599,13 +599,13 @@ exit:
     mock_teardown();
 }
 
-void test_mock_export_wrapper( void ** params )
+static void test_mock_export_wrapper( void ** params )
 {
 
     test_mock_export( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 440 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_generate(int mock_alloc_return_value,
+static void test_mock_generate(int mock_alloc_return_value,
                    int mock_generate_return_value,
                    int expected_result)
 {
@@ -667,13 +667,13 @@ exit:
     mock_teardown();
 }
 
-void test_mock_generate_wrapper( void ** params )
+static void test_mock_generate_wrapper( void ** params )
 {
 
     test_mock_generate( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #line 504 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_export_public(int mock_export_public_return_value,
+static void test_mock_export_public(int mock_export_public_return_value,
                         int expected_result)
 {
     psa_drv_se_t driver;
@@ -721,13 +721,13 @@ exit:
     mock_teardown();
 }
 
-void test_mock_export_public_wrapper( void ** params )
+static void test_mock_export_public_wrapper( void ** params )
 {
 
     test_mock_export_public( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 554 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_sign(int mock_sign_return_value, int expected_result)
+static void test_mock_sign(int mock_sign_return_value, int expected_result)
 {
     psa_drv_se_t driver;
     psa_drv_se_key_management_t key_management;
@@ -786,13 +786,13 @@ exit:
     mock_teardown();
 }
 
-void test_mock_sign_wrapper( void ** params )
+static void test_mock_sign_wrapper( void ** params )
 {
 
     test_mock_sign( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #line 615 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
-void test_mock_verify(int mock_verify_return_value, int expected_result)
+static void test_mock_verify(int mock_verify_return_value, int expected_result)
 {
     psa_drv_se_t driver;
     psa_drv_se_key_management_t key_management;
@@ -849,7 +849,7 @@ exit:
     mock_teardown();
 }
 
-void test_mock_verify_wrapper( void ** params )
+static void test_mock_verify_wrapper( void ** params )
 {
 
     test_mock_verify( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
@@ -876,7 +876,7 @@ void test_mock_verify_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -951,7 +951,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -1059,7 +1059,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1097,7 +1097,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1125,7 +1125,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -1149,7 +1149,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -1197,7 +1197,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -1550,7 +1550,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -1602,7 +1602,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_se_driver_hal_mocks.datax";
@@ -1935,7 +1935,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

@@ -97,13 +97,19 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
                             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
                         target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.c")
 
+                        if(UNIX)
+                            set(DATAX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
+                        else()
+                            set(DATAX_DIR "${PROJECT_BINARY_DIR}")
+                        endif()
+
                         string(FIND ${SUITE_FILE} "generated" INDEX)
                         if (INDEX EQUAL 0)
                             add_custom_command(
                                 TARGET ${PROJECT_NAME} PRE_LINK
                                 COMMAND ${CMAKE_COMMAND} -E copy
                                 ${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.datax
-                                ${PROJECT_BINARY_DIR}/
+                                ${DATAX_DIR}/
                                 DEPENDS ${PROJECT_BINARY_DIR}/${SUITE}.datax)
                         endif()
 

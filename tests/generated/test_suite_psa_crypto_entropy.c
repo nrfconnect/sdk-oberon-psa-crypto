@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -230,7 +230,7 @@ psa_status_t remove_seed_file(void)
 
 #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 #line 72 "tests/suites/test_suite_psa_crypto_entropy.function"
-void test_external_rng_failure_generate(void)
+static void test_external_rng_failure_generate(void)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
@@ -255,7 +255,7 @@ exit:
     PSA_DONE();
 }
 
-void test_external_rng_failure_generate_wrapper( void ** params )
+static void test_external_rng_failure_generate_wrapper( void ** params )
 {
     (void)params;
 
@@ -264,7 +264,7 @@ void test_external_rng_failure_generate_wrapper( void ** params )
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 #line 99 "tests/suites/test_suite_psa_crypto_entropy.function"
-void test_external_rng_failure_sign(int key_type, data_t *key_data, int alg,
+static void test_external_rng_failure_sign(int key_type, data_t *key_data, int alg,
                                int input_size_arg)
 {
     /* This test case is only expected to pass if the signature mechanism
@@ -313,7 +313,7 @@ exit:
     mbedtls_free(signature);
 }
 
-void test_external_rng_failure_sign_wrapper( void ** params )
+static void test_external_rng_failure_sign_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
 
@@ -322,7 +322,7 @@ void test_external_rng_failure_sign_wrapper( void ** params )
 #endif /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #if defined(MBEDTLS_PSA_INJECT_ENTROPY)
 #line 150 "tests/suites/test_suite_psa_crypto_entropy.function"
-void test_validate_entropy_seed_injection(int seed_length_a,
+static void test_validate_entropy_seed_injection(int seed_length_a,
                                      int expected_status_a,
                                      int seed_length_b,
                                      int expected_status_b)
@@ -376,7 +376,7 @@ exit:
     mbedtls_test_inject_entropy_restore();
 }
 
-void test_validate_entropy_seed_injection_wrapper( void ** params )
+static void test_validate_entropy_seed_injection_wrapper( void ** params )
 {
 
     test_validate_entropy_seed_injection( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
@@ -384,7 +384,7 @@ void test_validate_entropy_seed_injection_wrapper( void ** params )
 #endif /* MBEDTLS_PSA_INJECT_ENTROPY */
 #if defined(MBEDTLS_PSA_INJECT_ENTROPY)
 #line 206 "tests/suites/test_suite_psa_crypto_entropy.function"
-void test_run_entropy_inject_with_crypto_init(void)
+static void test_run_entropy_inject_with_crypto_init(void)
 {
     psa_status_t status;
     size_t i;
@@ -430,7 +430,7 @@ exit:
     mbedtls_test_inject_entropy_restore();
 }
 
-void test_run_entropy_inject_with_crypto_init_wrapper( void ** params )
+static void test_run_entropy_inject_with_crypto_init_wrapper( void ** params )
 {
     (void)params;
 
@@ -458,7 +458,7 @@ void test_run_entropy_inject_with_crypto_init_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -559,7 +559,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -786,7 +786,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -824,7 +824,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -852,7 +852,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -876,7 +876,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -924,7 +924,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -1277,7 +1277,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -1329,7 +1329,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_entropy.datax";
@@ -1662,7 +1662,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

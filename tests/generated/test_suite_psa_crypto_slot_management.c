@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -261,8 +261,33 @@ exit:
     return 0;
 }
 
-#line 109 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_transient_slot_lifecycle(int owner_id_arg,
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#if defined(MBEDTLS_TEST_HOOKS)
+/* Artificially restrictable dynamic key store */
+#define KEY_SLICE_1_LENGTH 4
+#define KEY_SLICE_2_LENGTH 10
+static size_t tiny_key_slice_length(size_t slice_idx)
+{
+    switch (slice_idx) {
+        case 1: return KEY_SLICE_1_LENGTH;
+        case 2: return KEY_SLICE_2_LENGTH;
+        default: return 1;
+    }
+}
+#define MAX_VOLATILE_KEYS                       \
+    (KEY_SLICE_1_LENGTH + KEY_SLICE_2_LENGTH +  \
+     psa_key_slot_volatile_slice_count() - 2)
+
+#else  /* Effectively unbounded dynamic key store */
+#undef MAX_VOLATILE_KEYS
+#endif
+
+#else  /* Static key store */
+#define MAX_VOLATILE_KEYS MBEDTLS_PSA_KEY_SLOT_COUNT
+#endif
+
+#line 134 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_transient_slot_lifecycle(int owner_id_arg,
                               int usage_arg, int alg_arg,
                               int type_arg, data_t *key_data,
                               int invalidate_method_arg)
@@ -343,15 +368,15 @@ exit:
     PSA_DONE();
 }
 
-void test_transient_slot_lifecycle_wrapper( void ** params )
+static void test_transient_slot_lifecycle_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
     test_transient_slot_lifecycle( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint );
 }
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 192 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_persistent_slot_lifecycle(int lifetime_arg, int owner_id_arg, int id_arg,
+#line 217 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_persistent_slot_lifecycle(int lifetime_arg, int owner_id_arg, int id_arg,
                                int usage_arg, int alg_arg, int alg2_arg,
                                int type_arg, data_t *key_data,
                                int invalidate_method_arg)
@@ -504,7 +529,7 @@ exit:
     mbedtls_free(reexported);
 }
 
-void test_persistent_slot_lifecycle_wrapper( void ** params )
+static void test_persistent_slot_lifecycle_wrapper( void ** params )
 {
     data_t data7 = {(uint8_t *) params[7], ((mbedtls_test_argument_t *) params[8])->len};
 
@@ -512,8 +537,8 @@ void test_persistent_slot_lifecycle_wrapper( void ** params )
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 347 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_create_existent(int lifetime_arg, int owner_id_arg, int id_arg,
+#line 372 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_create_existent(int lifetime_arg, int owner_id_arg, int id_arg,
                      int reopen_policy_arg)
 {
     psa_key_lifetime_t lifetime = lifetime_arg;
@@ -585,14 +610,14 @@ exit:
     PSA_DONE();
 }
 
-void test_create_existent_wrapper( void ** params )
+static void test_create_existent_wrapper( void ** params )
 {
 
     test_create_existent( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
-#line 421 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_open_fail(int id_arg,
+#line 446 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_open_fail(int id_arg,
                int expected_status_arg)
 {
     mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(1, id_arg);
@@ -608,13 +633,13 @@ exit:
     PSA_DONE();
 }
 
-void test_open_fail_wrapper( void ** params )
+static void test_open_fail_wrapper( void ** params )
 {
 
     test_open_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 439 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_create_fail(int lifetime_arg, int id_arg,
+#line 464 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_create_fail(int lifetime_arg, int id_arg,
                  int expected_status_arg)
 {
     psa_key_lifetime_t lifetime = lifetime_arg;
@@ -651,13 +676,13 @@ exit:
     PSA_DONE();
 }
 
-void test_create_fail_wrapper( void ** params )
+static void test_create_fail_wrapper( void ** params )
 {
 
     test_create_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 478 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_copy_across_lifetimes(int source_lifetime_arg, int source_owner_id_arg,
+#line 503 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_copy_across_lifetimes(int source_lifetime_arg, int source_owner_id_arg,
                            int source_id_arg, int source_usage_arg,
                            int source_alg_arg, int source_alg2_arg,
                            int type_arg, data_t *material,
@@ -783,14 +808,14 @@ exit:
     mbedtls_free(export_buffer);
 }
 
-void test_copy_across_lifetimes_wrapper( void ** params )
+static void test_copy_across_lifetimes_wrapper( void ** params )
 {
     data_t data7 = {(uint8_t *) params[7], ((mbedtls_test_argument_t *) params[8])->len};
 
     test_copy_across_lifetimes( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, &data7, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint, ((mbedtls_test_argument_t *) params[16])->sint, ((mbedtls_test_argument_t *) params[17])->sint );
 }
-#line 606 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_copy_to_occupied(int source_lifetime_arg, int source_id_arg,
+#line 631 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_copy_to_occupied(int source_lifetime_arg, int source_id_arg,
                       int source_usage_arg, int source_alg_arg,
                       int source_type_arg, data_t *source_material,
                       int target_lifetime_arg, int target_id_arg,
@@ -899,15 +924,15 @@ exit:
     mbedtls_free(export_buffer);
 }
 
-void test_copy_to_occupied_wrapper( void ** params )
+static void test_copy_to_occupied_wrapper( void ** params )
 {
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
     data_t data12 = {(uint8_t *) params[12], ((mbedtls_test_argument_t *) params[13])->len};
 
     test_copy_to_occupied( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, &data12 );
 }
-#line 717 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_invalid_handle(int handle_construction,
+#line 742 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_invalid_handle(int handle_construction,
                     int close_status_arg)
 {
     psa_key_handle_t valid_handle = PSA_KEY_HANDLE_INIT;
@@ -986,13 +1011,13 @@ exit:
     PSA_DONE();
 }
 
-void test_invalid_handle_wrapper( void ** params )
+static void test_invalid_handle_wrapper( void ** params )
 {
 
     test_invalid_handle( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 798 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_many_transient_keys(int max_keys_arg)
+#line 823 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_many_transient_keys(int max_keys_arg)
 {
     mbedtls_svc_key_id_t *keys = NULL;
     size_t max_keys = max_keys_arg;
@@ -1010,21 +1035,19 @@ void test_many_transient_keys(int max_keys_arg)
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
 
     for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
         status = psa_import_key(&attributes,
                                 (uint8_t *) &i, sizeof(i),
                                 &keys[i]);
-        if (status == PSA_ERROR_INSUFFICIENT_MEMORY) {
-            break;
-        }
         PSA_ASSERT(status);
         TEST_ASSERT(!mbedtls_svc_key_id_is_null(keys[i]));
         for (j = 0; j < i; j++) {
             TEST_ASSERT(!mbedtls_svc_key_id_equal(keys[i], keys[j]));
         }
     }
-    max_keys = i;
 
     for (i = 1; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
         PSA_ASSERT(psa_close_key(keys[i - 1]));
         PSA_ASSERT(psa_export_key(keys[i],
                                   exported, sizeof(exported),
@@ -1039,14 +1062,133 @@ exit:
     mbedtls_free(keys);
 }
 
-void test_many_transient_keys_wrapper( void ** params )
+static void test_many_transient_keys_wrapper( void ** params )
 {
 
     test_many_transient_keys( ((mbedtls_test_argument_t *) params[0])->sint );
 }
+#if defined(MAX_VOLATILE_KEYS)
+#line 870 "tests/suites/test_suite_psa_crypto_slot_management.function"
+
+
+
+
+
+
+
+
+
+
+static void test_fill_key_store(int key_to_destroy_arg)
+{
+    mbedtls_svc_key_id_t *keys = NULL;
+    size_t max_keys = MAX_VOLATILE_KEYS;
+    size_t i, j;
+    psa_status_t status;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t exported[sizeof(size_t)];
+    size_t exported_length;
+
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC) && defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_test_hook_psa_volatile_key_slice_length = &tiny_key_slice_length;
+#endif
+
+    PSA_ASSERT(psa_crypto_init());
+
+    mbedtls_psa_stats_t stats;
+    mbedtls_psa_get_stats(&stats);
+    /* Account for any system-created volatile key, e.g. for the RNG. */
+    max_keys -= stats.volatile_slots;
+    TEST_CALLOC(keys, max_keys + 1);
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
+    psa_set_key_algorithm(&attributes, 0);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+
+    /* Fill the key store. */
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        status = psa_import_key(&attributes,
+                                (uint8_t *) &i, sizeof(i),
+                                &keys[i]);
+        PSA_ASSERT(status);
+        TEST_ASSERT(!mbedtls_svc_key_id_is_null(keys[i]));
+        for (j = 0; j < i; j++) {
+            TEST_ASSERT(!mbedtls_svc_key_id_equal(keys[i], keys[j]));
+        }
+    }
+
+    /* Attempt to overfill. */
+    mbedtls_test_set_step(max_keys);
+    status = psa_import_key(&attributes,
+                            (uint8_t *) &max_keys, sizeof(max_keys),
+                            &keys[max_keys]);
+    TEST_EQUAL(status, PSA_ERROR_INSUFFICIENT_MEMORY);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(keys[max_keys]));
+
+    /* Check that the keys are not corrupted. */
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        PSA_ASSERT(psa_export_key(keys[i],
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        TEST_MEMORY_COMPARE(exported, exported_length,
+                            (uint8_t *) &i, sizeof(i));
+    }
+
+    /* Destroy one key and try again. */
+    size_t key_to_destroy = (key_to_destroy_arg >= 0 ?
+                             (size_t) key_to_destroy_arg :
+                             max_keys + key_to_destroy_arg);
+    mbedtls_svc_key_id_t reused_id = keys[key_to_destroy];
+    const uint8_t replacement_value[1] = { 0x64 };
+    PSA_ASSERT(psa_destroy_key(keys[key_to_destroy]));
+    keys[key_to_destroy] = MBEDTLS_SVC_KEY_ID_INIT;
+    status = psa_import_key(&attributes,
+                            replacement_value, sizeof(replacement_value),
+                            &keys[key_to_destroy]);
+    PSA_ASSERT(status);
+    /* Since the key store was full except for one key, the new key must be
+     * in the same slot in the key store as the destroyed key.
+     * Since volatile keys IDs are assigned based on which slot contains
+     * the key, the new key should have the same ID as the destroyed key.
+     */
+    TEST_ASSERT(mbedtls_svc_key_id_equal(reused_id, keys[key_to_destroy]));
+
+    /* Check that the keys are not corrupted and destroy them. */
+    for (i = 0; i < max_keys; i++) {
+        mbedtls_test_set_step(i);
+        PSA_ASSERT(psa_export_key(keys[i],
+                                  exported, sizeof(exported),
+                                  &exported_length));
+        if (i == key_to_destroy) {
+            TEST_MEMORY_COMPARE(exported, exported_length,
+                                replacement_value, sizeof(replacement_value));
+        } else {
+            TEST_MEMORY_COMPARE(exported, exported_length,
+                                (uint8_t *) &i, sizeof(i));
+        }
+        PSA_ASSERT(psa_destroy_key(keys[i]));
+        keys[i] = MBEDTLS_SVC_KEY_ID_INIT;
+    }
+
+exit:
+    PSA_DONE();
+    mbedtls_free(keys);
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC) && defined(MBEDTLS_TEST_HOOKS)
+    mbedtls_test_hook_psa_volatile_key_slice_length = NULL;
+#endif
+}
+
+static void test_fill_key_store_wrapper( void ** params )
+{
+
+    test_fill_key_store( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#endif /* MAX_VOLATILE_KEYS */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 847 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_key_slot_eviction_to_import_new_key(int lifetime_arg)
+#line 983 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_key_slot_eviction_to_import_new_key(int lifetime_arg)
 {
     psa_key_lifetime_t lifetime = (psa_key_lifetime_t) lifetime_arg;
     size_t i;
@@ -1120,15 +1262,16 @@ exit:
     PSA_DONE();
 }
 
-void test_key_slot_eviction_to_import_new_key_wrapper( void ** params )
+static void test_key_slot_eviction_to_import_new_key_wrapper( void ** params )
 {
 
     test_key_slot_eviction_to_import_new_key( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 923 "tests/suites/test_suite_psa_crypto_slot_management.function"
-void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
+#if !defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+#line 1059 "tests/suites/test_suite_psa_crypto_slot_management.function"
+static void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
 {
     psa_status_t status;
     size_t i;
@@ -1167,7 +1310,14 @@ void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
     TEST_ASSERT(mbedtls_svc_key_id_equal(returned_key_id, persistent_key));
 
     /*
-     * Create the maximum available number of volatile keys
+     * Create the maximum available number of keys that are locked in
+     * memory. This can be:
+     * - volatile keys, when MBEDTLS_PSA_KEY_STORE_DYNAMIC is disabled;
+     * - opened persistent keys (could work, but not currently implemented
+     *   in this test function);
+     * - keys in use by another thread (we don't do this because it would
+     *   be hard to arrange and we can't control how long the keys are
+     *   locked anyway).
      */
     psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_VOLATILE);
     for (i = 0; i < available_key_slots; i++) {
@@ -1247,12 +1397,13 @@ exit:
     mbedtls_free(keys);
 }
 
-void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation_wrapper( void ** params )
+static void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation_wrapper( void ** params )
 {
     (void)params;
 
     test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(  );
 }
+#endif /* !MBEDTLS_PSA_KEY_STORE_DYNAMIC */
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #endif /* MBEDTLS_PSA_CRYPTO_C */
 
@@ -1276,7 +1427,7 @@ void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation_wrappe
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -1399,7 +1550,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 22:
             {
-                *out_value = PSA_KEY_ID_USER_MAX + 1;
+                *out_value = (PSA_KEY_ID_VOLATILE_MIN + PSA_KEY_ID_VOLATILE_MAX) / 2;
             }
             break;
         case 23:
@@ -1429,62 +1580,77 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 28:
             {
-                *out_value = PSA_ERROR_NOT_SUPPORTED;
+                *out_value = PSA_KEY_ID_USER_MAX + 1;
             }
             break;
         case 29:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_COPY;
+                *out_value = PSA_ERROR_NOT_SUPPORTED;
             }
             break;
         case 30:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT;
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_COPY;
             }
             break;
         case 31:
             {
-                *out_value = PSA_ALG_CTR;
+                *out_value = PSA_KEY_USAGE_EXPORT;
             }
             break;
         case 32:
             {
-                *out_value = PSA_ALG_CBC_NO_PADDING;
+                *out_value = PSA_ALG_CTR;
             }
             break;
         case 33:
             {
-                *out_value = PSA_KEY_TYPE_AES;
+                *out_value = PSA_ALG_CBC_NO_PADDING;
             }
             break;
         case 34:
             {
-                *out_value = INVALID_HANDLE_0;
+                *out_value = PSA_KEY_TYPE_AES;
             }
             break;
         case 35:
             {
-                *out_value = PSA_SUCCESS;
+                *out_value = INVALID_HANDLE_0;
             }
             break;
         case 36:
             {
-                *out_value = INVALID_HANDLE_UNOPENED;
+                *out_value = PSA_SUCCESS;
             }
             break;
         case 37:
             {
-                *out_value = PSA_ERROR_INVALID_HANDLE;
+                *out_value = INVALID_HANDLE_UNOPENED;
             }
             break;
         case 38:
             {
-                *out_value = INVALID_HANDLE_CLOSED;
+                *out_value = PSA_ERROR_INVALID_HANDLE;
             }
             break;
         case 39:
             {
+                *out_value = INVALID_HANDLE_CLOSED;
+            }
+            break;
+        case 40:
+            {
                 *out_value = INVALID_HANDLE_HUGE;
+            }
+            break;
+        case 41:
+            {
+                *out_value = MBEDTLS_PSA_KEY_SLOT_COUNT - MBEDTLS_TEST_PSA_INTERNAL_KEYS;
+            }
+            break;
+        case 42:
+            {
+                *out_value = MBEDTLS_PSA_KEY_SLOT_COUNT + 1;
             }
             break;
 #endif
@@ -1511,7 +1677,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -1656,6 +1822,15 @@ int dep_check(int dep_id)
 #endif
             }
             break;
+        case 15:
+            {
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
 #endif
 
 #line 112 "suites/main_test.function"
@@ -1755,14 +1930,21 @@ TestWrapper_t test_funcs[] =
 #endif
 /* Function Id: 9 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-    test_key_slot_eviction_to_import_new_key_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MAX_VOLATILE_KEYS)
+    test_fill_key_store_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 10 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
+    test_key_slot_eviction_to_import_new_key_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 11 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) && !defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
     test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation_wrapper,
 #else
     NULL,
@@ -1782,7 +1964,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1820,7 +2002,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1848,7 +2030,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -1872,7 +2054,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -1920,7 +2102,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -2273,7 +2455,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -2325,7 +2507,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_slot_management.datax";
@@ -2658,7 +2840,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

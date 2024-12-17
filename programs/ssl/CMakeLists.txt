@@ -21,7 +21,8 @@ set(src_tls
         ${MBEDTLS_ROOT}/library/net_sockets.c
         ${MBEDTLS_ROOT}/library/oid.c
         ${MBEDTLS_ROOT}/library/pem.c
-        ${MBEDTLS_ROOT}/library/pk.c
+        # copied to oberon_psa_crypto to avoid double definition of PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE
+        ${CMAKE_SOURCE_DIR}/programs/ssl/library/pk.c
         ${MBEDTLS_ROOT}/library/pk_ecc.c
         ${MBEDTLS_ROOT}/library/pk_wrap.c
         ${MBEDTLS_ROOT}/library/pkparse.c
@@ -92,7 +93,7 @@ if (CONFIG_MBEDTLS_SSL_TESTS)
 
     if(NOT EXISTS "${MBEDTLS_ROOT}/library/pk_ecc.c")
         message(FATAL_ERROR
-                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.0.")
+                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.2.")
     endif()
 
     message(STATUS "CONFIG_MBEDTLS_SSL_TESTS: ${CONFIG_MBEDTLS_SSL_TESTS}")
@@ -220,11 +221,17 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/test-suites")
             target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/generated/${SUITE}.c")
 
+            if(UNIX)
+                set(DATAX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/test-suites")
+            else()
+                set(DATAX_DIR "${PROJECT_BINARY_DIR}")
+            endif()
+
             add_custom_command(
                 TARGET ${PROJECT_NAME} PRE_LINK
                 COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_SOURCE_DIR}/tests/generated/${SUITE}.datax
-                ${PROJECT_BINARY_DIR}/
+                ${DATAX_DIR}/
                 DEPENDS ${PROJECT_BINARY_DIR}/${SUITE}.datax)
 
             # add libs

@@ -18,9 +18,9 @@ _target platform_. For this purpose, the following file must be adapted:
 
 - `library/psa_its_file.c`
 
-This is assuming that the file-based implementation of
-`library/psa_crypto_storage.c` will be used. If not, the latter needs to be
-replaced by some other suitable implementation.
+For demonstration purposes, this file assumes that the file-based implementation
+of `library/psa_crypto_storage.c` will be used. For production systems, the
+latter needs to be replaced by some other suitable implementation.
 
 See the specification of the _PSA Secure Storage API_ for more information.
 

@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -170,6 +170,23 @@ static int restore_output(FILE *out_stream, int dup_fd)
 
 #include "mbedtls/entropy.h"
 #include "entropy_poll.h"
+
+static int check_stats(void)
+{
+    mbedtls_psa_stats_t stats;
+    mbedtls_psa_get_stats(&stats);
+
+    TEST_EQUAL(stats.volatile_slots, MBEDTLS_TEST_PSA_INTERNAL_KEYS);
+    TEST_EQUAL(stats.persistent_slots, 0);
+    TEST_EQUAL(stats.external_slots, 0);
+    TEST_EQUAL(stats.half_filled_slots, 0);
+    TEST_EQUAL(stats.locked_slots, 0);
+
+    return 1;
+
+exit:
+    return 0;
+}
 
 #define ENTROPY_MIN_NV_SEED_SIZE                                        \
     MAX(MBEDTLS_ENTROPY_MIN_PLATFORM, MBEDTLS_ENTROPY_BLOCK_SIZE)
@@ -331,8 +348,8 @@ exit:
 
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 177 "tests/suites/test_suite_psa_crypto_init.function"
-void test_create_nv_seed(void)
+#line 194 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_create_nv_seed(void)
 {
     static unsigned char seed[ENTROPY_MIN_NV_SEED_SIZE];
     TEST_ASSERT(mbedtls_nv_seed_write(seed, sizeof(seed)) >= 0);
@@ -340,7 +357,7 @@ exit:
     ;
 }
 
-void test_create_nv_seed_wrapper( void ** params )
+static void test_create_nv_seed_wrapper( void ** params )
 {
     (void)params;
 
@@ -348,29 +365,38 @@ void test_create_nv_seed_wrapper( void ** params )
 }
 #endif /* !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #endif /* MBEDTLS_ENTROPY_NV_SEED */
-#line 185 "tests/suites/test_suite_psa_crypto_init.function"
-void test_init_deinit(int count)
+#line 202 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_init_deinit(int count)
 {
     psa_status_t status;
     int i;
     for (i = 0; i < count; i++) {
+        mbedtls_test_set_step(2 * i);
         status = psa_crypto_init();
         PSA_ASSERT(status);
+        if (!check_stats()) {
+            goto exit;
+        }
+
+        mbedtls_test_set_step(2 * i);
         status = psa_crypto_init();
         PSA_ASSERT(status);
+        if (!check_stats()) {
+            goto exit;
+        }
         PSA_DONE();
     }
 exit:
-    ;
+    PSA_DONE();
 }
 
-void test_init_deinit_wrapper( void ** params )
+static void test_init_deinit_wrapper( void ** params )
 {
 
     test_init_deinit( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 200 "tests/suites/test_suite_psa_crypto_init.function"
-void test_deinit_without_init(int count)
+#line 228 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_deinit_without_init(int count)
 {
     int i;
     for (i = 0; i < count; i++) {
@@ -382,14 +408,14 @@ exit:
     ;
 }
 
-void test_deinit_without_init_wrapper( void ** params )
+static void test_deinit_without_init_wrapper( void ** params )
 {
 
     test_deinit_without_init( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #if defined(MBEDTLS_THREADING_PTHREAD)
-#line 212 "tests/suites/test_suite_psa_crypto_init.function"
-void test_psa_threaded_init(int arg_thread_count)
+#line 240 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_psa_threaded_init(int arg_thread_count)
 {
     thread_psa_init_ctx_t init_context;
     thread_psa_init_ctx_t init_context_2;
@@ -448,14 +474,14 @@ exit:
     mbedtls_free(threads);
 }
 
-void test_psa_threaded_init_wrapper( void ** params )
+static void test_psa_threaded_init_wrapper( void ** params )
 {
 
     test_psa_threaded_init( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #endif /* MBEDTLS_THREADING_PTHREAD */
-#line 273 "tests/suites/test_suite_psa_crypto_init.function"
-void test_validate_module_init_generate_random(int count)
+#line 301 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_validate_module_init_generate_random(int count)
 {
     psa_status_t status;
     uint8_t random[10] = { 0 };
@@ -471,13 +497,13 @@ exit:
     ;
 }
 
-void test_validate_module_init_generate_random_wrapper( void ** params )
+static void test_validate_module_init_generate_random_wrapper( void ** params )
 {
 
     test_validate_module_init_generate_random( ((mbedtls_test_argument_t *) params[0])->sint );
 }
-#line 289 "tests/suites/test_suite_psa_crypto_init.function"
-void test_validate_module_init_key_based(int count)
+#line 317 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_validate_module_init_key_based(int count)
 {
     psa_status_t status;
     uint8_t data[10] = { 0 };
@@ -498,14 +524,14 @@ exit:
     ;
 }
 
-void test_validate_module_init_key_based_wrapper( void ** params )
+static void test_validate_module_init_key_based_wrapper( void ** params )
 {
 
     test_validate_module_init_key_based( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 310 "tests/suites/test_suite_psa_crypto_init.function"
-void test_custom_entropy_sources(int sources_arg, int expected_init_status_arg)
+#line 338 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_custom_entropy_sources(int sources_arg, int expected_init_status_arg)
 {
     psa_status_t expected_init_status = expected_init_status_arg;
     uint8_t random[10] = { 0 };
@@ -525,15 +551,15 @@ exit:
     PSA_DONE();
 }
 
-void test_custom_entropy_sources_wrapper( void ** params )
+static void test_custom_entropy_sources_wrapper( void ** params )
 {
 
     test_custom_entropy_sources( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
 #endif /* !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 332 "tests/suites/test_suite_psa_crypto_init.function"
-void test_fake_entropy_source(int threshold,
+#line 360 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_fake_entropy_source(int threshold,
                          int amount1,
                          int amount2,
                          int amount3,
@@ -576,7 +602,7 @@ exit:
     PSA_DONE();
 }
 
-void test_fake_entropy_source_wrapper( void ** params )
+static void test_fake_entropy_source_wrapper( void ** params )
 {
 
     test_fake_entropy_source( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
@@ -584,8 +610,8 @@ void test_fake_entropy_source_wrapper( void ** params )
 #endif /* !MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
-#line 377 "tests/suites/test_suite_psa_crypto_init.function"
-void test_entropy_from_nv_seed(int seed_size_arg,
+#line 405 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_entropy_from_nv_seed(int seed_size_arg,
                           int expected_init_status_arg)
 {
     psa_status_t expected_init_status = expected_init_status_arg;
@@ -612,7 +638,7 @@ exit:
     PSA_DONE();
 }
 
-void test_entropy_from_nv_seed_wrapper( void ** params )
+static void test_entropy_from_nv_seed_wrapper( void ** params )
 {
 
     test_entropy_from_nv_seed( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
@@ -641,7 +667,7 @@ void test_entropy_from_nv_seed_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -711,7 +737,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -860,7 +886,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -898,7 +924,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -926,7 +952,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -950,7 +976,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -998,7 +1024,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -1351,7 +1377,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -1403,7 +1429,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_init.datax";
@@ -1736,7 +1762,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

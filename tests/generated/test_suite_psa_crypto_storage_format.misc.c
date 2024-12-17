@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -165,14 +165,16 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #line 2 "tests/suites/test_suite_psa_crypto_storage_format.function"
 
 #include <psa/crypto.h>
+#include <psa_crypto_storage.h>
 
 #include <test/psa_crypto_helpers.h>
 #include <test/psa_exercise_key.h>
 
 #include <psa_crypto_its.h>
 
-#define TEST_FLAG_EXERCISE      0x00000001
-#define TEST_FLAG_READ_ONLY     0x00000002
+#define TEST_FLAG_EXERCISE              0x00000001
+#define TEST_FLAG_READ_ONLY             0x00000002
+#define TEST_FLAG_OVERSIZED_KEY         0x00000004
 
 /** Write a key with the given attributes and key material to storage.
  * Test that it has the expected representation.
@@ -322,6 +324,15 @@ static int test_read_key(const psa_key_attributes_t *expected_attributes,
     /* Prime the storage with a key file. */
     PSA_ASSERT(psa_its_set(uid, representation->len, representation->x, 0));
 
+    if (flags & TEST_FLAG_OVERSIZED_KEY) {
+        psa_status_t status = psa_get_key_attributes(key_id, &actual_attributes);
+        if (status != PSA_ERROR_INSUFFICIENT_MEMORY) {  /* !!OM */
+            TEST_EQUAL(status, PSA_ERROR_DATA_INVALID);
+        }
+        ok = 1;
+        goto exit;
+    }
+
     /* Check that the injected key exists and looks as expected. */
     PSA_ASSERT(psa_get_key_attributes(key_id, &actual_attributes));
     TEST_ASSERT(mbedtls_svc_key_id_equal(key_id,
@@ -375,8 +386,8 @@ exit:
     return ok;
 }
 
-#line 222 "tests/suites/test_suite_psa_crypto_storage_format.function"
-void test_key_storage_save(int lifetime_arg, int type_arg, int bits_arg,
+#line 230 "tests/suites/test_suite_psa_crypto_storage_format.function"
+static void test_key_storage_save(int lifetime_arg, int type_arg, int bits_arg,
                       int usage_arg, int alg_arg, int alg2_arg,
                       data_t *material,
                       data_t *representation)
@@ -419,15 +430,15 @@ exit:
     PSA_DONE();
 }
 
-void test_key_storage_save_wrapper( void ** params )
+static void test_key_storage_save_wrapper( void ** params )
 {
     data_t data6 = {(uint8_t *) params[6], ((mbedtls_test_argument_t *) params[7])->len};
     data_t data8 = {(uint8_t *) params[8], ((mbedtls_test_argument_t *) params[9])->len};
 
     test_key_storage_save( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, &data6, &data8 );
 }
-#line 267 "tests/suites/test_suite_psa_crypto_storage_format.function"
-void test_key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
+#line 275 "tests/suites/test_suite_psa_crypto_storage_format.function"
+static void test_key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
                       int usage_arg, int alg_arg, int alg2_arg,
                       data_t *material,
                       data_t *representation, int flags)
@@ -444,6 +455,7 @@ void test_key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
     mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(0, 1);
     psa_storage_uid_t uid = 1;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *custom_key_data = NULL, *custom_storage_data = NULL;
 
     PSA_INIT();
     TEST_USES_KEY_ID(key_id);
@@ -456,6 +468,23 @@ void test_key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_enrollment_algorithm(&attributes, alg2);
 
+    /* Create a persistent key which is intentionally larger than the specified
+     * bit size. */
+    if (flags & TEST_FLAG_OVERSIZED_KEY) {
+        TEST_CALLOC(custom_key_data, PSA_BITS_TO_BYTES(bits));
+        memset(custom_key_data, 0xAA, PSA_BITS_TO_BYTES(bits));
+        material->len = PSA_BITS_TO_BYTES(bits);
+        material->x = custom_key_data;
+
+        /* 36 bytes are the overhead of psa_persistent_key_storage_format */
+        TEST_CALLOC(custom_storage_data, PSA_BITS_TO_BYTES(bits) + 36);
+        representation->len = PSA_BITS_TO_BYTES(bits) + 36;
+        representation->x = custom_storage_data;
+
+        psa_format_key_data_for_storage(custom_key_data, PSA_BITS_TO_BYTES(bits),
+                                        &attributes, custom_storage_data);
+    }
+
     /* Test that we can use a key with the given representation. This
      * guarantees backward compatibility with keys that were stored by
      * past versions of Mbed TLS. */
@@ -463,11 +492,13 @@ void test_key_storage_read(int lifetime_arg, int type_arg, int bits_arg,
                               uid, representation, flags));
 
 exit:
+    mbedtls_free(custom_key_data);
+    mbedtls_free(custom_storage_data);
     psa_reset_key_attributes(&attributes);
     PSA_DONE();
 }
 
-void test_key_storage_read_wrapper( void ** params )
+static void test_key_storage_read_wrapper( void ** params )
 {
     data_t data6 = {(uint8_t *) params[6], ((mbedtls_test_argument_t *) params[7])->len};
     data_t data8 = {(uint8_t *) params[8], ((mbedtls_test_argument_t *) params[9])->len};
@@ -497,7 +528,7 @@ void test_key_storage_read_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -533,6 +564,31 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
                 *out_value = PSA_ALG_CTR;
             }
             break;
+        case 5:
+            {
+                *out_value = PSA_KEY_TYPE_RAW_DATA;
+            }
+            break;
+        case 6:
+            {
+                *out_value = PSA_BYTES_TO_BITS(MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE + 1);
+            }
+            break;
+        case 7:
+            {
+                *out_value = PSA_KEY_USAGE_EXPORT;
+            }
+            break;
+        case 8:
+            {
+                *out_value = PSA_ALG_NONE;
+            }
+            break;
+        case 9:
+            {
+                *out_value = TEST_FLAG_OVERSIZED_KEY;
+            }
+            break;
 #endif
 
 #line 82 "suites/main_test.function"
@@ -557,7 +613,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -588,6 +644,24 @@ int dep_check(int dep_id)
         case 2:
             {
 #if defined(PSA_WANT_ALG_CTR)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 3:
+            {
+#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 4:
+            {
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -657,7 +731,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -695,7 +769,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -723,7 +797,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -747,7 +821,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -795,7 +869,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -1148,7 +1222,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -1200,7 +1274,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_storage_format.misc.datax";
@@ -1533,7 +1607,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

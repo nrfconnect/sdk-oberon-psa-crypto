@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -234,9 +234,9 @@ static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
  * we're corrupting.
  */
 #define DO_ROUND_CONDITIONAL_INJECT(this_stage, buf) \
-    if (this_stage == err_stage)                  \
-    {                                               \
-        *(buf + 7) ^= 1;                           \
+    if (this_stage == err_stage)                     \
+    {                                                \
+        *(buf + 7) ^= 1;                             \
     }
 
 #define DO_ROUND_CONDITIONAL_CHECK_FAILURE(this_stage, function) \
@@ -247,20 +247,20 @@ static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
     }
 
 #define DO_ROUND_UPDATE_OFFSETS(main_buf_offset, step_offset, step_size) \
-    {                                       \
-        step_offset = main_buf_offset;      \
-        main_buf_offset += step_size;        \
+    {                                                                    \
+        step_offset = main_buf_offset;                                   \
+        main_buf_offset += step_size;                                    \
     }
 
-#define DO_ROUND_CHECK_FAILURE()                                  \
-    if (err_stage != ERR_NONE && status != PSA_SUCCESS)            \
+#define DO_ROUND_CHECK_FAILURE()                                    \
+    if (err_stage != ERR_NONE && status != PSA_SUCCESS)             \
     {                                                               \
-        TEST_EQUAL(status, expected_error_arg);                   \
+        TEST_EQUAL(status, expected_error_arg);                     \
         break;                                                      \
     }                                                               \
     else                                                            \
     {                                                               \
-        TEST_EQUAL(status, PSA_SUCCESS);                          \
+        TEST_EQUAL(status, PSA_SUCCESS);                            \
     }
 
 #if defined(PSA_WANT_ALG_JPAKE)
@@ -713,15 +713,15 @@ exit:
  *     - terminated with failure otherwise (either no error was expected at this
  *       stage or a different error code was expected)
  */
-#define SETUP_ALWAYS_CHECK_STEP(test_function, this_check_err_stage)      \
+#define SETUP_ALWAYS_CHECK_STEP(test_function, this_check_err_stage)        \
     status = test_function;                                                 \
-    if (err_stage != this_check_err_stage)                                 \
+    if (err_stage != this_check_err_stage)                                  \
     {                                                                       \
-        PSA_ASSERT(status);                                               \
+        PSA_ASSERT(status);                                                 \
     }                                                                       \
     else                                                                    \
     {                                                                       \
-        TEST_EQUAL(status, expected_error);                               \
+        TEST_EQUAL(status, expected_error);                                 \
         goto exit;                                                          \
     }
 
@@ -756,15 +756,15 @@ static psa_status_t psa_pake_get_implicit_key(  // !!OM
  * The test succeeds if the returned error is exactly the expected one,
  * otherwise it fails.
  */
-#define SETUP_CONDITIONAL_CHECK_STEP(test_function, this_check_err_stage) \
-    if (err_stage == this_check_err_stage)                                 \
+#define SETUP_CONDITIONAL_CHECK_STEP(test_function, this_check_err_stage)   \
+    if (err_stage == this_check_err_stage)                                  \
     {                                                                       \
-        TEST_EQUAL(test_function, expected_error);                        \
+        TEST_EQUAL(test_function, expected_error);                          \
         goto exit;                                                          \
     }
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 589 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
+static void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_pw_arg,
                    int primitive_arg, int hash_arg, char *user_arg, char *peer_arg,
                    int test_input,
                    int err_stage_arg,
@@ -947,7 +947,7 @@ exit:
     PSA_DONE();
 }
 
-void test_ecjpake_setup_wrapper( void ** params )
+static void test_ecjpake_setup_wrapper( void ** params )
 {
 
     test_ecjpake_setup( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, (char *) params[5], (char *) params[6], ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
@@ -955,7 +955,7 @@ void test_ecjpake_setup_wrapper( void ** params )
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 774 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
+static void test_ecjpake_rounds_inject(int alg_arg, int primitive_arg, int hash_arg,
                            int client_input_first,
                            data_t *pw_data,
                            int err_stage_arg,
@@ -1012,7 +1012,7 @@ exit:
     PSA_DONE();
 }
 
-void test_ecjpake_rounds_inject_wrapper( void ** params )
+static void test_ecjpake_rounds_inject_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
@@ -1021,7 +1021,7 @@ void test_ecjpake_rounds_inject_wrapper( void ** params )
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 836 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
+static void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
                     int derive_alg_arg, data_t *pw_data,
                     int client_input_first, int destroy_key,
                     int err_stage_arg)
@@ -1116,7 +1116,7 @@ exit:
     PSA_DONE();
 }
 
-void test_ecjpake_rounds_wrapper( void ** params )
+static void test_ecjpake_rounds_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
@@ -1124,7 +1124,7 @@ void test_ecjpake_rounds_wrapper( void ** params )
 }
 #endif /* PSA_WANT_ALG_JPAKE */
 #line 936 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_ecjpake_size_macros(void)
+static void test_ecjpake_size_macros(void)
 {
     const psa_algorithm_t alg = PSA_ALG_JPAKE(PSA_ALG_SHA_256);
     const size_t bits = 256;
@@ -1168,7 +1168,7 @@ exit:
     ;
 }
 
-void test_ecjpake_size_macros_wrapper( void ** params )
+static void test_ecjpake_size_macros_wrapper( void ** params )
 {
     (void)params;
 
@@ -1176,7 +1176,7 @@ void test_ecjpake_size_macros_wrapper( void ** params )
 }
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 980 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_pake_input_getters_password(void)
+static void test_pake_input_getters_password(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t operation = psa_pake_operation_init();
@@ -1238,7 +1238,7 @@ exit:
     PSA_DONE();
 }
 
-void test_pake_input_getters_password_wrapper( void ** params )
+static void test_pake_input_getters_password_wrapper( void ** params )
 {
     (void)params;
 
@@ -1247,7 +1247,7 @@ void test_pake_input_getters_password_wrapper( void ** params )
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 1045 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_pake_input_getters_cipher_suite(void)
+static void test_pake_input_getters_cipher_suite(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t operation = psa_pake_operation_init();
@@ -1280,7 +1280,7 @@ exit:
     PSA_DONE();
 }
 
-void test_pake_input_getters_cipher_suite_wrapper( void ** params )
+static void test_pake_input_getters_cipher_suite_wrapper( void ** params )
 {
     (void)params;
 
@@ -1289,7 +1289,7 @@ void test_pake_input_getters_cipher_suite_wrapper( void ** params )
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 1079 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_pake_input_getters_user(void)
+static void test_pake_input_getters_user(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t operation = psa_pake_operation_init();
@@ -1351,7 +1351,7 @@ exit:
     PSA_DONE();
 }
 
-void test_pake_input_getters_user_wrapper( void ** params )
+static void test_pake_input_getters_user_wrapper( void ** params )
 {
     (void)params;
 
@@ -1360,7 +1360,7 @@ void test_pake_input_getters_user_wrapper( void ** params )
 #endif /* PSA_WANT_ALG_JPAKE */
 #if defined(PSA_WANT_ALG_JPAKE)
 #line 1142 "tests/suites/test_suite_psa_crypto_pake.function"
-void test_pake_input_getters_peer(void)
+static void test_pake_input_getters_peer(void)
 {
     psa_pake_cipher_suite_t cipher_suite = psa_pake_cipher_suite_init();
     psa_pake_operation_t operation = psa_pake_operation_init();
@@ -1422,7 +1422,7 @@ exit:
     PSA_DONE();
 }
 
-void test_pake_input_getters_peer_wrapper( void ** params )
+static void test_pake_input_getters_peer_wrapper( void ** params )
 {
     (void)params;
 
@@ -1451,7 +1451,7 @@ void test_pake_input_getters_peer_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -1786,7 +1786,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -1835,15 +1835,6 @@ int dep_check(int dep_id)
         case 4:
             {
 #if defined(PSA_WANT_ALG_TLS12_PRF)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 5:
-            {
-#if defined(MBEDTLS_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -1955,7 +1946,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -1993,7 +1984,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -2021,7 +2012,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -2045,7 +2036,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -2093,7 +2084,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -2446,7 +2437,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -2498,7 +2489,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_pake.datax";
@@ -2831,7 +2822,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

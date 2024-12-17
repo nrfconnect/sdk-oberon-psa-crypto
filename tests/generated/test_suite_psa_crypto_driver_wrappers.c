@@ -94,8 +94,8 @@
 /* Indicates whether we expect mbedtls_entropy_init
  * to initialize some strong entropy source. */
 #if !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
-    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||      \
-    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||    \
+    (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) ||       \
+    defined(MBEDTLS_ENTROPY_HARDWARE_ALT) ||        \
     defined(ENTROPY_NV_SEED))
 #define ENTROPY_HAVE_STRONG
 #endif
@@ -170,13 +170,14 @@ static int restore_output(FILE *out_stream, int dup_fd)
 size_t pake_expected_hit_count = 0;
 int pake_in_driver = 0;
 
+#if defined(PSA_WANT_ALG_JPAKE) && \
+    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && \
+    defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_ALG_SHA_256)
+
 /* The only two JPAKE user/peer identifiers supported for the time being. */
 static const uint8_t jpake_server_id[] = { 's', 'e', 'r', 'v', 'e', 'r' };
 static const uint8_t jpake_client_id[] = { 'c', 'l', 'i', 'e', 'n', 't' };
 
-#if defined(PSA_WANT_ALG_JPAKE) && \
-    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && \
-    defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_ALG_SHA_256)
 static void ecjpake_do_round(psa_algorithm_t alg, unsigned int primitive,
                              psa_pake_operation_t *server,
                              psa_pake_operation_t *client,
@@ -601,6 +602,11 @@ static int sanity_check_rsa_encryption_result(
     mbedtls_mpi_init(&D);
     mbedtls_mpi_init(&C);
     mbedtls_mpi_init(&X);
+#else /* MBEDTLS_BIGNUM_C */
+    (void) alg;
+    (void) private_exponent;
+    (void) input_data;
+    (void) buf;
 #endif /* MBEDTLS_BIGNUM_C */
 
     int ok = 0;
@@ -646,8 +652,30 @@ exit:
     return ok;
 }
 #endif
-#line 493 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_sign_hash(int key_type_arg,
+#line 499 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_builtin_key_id_stability(void)
+{
+    /* If the range of built-in keys is reduced, it's an API break, since
+     * it breaks user code that hard-codes the key id of built-in keys.
+     * It's ok to expand this range, but not to shrink it. That is, you
+     * may make the MIN smaller or the MAX larger at any time, but
+     * making the MIN larger or the MAX smaller can only be done in
+     * a new major version of the library.
+     */
+    TEST_EQUAL(MBEDTLS_PSA_KEY_ID_BUILTIN_MIN, 0x7fff0000);
+    TEST_EQUAL(MBEDTLS_PSA_KEY_ID_BUILTIN_MAX, 0x7fffefff);
+exit:
+    ;
+}
+
+static void test_builtin_key_id_stability_wrapper( void ** params )
+{
+    (void)params;
+
+    test_builtin_key_id_stability(  );
+}
+#line 514 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_sign_hash(int key_type_arg,
                int alg_arg,
                int force_status_arg,
                data_t *key_input,
@@ -717,7 +745,7 @@ exit:
         mbedtls_test_driver_signature_hooks_init();
 }
 
-void test_sign_hash_wrapper( void ** params )
+static void test_sign_hash_wrapper( void ** params )
 {
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
@@ -725,8 +753,8 @@ void test_sign_hash_wrapper( void ** params )
 
     test_sign_hash( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, &data5, &data7, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 565 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_verify_hash(int key_type_arg,
+#line 586 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_verify_hash(int key_type_arg,
                  int key_type_public_arg,
                  int alg_arg,
                  int force_status_arg,
@@ -780,7 +808,7 @@ exit:
         mbedtls_test_driver_signature_hooks_init();
 }
 
-void test_verify_hash_wrapper( void ** params )
+static void test_verify_hash_wrapper( void ** params )
 {
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
     data_t data7 = {(uint8_t *) params[7], ((mbedtls_test_argument_t *) params[8])->len};
@@ -788,8 +816,8 @@ void test_verify_hash_wrapper( void ** params )
 
     test_verify_hash( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, &data7, &data9, ((mbedtls_test_argument_t *) params[11])->sint );
 }
-#line 621 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_sign_message(int key_type_arg,
+#line 642 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_sign_message(int key_type_arg,
                   int alg_arg,
                   int force_status_arg,
                   data_t *key_input,
@@ -860,7 +888,7 @@ exit:
         mbedtls_test_driver_signature_hooks_init();
 }
 
-void test_sign_message_wrapper( void ** params )
+static void test_sign_message_wrapper( void ** params )
 {
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
@@ -868,8 +896,8 @@ void test_sign_message_wrapper( void ** params )
 
     test_sign_message( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, &data5, &data7, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint );
 }
-#line 694 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_verify_message(int key_type_arg,
+#line 715 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_verify_message(int key_type_arg,
                     int key_type_public_arg,
                     int alg_arg,
                     int force_status_arg,
@@ -925,7 +953,7 @@ exit:
         mbedtls_test_driver_signature_hooks_init();
 }
 
-void test_verify_message_wrapper( void ** params )
+static void test_verify_message_wrapper( void ** params )
 {
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
     data_t data7 = {(uint8_t *) params[7], ((mbedtls_test_argument_t *) params[8])->len};
@@ -935,9 +963,9 @@ void test_verify_message_wrapper( void ** params )
 }
 #if defined(PSA_WANT_ALG_ECDSA)
 #if defined(PSA_WANT_ECC_SECP_R1_256)
-#if defined(MBEDTLS_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
-#line 752 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_generate_ec_key(int force_status_arg,
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+#line 773 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_generate_ec_key(int force_status_arg,
                      data_t *fake_output,
                      int expected_status_arg)
 {
@@ -970,13 +998,14 @@ void test_generate_ec_key(int force_status_arg,
                 fake_output->len;
     }
 
-    mbedtls_test_driver_key_management_hooks.hits = 0;
-    mbedtls_test_driver_key_management_hooks.forced_status = force_status;
-
     PSA_ASSERT(psa_crypto_init());
 
+    mbedtls_test_driver_key_management_hooks.hits = 0;
+    mbedtls_test_driver_key_management_hooks.hits_generate_key = 0;
+    mbedtls_test_driver_key_management_hooks.forced_status = force_status;
+
     actual_status = psa_generate_key(&attributes, &key);
-    TEST_EQUAL(mbedtls_test_driver_key_management_hooks.hits, 1);
+    TEST_EQUAL(mbedtls_test_driver_key_management_hooks.hits_generate_key, 1);
     TEST_EQUAL(actual_status, expected_status);
 
     if (actual_status == PSA_SUCCESS) {
@@ -1003,17 +1032,17 @@ exit:
         mbedtls_test_driver_key_management_hooks_init();
 }
 
-void test_generate_ec_key_wrapper( void ** params )
+static void test_generate_ec_key_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
 
     test_generate_ec_key( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint );
 }
-#endif /* MBEDTLS_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE */
+#endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE */
 #endif /* PSA_WANT_ECC_SECP_R1_256 */
 #endif /* PSA_WANT_ALG_ECDSA */
-#line 820 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_validate_key(int force_status_arg,
+#line 842 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_validate_key(int force_status_arg,
                   int location,
                   int owner_id_arg,
                   int id_arg,
@@ -1023,7 +1052,7 @@ void test_validate_key(int force_status_arg,
 {
     psa_key_lifetime_t lifetime =
         PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( \
-            PSA_KEY_PERSISTENCE_DEFAULT, location);
+            PSA_KEY_PERSISTENCE_VOLATILE, location);
     mbedtls_svc_key_id_t id = mbedtls_svc_key_id_make(owner_id_arg, id_arg);
     psa_status_t force_status = force_status_arg;
     psa_status_t expected_status = expected_status_arg;
@@ -1057,14 +1086,14 @@ exit:
         mbedtls_test_driver_key_management_hooks_init();
 }
 
-void test_validate_key_wrapper( void ** params )
+static void test_validate_key_wrapper( void ** params )
 {
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
 
     test_validate_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint );
 }
-#line 866 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_export_key(int force_status_arg,
+#line 888 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_export_key(int force_status_arg,
                 data_t *fake_output,
                 int key_in_type_arg,
                 data_t *key_in,
@@ -1140,7 +1169,7 @@ exit:
         mbedtls_test_driver_key_management_hooks_init();
 }
 
-void test_export_key_wrapper( void ** params )
+static void test_export_key_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -1148,8 +1177,8 @@ void test_export_key_wrapper( void ** params )
 
     test_export_key( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, ((mbedtls_test_argument_t *) params[6])->sint, &data7, ((mbedtls_test_argument_t *) params[9])->sint );
 }
-#line 944 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_key_agreement(int alg_arg,
+#line 966 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_key_agreement(int alg_arg,
                    int force_status_arg,
                    int our_key_type_arg,
                    data_t *our_key_data,
@@ -1231,7 +1260,7 @@ exit:
 }
 
 
-void test_key_agreement_wrapper( void ** params )
+static void test_key_agreement_wrapper( void ** params )
 {
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
     data_t data5 = {(uint8_t *) params[5], ((mbedtls_test_argument_t *) params[6])->len};
@@ -1240,8 +1269,8 @@ void test_key_agreement_wrapper( void ** params )
 
     test_key_agreement( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, &data3, &data5, &data7, &data9, ((mbedtls_test_argument_t *) params[11])->sint );
 }
-#line 1028 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_cipher_encrypt_validation(int alg_arg,
+#line 1050 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_cipher_encrypt_validation(int alg_arg,
                                int key_type_arg,
                                data_t *key_data,
                                data_t *input)
@@ -1324,15 +1353,15 @@ exit:
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 }
 
-void test_cipher_encrypt_validation_wrapper( void ** params )
+static void test_cipher_encrypt_validation_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
     test_cipher_encrypt_validation( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4 );
 }
-#line 1113 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_cipher_encrypt_multipart(int alg_arg,
+#line 1135 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_cipher_encrypt_multipart(int alg_arg,
                               int key_type_arg,
                               data_t *key_data,
                               data_t *iv,
@@ -1459,7 +1488,7 @@ exit:
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 }
 
-void test_cipher_encrypt_multipart_wrapper( void ** params )
+static void test_cipher_encrypt_multipart_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -1468,8 +1497,8 @@ void test_cipher_encrypt_multipart_wrapper( void ** params )
 
     test_cipher_encrypt_multipart( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, &data11, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint );
 }
-#line 1242 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_cipher_decrypt_multipart(int alg_arg,
+#line 1264 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_cipher_decrypt_multipart(int alg_arg,
                               int key_type_arg,
                               data_t *key_data,
                               data_t *iv,
@@ -1597,7 +1626,7 @@ exit:
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 }
 
-void test_cipher_decrypt_multipart_wrapper( void ** params )
+static void test_cipher_decrypt_multipart_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -1606,8 +1635,8 @@ void test_cipher_decrypt_multipart_wrapper( void ** params )
 
     test_cipher_decrypt_multipart( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, &data11, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint );
 }
-#line 1372 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_cipher_decrypt(int alg_arg,
+#line 1394 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_cipher_decrypt(int alg_arg,
                     int key_type_arg,
                     data_t *key_data,
                     data_t *iv,
@@ -1678,7 +1707,7 @@ exit:
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 }
 
-void test_cipher_decrypt_wrapper( void ** params )
+static void test_cipher_decrypt_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -1687,8 +1716,8 @@ void test_cipher_decrypt_wrapper( void ** params )
 
     test_cipher_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6, &data8, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint );
 }
-#line 1445 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_cipher_entry_points(int alg_arg, int key_type_arg,
+#line 1467 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_cipher_entry_points(int alg_arg, int key_type_arg,
                          data_t *key_data, data_t *iv,
                          data_t *input)
 {
@@ -1891,7 +1920,7 @@ exit:
     mbedtls_test_driver_cipher_hooks = mbedtls_test_driver_cipher_hooks_init();
 }
 
-void test_cipher_entry_points_wrapper( void ** params )
+static void test_cipher_entry_points_wrapper( void ** params )
 {
     data_t data2 = {(uint8_t *) params[2], ((mbedtls_test_argument_t *) params[3])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -1899,8 +1928,8 @@ void test_cipher_entry_points_wrapper( void ** params )
 
     test_cipher_entry_points( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, &data2, &data4, &data6 );
 }
-#line 1650 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_aead_encrypt(int key_type_arg, data_t *key_data,
+#line 1672 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_aead_encrypt(int key_type_arg, data_t *key_data,
                   int alg_arg,
                   data_t *nonce,
                   data_t *additional_data,
@@ -1966,7 +1995,7 @@ exit:
     mbedtls_test_driver_aead_hooks = mbedtls_test_driver_aead_hooks_init();
 }
 
-void test_aead_encrypt_wrapper( void ** params )
+static void test_aead_encrypt_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -1976,8 +2005,8 @@ void test_aead_encrypt_wrapper( void ** params )
 
     test_aead_encrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10, ((mbedtls_test_argument_t *) params[12])->sint );
 }
-#line 1718 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_aead_decrypt(int key_type_arg, data_t *key_data,
+#line 1740 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_aead_decrypt(int key_type_arg, data_t *key_data,
                   int alg_arg,
                   data_t *nonce,
                   data_t *additional_data,
@@ -2038,7 +2067,7 @@ exit:
     mbedtls_test_driver_aead_hooks = mbedtls_test_driver_aead_hooks_init();
 }
 
-void test_aead_decrypt_wrapper( void ** params )
+static void test_aead_decrypt_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -2048,8 +2077,8 @@ void test_aead_decrypt_wrapper( void ** params )
 
     test_aead_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10, ((mbedtls_test_argument_t *) params[12])->sint );
 }
-#line 1781 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_mac_sign(int key_type_arg,
+#line 1803 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_mac_sign(int key_type_arg,
               data_t *key_data,
               int alg_arg,
               data_t *input,
@@ -2120,7 +2149,7 @@ exit:
     mbedtls_test_driver_mac_hooks = mbedtls_test_driver_mac_hooks_init();
 }
 
-void test_mac_sign_wrapper( void ** params )
+static void test_mac_sign_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -2128,8 +2157,8 @@ void test_mac_sign_wrapper( void ** params )
 
     test_mac_sign( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
-#line 1854 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_mac_sign_multipart(int key_type_arg,
+#line 1876 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_mac_sign_multipart(int key_type_arg,
                         data_t *key_data,
                         int alg_arg,
                         data_t *input,
@@ -2245,7 +2274,7 @@ exit:
     mbedtls_test_driver_mac_hooks = mbedtls_test_driver_mac_hooks_init();
 }
 
-void test_mac_sign_multipart_wrapper( void ** params )
+static void test_mac_sign_multipart_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -2253,8 +2282,8 @@ void test_mac_sign_multipart_wrapper( void ** params )
 
     test_mac_sign_multipart( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint );
 }
-#line 1972 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_mac_verify(int key_type_arg,
+#line 1994 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_mac_verify(int key_type_arg,
                 data_t *key_data,
                 int alg_arg,
                 data_t *input,
@@ -2306,7 +2335,7 @@ exit:
     mbedtls_test_driver_mac_hooks = mbedtls_test_driver_mac_hooks_init();
 }
 
-void test_mac_verify_wrapper( void ** params )
+static void test_mac_verify_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -2314,8 +2343,8 @@ void test_mac_verify_wrapper( void ** params )
 
     test_mac_verify( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, ((mbedtls_test_argument_t *) params[8])->sint );
 }
-#line 2026 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_mac_verify_multipart(int key_type_arg,
+#line 2048 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_mac_verify_multipart(int key_type_arg,
                           data_t *key_data,
                           int alg_arg,
                           data_t *input,
@@ -2417,7 +2446,7 @@ exit:
     mbedtls_test_driver_mac_hooks = mbedtls_test_driver_mac_hooks_init();
 }
 
-void test_mac_verify_multipart_wrapper( void ** params )
+static void test_mac_verify_multipart_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -2427,8 +2456,8 @@ void test_mac_verify_multipart_wrapper( void ** params )
 }
 #if defined(PSA_CRYPTO_DRIVER_TEST)
 #if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
-#line 2130 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_builtin_key_export(int builtin_key_id_arg,
+#line 2152 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_builtin_key_export(int builtin_key_id_arg,
                         int builtin_key_type_arg,
                         int builtin_key_bits_arg,
                         int builtin_key_algorithm_arg,
@@ -2477,7 +2506,7 @@ exit:
     PSA_DONE();
 }
 
-void test_builtin_key_export_wrapper( void ** params )
+static void test_builtin_key_export_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
@@ -2487,8 +2516,8 @@ void test_builtin_key_export_wrapper( void ** params )
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 #if defined(PSA_CRYPTO_DRIVER_TEST)
 #if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
-#line 2181 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_builtin_pubkey_export(int builtin_key_id_arg,
+#line 2203 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_builtin_pubkey_export(int builtin_key_id_arg,
                            int builtin_key_type_arg,
                            int builtin_key_bits_arg,
                            int builtin_key_algorithm_arg,
@@ -2534,7 +2563,7 @@ exit:
     PSA_DONE();
 }
 
-void test_builtin_pubkey_export_wrapper( void ** params )
+static void test_builtin_pubkey_export_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
@@ -2542,8 +2571,8 @@ void test_builtin_pubkey_export_wrapper( void ** params )
 }
 #endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
 #endif /* PSA_CRYPTO_DRIVER_TEST */
-#line 2229 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_hash_compute(int alg_arg,
+#line 2251 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_hash_compute(int alg_arg,
                   data_t *input, data_t *hash,
                   int forced_status_arg,
                   int expected_status_arg)
@@ -2578,15 +2607,15 @@ exit:
     mbedtls_test_driver_hash_hooks = mbedtls_test_driver_hash_hooks_init();
 }
 
-void test_hash_compute_wrapper( void ** params )
+static void test_hash_compute_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
     test_hash_compute( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 2266 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_hash_multipart_setup(int alg_arg,
+#line 2288 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_hash_multipart_setup(int alg_arg,
                           data_t *input, data_t *hash,
                           int forced_status_arg,
                           int expected_status_arg)
@@ -2633,15 +2662,15 @@ exit:
     mbedtls_test_driver_hash_hooks = mbedtls_test_driver_hash_hooks_init();
 }
 
-void test_hash_multipart_setup_wrapper( void ** params )
+static void test_hash_multipart_setup_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
     test_hash_multipart_setup( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint );
 }
-#line 2315 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_hash_multipart_update(int alg_arg,
+#line 2337 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_hash_multipart_update(int alg_arg,
                            data_t *input, data_t *hash,
                            int forced_status_arg)
 {
@@ -2696,15 +2725,15 @@ exit:
     mbedtls_test_driver_hash_hooks = mbedtls_test_driver_hash_hooks_init();
 }
 
-void test_hash_multipart_update_wrapper( void ** params )
+static void test_hash_multipart_update_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
     test_hash_multipart_update( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2372 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_hash_multipart_finish(int alg_arg,
+#line 2394 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_hash_multipart_finish(int alg_arg,
                            data_t *input, data_t *hash,
                            int forced_status_arg)
 {
@@ -2756,15 +2785,15 @@ exit:
     mbedtls_test_driver_hash_hooks = mbedtls_test_driver_hash_hooks_init();
 }
 
-void test_hash_multipart_finish_wrapper( void ** params )
+static void test_hash_multipart_finish_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
     test_hash_multipart_finish( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2426 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_hash_clone(int alg_arg,
+#line 2448 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_hash_clone(int alg_arg,
                 data_t *input, data_t *hash,
                 int forced_status_arg)
 {
@@ -2823,15 +2852,15 @@ exit:
     mbedtls_test_driver_hash_hooks = mbedtls_test_driver_hash_hooks_init();
 }
 
-void test_hash_clone_wrapper( void ** params )
+static void test_hash_clone_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
 
     test_hash_clone( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 2487 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_asymmetric_encrypt_decrypt(int alg_arg,
+#line 2509 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_asymmetric_encrypt_decrypt(int alg_arg,
                                 data_t *key_data,
                                 data_t *input_data,
                                 data_t *label,
@@ -2952,7 +2981,7 @@ exit:
     PSA_DONE();
 }
 
-void test_asymmetric_encrypt_decrypt_wrapper( void ** params )
+static void test_asymmetric_encrypt_decrypt_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
@@ -2962,8 +2991,8 @@ void test_asymmetric_encrypt_decrypt_wrapper( void ** params )
 
     test_asymmetric_encrypt_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, &data7, &data9, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint );
 }
-#line 2610 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_asymmetric_decrypt(int alg_arg,
+#line 2632 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_asymmetric_decrypt(int alg_arg,
                         data_t *key_data,
                         data_t *input_data,
                         data_t *label,
@@ -3030,7 +3059,7 @@ exit:
     PSA_DONE();
 }
 
-void test_asymmetric_decrypt_wrapper( void ** params )
+static void test_asymmetric_decrypt_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
@@ -3040,8 +3069,8 @@ void test_asymmetric_decrypt_wrapper( void ** params )
 
     test_asymmetric_decrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, &data7, &data9, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint );
 }
-#line 2679 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_asymmetric_encrypt(int alg_arg,
+#line 2701 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_asymmetric_encrypt(int alg_arg,
                         data_t *key_data,
                         data_t *modulus,
                         data_t *private_exponent,
@@ -3131,7 +3160,7 @@ exit:
     PSA_DONE();
 }
 
-void test_asymmetric_encrypt_wrapper( void ** params )
+static void test_asymmetric_encrypt_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data3 = {(uint8_t *) params[3], ((mbedtls_test_argument_t *) params[4])->len};
@@ -3142,8 +3171,8 @@ void test_asymmetric_encrypt_wrapper( void ** params )
 
     test_asymmetric_encrypt( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, &data7, &data9, &data11, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint );
 }
-#line 2771 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_aead_encrypt_setup(int key_type_arg, data_t *key_data,
+#line 2793 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_aead_encrypt_setup(int key_type_arg, data_t *key_data,
                         int alg_arg,
                         data_t *nonce,
                         data_t *additional_data,
@@ -3258,7 +3287,7 @@ exit:
     mbedtls_test_driver_aead_hooks = mbedtls_test_driver_aead_hooks_init();
 }
 
-void test_aead_encrypt_setup_wrapper( void ** params )
+static void test_aead_encrypt_setup_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -3269,8 +3298,8 @@ void test_aead_encrypt_setup_wrapper( void ** params )
 
     test_aead_encrypt_setup( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, &data4, &data6, &data8, &data10, &data12, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint );
 }
-#line 2888 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_aead_decrypt_setup(int key_type_arg, data_t *key_data,
+#line 2910 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_aead_decrypt_setup(int key_type_arg, data_t *key_data,
                         int alg_arg,
                         data_t *nonce,
                         data_t *additional_data,
@@ -3369,7 +3398,7 @@ exit:
     PSA_DONE();
 }
 
-void test_aead_decrypt_setup_wrapper( void ** params )
+static void test_aead_decrypt_setup_wrapper( void ** params )
 {
     data_t data1 = {(uint8_t *) params[1], ((mbedtls_test_argument_t *) params[2])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -3401,8 +3430,8 @@ static psa_status_t psa_pake_get_implicit_key(  // !!OM
     return status;
 }
 
-#line 2989 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_status_arg,
+#line 3011 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_pake_operations(data_t *pw_data, int forced_status_setup_arg, int forced_status_arg,
                      data_t *forced_output, int expected_status_arg,
                      int fut)
 {
@@ -3590,7 +3619,7 @@ exit:
     PSA_DONE();
 }
 
-void test_pake_operations_wrapper( void ** params )
+static void test_pake_operations_wrapper( void ** params )
 {
     data_t data0 = {(uint8_t *) params[0], ((mbedtls_test_argument_t *) params[1])->len};
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
@@ -3604,8 +3633,8 @@ void test_pake_operations_wrapper( void ** params )
 #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
 #if defined(PSA_WANT_ECC_SECP_R1_256)
 #if defined(PSA_WANT_ALG_SHA_256)
-#line 3182 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
-void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
+#line 3204 "tests/suites/test_suite_psa_crypto_driver_wrappers.function"
+static void test_ecjpake_rounds(int alg_arg, int primitive_arg, int hash_arg,
                     int derive_alg_arg, data_t *pw_data,
                     int client_input_first, int in_driver)
 {
@@ -3709,7 +3738,7 @@ exit:
     PSA_DONE();
 }
 
-void test_ecjpake_rounds_wrapper( void ** params )
+static void test_ecjpake_rounds_wrapper( void ** params )
 {
     data_t data4 = {(uint8_t *) params[4], ((mbedtls_test_argument_t *) params[5])->len};
 
@@ -3744,7 +3773,7 @@ void test_ecjpake_rounds_wrapper( void ** params )
  *
  * \return       0 if exp_id is found. 1 otherwise.
  */
-int get_expression(int32_t exp_id, intmax_t *out_value)
+static int get_expression(int32_t exp_id, intmax_t *out_value)
 {
     int ret = KEY_VALUE_MAPPING_FOUND;
 
@@ -3994,7 +4023,7 @@ int get_expression(int32_t exp_id, intmax_t *out_value)
  *
  * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
  */
-int dep_check(int dep_id)
+static int dep_check(int dep_id)
 {
     int ret = DEPENDENCY_NOT_SUPPORTED;
 
@@ -4150,7 +4179,7 @@ int dep_check(int dep_id)
             break;
         case 16:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+#if defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4159,7 +4188,7 @@ int dep_check(int dep_id)
             break;
         case 17:
             {
-#if !defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4168,7 +4197,7 @@ int dep_check(int dep_id)
             break;
         case 18:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4177,7 +4206,7 @@ int dep_check(int dep_id)
             break;
         case 19:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+#if !defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4186,7 +4215,7 @@ int dep_check(int dep_id)
             break;
         case 20:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4195,7 +4224,7 @@ int dep_check(int dep_id)
             break;
         case 21:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_BASIC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4204,7 +4233,7 @@ int dep_check(int dep_id)
             break;
         case 22:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_256)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4213,7 +4242,7 @@ int dep_check(int dep_id)
             break;
         case 23:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4222,7 +4251,7 @@ int dep_check(int dep_id)
             break;
         case 24:
             {
-#if defined(PSA_WANT_ALG_ECDH)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4231,7 +4260,7 @@ int dep_check(int dep_id)
             break;
         case 25:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
+#if defined(PSA_WANT_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4240,7 +4269,7 @@ int dep_check(int dep_id)
             break;
         case 26:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4249,7 +4278,7 @@ int dep_check(int dep_id)
             break;
         case 27:
             {
-#if defined(PSA_WANT_ALG_CTR)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4258,7 +4287,7 @@ int dep_check(int dep_id)
             break;
         case 28:
             {
-#if defined(PSA_WANT_KEY_TYPE_AES)
+#if defined(PSA_WANT_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4267,7 +4296,7 @@ int dep_check(int dep_id)
             break;
         case 29:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_CTR)
+#if defined(PSA_WANT_KEY_TYPE_AES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4276,7 +4305,7 @@ int dep_check(int dep_id)
             break;
         case 30:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_AES)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4285,7 +4314,7 @@ int dep_check(int dep_id)
             break;
         case 31:
             {
-#if defined(PSA_WANT_ALG_CCM)
+#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_AES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4294,7 +4323,7 @@ int dep_check(int dep_id)
             break;
         case 32:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
+#if defined(PSA_WANT_ALG_CCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4303,7 +4332,7 @@ int dep_check(int dep_id)
             break;
         case 33:
             {
-#if defined(PSA_WANT_ALG_GCM)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4312,7 +4341,7 @@ int dep_check(int dep_id)
             break;
         case 34:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
+#if defined(PSA_WANT_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4321,7 +4350,7 @@ int dep_check(int dep_id)
             break;
         case 35:
             {
-#if defined(PSA_WANT_ALG_HMAC)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4330,7 +4359,7 @@ int dep_check(int dep_id)
             break;
         case 36:
             {
-#if defined(PSA_WANT_ALG_SHA_224)
+#if defined(PSA_WANT_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4339,7 +4368,7 @@ int dep_check(int dep_id)
             break;
         case 37:
             {
-#if defined(PSA_WANT_KEY_TYPE_HMAC)
+#if defined(PSA_WANT_ALG_SHA_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4348,7 +4377,7 @@ int dep_check(int dep_id)
             break;
         case 38:
             {
-#if defined(MBEDTLS_PSA_ACCEL_ALG_HMAC)
+#if defined(PSA_WANT_KEY_TYPE_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4357,7 +4386,7 @@ int dep_check(int dep_id)
             break;
         case 39:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
+#if defined(MBEDTLS_PSA_ACCEL_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4366,7 +4395,7 @@ int dep_check(int dep_id)
             break;
         case 40:
             {
-#if defined(PSA_WANT_ALG_CMAC)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4375,7 +4404,7 @@ int dep_check(int dep_id)
             break;
         case 41:
             {
-#if defined(MBEDTLS_PSA_ACCEL_ALG_CMAC)
+#if defined(PSA_WANT_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4384,7 +4413,7 @@ int dep_check(int dep_id)
             break;
         case 42:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC)
+#if defined(MBEDTLS_PSA_ACCEL_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4393,7 +4422,7 @@ int dep_check(int dep_id)
             break;
         case 43:
             {
-#if defined(MBEDTLS_PSA_ACCEL_ALG_SHA_256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4402,7 +4431,7 @@ int dep_check(int dep_id)
             break;
         case 44:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_256)
+#if defined(MBEDTLS_PSA_ACCEL_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4411,7 +4440,7 @@ int dep_check(int dep_id)
             break;
         case 45:
             {
-#if !defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_256)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4420,7 +4449,7 @@ int dep_check(int dep_id)
             break;
         case 46:
             {
-#if !defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
+#if !defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4429,7 +4458,7 @@ int dep_check(int dep_id)
             break;
         case 47:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
+#if !defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4438,7 +4467,7 @@ int dep_check(int dep_id)
             break;
         case 48:
             {
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_OAEP)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4447,7 +4476,7 @@ int dep_check(int dep_id)
             break;
         case 49:
             {
-#if !defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_OAEP)
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4456,7 +4485,7 @@ int dep_check(int dep_id)
             break;
         case 50:
             {
-#if defined(PSA_WANT_ALG_RSA_OAEP)
+#if !defined(MBEDTLS_PSA_BUILTIN_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4465,7 +4494,7 @@ int dep_check(int dep_id)
             break;
         case 51:
             {
-#if !defined(MBEDTLS_PSA_BUILTIN_PAKE)
+#if defined(PSA_WANT_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4474,7 +4503,7 @@ int dep_check(int dep_id)
             break;
         case 52:
             {
-#if defined(PSA_WANT_ALG_JPAKE)
+#if !defined(MBEDTLS_PSA_BUILTIN_PAKE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4483,7 +4512,7 @@ int dep_check(int dep_id)
             break;
         case 53:
             {
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+#if defined(PSA_WANT_ALG_JPAKE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -4491,6 +4520,15 @@ int dep_check(int dep_id)
             }
             break;
         case 54:
+            {
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 55:
             {
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
                 ret = DEPENDENCY_SUPPORTED;
@@ -4536,228 +4574,235 @@ TestWrapper_t test_funcs[] =
     /* Function Id: 0 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_sign_hash_wrapper,
+    test_builtin_key_id_stability_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 1 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_verify_hash_wrapper,
+    test_sign_hash_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 2 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_sign_message_wrapper,
+    test_verify_hash_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 3 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_verify_message_wrapper,
+    test_sign_message_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 4 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_256) && defined(MBEDTLS_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
-    test_generate_ec_key_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
+    test_verify_message_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 5 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_validate_key_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+    test_generate_ec_key_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 6 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_export_key_wrapper,
+    test_validate_key_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 7 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_key_agreement_wrapper,
+    test_export_key_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 8 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_cipher_encrypt_validation_wrapper,
+    test_key_agreement_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 9 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_cipher_encrypt_multipart_wrapper,
+    test_cipher_encrypt_validation_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 10 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_cipher_decrypt_multipart_wrapper,
+    test_cipher_encrypt_multipart_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 11 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_cipher_decrypt_wrapper,
+    test_cipher_decrypt_multipart_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 12 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_cipher_entry_points_wrapper,
+    test_cipher_decrypt_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 13 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_aead_encrypt_wrapper,
+    test_cipher_entry_points_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 14 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_aead_decrypt_wrapper,
+    test_aead_encrypt_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 15 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_mac_sign_wrapper,
+    test_aead_decrypt_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 16 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_mac_sign_multipart_wrapper,
+    test_mac_sign_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 17 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_mac_verify_wrapper,
+    test_mac_sign_multipart_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 18 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_mac_verify_multipart_wrapper,
+    test_mac_verify_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 19 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
-    test_builtin_key_export_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
+    test_mac_verify_multipart_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 20 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
-    test_builtin_pubkey_export_wrapper,
+    test_builtin_key_export_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 21 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_hash_compute_wrapper,
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    test_builtin_pubkey_export_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 22 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_hash_multipart_setup_wrapper,
+    test_hash_compute_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 23 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_hash_multipart_update_wrapper,
+    test_hash_multipart_setup_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 24 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_hash_multipart_finish_wrapper,
+    test_hash_multipart_update_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 25 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_hash_clone_wrapper,
+    test_hash_multipart_finish_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 26 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_asymmetric_encrypt_decrypt_wrapper,
+    test_hash_clone_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 27 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_asymmetric_decrypt_wrapper,
+    test_asymmetric_encrypt_decrypt_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 28 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_asymmetric_encrypt_wrapper,
+    test_asymmetric_decrypt_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 29 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_aead_encrypt_setup_wrapper,
+    test_asymmetric_encrypt_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 30 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
-    test_aead_decrypt_setup_wrapper,
+    test_aead_encrypt_setup_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 31 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST)
+    test_aead_decrypt_setup_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 32 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_WANT_ALG_JPAKE)
     test_pake_operations_wrapper,
 #else
     NULL,
 #endif
-/* Function Id: 32 */
+/* Function Id: 33 */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(PSA_CRYPTO_DRIVER_TEST) && defined(PSA_WANT_ALG_JPAKE) && defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && defined(PSA_WANT_ECC_SECP_R1_256) && defined(PSA_WANT_ALG_SHA_256)
     test_ecjpake_rounds_wrapper,
@@ -4779,7 +4824,7 @@ TestWrapper_t test_funcs[] =
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int dispatch_test(size_t func_idx, void **params)
+static int dispatch_test(size_t func_idx, void **params)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -4817,7 +4862,7 @@ int dispatch_test(size_t func_idx, void **params)
  *               DISPATCH_TEST_FN_NOT_FOUND if not found
  *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
  */
-int check_test(size_t func_idx)
+static int check_test(size_t func_idx)
 {
     int ret = DISPATCH_TEST_SUCCESS;
     TestWrapper_t fp = NULL;
@@ -4845,7 +4890,7 @@ int check_test(size_t func_idx)
  *
  * \return      0 if success else 1
  */
-int verify_string(char **str)
+static int verify_string(char **str)
 {
     if ((*str)[0] != '"' ||
         (*str)[strlen(*str) - 1] != '"') {
@@ -4869,7 +4914,7 @@ int verify_string(char **str)
  *
  * \return      0 if success else 1
  */
-int verify_int(char *str, intmax_t *p_value)
+static int verify_int(char *str, intmax_t *p_value)
 {
     char *end = NULL;
     errno = 0;
@@ -4917,7 +4962,7 @@ int verify_int(char *str, intmax_t *p_value)
  *
  * \return      0 if success else -1
  */
-int get_line(FILE *f, char *buf, size_t len)
+static int get_line(FILE *f, char *buf, size_t len)
 {
     char *ret;
     int i = 0, str_len = 0, has_string = 0;
@@ -5270,7 +5315,7 @@ static void write_outcome_result(FILE *outcome_file,
 
 #if defined(__unix__) ||                                \
     (defined(__APPLE__) && defined(__MACH__))
-//#define MBEDTLS_HAVE_CHDIR  /* !!OM */
+#define MBEDTLS_HAVE_CHDIR
 #endif
 
 #if defined(MBEDTLS_HAVE_CHDIR)
@@ -5322,7 +5367,7 @@ static void try_chdir_if_supported(const char *argv0)
  *
  * \return      Program exit status.
  */
-int execute_tests(int argc, const char **argv)
+static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "./test_suite_psa_crypto_driver_wrappers.datax";
@@ -5655,7 +5700,7 @@ int main(int argc, const char *argv[])
      * using the default data file. This allows running the executable
      * from another directory (e.g. the project root) and still access
      * the .datax file as well as data files used by test cases
-     * (typically from tests/data_files).
+     * (typically from framework/data_files).
      *
      * Note that we do this before the platform setup (which may access
      * files such as a random seed). We also do this before accessing

@@ -15,8 +15,8 @@ program examples and the SSL test suite from _Mbed TLS_.
 Example programs and test suite are compiled for all `mbedtls_config.h`
 variants located in `programs/ssl/inlude/mbedtls`.
 
-_Note: The TLS protocol stack, the sample programs, and the SSL test suite are
-used as is from the Mbed TLS sources._
+*Note: The TLS protocol stack, the sample programs, and the SSL test suite are
+used as is from the Mbed TLS sources.*
 
 ### Mbed TLS SSL programs' documentation
 
@@ -42,19 +42,19 @@ the _Mbed TLS_ README located in its `programs` directory:
 
 _Mbed TLS_ contains the SSL program examples and is required to run these samples
 on top of _Oberon PSA Crypto_. Download and unzip _Mbed TLS_ from the archive at
-<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.0>
+<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.2>
 or clone_Mbed TLS_ and
-check out version 3.6.0 as follows:
+check out version 3.6.2 as follows:
 
     cd path/to/new/folder
     git clone https://github.com/Mbed-TLS/mbedtls.git
-    git checkout v3.6.0
+    git checkout v3.6.2
 
 ### Build with CMake
 
 Provide the path to _ocrypto 3.6.x_ via _-DOCRYPTO_ROOT=path/to/ocrypto_.
 
-Provide the path to _Mbed TLS_ 3.6.0 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
+Provide the path to _Mbed TLS_ 3.6.2 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
 
 Build the source in a separate directory `build` from the command line:
 
@@ -63,10 +63,6 @@ Build the source in a separate directory `build` from the command line:
     cmake --build build
 
 ### Run the SSL example
-
-_Note: In Mbed TLS 3.6.0, `ssl_server2` and `ssl_client2` fail with the default 
-settings, hence they do not work in _Oberon PSA Crypto_ either. This will be 
-fixed in a future version when the TLS protocol implementation is more stable._
 
 Change the directory to the `programs/ssl` directory in the `build` directory.
 Change to one of the `mbedtls_config` directories and execute `ssl_server2`:
@@ -106,7 +102,7 @@ Run _PSA_ and SSL tests from same `build` directory:
 
 In existing projects that use the TLS protocol implementation from _Mbed TLS_,
 the crypto implementation can be replaced with the one from _Oberon PSA Crypto_.
-The migration requires projects building on _Mbed TLS_ 3.6.0.
+The migration requires projects building on _Mbed TLS_ 3.6.2.
 
 Configuration options are still limited and there are still build dependencies
 to some of the _Mbed TLS_ crypto code files even though the code is not used;
@@ -120,9 +116,10 @@ steps:
    `mbedtls` with the path to the equivalent files in _Oberon PSA Crypto_:
     * `library/*.c`
     * `programs/ssl/library/md.c`
+    * `programs/ssl/library/pk.c`
     * `programs/ssl/library/psa_util.c`
 
-3. Add the _Oberon PSA Crypto_ include paths in the following order and make 
+3. Add the _Oberon PSA Crypto_ include paths in the following order and make
    sure they are searched before the equivalent include paths in `mbedtls`:
     * `oberon-psa-crypto/programs/ssl/include`
     * `oberon-psa-crypto/include`
@@ -136,26 +133,7 @@ steps:
 5. Add an entropy driver to your build, for testing the demo driver can be used:
     * `oberon/platforms/demo/drivers/demo_entropy.c`
 6. Add _Oberon PSA Crypto_ sources to your build:
-    * `oberon/drivers/oberon_aead.c`
-    * `oberon/drivers/oberon_asymmetric_encrypt.c`
-    * `oberon/drivers/oberon_asymmetric_signature.c`
-    * `oberon/drivers/oberon_cipher.c`
-    * `oberon/drivers/oberon_ctr_drbg.c`
-    * `oberon/drivers/oberon_ec_keys.c`
-    * `oberon/drivers/oberon_ecdh.c`
-    * `oberon/drivers/oberon_ecdsa.c`
-    * `oberon/drivers/oberon_hash.c`
-    * `oberon/drivers/oberon_helpers.c`
-    * `oberon/drivers/oberon_hmac_drbg.c`
-    * `oberon/drivers/oberon_jpake.c`
-    * `oberon/drivers/oberon_key_agreement.c`
-    * `oberon/drivers/oberon_key_derivation.c`
-    * `oberon/drivers/oberon_key_management.c`
-    * `oberon/drivers/oberon_mac.c`
-    * `oberon/drivers/oberon_pake.c`
-    * `oberon/drivers/oberon_rsa.c`
-    * `oberon/drivers/oberon_spake2p.c`
-    * `oberon/drivers/oberon_srp.c`
+    * `oberon/drivers/oberon_*.c`
 7. Add _ocrypto_ sources to your build:
     * `ocrypto/src/ocrypto_*`
 8. Add _ocrypto_ platform sources, e.g., for the `Generic` platform:

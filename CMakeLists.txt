@@ -144,6 +144,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
                     # test_suite_psa_crypto_op_fail.generated # n.a. - does not work with drivers /* !!OM */
                     test_suite_psa_crypto_op_fail.misc
                     test_suite_psa_crypto_pake
+                    test_suite_psa_crypto_pbkdf2
                     test_suite_psa_crypto_persistent_key
                     # test_suite_psa_crypto_se_driver_hal       # n.a. - SE drivers are not supported /* !!OM */
                     # test_suite_psa_crypto_se_driver_hal_mocks # n.a.

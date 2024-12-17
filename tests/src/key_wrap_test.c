@@ -98,14 +98,15 @@ int test_aes_kw()
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
     TEST_ASSERT(psa_import_key(&attributes, key128, sizeof key128, &key) == PSA_SUCCESS);
 
-    TEST_ASSERT(psa_wrap_key(kek, PSA_ALG_AES_KW, key, ct, sizeof ct, &length) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_wrap_key(kek, PSA_ALG_AES_KW, key, ct, sizeof ct, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(ct, length, ct128, sizeof ct128);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
+    TEST_ASSERT(length == OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_AES, PSA_ALG_AES_KW, PSA_KEY_TYPE_AES, 128));
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&attributes, PSA_ALG_CTR);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
-    TEST_ASSERT(psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KW, ct, length, &key) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KW, ct, length, &key) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(key, pt, sizeof pt, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(pt, length, key128, sizeof key128);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
@@ -121,14 +122,15 @@ int test_aes_kw()
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
     TEST_ASSERT(psa_import_key(&attributes, key256, sizeof key256, &key) == PSA_SUCCESS);
 
-    TEST_ASSERT(psa_wrap_key(kek, PSA_ALG_AES_KW,  key, ct, sizeof ct, &length) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_wrap_key(kek, PSA_ALG_AES_KW,  key, ct, sizeof ct, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(ct, length, ct256, sizeof ct256);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
+    TEST_ASSERT(length == OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_AES, PSA_ALG_AES_KW, PSA_KEY_TYPE_AES, 256));
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&attributes, PSA_ALG_CTR);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
-    TEST_ASSERT(psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KW, ct, length, &key) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KW, ct, length, &key) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(key, pt, sizeof pt, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(pt, length, key256, sizeof key256);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
@@ -230,7 +232,7 @@ int test_aes_kw_err(int n)
         expected = PSA_ERROR_INVALID_HANDLE;
     }
 
-    TEST_ASSERT(psa_wrap_key(kek, alg, key, ct, buf_size, &length) == expected);
+    TEST_ASSERT(oberon_psa_wrap_key(kek, alg, key, ct, buf_size, &length) == expected);
     if (expected != PSA_SUCCESS) goto abort;
 
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
@@ -294,7 +296,7 @@ int test_aes_kw_err(int n)
         expected = PSA_ERROR_INVALID_HANDLE;
     }
 
-    TEST_ASSERT(psa_unwrap_key(&key_attr, kek, alg, ct, length, &key) == expected);
+    TEST_ASSERT(oberon_psa_unwrap_key(&key_attr, kek, alg, ct, length, &key) == expected);
 
 abort:
     if (key != ILLEGAL_ID) TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
@@ -326,14 +328,15 @@ int test_aes_kwp()
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
     TEST_ASSERT(psa_import_key(&attributes, key1, sizeof key1, &key) == PSA_SUCCESS);
 
-    TEST_ASSERT(psa_wrap_key(kek, PSA_ALG_AES_KWP, key, ct, sizeof ct, &length) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_wrap_key(kek, PSA_ALG_AES_KWP, key, ct, sizeof ct, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(ct, length, ct1, sizeof ct1);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
+    TEST_ASSERT(length == OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_AES, PSA_ALG_AES_KWP, PSA_KEY_TYPE_RAW_DATA, sizeof key1 * 8));
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&attributes, PSA_ALG_CTR);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
-    TEST_ASSERT(psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KWP, ct, length, &key) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KWP, ct, length, &key) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(key, pt, sizeof pt, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(pt, length, key1, sizeof key1);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
@@ -343,14 +346,15 @@ int test_aes_kwp()
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
     TEST_ASSERT(psa_import_key(&attributes, key2, sizeof key2, &key) == PSA_SUCCESS);
 
-    TEST_ASSERT(psa_wrap_key(kek, PSA_ALG_AES_KWP, key, ct, sizeof ct, &length) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_wrap_key(kek, PSA_ALG_AES_KWP, key, ct, sizeof ct, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(ct, length, ct2, sizeof ct2);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
+    TEST_ASSERT(length == OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(PSA_KEY_TYPE_AES, PSA_ALG_AES_KWP, PSA_KEY_TYPE_RAW_DATA, sizeof key2 * 8));
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&attributes, PSA_ALG_CTR);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
-    TEST_ASSERT(psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KWP, ct, length, &key) == PSA_SUCCESS);
+    TEST_ASSERT(oberon_psa_unwrap_key(&attributes, kek, PSA_ALG_AES_KWP, ct, length, &key) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(key, pt, sizeof pt, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(pt, length, key2, sizeof key2);
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
@@ -444,7 +448,7 @@ int test_aes_kwp_err(int n)
         expected = PSA_ERROR_INVALID_HANDLE;
     }
 
-    TEST_ASSERT(psa_wrap_key(kek, alg, key, ct, buf_size, &length) == expected);
+    TEST_ASSERT(oberon_psa_wrap_key(kek, alg, key, ct, buf_size, &length) == expected);
     if (expected != PSA_SUCCESS) goto abort;
 
     TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS); key = 0;
@@ -525,7 +529,7 @@ int test_aes_kwp_err(int n)
         expected = PSA_ERROR_INVALID_HANDLE;
     }
 
-    TEST_ASSERT(psa_unwrap_key(&key_attr, kek, alg, ctp, length, &key) == expected);
+    TEST_ASSERT(oberon_psa_unwrap_key(&key_attr, kek, alg, ctp, length, &key) == expected);
 
 abort:
     if (key != ILLEGAL_ID) TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);

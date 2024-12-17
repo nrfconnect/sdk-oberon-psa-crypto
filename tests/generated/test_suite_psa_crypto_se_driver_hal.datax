@@ -146,7 +146,16 @@ Key generation smoke test: HMAC-SHA-256
 Key registration: smoke test
 9:exp:6:int:7:int:1:int:1:exp:1
 
-Key registration: invalid lifetime (volatile internal storage)
+Key registration: invalid lifetime (volatile, in SE, id=0)
+9:exp:8:int:7:int:0:int:0:exp:2
+
+Key registration: invalid lifetime (volatile, in SE, id=1)
+9:exp:8:int:7:int:1:int:1:exp:2
+
+Key registration: invalid lifetime (volatile, internal, id=0)
+9:exp:30:int:7:int:0:int:0:exp:2
+
+Key registration: invalid lifetime (volatile, internal, id=1)
 9:exp:30:int:7:int:1:int:1:exp:2
 
 Key registration: invalid lifetime (internal storage)
@@ -167,7 +176,7 @@ Key registration: key id out of range
 Key registration: key id min vendor
 9:exp:6:int:7:exp:35:int:1:exp:2
 
-Key registration: key id max vendor except volatile
+Key registration: key id max vendor
 9:exp:6:int:7:exp:36:int:1:exp:2
 
 Key registration: key id min volatile

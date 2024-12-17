@@ -1,5 +1,5 @@
 /** @file
- * Copyright (c) 2019-2022, Arm Limited or its affiliates. All rights reserved.
+ * Copyright (c) 2019-2024, Arm Limited or its affiliates. All rights reserved.
  * SPDX-License-Identifier : Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -341,6 +341,23 @@
  * Enable the Password-based Key derivation functions - 2.
 */
 #define ARCH_TEST_PBKDF2
+
+/**
+ * \def ARCH_TEST_JAPKE
+ *
+ * Enable support for balanced PAKE: ECJPAKE algorithm
+*/
+#define ARCH_TEST_JPAKE
+
+/**
+ * \def ARCH_TEST_SPAKE2P
+ *
+ * Enable support for augmented PAKE: SPAKE2P algorithm
+ */
+#define ARCH_TEST_SPAKE2P
+#define ARCH_TEST_SPAKE2P_HMAC
+#define ARCH_TEST_SPAKE2P_CMAC
+#define ARCH_TEST_SPAKE2P_MATTER
 
 #include "pal_crypto_config_check.h"
 
