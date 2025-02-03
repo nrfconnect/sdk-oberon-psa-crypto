@@ -121,11 +121,6 @@ int psa_is_key_present_in_storage(const mbedtls_svc_key_id_t key)
  *
  * \retval #PSA_SUCCESS \emptydescription
  * \retval #PSA_ERROR_INSUFFICIENT_STORAGE \emptydescription
- * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
- * \retval #PSA_ERROR_DOES_NOT_EXIST \emptydescription
- * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
- * \retval #PSA_ERROR_NOT_PERMITTED \emptydescription
- * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
  * \retval #PSA_ERROR_ALREADY_EXISTS \emptydescription
  * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
  * \retval #PSA_ERROR_DATA_INVALID \emptydescription
@@ -144,7 +139,7 @@ static psa_status_t psa_crypto_storage_store(const mbedtls_svc_key_id_t key,
 
     status = psa_its_set(data_identifier, (uint32_t) data_length, data, 0);
     if (status != PSA_SUCCESS) {
-        return status;
+        return PSA_ERROR_DATA_INVALID;
     }
 
     status = psa_its_get_info(data_identifier, &data_identifier_info);
@@ -274,6 +269,14 @@ psa_status_t psa_parse_key_data_from_storage(const uint8_t *storage_data,
                                              size_t *key_data_length,
                                              psa_key_attributes_t *attr)
 {
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)  /* !!OM */
+    (void)storage_data;
+    (void)storage_data_length;
+    (void)key_data;
+    (void)key_data_length;
+    (void)attr;
+    return PSA_ERROR_GENERIC_ERROR;
+#else
     psa_status_t status;
     const psa_persistent_key_storage_format *storage_format =
         (const psa_persistent_key_storage_format *) storage_data;
@@ -317,6 +320,64 @@ psa_status_t psa_parse_key_data_from_storage(const uint8_t *storage_data,
     attr->policy.alg2 = MBEDTLS_GET_UINT32_LE(storage_format->policy, 2 * sizeof(uint32_t));
 
     return PSA_SUCCESS;
+#endif
+}
+
+// heapless variant of psa_parse_key_data_from_storage  /* !!OM */
+psa_status_t psa_parse_key_data_from_storage_static(const uint8_t *storage_data,
+                                                    size_t storage_data_length,
+                                                    uint8_t *key_data,
+                                                    size_t *key_data_length,
+                                                    psa_key_attributes_t *attr)
+{
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+    psa_status_t status;
+    const psa_persistent_key_storage_format *storage_format =
+        (const psa_persistent_key_storage_format *) storage_data;
+    uint32_t version;
+
+    if (storage_data_length < sizeof(*storage_format)) {
+        return PSA_ERROR_DATA_INVALID;
+    }
+
+    status = check_magic_header(storage_data);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    version = MBEDTLS_GET_UINT32_LE(storage_format->version, 0);
+    if (version != 0) {
+        return PSA_ERROR_DATA_INVALID;
+    }
+
+    *key_data_length = MBEDTLS_GET_UINT32_LE(storage_format->data_len, 0);
+    if (*key_data_length > (storage_data_length - sizeof(*storage_format)) ||
+        *key_data_length > PSA_CRYPTO_MAX_STORAGE_SIZE) {
+        return PSA_ERROR_DATA_INVALID;
+    }
+
+    if (*key_data_length > MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE) {
+        // key does not fit into key slot
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+    memcpy(key_data, storage_format->key_data, *key_data_length);
+
+    attr->lifetime = MBEDTLS_GET_UINT32_LE(storage_format->lifetime, 0);
+    attr->type = MBEDTLS_GET_UINT16_LE(storage_format->type, 0);
+    attr->bits = MBEDTLS_GET_UINT16_LE(storage_format->bits, 0);
+    attr->policy.usage = MBEDTLS_GET_UINT32_LE(storage_format->policy, 0);
+    attr->policy.alg = MBEDTLS_GET_UINT32_LE(storage_format->policy, sizeof(uint32_t));
+    attr->policy.alg2 = MBEDTLS_GET_UINT32_LE(storage_format->policy, 2 * sizeof(uint32_t));
+
+    return PSA_SUCCESS;
+#else
+    (void)storage_data;
+    (void)storage_data_length;
+    (void)key_data;
+    (void)key_data_length;
+    (void)attr;
+    return PSA_ERROR_GENERIC_ERROR;
+#endif
 }
 
 psa_status_t psa_save_persistent_key(const psa_key_attributes_t *attr,
@@ -324,7 +385,11 @@ psa_status_t psa_save_persistent_key(const psa_key_attributes_t *attr,
                                      const size_t data_length)
 {
     size_t storage_data_length;
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)  /* !!OM */
+    uint8_t storage_data[MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE + sizeof(psa_persistent_key_storage_format)];
+#else
     uint8_t *storage_data;
+#endif
     psa_status_t status;
 
     /* All keys saved to persistent storage always have a key context */
@@ -337,30 +402,53 @@ psa_status_t psa_save_persistent_key(const psa_key_attributes_t *attr,
     }
     storage_data_length = data_length + sizeof(psa_persistent_key_storage_format);
 
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)  /* !!OM */
+    if (storage_data_length > sizeof storage_data) {
+        // should never happen
+        return PSA_ERROR_INSUFFICIENT_MEMORY;
+    }
+#else
     storage_data = mbedtls_calloc(1, storage_data_length);
     if (storage_data == NULL) {
         return PSA_ERROR_INSUFFICIENT_MEMORY;
     }
+#endif
 
     psa_format_key_data_for_storage(data, data_length, attr, storage_data);
 
     status = psa_crypto_storage_store(attr->id,
                                       storage_data, storage_data_length);
 
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)  /* !!OM */
+    mbedtls_platform_zeroize(storage_data, storage_data_length);
+#else
     mbedtls_zeroize_and_free(storage_data, storage_data_length);
+#endif
 
     return status;
 }
 
 void psa_free_persistent_key_data(uint8_t *key_data, size_t key_data_length)
 {
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)  /* !!OM */
+    // nothing to free or zeroize
+    (void)key_data;
+    (void)key_data_length;
+#else
     mbedtls_zeroize_and_free(key_data, key_data_length);
+#endif
 }
 
 psa_status_t psa_load_persistent_key(psa_key_attributes_t *attr,
                                      uint8_t **data,
                                      size_t *data_length)
 {
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)  /* !!OM */
+    (void)attr;
+    (void)data;
+    (void)data_length;
+    return PSA_ERROR_GENERIC_ERROR;
+#else
     psa_status_t status = PSA_SUCCESS;
     uint8_t *loaded_data;
     size_t storage_data_length = 0;
@@ -394,8 +482,53 @@ psa_status_t psa_load_persistent_key(psa_key_attributes_t *attr,
 exit:
     mbedtls_zeroize_and_free(loaded_data, storage_data_length);
     return status;
+#endif
 }
 
+// heapless variant of psa_load_persistent_key  /* !!OM */
+psa_status_t psa_load_persistent_key_static(psa_key_attributes_t *attr,
+                                            uint8_t *data,
+                                            size_t *data_length)
+{
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+    psa_status_t status = PSA_SUCCESS;
+    uint8_t loaded_data[MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE + sizeof(psa_persistent_key_storage_format)];
+    size_t storage_data_length = 0;
+    mbedtls_svc_key_id_t key = attr->id;
+
+    status = psa_crypto_storage_get_data_length(key, &storage_data_length);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    if (storage_data_length > sizeof loaded_data) {
+        // should never happen
+        return PSA_ERROR_INSUFFICIENT_MEMORY;
+    }
+
+    status = psa_crypto_storage_load(key, loaded_data, storage_data_length);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    status = psa_parse_key_data_from_storage_static(loaded_data, storage_data_length,
+                                                    data, data_length, attr);
+
+    /* All keys saved to persistent storage always have a key context */
+    if (status == PSA_SUCCESS && *data_length == 0) {
+        status = PSA_ERROR_STORAGE_FAILURE;
+    }
+
+exit:
+    mbedtls_platform_zeroize(loaded_data, storage_data_length);
+    return status;
+#else
+    (void)attr;
+    (void)data;
+    (void)data_length;
+    return PSA_ERROR_GENERIC_ERROR;
+#endif
+}
 
 
 /****************************************************************/

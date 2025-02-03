@@ -286,6 +286,11 @@ MBEDTLS_STATIC_TESTABLE psa_status_t psa_mac_key_can_do(
 psa_status_t psa_allocate_buffer_to_slot(psa_key_slot_t *slot,
                                          size_t buffer_length)
 {
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+    if (buffer_length > ((size_t) MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE)) {
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+#else
     if (slot->key.data != NULL) {
         return PSA_ERROR_ALREADY_EXISTS;
     }
@@ -294,6 +299,7 @@ psa_status_t psa_allocate_buffer_to_slot(psa_key_slot_t *slot,
     if (slot->key.data == NULL) {
         return PSA_ERROR_INSUFFICIENT_MEMORY;
     }
+#endif
 
     slot->key.bytes = buffer_length;
     return PSA_SUCCESS;
@@ -723,11 +729,18 @@ static psa_status_t psa_get_and_lock_transparent_key_slot_with_policy(
 
 psa_status_t psa_remove_key_data_from_memory(psa_key_slot_t *slot)
 {
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+    if (slot->key.bytes > 0) {
+        mbedtls_platform_zeroize(slot->key.data, MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
+    }
+#else
     if (slot->key.data != NULL) {
         mbedtls_zeroize_and_free(slot->key.data, slot->key.bytes);
     }
 
     slot->key.data = NULL;
+#endif /* MBEDTLS_PSA_STATIC_KEY_SLOTS */
+
     slot->key.bytes = 0;
 
     return PSA_SUCCESS;
@@ -756,15 +769,15 @@ psa_status_t psa_wipe_key_slot(psa_key_slot_t *slot)
         case PSA_SLOT_PENDING_DELETION:
             /* In this state psa_wipe_key_slot() must only be called if the
              * caller is the last reader. */
-            if (slot->registered_readers != 1) {
-                MBEDTLS_TEST_HOOK_TEST_ASSERT(slot->registered_readers == 1);
+            if (slot->var.occupied.registered_readers != 1) {
+                MBEDTLS_TEST_HOOK_TEST_ASSERT(slot->var.occupied.registered_readers == 1);
                 status = PSA_ERROR_CORRUPTION_DETECTED;
             }
             break;
         case PSA_SLOT_FILLING:
             /* In this state registered_readers must be 0. */
-            if (slot->registered_readers != 0) {
-                MBEDTLS_TEST_HOOK_TEST_ASSERT(slot->registered_readers == 0);
+            if (slot->var.occupied.registered_readers != 0) {
+                MBEDTLS_TEST_HOOK_TEST_ASSERT(slot->var.occupied.registered_readers == 0);
                 status = PSA_ERROR_CORRUPTION_DETECTED;
             }
             break;
@@ -778,6 +791,11 @@ psa_status_t psa_wipe_key_slot(psa_key_slot_t *slot)
             status = PSA_ERROR_CORRUPTION_DETECTED;
     }
 
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+    size_t slice_index = slot->slice_index;
+#endif /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
+
+
     /* Multipart operations may still be using the key. This is safe
      * because all multipart operation objects are independent from
      * the key slot: if they need to access the key after the setup
@@ -788,6 +806,17 @@ psa_status_t psa_wipe_key_slot(psa_key_slot_t *slot)
      * zeroize because the metadata is not particularly sensitive.
      * This memset also sets the slot's state to PSA_SLOT_EMPTY. */
     memset(slot, 0, sizeof(*slot));
+
+#if defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
+    /* If the slot is already corrupted, something went deeply wrong,
+     * like a thread still using the slot or a stray pointer leading
+     * to the slot's memory being used for another object. Let the slot
+     * leak rather than make the corruption worse. */
+    if (status == PSA_SUCCESS) {
+        status = psa_free_key_slot(slice_index, slot);
+    }
+#endif /* MBEDTLS_PSA_KEY_STORE_DYNAMIC */
+
     return status;
 }
 
@@ -1138,7 +1167,7 @@ static psa_status_t psa_validate_key_attributes(
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     } else {
-        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 1)) {
+        if (!psa_is_valid_key_id(psa_get_key_id(attributes), 0)) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     }
@@ -1196,8 +1225,6 @@ static psa_status_t psa_start_key_creation(
     psa_se_drv_table_entry_t **p_drv)
 {
     psa_status_t status;
-    psa_key_id_t volatile_key_id;
-    psa_key_slot_t *slot;
 
     (void) method;
     *p_drv = NULL;
@@ -1207,11 +1234,16 @@ static psa_status_t psa_start_key_creation(
         return status;
     }
 
+    int key_is_volatile = PSA_KEY_LIFETIME_IS_VOLATILE(attributes->lifetime);
+    psa_key_id_t volatile_key_id;
+
 #if defined(MBEDTLS_THREADING_C)
     PSA_THREADING_CHK_RET(mbedtls_mutex_lock(
                               &mbedtls_threading_key_slot_mutex));
 #endif
-    status = psa_reserve_free_key_slot(&volatile_key_id, p_slot);
+    status = psa_reserve_free_key_slot(
+        key_is_volatile ? &volatile_key_id : NULL,
+        p_slot);
 #if defined(MBEDTLS_THREADING_C)
     PSA_THREADING_CHK_RET(mbedtls_mutex_unlock(
                               &mbedtls_threading_key_slot_mutex));
@@ -1219,7 +1251,7 @@ static psa_status_t psa_start_key_creation(
     if (status != PSA_SUCCESS) {
         return status;
     }
-    slot = *p_slot;
+    psa_key_slot_t *slot = *p_slot;
 
     /* We're storing the declared bit-size of the key. It's up to each
      * creation mechanism to verify that this information is correct.
@@ -1230,7 +1262,7 @@ static psa_status_t psa_start_key_creation(
      * definition. */
 
     slot->attr = *attributes;
-    if (PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+    if (key_is_volatile) {
 #if !defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
         slot->attr.id = volatile_key_id;
 #else
@@ -1553,7 +1585,7 @@ psa_status_t psa_import_key(const psa_key_attributes_t *attributes,
      * storage ( thus not in the case of importing a key in a secure element
      * with storage ( MBEDTLS_PSA_CRYPTO_SE_C ) ),we have to allocate a
      * buffer to hold the imported key material. */
-    if (slot->key.data == NULL) {
+    if (slot->key.bytes == 0) {
         if (psa_key_lifetime_is_external(attributes->lifetime)) {
             status = psa_driver_wrapper_get_key_buffer_size_from_key_data(
                 attributes, data, data_length, &storage_size);
@@ -3499,6 +3531,12 @@ psa_status_t psa_aead_update_ad(psa_aead_operation_t *operation,
         goto exit;
     }
 
+    /* No input to add (zero length), nothing to do. */
+    if (input_length == 0) {
+        status = PSA_SUCCESS;
+        goto exit;
+    }
+
     if (operation->lengths_set) {
         if (operation->ad_remaining < input_length) {
             status = PSA_ERROR_INVALID_ARGUMENT;
@@ -4007,7 +4045,11 @@ static psa_status_t psa_generate_derived_key_internal(
     size_t bits,
     psa_key_derivation_operation_t *operation)
 {
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS
+    uint8_t data[256]; // large enough for all derivable keys
+#else
     uint8_t *data = NULL;
+#endif
     size_t bytes = PSA_BITS_TO_BYTES(bits);
     size_t storage_size = bytes;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -4043,10 +4085,16 @@ static psa_status_t psa_generate_derived_key_internal(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS
+    if (bytes > sizeof data) {
+        return PSA_ERROR_INSUFFICIENT_MEMORY;
+    }
+#else
     data = mbedtls_calloc(1, bytes);
     if (data == NULL) {
         return PSA_ERROR_INSUFFICIENT_MEMORY;
     }
+#endif
     slot->attr.bits = (psa_key_bits_t) bits;
 
     if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
@@ -4087,7 +4135,11 @@ static psa_status_t psa_generate_derived_key_internal(
     } while (status == PSA_ERROR_INSUFFICIENT_DATA);
 
 exit:
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS
+    mbedtls_platform_zeroize(data, sizeof data);
+#else
     mbedtls_zeroize_and_free(data, bytes);
+#endif
     return status;
 }
 
@@ -5315,7 +5367,7 @@ psa_status_t psa_generate_key(const psa_key_attributes_t *attributes,
      * storage ( thus not in the case of generating a key in a secure element
      * with storage ( MBEDTLS_PSA_CRYPTO_SE_C ) ),we have to allocate a
      * buffer to hold the generated key material. */
-    if (slot->key.data == NULL) {
+    if (slot->key.bytes == 0) {
         if (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime) ==
             PSA_KEY_LOCATION_LOCAL_STORAGE) {
             status = psa_validate_key_type_and_size_for_key_generation(

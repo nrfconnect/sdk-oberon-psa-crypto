@@ -21,9 +21,16 @@ extern "C" {
 #include <stdint.h>
 #include <string.h>
 
-/* Limit the maximum key size in storage. This should have no effect
- * since the key size is limited in memory. */
+/* Limit the maximum key size in storage. */
+#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+/* Reflect the maximum size for the key buffer. */
+#define PSA_CRYPTO_MAX_STORAGE_SIZE (MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE)
+#else
+/* Just set an upper boundary but it should have no effect since the key size
+ * is limited in memory. */
 #define PSA_CRYPTO_MAX_STORAGE_SIZE (PSA_BITS_TO_BYTES(PSA_MAX_KEY_BITS))
+#endif
+
 /* Sanity check: a file size must fit in 32 bits. Allow a generous
  * 64kB of metadata. */
 #if PSA_CRYPTO_MAX_STORAGE_SIZE > 0xffff0000
@@ -128,6 +135,35 @@ psa_status_t psa_load_persistent_key(psa_key_attributes_t *attr,
                                      size_t *data_length);
 
 /**
+ * \brief Parses key data and metadata and load persistent key for given
+ * key slot number.
+ *
+ * This function reads from a storage backend, parses the key data and
+ * metadata and writes them to the appropriate output parameters.
+ *
+ * Note: In contrast to psa_load_persistent_key(), this function does not
+ * allocate any dynamic memory.
+ *
+ * \param[in,out] attr      On input, the key identifier field identifies
+ *                          the key to load. Other fields are ignored.
+ *                          On success, the attribute structure contains
+ *                          the key metadata that was loaded from storage.
+ * \param[out] data         The loaded key data. A buffer of size
+ *                          MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE must
+ *                          be supplied.
+ * \param[out] data_length  The number of bytes that make up the key data.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ * \retval #PSA_ERROR_DATA_CORRUPT \emptydescription
+ * \retval #PSA_ERROR_DOES_NOT_EXIST \emptydescription
+ */
+psa_status_t psa_load_persistent_key_static(psa_key_attributes_t *attr,  /* !!OM */
+                                            uint8_t *data,
+                                            size_t *data_length);
+
+/**
  * \brief Remove persistent data for the given key slot number.
  *
  * \param key           Persistent identifier of the key to remove
@@ -187,6 +223,31 @@ psa_status_t psa_parse_key_data_from_storage(const uint8_t *storage_data,
                                              uint8_t **key_data,
                                              size_t *key_data_length,
                                              psa_key_attributes_t *attr);
+
+/**
+ * \brief Parses persistent storage data into key data and metadata
+ *
+ * Note: In contrast to psa_parse_key_data_from_storage(), this function
+ * does not allocate any dynamic memory.
+ *
+ * \param[in] storage_data     Buffer for the storage data.
+ * \param storage_data_length  Length of the storage data buffer
+ * \param[out] key_data        The data parsed from the storage. A buffer of
+ *                             size MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
+ *                             must be supplied.
+ * \param[out] key_data_length Length of the key data buffer
+ * \param[out] attr            On success, the attribute structure is filled
+ *                             with the loaded key metadata.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_DATA_INVALID \emptydescription
+ */
+psa_status_t psa_parse_key_data_from_storage_static(const uint8_t *storage_data,  /* !!OM */
+                                                    size_t storage_data_length,
+                                                    uint8_t *key_data,
+                                                    size_t *key_data_length,
+                                                    psa_key_attributes_t *attr);
 
 #if defined(MBEDTLS_PSA_CRYPTO_SE_C)
 /** This symbol is defined if transaction support is required. */
