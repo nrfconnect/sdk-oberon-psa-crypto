@@ -1180,6 +1180,23 @@
 #define PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE    PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #endif
 
+/** Maximum key length for ciphers.
+ *
+ * Since there is no additional PSA_WANT_xxx symbol to specifiy the size of
+ * the key once a cipher is enabled (as it happens for asymmetric keys for
+ * example), the maximum key length is taken into account for each cipher.
+ * The resulting value will be the maximum cipher's key length given depending
+ * on which ciphers are enabled.
+ */
+#if (defined(PSA_WANT_KEY_TYPE_AES) || defined(PSA_WANT_KEY_TYPE_ARIA) || \
+    defined(PSA_WANT_KEY_TYPE_CAMELLIA) || defined(PSA_WANT_KEY_TYPE_CHACHA20))
+#define PSA_CIPHER_MAX_KEY_LENGTH       32u
+#elif defined(PSA_WANT_KEY_TYPE_DES)
+#define PSA_CIPHER_MAX_KEY_LENGTH       24u
+#else
+#define PSA_CIPHER_MAX_KEY_LENGTH       0u
+#endif
+
 /** The default IV size for a cipher algorithm, in bytes.
  *
  * The IV that is generated as part of a call to #psa_cipher_encrypt() is always
