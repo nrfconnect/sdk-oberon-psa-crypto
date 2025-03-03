@@ -355,6 +355,60 @@
     #endif
 #endif
 
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_160)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_192)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_224)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair derive"
+    #endif
+#endif
+
 #if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
     #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_256)
         #error "No software implementation for brainpoolP256r1 public key"
@@ -374,6 +428,24 @@
     #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && \
         !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_256)
         #error "No software implementation for brainpoolP256r1 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_320)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair derive"
     #endif
 #endif
 
