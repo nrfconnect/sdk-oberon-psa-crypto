@@ -2239,9 +2239,9 @@ static inline void psa_pake_cs_set_key_confirmation(
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
 psa_status_t oberon_psa_wrap_key(
-    psa_key_id_t wrapping_key,
+    mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
-    psa_key_id_t key,
+    mbedtls_svc_key_id_t key,
     uint8_t *data,
     size_t data_size,
     size_t *data_length);
@@ -2280,11 +2280,11 @@ psa_status_t oberon_psa_wrap_key(
  */
 psa_status_t oberon_psa_unwrap_key(
     const psa_key_attributes_t *attributes,
-    psa_key_id_t wrapping_key,
+    mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
     const uint8_t *data,
     size_t data_length,
-    psa_key_id_t *key);
+    mbedtls_svc_key_id_t *key);
 
 
 #ifdef __cplusplus
