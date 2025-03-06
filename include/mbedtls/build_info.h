@@ -176,4 +176,19 @@
 #include "mbedtls/config_psa.h"
 #endif
 
+#include "mbedtls/config_adjust_legacy_crypto.h"
+
+#include "mbedtls/config_adjust_x509.h"
+
+#include "mbedtls/config_adjust_ssl.h"
+
+/* Indicate that all configuration symbols are set,
+ * even the ones that are calculated programmatically.
+ * It is now safe to query the configuration (to check it, to size buffers,
+ * etc.).
+ */
+#define MBEDTLS_CONFIG_IS_FINALIZED
+
+#include "mbedtls/check_config.h"
+
 #endif /* MBEDTLS_BUILD_INFO_H */
