@@ -176,10 +176,28 @@ static void test_import_not_supported(int key_type, data_t *key_material)
 
     PSA_ASSERT(psa_crypto_init());
     psa_set_key_type(&attributes, key_type);
-    TEST_EQUAL(psa_import_key(&attributes,
-                              key_material->x, key_material->len,
-                              &key_id),
-               PSA_ERROR_NOT_SUPPORTED);
+    psa_status_t actual_status =
+        psa_import_key(&attributes, key_material->x, key_material->len, &key_id);
+
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+    if (actual_status == PSA_ERROR_INVALID_ARGUMENT) {
+        /* Edge case: when importing an ECC public key with an unspecified
+         * bit-size (as we do here), the implementation of psa_import_key()
+         * infers the bit-size from the input. If the key type specifies an
+         * unknown curve, the validation might reject the data as invalid
+         * before it checks that the curve is supported. If so, that's ok.
+         * In practice, at the time of writing, this happens with Ed25519,
+         * for which a valid but unsupported 32-byte input causes
+         * psa_import_key() to fail because it assumes a Weierstrass curve
+         * which must have an odd-length encoding.
+         *
+         * In other cases, we do not expect an INVALID_ARGUMENT error here. */
+        TEST_ASSERT(PSA_KEY_TYPE_IS_ECC(key_type));
+    } else
+#endif /* defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) */
+    {
+        TEST_EQUAL(actual_status, PSA_ERROR_NOT_SUPPORTED);
+    }
     TEST_ASSERT(mbedtls_svc_key_id_equal(key_id, MBEDTLS_SVC_KEY_ID_INIT));
 
 exit:
@@ -193,7 +211,7 @@ static void test_import_not_supported_wrapper( void ** params )
 
     test_import_not_supported( ((mbedtls_test_argument_t *) params[0])->sint, &data1 );
 }
-#line 36 "tests/suites/test_suite_psa_crypto_not_supported.function"
+#line 54 "tests/suites/test_suite_psa_crypto_not_supported.function"
 static void test_generate_not_supported(int key_type, int bits)
 {
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;

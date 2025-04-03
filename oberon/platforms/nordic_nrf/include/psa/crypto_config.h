@@ -34,6 +34,7 @@
 #define PSA_WANT_ALG_CCM                        1
 #define PSA_WANT_ALG_CCM_STAR_NO_TAG            1
 #define PSA_WANT_ALG_CHACHA20_POLY1305          1
+#define PSA_WANT_ALG_XCHACHA20_POLY1305         1
 #define PSA_WANT_ALG_CMAC                       1
 #define PSA_WANT_ALG_CTR                        1
 #define PSA_WANT_ALG_DETERMINISTIC_ECDSA        1
@@ -45,7 +46,9 @@
 #define PSA_WANT_ALG_HKDF_EXTRACT               1
 #define PSA_WANT_ALG_HKDF_EXPAND                1
 #define PSA_WANT_ALG_HMAC                       1
+#define PSA_WANT_ALG_HSS                        1
 #define PSA_WANT_ALG_JPAKE                      1
+#define PSA_WANT_ALG_LMS                        1
 #define PSA_WANT_ALG_PBKDF2_HMAC                1
 #define PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128    1
 #define PSA_WANT_ALG_PURE_EDDSA                 1
@@ -60,10 +63,14 @@
 #define PSA_WANT_ALG_SHA_256                    1
 #define PSA_WANT_ALG_SHA_384                    1
 #define PSA_WANT_ALG_SHA_512                    1
+#define PSA_WANT_ALG_SHA_256_192                1
 #define PSA_WANT_ALG_SHA3_224                   1
 #define PSA_WANT_ALG_SHA3_256                   1
 #define PSA_WANT_ALG_SHA3_384                   1
 #define PSA_WANT_ALG_SHA3_512                   1
+#define PSA_WANT_ALG_SHAKE128_256               1
+#define PSA_WANT_ALG_SHAKE256_192               1
+#define PSA_WANT_ALG_SHAKE256_256               1
 #define PSA_WANT_ALG_SHAKE256_512               1
 #define PSA_WANT_ALG_SPAKE2P_HMAC               1
 #define PSA_WANT_ALG_SPAKE2P_CMAC               1
@@ -79,7 +86,9 @@
 #define PSA_WANT_ALG_AES_KW                     1
 #define PSA_WANT_ALG_AES_KWP                    1
 #define PSA_WANT_ALG_WPA3_SAE                   1
-#define PSA_WANT_ALG_WPA3_SAE_PT                1
+#define PSA_WANT_ALG_WPA3_SAE_H2E               1
+#define PSA_WANT_ALG_XMSS                       1
+#define PSA_WANT_ALG_XMSS_MT                    1
 
 #define PSA_WANT_ECC_MONTGOMERY_255             1
 #define PSA_WANT_ECC_MONTGOMERY_448             1
@@ -89,6 +98,7 @@
 #define PSA_WANT_ECC_SECP_R1_256                1
 #define PSA_WANT_ECC_SECP_R1_384                1
 #define PSA_WANT_ECC_SECP_R1_521                1
+#define PSA_WANT_ECC_SECP_K1_256                1
 
 #define PSA_WANT_KEY_TYPE_DERIVE                1
 #define PSA_WANT_KEY_TYPE_PASSWORD              1
@@ -96,8 +106,13 @@
 #define PSA_WANT_KEY_TYPE_HMAC                  1
 #define PSA_WANT_KEY_TYPE_AES                   1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
+#define PSA_WANT_KEY_TYPE_XCHACHA20             1
 //#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_HSS_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_LMS_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_XMSS_PUBLIC_KEY       1
+#define PSA_WANT_KEY_TYPE_XMSS_MT_PUBLIC_KEY    1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 //#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
@@ -143,8 +158,42 @@
 #define PSA_WANT_GENERATE_RANDOM                1
 
 // Moved from mbedtls_config.h
+
+/**
+ * \def MBEDTLS_PSA_KEY_SLOT_COUNT
+ *
+ * When #MBEDTLS_PSA_KEY_STORE_DYNAMIC is disabled,
+ * the maximum amount of PSA keys simultaneously in memory. This counts all
+ * volatile keys, plus loaded persistent keys.
+ *
+ * When #MBEDTLS_PSA_KEY_STORE_DYNAMIC is enabled,
+ * the maximum number of loaded persistent keys.
+ *
+ * Currently, persistent keys do not need to be loaded all the time while
+ * a multipart operation is in progress, only while the operation is being
+ * set up. This may change in future versions of the library.
+ *
+ * Currently, the library traverses of the whole table on each access to a
+ * persistent key. Therefore large values may cause poor performance.
+ */
 #define MBEDTLS_PSA_KEY_SLOT_COUNT              16
-#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE 3000
+
+/**
+ * \def MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
+ *
+ * Define the size (in bytes) of each static key buffer when
+ * #MBEDTLS_PSA_STATIC_KEY_SLOTS is set.
+ *
+ * If not explicitly defined then it's automatically guessed from available PSA
+ * keys enabled in the build through PSA_WANT_xxx symbols.
+ * Note that automatic size computation / guessing is incomplete. For 'raw keys'
+ * (MAC keys, passwords, salt as key, etc.) there is no clear upper limit.
+ *
+ * If required by the application this parameter can be set to higher values
+ * in order to store larger objects (ex: raw keys), but please note that this
+ * will increase RAM usage.
+ */
+//#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE 3000
 
 
 /* Driver usage configuration */

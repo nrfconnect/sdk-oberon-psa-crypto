@@ -693,1587 +693,1302 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 31:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
+                *out_value = PSA_ALG_CBC_NO_PADDING;
             }
             break;
         case 32:
             {
-                *out_value = PSA_ALG_CBC_MAC;
+                *out_value = PSA_ALG_CBC_PKCS7;
             }
             break;
         case 33:
             {
-                *out_value = PSA_ALG_CBC_NO_PADDING;
+                *out_value = PSA_ALG_CCM;
             }
             break;
         case 34:
             {
-                *out_value = PSA_ALG_CBC_PKCS7;
+                *out_value = PSA_ALG_CCM_STAR_NO_TAG;
             }
             break;
         case 35:
             {
-                *out_value = PSA_ALG_CCM;
+                *out_value = PSA_ALG_CFB;
             }
             break;
         case 36:
             {
-                *out_value = PSA_ALG_CCM_STAR_NO_TAG;
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
             }
             break;
         case 37:
             {
-                *out_value = PSA_ALG_CFB;
+                *out_value = PSA_ALG_CMAC;
             }
             break;
         case 38:
             {
-                *out_value = PSA_ALG_CMAC;
+                *out_value = PSA_ALG_CTR;
             }
             break;
         case 39:
             {
-                *out_value = PSA_ALG_CTR;
+                *out_value = PSA_ALG_ECB_NO_PADDING;
             }
             break;
         case 40:
             {
-                *out_value = PSA_ALG_ECB_NO_PADDING;
+                *out_value = PSA_ALG_GCM;
             }
             break;
         case 41:
             {
-                *out_value = PSA_ALG_GCM;
+                *out_value = PSA_ALG_OFB;
             }
             break;
         case 42:
             {
-                *out_value = PSA_ALG_OFB;
+                *out_value = PSA_KEY_TYPE_ARIA;
             }
             break;
         case 43:
             {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC,4);
+                *out_value = PSA_KEY_TYPE_CAMELLIA;
             }
             break;
         case 44:
             {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC,13);
+                *out_value = PSA_KEY_TYPE_CHACHA20;
             }
             break;
         case 45:
             {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC,14);
+                *out_value = PSA_ALG_CHACHA20_POLY1305;
             }
             break;
         case 46:
             {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC,16);
+                *out_value = PSA_ALG_STREAM_CIPHER;
             }
             break;
         case 47:
             {
-                *out_value = PSA_ALG_XTS;
+                *out_value = PSA_KEY_TYPE_DERIVE;
             }
             break;
         case 48:
             {
-                *out_value = PSA_KEY_TYPE_ARIA;
+                *out_value = PSA_KEY_TYPE_DES;
             }
             break;
         case 49:
             {
-                *out_value = PSA_KEY_TYPE_CAMELLIA;
+                *out_value = PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919);
             }
             break;
         case 50:
             {
-                *out_value = PSA_KEY_TYPE_CHACHA20;
+                *out_value = PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT;
             }
             break;
         case 51:
             {
-                *out_value = PSA_ALG_CHACHA20_POLY1305;
+                *out_value = PSA_ALG_FFDH;
             }
             break;
         case 52:
             {
-                *out_value = PSA_ALG_STREAM_CIPHER;
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH,PSA_ALG_HKDF(PSA_ALG_SHA_256));
             }
             break;
         case 53:
             {
-                *out_value = PSA_KEY_TYPE_DERIVE;
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH,PSA_ALG_HKDF(PSA_ALG_SHA_384));
             }
             break;
         case 54:
             {
-                *out_value = PSA_KEY_TYPE_DES;
+                *out_value = PSA_KEY_TYPE_DH_PUBLIC_KEY(PSA_DH_FAMILY_RFC7919);
             }
             break;
         case 55:
             {
-                *out_value = PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919);
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
             }
             break;
         case 56:
             {
-                *out_value = PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT;
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_MD5);
             }
             break;
         case 57:
             {
-                *out_value = PSA_ALG_FFDH;
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_RIPEMD160);
             }
             break;
         case 58:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH,PSA_ALG_HKDF(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_224);
             }
             break;
         case 59:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH,PSA_ALG_HKDF(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_256);
             }
             break;
         case 60:
             {
-                *out_value = PSA_KEY_TYPE_DH_PUBLIC_KEY(PSA_DH_FAMILY_RFC7919);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_384);
             }
             break;
         case 61:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_512);
             }
             break;
         case 62:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_MD5);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_1);
             }
             break;
         case 63:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_224);
             }
             break;
         case 64:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256);
             }
             break;
         case 65:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_384);
             }
             break;
         case 66:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_512);
             }
             break;
         case 67:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_ECDH;
             }
             break;
         case 68:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_MD5);
             }
             break;
         case 69:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_RIPEMD160);
             }
             break;
         case 70:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_224);
             }
             break;
         case 71:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_256);
             }
             break;
         case 72:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_384);
             }
             break;
         case 73:
             {
-                *out_value = PSA_ALG_ECDH;
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_512);
             }
             break;
         case 74:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_MD5);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_1);
             }
             break;
         case 75:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_224);
             }
             break;
         case 76:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
             }
             break;
         case 77:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_384);
             }
             break;
         case 78:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_512);
             }
             break;
         case 79:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_ECDSA_ANY;
             }
             break;
         case 80:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF(PSA_ALG_SHA_256));
             }
             break;
         case 81:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF(PSA_ALG_SHA_384));
             }
             break;
         case 82:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256));
             }
             break;
         case 83:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_384));
             }
             break;
         case 84:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256));
             }
             break;
         case 85:
             {
-                *out_value = PSA_ALG_ECDSA_ANY;
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_384));
             }
             break;
         case 86:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256));
             }
             break;
         case 87:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384));
             }
             break;
         case 88:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
             }
             break;
         case 89:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384));
             }
             break;
         case 90:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256));
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY);
             }
             break;
         case 91:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_384));
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
             }
             break;
         case 92:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256));
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
             }
             break;
         case 93:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384));
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
             }
             break;
         case 94:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
             }
             break;
         case 95:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH,PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384));
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_MONTGOMERY);
             }
             break;
         case 96:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1);
             }
             break;
         case 97:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1);
             }
             break;
         case 98:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+                *out_value = PSA_KEY_TYPE_HMAC;
             }
             break;
         case 99:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R2);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_MD5);
             }
             break;
         case 100:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_K1);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_RIPEMD160);
             }
             break;
         case 101:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R1);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_224);
             }
             break;
         case 102:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R2);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_256);
             }
             break;
         case 103:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_384);
             }
             break;
         case 104:
             {
-                *out_value = PSA_ALG_ED25519PH;
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_512);
             }
             break;
         case 105:
             {
-                *out_value = PSA_ALG_ED448PH;
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_1);
             }
             break;
         case 106:
             {
-                *out_value = PSA_ALG_PURE_EDDSA;
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_224);
             }
             break;
         case 107:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_256);
             }
             break;
         case 108:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_384);
             }
             break;
         case 109:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_MONTGOMERY);
+                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_512);
             }
             break;
         case 110:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1);
+                *out_value = PSA_KEY_TYPE_PASSWORD;
             }
             break;
         case 111:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1);
+                *out_value = PSA_KEY_TYPE_PASSWORD_HASH;
             }
             break;
         case 112:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R2);
+                *out_value = PSA_KEY_TYPE_RSA_KEY_PAIR;
             }
             break;
         case 113:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_K1);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_MD5);
             }
             break;
         case 114:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_R1);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_RIPEMD160);
             }
             break;
         case 115:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_R2);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_224);
             }
             break;
         case 116:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_256);
             }
             break;
         case 117:
             {
-                *out_value = PSA_KEY_TYPE_HMAC;
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_384);
             }
             break;
         case 118:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_MD5);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_512);
             }
             break;
         case 119:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_1);
             }
             break;
         case 120:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_224);
             }
             break;
         case 121:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256);
             }
             break;
         case 122:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_384);
             }
             break;
         case 123:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_512);
             }
             break;
         case 124:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_RSA_PKCS1V15_CRYPT;
             }
             break;
         case 125:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_MD5);
             }
             break;
         case 126:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_RIPEMD160);
             }
             break;
         case 127:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_224);
             }
             break;
         case 128:
             {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_256);
             }
             break;
         case 129:
             {
-                *out_value = PSA_KEY_TYPE_PASSWORD;
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_384);
             }
             break;
         case 130:
             {
-                *out_value = PSA_KEY_TYPE_PASSWORD_HASH;
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_512);
             }
             break;
         case 131:
             {
-                *out_value = PSA_KEY_TYPE_PEPPER;
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_1);
             }
             break;
         case 132:
             {
-                *out_value = PSA_KEY_TYPE_RSA_KEY_PAIR;
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_224);
             }
             break;
         case 133:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_MD5);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_256);
             }
             break;
         case 134:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_384);
             }
             break;
         case 135:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_512);
             }
             break;
         case 136:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN_RAW;
             }
             break;
         case 137:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_MD5);
             }
             break;
         case 138:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_RIPEMD160);
             }
             break;
         case 139:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_224);
             }
             break;
         case 140:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_256);
             }
             break;
         case 141:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_384);
             }
             break;
         case 142:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_512);
             }
             break;
         case 143:
             {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_1);
             }
             break;
         case 144:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_CRYPT;
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_224);
             }
             break;
         case 145:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_MD5);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_256);
             }
             break;
         case 146:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_384);
             }
             break;
         case 147:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_512);
             }
             break;
         case 148:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_MD5);
             }
             break;
         case 149:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_RIPEMD160);
             }
             break;
         case 150:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_224);
             }
             break;
         case 151:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_256);
             }
             break;
         case 152:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_384);
             }
             break;
         case 153:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_512);
             }
             break;
         case 154:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_1);
             }
             break;
         case 155:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_224);
             }
             break;
         case 156:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN_RAW;
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_256);
             }
             break;
         case 157:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_MD5);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_384);
             }
             break;
         case 158:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_512);
             }
             break;
         case 159:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_224);
+                *out_value = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
             }
             break;
         case 160:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 1);
             }
             break;
         case 161:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CHACHA20_POLY1305, 1);
             }
             break;
         case 162:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_GCM, 1);
             }
             break;
         case 163:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 4);
             }
             break;
         case 164:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 13);
             }
             break;
         case 165:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 14);
             }
             break;
         case 166:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 16);
             }
             break;
         case 167:
             {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 63);
             }
             break;
         case 168:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_MD5);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 1);
             }
             break;
         case 169:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 1);
             }
             break;
         case 170:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 1);
             }
             break;
         case 171:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 4);
             }
             break;
         case 172:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 13);
             }
             break;
         case 173:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 14);
             }
             break;
         case 174:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 16);
             }
             break;
         case 175:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 63);
             }
             break;
         case 176:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_ANY_HASH;
             }
             break;
         case 177:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CMAC, 1);
             }
             break;
         case 178:
             {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_MD5), 1);
             }
             break;
         case 179:
             {
-                *out_value = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_RIPEMD160), 1);
             }
             break;
         case 180:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 1);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_1), 1);
             }
             break;
         case 181:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CHACHA20_POLY1305, 1);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 1);
             }
             break;
         case 182:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_GCM, 1);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 1);
             }
             break;
         case 183:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 4);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_384), 1);
             }
             break;
         case 184:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 13);
+                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_512), 1);
             }
             break;
         case 185:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 14);
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_ANY_HASH);
             }
             break;
         case 186:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 16);
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
             }
             break;
         case 187:
             {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 63);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_MD5);
             }
             break;
         case 188:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 1);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_RIPEMD160);
             }
             break;
         case 189:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 1);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_224);
             }
             break;
         case 190:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 1);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_256);
             }
             break;
         case 191:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 4);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_384);
             }
             break;
         case 192:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 13);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_512);
             }
             break;
         case 193:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 14);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_1);
             }
             break;
         case 194:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 16);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_224);
             }
             break;
         case 195:
             {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 63);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_256);
             }
             break;
         case 196:
             {
-                *out_value = PSA_ALG_ANY_HASH;
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_384);
             }
             break;
         case 197:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CBC_MAC, 1);
+                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_512);
             }
             break;
         case 198:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CMAC, 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_MD5);
             }
             break;
         case 199:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_MD5), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_RIPEMD160);
             }
             break;
         case 200:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_RIPEMD160), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_224);
             }
             break;
         case 201:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_1), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_256);
             }
             break;
         case 202:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_384);
             }
             break;
         case 203:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_512);
             }
             break;
         case 204:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_384), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_1);
             }
             break;
         case 205:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_512), 1);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_224);
             }
             break;
         case 206:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CBC_MAC, 4);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256);
             }
             break;
         case 207:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CBC_MAC, 13);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_384);
             }
             break;
         case 208:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CBC_MAC, 14);
+                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_512);
             }
             break;
         case 209:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CBC_MAC, 16);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_MD5);
             }
             break;
         case 210:
             {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CBC_MAC, 63);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_RIPEMD160);
             }
             break;
         case 211:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_MD5);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_224);
             }
             break;
         case 212:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_256);
             }
             break;
         case 213:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_384);
             }
             break;
         case 214:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_512);
             }
             break;
         case 215:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_1);
             }
             break;
         case 216:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_224);
             }
             break;
         case 217:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256);
             }
             break;
         case 218:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_384);
             }
             break;
         case 219:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_512);
             }
             break;
         case 220:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_JPAKE(0);
             }
             break;
         case 221:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_DSA(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
             }
             break;
         case 222:
             {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_ANY_HASH);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
             }
             break;
         case 223:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_MD5);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_384));
             }
             break;
         case 224:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256));
             }
             break;
         case 225:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_384));
             }
             break;
         case 226:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256));
             }
             break;
         case 227:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_384));
             }
             break;
         case 228:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_ECJPAKE_TO_PMS);
             }
             break;
         case 229:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256));
             }
             break;
         case 230:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384));
             }
             break;
         case 231:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
             }
             break;
         case 232:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384));
             }
             break;
         case 233:
             {
-                *out_value = PSA_ALG_DSA(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_384));
             }
             break;
         case 234:
             {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
+                *out_value = PSA_ALG_MD5;
             }
             break;
         case 235:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_MD5);
+                *out_value = PSA_ALG_PBKDF2_AES_CMAC_PRF_128;
             }
             break;
         case 236:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_MD5);
             }
             break;
         case 237:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_RIPEMD160);
             }
             break;
         case 238:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_224);
             }
             break;
         case 239:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_256);
             }
             break;
         case 240:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_384);
             }
             break;
         case 241:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_512);
             }
             break;
         case 242:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_1);
             }
             break;
         case 243:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_224);
             }
             break;
         case 244:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256);
             }
             break;
         case 245:
             {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_384);
             }
             break;
         case 246:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_MD5);
+                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_512);
             }
             break;
         case 247:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_RIPEMD160;
             }
             break;
         case 248:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
             }
             break;
         case 249:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH);
             }
             break;
         case 250:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH);
             }
             break;
         case 251:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_SHA3_224;
             }
             break;
         case 252:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_SHA3_256;
             }
             break;
         case 253:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_SHA3_384;
             }
             break;
         case 254:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_SHA3_512;
             }
             break;
         case 255:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_SHA_1;
             }
             break;
         case 256:
             {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_SHA_224;
             }
             break;
         case 257:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_MD5);
+                *out_value = PSA_ALG_SHA_256;
             }
             break;
         case 258:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_SHA_384;
             }
             break;
         case 259:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_SHA_512;
             }
             break;
         case 260:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_TLS12_ECJPAKE_TO_PMS;
             }
             break;
         case 261:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_MD5);
             }
             break;
         case 262:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_RIPEMD160);
             }
             break;
         case 263:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_1);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_224);
             }
             break;
         case 264:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_224);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_256);
             }
             break;
         case 265:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_384);
             }
             break;
         case 266:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_384);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_512);
             }
             break;
         case 267:
             {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_512);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_1);
             }
             break;
         case 268:
             {
-                *out_value = PSA_ALG_JPAKE(0);
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_224);
             }
             break;
         case 269:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256);
             }
             break;
         case 270:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384);
             }
             break;
         case 271:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_512);
             }
             break;
         case 272:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_MD5);
             }
             break;
         case 273:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_RIPEMD160);
             }
             break;
         case 274:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_224);
             }
             break;
         case 275:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_256);
             }
             break;
         case 276:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_ECJPAKE_TO_PMS);
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_384);
             }
             break;
         case 277:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_512);
             }
             break;
         case 278:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_1);
             }
             break;
         case 279:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_224);
             }
             break;
         case 280:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256);
             }
             break;
         case 281:
             {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_384));
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384);
             }
             break;
         case 282:
             {
-                *out_value = PSA_ALG_MD5;
+                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_512);
             }
             break;
         case 283:
             {
-                *out_value = PSA_ALG_PBKDF2_AES_CMAC_PRF_128;
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 1);
             }
             break;
         case 284:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_MD5);
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_MD5), 1);
             }
             break;
         case 285:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_RIPEMD160);
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_RIPEMD160), 1);
             }
             break;
         case 286:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_224);
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_1), 1);
             }
             break;
         case 287:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_256);
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 1);
             }
             break;
         case 288:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_384);
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 1);
             }
             break;
         case 289:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA3_512);
+                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_384), 1);
             }
             break;
         case 290:
             {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_1);
-            }
-            break;
-        case 291:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_224);
-            }
-            break;
-        case 292:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256);
-            }
-            break;
-        case 293:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_384);
-            }
-            break;
-        case 294:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_512);
-            }
-            break;
-        case 295:
-            {
-                *out_value = PSA_ALG_RIPEMD160;
-            }
-            break;
-        case 296:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 297:
-            {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 298:
-            {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 299:
-            {
-                *out_value = PSA_ALG_SHA3_224;
-            }
-            break;
-        case 300:
-            {
-                *out_value = PSA_ALG_SHA3_256;
-            }
-            break;
-        case 301:
-            {
-                *out_value = PSA_ALG_SHA3_384;
-            }
-            break;
-        case 302:
-            {
-                *out_value = PSA_ALG_SHA3_512;
-            }
-            break;
-        case 303:
-            {
-                *out_value = PSA_ALG_SHAKE256_512;
-            }
-            break;
-        case 304:
-            {
-                *out_value = PSA_ALG_SHA_1;
-            }
-            break;
-        case 305:
-            {
-                *out_value = PSA_ALG_SHA_224;
-            }
-            break;
-        case 306:
-            {
-                *out_value = PSA_ALG_SHA_256;
-            }
-            break;
-        case 307:
-            {
-                *out_value = PSA_ALG_SHA_384;
-            }
-            break;
-        case 308:
-            {
-                *out_value = PSA_ALG_SHA_512;
-            }
-            break;
-        case 309:
-            {
-                *out_value = PSA_ALG_SHA_512_224;
-            }
-            break;
-        case 310:
-            {
-                *out_value = PSA_ALG_SHA_512_256;
-            }
-            break;
-        case 311:
-            {
-                *out_value = PSA_ALG_TLS12_ECJPAKE_TO_PMS;
-            }
-            break;
-        case 312:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_MD5);
-            }
-            break;
-        case 313:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_RIPEMD160);
-            }
-            break;
-        case 314:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_224);
-            }
-            break;
-        case 315:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_256);
-            }
-            break;
-        case 316:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_384);
-            }
-            break;
-        case 317:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA3_512);
-            }
-            break;
-        case 318:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_1);
-            }
-            break;
-        case 319:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_224);
-            }
-            break;
-        case 320:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256);
-            }
-            break;
-        case 321:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384);
-            }
-            break;
-        case 322:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_512);
-            }
-            break;
-        case 323:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_MD5);
-            }
-            break;
-        case 324:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_RIPEMD160);
-            }
-            break;
-        case 325:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_224);
-            }
-            break;
-        case 326:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_256);
-            }
-            break;
-        case 327:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_384);
-            }
-            break;
-        case 328:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA3_512);
-            }
-            break;
-        case 329:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_1);
-            }
-            break;
-        case 330:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_224);
-            }
-            break;
-        case 331:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256);
-            }
-            break;
-        case 332:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384);
-            }
-            break;
-        case 333:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_512);
-            }
-            break;
-        case 334:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC, 1);
-            }
-            break;
-        case 335:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 1);
-            }
-            break;
-        case 336:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_MD5), 1);
-            }
-            break;
-        case 337:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_RIPEMD160), 1);
-            }
-            break;
-        case 338:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_1), 1);
-            }
-            break;
-        case 339:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 1);
-            }
-            break;
-        case 340:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 1);
-            }
-            break;
-        case 341:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_384), 1);
-            }
-            break;
-        case 342:
-            {
                 *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_512), 1);
-            }
-            break;
-        case 343:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC, 4);
-            }
-            break;
-        case 344:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC, 13);
-            }
-            break;
-        case 345:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC, 14);
-            }
-            break;
-        case 346:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC, 16);
-            }
-            break;
-        case 347:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CBC_MAC, 63);
             }
             break;
 #endif
@@ -2339,7 +2054,7 @@ static int dep_check(int dep_id)
             break;
         case 3:
             {
-#if defined(PSA_WANT_ALG_CBC_MAC)
+#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2348,7 +2063,7 @@ static int dep_check(int dep_id)
             break;
         case 4:
             {
-#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
+#if defined(PSA_WANT_ALG_CBC_PKCS7)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2357,7 +2072,7 @@ static int dep_check(int dep_id)
             break;
         case 5:
             {
-#if defined(PSA_WANT_ALG_CBC_PKCS7)
+#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2366,7 +2081,7 @@ static int dep_check(int dep_id)
             break;
         case 6:
             {
-#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+#if defined(PSA_WANT_ALG_CFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2375,7 +2090,7 @@ static int dep_check(int dep_id)
             break;
         case 7:
             {
-#if defined(PSA_WANT_ALG_CFB)
+#if defined(PSA_WANT_ALG_CMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2384,7 +2099,7 @@ static int dep_check(int dep_id)
             break;
         case 8:
             {
-#if defined(PSA_WANT_ALG_CMAC)
+#if defined(PSA_WANT_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2393,7 +2108,7 @@ static int dep_check(int dep_id)
             break;
         case 9:
             {
-#if defined(PSA_WANT_ALG_CTR)
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2411,7 +2126,7 @@ static int dep_check(int dep_id)
             break;
         case 11:
             {
-#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+#if defined(PSA_WANT_ALG_GCM)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2420,7 +2135,7 @@ static int dep_check(int dep_id)
             break;
         case 12:
             {
-#if defined(PSA_WANT_ALG_GCM)
+#if defined(PSA_WANT_ALG_OFB)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2429,7 +2144,7 @@ static int dep_check(int dep_id)
             break;
         case 13:
             {
-#if defined(PSA_WANT_ALG_OFB)
+#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2438,7 +2153,7 @@ static int dep_check(int dep_id)
             break;
         case 14:
             {
-#if defined(PSA_WANT_ALG_XTS)
+#if defined(PSA_WANT_KEY_TYPE_ARIA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2447,7 +2162,7 @@ static int dep_check(int dep_id)
             break;
         case 15:
             {
-#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#if defined(PSA_WANT_KEY_TYPE_CAMELLIA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2456,7 +2171,7 @@ static int dep_check(int dep_id)
             break;
         case 16:
             {
-#if defined(PSA_WANT_KEY_TYPE_ARIA)
+#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2465,7 +2180,7 @@ static int dep_check(int dep_id)
             break;
         case 17:
             {
-#if defined(PSA_WANT_KEY_TYPE_CAMELLIA)
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2474,7 +2189,7 @@ static int dep_check(int dep_id)
             break;
         case 18:
             {
-#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
+#if defined(PSA_WANT_ALG_STREAM_CIPHER)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2483,7 +2198,7 @@ static int dep_check(int dep_id)
             break;
         case 19:
             {
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+#if defined(PSA_WANT_KEY_TYPE_DERIVE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2492,7 +2207,7 @@ static int dep_check(int dep_id)
             break;
         case 20:
             {
-#if defined(PSA_WANT_ALG_STREAM_CIPHER)
+#if defined(PSA_WANT_KEY_TYPE_DES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2501,7 +2216,7 @@ static int dep_check(int dep_id)
             break;
         case 21:
             {
-#if defined(PSA_WANT_KEY_TYPE_DERIVE)
+#if defined(PSA_WANT_DH_RFC7919_2048)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2510,7 +2225,7 @@ static int dep_check(int dep_id)
             break;
         case 22:
             {
-#if defined(PSA_WANT_KEY_TYPE_DES)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2519,7 +2234,7 @@ static int dep_check(int dep_id)
             break;
         case 23:
             {
-#if defined(PSA_WANT_DH_RFC7919_2048)
+#if defined(PSA_WANT_ALG_FFDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2528,7 +2243,7 @@ static int dep_check(int dep_id)
             break;
         case 24:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_ALG_HKDF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2537,7 +2252,7 @@ static int dep_check(int dep_id)
             break;
         case 25:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2546,7 +2261,7 @@ static int dep_check(int dep_id)
             break;
         case 26:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_ALG_SHA_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2555,7 +2270,7 @@ static int dep_check(int dep_id)
             break;
         case 27:
             {
-#if defined(PSA_WANT_ALG_FFDH)
+#if defined(PSA_WANT_DH_RFC7919_3072)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2564,7 +2279,7 @@ static int dep_check(int dep_id)
             break;
         case 28:
             {
-#if defined(PSA_WANT_ALG_HKDF)
+#if defined(PSA_WANT_DH_RFC7919_4096)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2573,7 +2288,7 @@ static int dep_check(int dep_id)
             break;
         case 29:
             {
-#if defined(PSA_WANT_ALG_SHA_256)
+#if defined(PSA_WANT_DH_RFC7919_6144)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2582,7 +2297,7 @@ static int dep_check(int dep_id)
             break;
         case 30:
             {
-#if defined(PSA_WANT_ALG_SHA_384)
+#if defined(PSA_WANT_DH_RFC7919_8192)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2591,7 +2306,7 @@ static int dep_check(int dep_id)
             break;
         case 31:
             {
-#if defined(PSA_WANT_DH_RFC7919_3072)
+#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2600,7 +2315,7 @@ static int dep_check(int dep_id)
             break;
         case 32:
             {
-#if defined(PSA_WANT_DH_RFC7919_4096)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2609,7 +2324,7 @@ static int dep_check(int dep_id)
             break;
         case 33:
             {
-#if defined(PSA_WANT_DH_RFC7919_6144)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2618,7 +2333,7 @@ static int dep_check(int dep_id)
             break;
         case 34:
             {
-#if defined(PSA_WANT_DH_RFC7919_8192)
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2627,7 +2342,7 @@ static int dep_check(int dep_id)
             break;
         case 35:
             {
-#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
+#if defined(PSA_WANT_ALG_MD5)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2636,7 +2351,7 @@ static int dep_check(int dep_id)
             break;
         case 36:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_160)
+#if defined(PSA_WANT_ALG_RIPEMD160)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2645,7 +2360,7 @@ static int dep_check(int dep_id)
             break;
         case 37:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_ALG_SHA3_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2654,7 +2369,7 @@ static int dep_check(int dep_id)
             break;
         case 38:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ALG_SHA3_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2663,7 +2378,7 @@ static int dep_check(int dep_id)
             break;
         case 39:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
+#if defined(PSA_WANT_ALG_SHA3_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2672,7 +2387,7 @@ static int dep_check(int dep_id)
             break;
         case 40:
             {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#if defined(PSA_WANT_ALG_SHA3_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2681,7 +2396,7 @@ static int dep_check(int dep_id)
             break;
         case 41:
             {
-#if defined(PSA_WANT_ALG_MD5)
+#if defined(PSA_WANT_ALG_SHA_1)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2690,7 +2405,7 @@ static int dep_check(int dep_id)
             break;
         case 42:
             {
-#if defined(PSA_WANT_ALG_RIPEMD160)
+#if defined(PSA_WANT_ALG_SHA_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2699,7 +2414,7 @@ static int dep_check(int dep_id)
             break;
         case 43:
             {
-#if defined(PSA_WANT_ALG_SHA3_224)
+#if defined(PSA_WANT_ALG_SHA_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2708,7 +2423,7 @@ static int dep_check(int dep_id)
             break;
         case 44:
             {
-#if defined(PSA_WANT_ALG_SHA3_256)
+#if defined(PSA_WANT_ALG_ECDH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2717,7 +2432,7 @@ static int dep_check(int dep_id)
             break;
         case 45:
             {
-#if defined(PSA_WANT_ALG_SHA3_384)
+#if defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2726,7 +2441,7 @@ static int dep_check(int dep_id)
             break;
         case 46:
             {
-#if defined(PSA_WANT_ALG_SHA3_512)
+#if defined(PSA_WANT_ALG_ECDSA_ANY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2735,7 +2450,7 @@ static int dep_check(int dep_id)
             break;
         case 47:
             {
-#if defined(PSA_WANT_ALG_SHA_1)
+#if defined(PSA_WANT_ALG_HKDF_EXPAND)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2744,7 +2459,7 @@ static int dep_check(int dep_id)
             break;
         case 48:
             {
-#if defined(PSA_WANT_ALG_SHA_224)
+#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2753,7 +2468,7 @@ static int dep_check(int dep_id)
             break;
         case 49:
             {
-#if defined(PSA_WANT_ALG_SHA_512)
+#if defined(PSA_WANT_ALG_TLS12_PRF)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2762,7 +2477,7 @@ static int dep_check(int dep_id)
             break;
         case 50:
             {
-#if defined(PSA_WANT_ALG_ECDH)
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2771,7 +2486,7 @@ static int dep_check(int dep_id)
             break;
         case 51:
             {
-#if defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2780,7 +2495,7 @@ static int dep_check(int dep_id)
             break;
         case 52:
             {
-#if defined(PSA_WANT_ALG_ECDSA_ANY)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2789,7 +2504,7 @@ static int dep_check(int dep_id)
             break;
         case 53:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXPAND)
+#if defined(PSA_WANT_ECC_MONTGOMERY_255)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2798,7 +2513,7 @@ static int dep_check(int dep_id)
             break;
         case 54:
             {
-#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
+#if defined(PSA_WANT_ECC_MONTGOMERY_448)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2807,7 +2522,7 @@ static int dep_check(int dep_id)
             break;
         case 55:
             {
-#if defined(PSA_WANT_ALG_TLS12_PRF)
+#if defined(PSA_WANT_ECC_SECP_K1_192)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2816,7 +2531,7 @@ static int dep_check(int dep_id)
             break;
         case 56:
             {
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+#if defined(PSA_WANT_ECC_SECP_K1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2825,7 +2540,7 @@ static int dep_check(int dep_id)
             break;
         case 57:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_192)
+#if defined(PSA_WANT_ECC_SECP_R1_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2834,7 +2549,7 @@ static int dep_check(int dep_id)
             break;
         case 58:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_224)
+#if defined(PSA_WANT_ECC_SECP_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2843,7 +2558,7 @@ static int dep_check(int dep_id)
             break;
         case 59:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
+#if defined(PSA_WANT_ECC_SECP_R1_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2852,7 +2567,7 @@ static int dep_check(int dep_id)
             break;
         case 60:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_320)
+#if defined(PSA_WANT_ECC_SECP_R1_521)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2861,7 +2576,7 @@ static int dep_check(int dep_id)
             break;
         case 61:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2870,7 +2585,7 @@ static int dep_check(int dep_id)
             break;
         case 62:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
+#if defined(PSA_WANT_KEY_TYPE_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2879,7 +2594,7 @@ static int dep_check(int dep_id)
             break;
         case 63:
             {
-#if defined(PSA_WANT_ECC_MONTGOMERY_255)
+#if defined(PSA_WANT_ALG_HMAC)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2888,7 +2603,7 @@ static int dep_check(int dep_id)
             break;
         case 64:
             {
-#if defined(PSA_WANT_ECC_MONTGOMERY_448)
+#if defined(PSA_WANT_KEY_TYPE_PASSWORD)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2897,7 +2612,7 @@ static int dep_check(int dep_id)
             break;
         case 65:
             {
-#if defined(PSA_WANT_ECC_SECP_K1_192)
+#if defined(PSA_WANT_KEY_TYPE_PASSWORD_HASH)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2906,7 +2621,7 @@ static int dep_check(int dep_id)
             break;
         case 66:
             {
-#if defined(PSA_WANT_ECC_SECP_K1_225)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2915,7 +2630,7 @@ static int dep_check(int dep_id)
             break;
         case 67:
             {
-#if defined(PSA_WANT_ECC_SECP_K1_256)
+#if defined(PSA_WANT_ALG_RSA_OAEP)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2924,7 +2639,7 @@ static int dep_check(int dep_id)
             break;
         case 68:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_224)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2933,7 +2648,7 @@ static int dep_check(int dep_id)
             break;
         case 69:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_256)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2942,7 +2657,7 @@ static int dep_check(int dep_id)
             break;
         case 70:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_384)
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2951,7 +2666,7 @@ static int dep_check(int dep_id)
             break;
         case 71:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_521)
+#if defined(PSA_WANT_ALG_RSA_PSS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2960,7 +2675,7 @@ static int dep_check(int dep_id)
             break;
         case 72:
             {
-#if defined(PSA_WANT_ECC_SECP_R2_160)
+#if defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2969,7 +2684,7 @@ static int dep_check(int dep_id)
             break;
         case 73:
             {
-#if defined(PSA_WANT_ECC_SECT_K1_163)
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2978,7 +2693,7 @@ static int dep_check(int dep_id)
             break;
         case 74:
             {
-#if defined(PSA_WANT_ECC_SECT_K1_233)
+#if defined(PSA_WANT_ALG_JPAKE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2987,7 +2702,7 @@ static int dep_check(int dep_id)
             break;
         case 75:
             {
-#if defined(PSA_WANT_ECC_SECT_K1_239)
+#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -2996,7 +2711,7 @@ static int dep_check(int dep_id)
             break;
         case 76:
             {
-#if defined(PSA_WANT_ECC_SECT_K1_283)
+#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -3005,340 +2720,7 @@ static int dep_check(int dep_id)
             break;
         case 77:
             {
-#if defined(PSA_WANT_ECC_SECT_K1_409)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 78:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_571)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 79:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_163)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 80:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_233)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 81:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_283)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 82:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_409)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 83:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_571)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 84:
-            {
-#if defined(PSA_WANT_ECC_SECT_R2_163)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 85:
-            {
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 86:
-            {
-#if defined(PSA_WANT_ALG_ED25519PH)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 87:
-            {
-#if defined(PSA_WANT_ALG_ED448PH)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 88:
-            {
-#if defined(PSA_WANT_ALG_PURE_EDDSA)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 89:
-            {
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_448)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 90:
-            {
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 91:
-            {
-#if defined(PSA_WANT_KEY_TYPE_HMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 92:
-            {
-#if defined(PSA_WANT_ALG_HMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 93:
-            {
-#if defined(PSA_WANT_KEY_TYPE_PASSWORD)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 94:
-            {
-#if defined(PSA_WANT_KEY_TYPE_PASSWORD_HASH)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 95:
-            {
-#if defined(PSA_WANT_KEY_TYPE_PEPPER)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 96:
-            {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 97:
-            {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 98:
-            {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 99:
-            {
-#if defined(PSA_WANT_ALG_RSA_OAEP)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 100:
-            {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 101:
-            {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 102:
-            {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 103:
-            {
-#if defined(PSA_WANT_ALG_RSA_PSS)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 104:
-            {
-#if defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 105:
-            {
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 106:
-            {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_DSA)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 107:
-            {
-#if defined(PSA_WANT_ALG_DSA)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 108:
-            {
-#if defined(PSA_WANT_ALG_JPAKE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 109:
-            {
-#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 110:
-            {
-#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 111:
-            {
 #if defined(PSA_WANT_ALG_PBKDF2_HMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 112:
-            {
-#if defined(PSA_WANT_ALG_SHAKE256_512)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 113:
-            {
-#if defined(PSA_WANT_ALG_SHA_512_224)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 114:
-            {
-#if defined(PSA_WANT_ALG_SHA_512_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;

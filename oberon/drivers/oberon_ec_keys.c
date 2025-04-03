@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -37,6 +37,12 @@
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_R1_521) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_521)
 #include "ocrypto_ecdh_p521.h"
+#endif
+#if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256)
+#include "ocrypto_ecdh_p256k1.h"
 #endif
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_MONTGOMERY_255) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_MONTGOMERY_255) || \
@@ -113,6 +119,18 @@ psa_status_t oberon_export_ec_public_key(
         if (res) return PSA_ERROR_INVALID_ARGUMENT;
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256
+    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):
+        if (data_size < key_length * 2 + 1) return PSA_ERROR_BUFFER_TOO_SMALL;
+        *data_length = key_length * 2 + 1;
+        data[0] = 0x04;
+        if (bits != 256) return PSA_ERROR_NOT_SUPPORTED;
+        res = ocrypto_ecdh_p256k1_public_key(&data[1], key);
+        if (res) return PSA_ERROR_INVALID_ARGUMENT;
+        break;
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256 */
+
 #ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_MONTGOMERY
     case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY):
         if (data_size < key_length) return PSA_ERROR_BUFFER_TOO_SMALL;
@@ -123,6 +141,7 @@ psa_status_t oberon_export_ec_public_key(
             ocrypto_curve25519_scalarmult_base(data, key);
             break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_MONTGOMERY_255 */
+
 #ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_MONTGOMERY_448
         case 448:
             ocrypto_curve448_scalarmult_base(data, key);
@@ -133,6 +152,7 @@ psa_status_t oberon_export_ec_public_key(
         }
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_MONTGOMERY */
+
 #ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_TWISTED_EDWARDS
     case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS):
         if (data_size < key_length) return PSA_ERROR_BUFFER_TOO_SMALL;
@@ -153,6 +173,7 @@ psa_status_t oberon_export_ec_public_key(
         }
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_TWISTED_EDWARDS */
+
     default:
         (void)res;
         return PSA_ERROR_NOT_SUPPORTED;
@@ -288,6 +309,31 @@ psa_status_t oberon_import_ec_key(
         if (res) return PSA_ERROR_INVALID_ARGUMENT; // point not on curve
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256
+    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):
+        if (bits == 0) {
+            bits = PSA_BYTES_TO_BITS(data_length);
+        }
+        if (bits != 256) return PSA_ERROR_NOT_SUPPORTED;
+        if (data_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
+        if (!oberon_ct_compare_zero(data, 32)) return PSA_ERROR_INVALID_ARGUMENT;
+        res = ocrypto_ecdh_p256k1_secret_key_check(data);
+        if (res) return PSA_ERROR_INVALID_ARGUMENT; // out of range
+        break;
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256 */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256
+    case PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1):
+        if (bits == 0) {
+            if ((data_length & 1) == 0) return PSA_ERROR_INVALID_ARGUMENT;
+            bits = PSA_BYTES_TO_BITS(data_length >> 1);
+        }
+        if (bits != 256) return PSA_ERROR_NOT_SUPPORTED;
+        res = ocrypto_ecdh_p256k1_public_key_check(&data[1]);
+        if (res) return PSA_ERROR_INVALID_ARGUMENT; // point not on curve
+        break;
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256 */
 
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_MONTGOMERY) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_MONTGOMERY)
@@ -442,6 +488,20 @@ psa_status_t oberon_generate_ec_key(
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP */
 
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256
+    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):
+        if (key_size < length) return PSA_ERROR_BUFFER_TOO_SMALL;
+        if (bits != 256) return PSA_ERROR_NOT_SUPPORTED;
+        do {
+            do {
+                status = psa_generate_random(key, length);
+                if (status) return status;
+            } while (oberon_ct_compare_zero(key, length) == 0);
+            res = ocrypto_ecdh_p256k1_secret_key_check(key);
+        } while (res);
+        break;
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256 */
+
 #ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_MONTGOMERY
     case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY):
         if (key_size < length) return PSA_ERROR_BUFFER_TOO_SMALL;
@@ -548,6 +608,24 @@ psa_status_t oberon_derive_ec_key(
         if (res || !oberon_ct_compare_zero(key, input_length)) return PSA_ERROR_INSUFFICIENT_DATA;
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256
+    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1):
+        if (bits != 256) return PSA_ERROR_INVALID_ARGUMENT;
+
+        // increment key data
+        c = 1; i = input_length;
+        do {
+            c += key[--i];
+            key[i] = (uint8_t)c;
+            c >>= 8;
+        } while (i > 0);
+
+        res = ocrypto_ecdh_p256_secret_key_check(key);
+        // repeat if input out of range
+        if (res || !oberon_ct_compare_zero(key, input_length)) return PSA_ERROR_INSUFFICIENT_DATA;
+        break;
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256 */
 
 #ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_MONTGOMERY
     case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY):

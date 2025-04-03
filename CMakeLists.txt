@@ -68,7 +68,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
     else()
         set(OCRYPTO_ROOT oberon/drivers/ocrypto)
     endif()
-    if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_types.h")
+    if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_types_p256.h")
         message(FATAL_ERROR
                 "Path ${OCRYPTO_ROOT} does not contain valid ocrypto sources. \
                 Please provide -DOCRYPTO_ROOT=path/to/ocrypto/sources or copy \
@@ -161,6 +161,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
                     pake_test
                     kdf_test
                     key_wrap_test
+                    lms_test
             )
 
             # define Mbed TLS helper sources originating from Mbed TLS test, modified and unmodified
@@ -222,6 +223,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
         "oberon/drivers/oberon_hash.h"
         "oberon/drivers/oberon_cipher.h"
         "oberon/drivers/oberon_aead.h"
+        "oberon/drivers/oberon_lms.h"
         "oberon/drivers/oberon_mac.h"
         "oberon/drivers/oberon_key_derivation.h"
         "oberon/drivers/oberon_key_wrap.h"
@@ -233,6 +235,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
         "oberon/drivers/oberon_hmac_drbg.h"
         "oberon/drivers/oberon_helpers.h"
         "oberon/drivers/oberon_wpa3_sae.h"
+        "oberon/drivers/oberon_xmss.h"
         DESTINATION "include/oberon"
     )
     install(FILES

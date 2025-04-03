@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -135,12 +135,12 @@ psa_status_t oberon_key_derivation_setup(
         } else
 #endif /* PSA_NEED_OBERON_HKDF_EXTRACT */
 
-#ifdef PSA_NEED_OBERON_WPA3_SAE_PT
-        if (PSA_ALG_IS_WPA3_SAE_PT(alg)) {
+#ifdef PSA_NEED_OBERON_WPA3_SAE_H2E
+        if (PSA_ALG_IS_WPA3_SAE_H2E(alg)) {
             operation->info_length = 0;
-            operation->alg = OBERON_WPA3_SAE_PT_ALG;
+            operation->alg = OBERON_WPA3_SAE_H2E_ALG;
         } else
-#endif /* PSA_NEED_OBERON_WPA3_SAE_PT */
+#endif /* PSA_NEED_OBERON_WPA3_SAE_H2E */
 
 #ifdef PSA_NEED_OBERON_HKDF_EXPAND
         if (PSA_ALG_IS_HKDF_EXPAND(alg)) {
@@ -225,11 +225,11 @@ psa_status_t oberon_key_derivation_input_bytes(
     case PSA_KEY_DERIVATION_INPUT_SALT:
         if (data_length) {
             if (operation->alg == OBERON_HKDF_ALG || operation->alg == OBERON_HKDF_EXTRACT_ALG
-#ifdef PSA_NEED_OBERON_WPA3_SAE_PT
-                || operation->alg == OBERON_WPA3_SAE_PT_ALG
+#ifdef PSA_NEED_OBERON_WPA3_SAE_H2E
+                || operation->alg == OBERON_WPA3_SAE_H2E_ALG
 #endif
                 ) {
-#if defined(PSA_NEED_OBERON_HKDF) || defined(PSA_NEED_OBERON_HKDF_EXTRACT) || defined(PSA_NEED_OBERON_WPA3_SAE_PT)
+#if defined(PSA_NEED_OBERON_HKDF) || defined(PSA_NEED_OBERON_HKDF_EXTRACT) || defined(PSA_NEED_OBERON_WPA3_SAE_H2E)
                 status = oberon_setup_mac(operation, data, data_length);
                 if (status) goto exit;
                 operation->salt_length = (uint16_t)data_length;
@@ -340,7 +340,7 @@ psa_status_t oberon_key_derivation_input_bytes(
 #endif /* PSA_NEED_OBERON_HKDF || PSA_NEED_OBERON_HKDF_EXTRACT || PSA_NEED_OBERON_HKDF_EXPAND || PSA_NEED_OBERON_TLS12 */
 
 #if defined(PSA_NEED_OBERON_HKDF) || defined(PSA_NEED_OBERON_HKDF_EXTRACT) || defined(PSA_NEED_OBERON_HKDF_EXPAND) || \
-    defined(PSA_NEED_OBERON_SRP_PASSWORD_HASH) || defined(PSA_NEED_OBERON_WPA3_SAE_PT)
+    defined(PSA_NEED_OBERON_SRP_PASSWORD_HASH) || defined(PSA_NEED_OBERON_WPA3_SAE_H2E)
     case PSA_KEY_DERIVATION_INPUT_INFO:
         switch (operation->alg) {
 #ifdef PSA_NEED_OBERON_SRP_PASSWORD_HASH
@@ -351,8 +351,8 @@ psa_status_t oberon_key_derivation_input_bytes(
             if (status) goto exit;
             return PSA_SUCCESS;
 #endif
-#ifdef PSA_NEED_OBERON_WPA3_SAE_PT
-        case OBERON_WPA3_SAE_PT_ALG:
+#ifdef PSA_NEED_OBERON_WPA3_SAE_H2E
+        case OBERON_WPA3_SAE_H2E_ALG:
             // add password id
             status = psa_driver_wrapper_mac_update(&operation->mac_op, data, data_length);
             if (status) goto exit;
@@ -368,7 +368,7 @@ psa_status_t oberon_key_derivation_input_bytes(
           PSA_NEED_OBERON_SRP_PASSWORD_HASH || PSA_NEED_OBERON_WPA3_SAE_PT */
 
 #if defined(PSA_NEED_OBERON_PBKDF2_HMAC) || defined(PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128) || \
-    defined(PSA_NEED_OBERON_SRP_PASSWORD_HASH) || defined(PSA_NEED_OBERON_WPA3_SAE_PT)
+    defined(PSA_NEED_OBERON_SRP_PASSWORD_HASH) || defined(PSA_NEED_OBERON_WPA3_SAE_H2E)
     case PSA_KEY_DERIVATION_INPUT_PASSWORD:
         switch (operation->alg) {
 #ifdef PSA_NEED_OBERON_PBKDF2_HMAC
@@ -408,19 +408,19 @@ psa_status_t oberon_key_derivation_input_bytes(
             if (status) goto exit;
             break;
 #endif /* PSA_NEED_OBERON_SRP_PASSWORD_HASH */
-#ifdef PSA_NEED_OBERON_WPA3_SAE_PT
-        case OBERON_WPA3_SAE_PT_ALG:
+#ifdef PSA_NEED_OBERON_WPA3_SAE_H2E
+        case OBERON_WPA3_SAE_H2E_ALG:
             // add password
             status = psa_driver_wrapper_mac_update(&operation->mac_op, data, data_length);
             if (status) goto exit;
             return PSA_SUCCESS;
-#endif /* PSA_NEED_OBERON_WPA3_SAE_PT */
+#endif /* PSA_NEED_OBERON_WPA3_SAE_H2E */
         default:
             break;
         }
         return PSA_SUCCESS;
 #endif /* PSA_NEED_OBERON_PBKDF2_HMAC || PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128 ||
-          PSA_NEED_OBERON_SRP_PASSWORD_HASH || PSA_NEED_OBERON_WPA3_SAE_PT */
+          PSA_NEED_OBERON_SRP_PASSWORD_HASH || PSA_NEED_OBERON_WPA3_SAE_H2E */
 
 #if defined(PSA_NEED_OBERON_TLS12_PRF) || defined(PSA_NEED_OBERON_TLS12_PSK_TO_MS)
     case PSA_KEY_DERIVATION_INPUT_SEED:
@@ -658,14 +658,14 @@ psa_status_t oberon_key_derivation_output_bytes(
             return status;
 #endif
 
-#ifdef PSA_NEED_OBERON_WPA3_SAE_PT
-        case OBERON_WPA3_SAE_PT_ALG:
+#ifdef PSA_NEED_OBERON_WPA3_SAE_H2E
+        case OBERON_WPA3_SAE_H2E_ALG:
             // finish extract and skip expand
             status = psa_driver_wrapper_mac_sign_finish(&operation->mac_op,
                 output, output_length, &length);
             if (status) goto exit;
             return PSA_SUCCESS;
-#endif /* PSA_NEED_OBERON_WPA3_SAE_PT */
+#endif /* PSA_NEED_OBERON_WPA3_SAE_H2E */
 
 #if defined(PSA_NEED_OBERON_SP800_108_COUNTER_HMAC) || defined(PSA_NEED_OBERON_SP800_108_COUNTER_CMAC)
         case OBERON_SP800_108_COUNTER_ALG:
@@ -728,10 +728,10 @@ psa_status_t oberon_key_derivation_abort(
     oberon_key_derivation_operation_t *operation )
 {
     switch (operation->alg) {
-#if defined(PSA_NEED_OBERON_HKDF) || defined(PSA_NEED_OBERON_HKDF_EXTRACT) || defined(PSA_NEED_OBERON_WPA3_SAE_PT)
+#if defined(PSA_NEED_OBERON_HKDF) || defined(PSA_NEED_OBERON_HKDF_EXTRACT) || defined(PSA_NEED_OBERON_WPA3_SAE_H2E)
     case OBERON_HKDF_ALG:
     case OBERON_HKDF_EXTRACT_ALG:
-    case OBERON_WPA3_SAE_PT_ALG:
+    case OBERON_WPA3_SAE_H2E_ALG:
         return psa_driver_wrapper_mac_abort(&operation->mac_op);
 #endif
 #ifdef PSA_NEED_OBERON_SRP_PASSWORD_HASH

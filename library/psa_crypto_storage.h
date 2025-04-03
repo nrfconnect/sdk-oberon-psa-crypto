@@ -25,6 +25,15 @@ extern "C" {
 #if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
 /* Reflect the maximum size for the key buffer. */
 #define PSA_CRYPTO_MAX_STORAGE_SIZE (MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE)
+MBEDTLS_STATIC_ASSERT(PSA_EXPORT_PUBLIC_KEY_MAX_SIZE <= PSA_CRYPTO_MAX_STORAGE_SIZE, 
+    "The enabled asymmetric public key size cannot fit in the PSA key store buffer," 
+    "increase the config MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE.");
+MBEDTLS_STATIC_ASSERT(PSA_EXPORT_KEY_PAIR_MAX_SIZE <= PSA_CRYPTO_MAX_STORAGE_SIZE, 
+    "The enabled asymmetric key pair size cannot fit in the PSA key store buffer," 
+    "increase the config MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE.");
+MBEDTLS_STATIC_ASSERT(PSA_CIPHER_MAX_KEY_LENGTH <= PSA_CRYPTO_MAX_STORAGE_SIZE, 
+    "The enabled symmetric key size cannot fit in the PSA key store buffer," 
+    "increase the config MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE.");
 #else
 /* Just set an upper boundary but it should have no effect since the key size
  * is limited in memory. */

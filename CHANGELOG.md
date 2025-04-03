@@ -1,5 +1,52 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.4.0
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.4.0>
+3-Apr-2025 (2df55af)
+
+Oberon crypto software drivers require _ocrypto_ version 3.8.x.
+
+### Compatibility
+- PSA Certified Crypto API specifications
+  - Core specification: 1.3.0 including former PAKE extensions for EC-JPAKE and SPAKE2+
+    [IHI0086-PSA_Certified_Crypto_API-1.3.0.pdf](https://arm-software.github.io/psa-api/crypto/1.3/IHI0086-PSA_Certified_Crypto_API-1.3.0.pdf).
+  - SRP PAKE extension according to
+    [Add support for the SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
+  - WPA3 PAKE extension according to
+    [Dragonfly PAKE for WPA3 use cases](https://github.com/ARM-software/psa-api/issues/203).
+  - LMS/HSS/XMSS/XMSS^MT PQC extension according to PSA Crypto API 1.3 PQC Extension beta 0 release candidate 1
+    [AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.0.pdf](https://arm-software.github.io/psa-api/crypto/1.3/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.0.pdf).
+- PSA Certified APIs Architecture Test Suite v1.8.
+- Aligned with PSA Crypto core from Mbed TLS 3.6.3.
+
+### New Features
+- Add support for LMS verify, HSS verify, XMSS verify and XMSS^MT verify
+  (PQC signature algorithms) with support for SHA256 and SHAKE256 hashing.
+  Based on [NIST SP 800-208](https://csrc.nist.gov/pubs/sp/800/208/final).
+- Add `psa_key_agreement()` function.
+- Add `PSA_ALG_CCM_STAR_ANY_TAG` wildcard.
+- Add support for Koblitz curve secp256k1.
+- Add XChaCha20 and XChaCha20Poly1305.
+
+### Improvements
+- Add SHA3 to cycle tests.
+- Improve zero checking in SPAKE2+ driver.
+- Update WPA3 SAE to latest PAKE specification draft.
+- Add static asserts to check PSA_CRYPTO_MAX_STORAGE_SIZE configuration.
+- Extend union initialization to comply with GCC 1.5 requirements.
+- Replaced `psa_key_id_t` with `mbedtls_svc_key_id_t` at various places
+  to improve TF-M compatibility.
+- Align heapless configuration with Mbed TLS 3.6.3.
+- Update PSA Certified APIs Architecture Test Suite.
+
+### Bug Fixes
+- Bug 14: Key compatibility checking in key derivation incomplete for
+  PSA_ALG_SP800_108_COUNTER_CMAC and PSA_ALG_SP800_108_COUNTER_HMAC.
+- Bug 15: Wrong handling of ED25519 and ED448 with pre-hashing when used
+  with `psa_sign_message()` or `psa_verify_message()`.
+- Bug 16: Wrong buffer size calculation for Ed488.
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.3.4
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.3.4>
 17-Dec-2024 (74d1408)

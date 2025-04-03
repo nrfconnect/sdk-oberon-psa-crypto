@@ -45,3 +45,35 @@ PSA Crypto_, there are settings in `include/mbedtls/mbedtls_config.h` that may
 have to be configured as well.
 See [README-SSL](../../programs/README-SSL.md)
 for more information.
+
+## Relevant Defines
+
+The following defines in `mbedtls_config.h` are relevant for _Oberon PSA Crypto_:
+
+- `MBEDTLS_THREADING_C`
+- `MBEDTLS_PSA_CRYPTO_C`
+- `MBEDTLS_PSA_CRYPTO_CLIENT`
+- `MBEDTLS_PSA_CRYPTO_STORAGE_C`
+- `MBEDTLS_PSA_ITS_FILE_C`
+- `MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER`
+- `MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS`
+
+Only relevant for testing:
+
+- `MBEDTLS_STATIC_TESTABLE`
+- `MBEDTLS_TEST_HOOKS`
+- `MBEDTLS_TEST_HOOK_TEST_ASSERT`
+- `MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY` (introduced by _Oberon microsystems_)
+
+Should always be defined:
+
+- `MBEDTLS_USE_PSA_CRYPTO`
+- `MBEDTLS_PSA_CRYPTO_CONFIG`
+
+Should never be defined:
+
+- `MBEDTLS_PSA_CRYPTO_SE_C`
+- `MBEDTLS_PSA_INJECT_ENTROPY`
+- `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`
+- `MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS`
+- `MBEDTLS_PSA_CRYPTO_SPM`

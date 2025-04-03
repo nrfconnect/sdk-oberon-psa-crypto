@@ -102,289 +102,201 @@ PSA PASSWORD_HASH 256-bit
 depends_on:8
 0:exp:9:int:256:exp:1
 
-PSA PEPPER 128-bit
-depends_on:9:10
-0:exp:10:int:128:exp:1
-
-PSA PEPPER 256-bit
-depends_on:9:10
-0:exp:10:int:256:exp:1
-
 PSA RAW_DATA 8-bit
-depends_on:11
-0:exp:11:int:8:exp:1
+depends_on:9
+0:exp:10:int:8:exp:1
 
 PSA RAW_DATA 40-bit
-depends_on:11
-0:exp:11:int:40:exp:1
+depends_on:9
+0:exp:10:int:40:exp:1
 
 PSA RAW_DATA 128-bit
-depends_on:11
-0:exp:11:int:128:exp:1
+depends_on:9
+0:exp:10:int:128:exp:1
 
 PSA RSA_KEY_PAIR 1024-bit
-depends_on:12:13
-0:exp:12:int:1024:exp:1
+depends_on:10:11
+0:exp:11:int:1024:exp:1
 
 PSA RSA_KEY_PAIR 1536-bit
-depends_on:12:14
-0:exp:12:int:1536:exp:1
+depends_on:12:11
+0:exp:11:int:1536:exp:1
 
 PSA RSA_PUBLIC_KEY 1024-bit
-0:exp:13:int:1024:exp:14
+0:exp:12:int:1024:exp:13
 
 PSA RSA_PUBLIC_KEY 1536-bit
-0:exp:13:int:1536:exp:14
-
-PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 160-bit
-depends_on:15:16:10
-0:exp:15:int:160:exp:1
-
-PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 192-bit
-depends_on:15:17:10
-0:exp:15:int:192:exp:1
-
-PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 224-bit
-depends_on:15:18:10
-0:exp:15:int:224:exp:1
+0:exp:12:int:1536:exp:13
 
 PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 256-bit
-depends_on:15:19
-0:exp:15:int:256:exp:1
-
-PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 320-bit
-depends_on:15:20:10
-0:exp:15:int:320:exp:1
+depends_on:13:14
+0:exp:14:int:256:exp:1
 
 PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 384-bit
-depends_on:15:21
-0:exp:15:int:384:exp:1
+depends_on:15:14
+0:exp:14:int:384:exp:1
 
 PSA ECC_KEY_PAIR(BRAINPOOL_P_R1) 512-bit
-depends_on:15:22
-0:exp:15:int:512:exp:1
+depends_on:16:14
+0:exp:14:int:512:exp:1
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 160-bit
-0:exp:16:int:160:exp:14
+0:exp:15:int:160:exp:13
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 192-bit
-0:exp:16:int:192:exp:14
+0:exp:15:int:192:exp:13
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 224-bit
-0:exp:16:int:224:exp:14
+0:exp:15:int:224:exp:13
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 256-bit
-0:exp:16:int:256:exp:14
+0:exp:15:int:256:exp:13
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 320-bit
-0:exp:16:int:320:exp:14
+0:exp:15:int:320:exp:13
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 384-bit
-0:exp:16:int:384:exp:14
+0:exp:15:int:384:exp:13
 
 PSA ECC_PUBLIC_KEY(BRAINPOOL_P_R1) 512-bit
-0:exp:16:int:512:exp:14
+0:exp:15:int:512:exp:13
 
 PSA ECC_KEY_PAIR(MONTGOMERY) 255-bit
-depends_on:15:23
-0:exp:17:int:255:exp:1
+depends_on:17:14
+0:exp:16:int:255:exp:1
 
 PSA ECC_KEY_PAIR(MONTGOMERY) 448-bit
-depends_on:15:24
-0:exp:17:int:448:exp:1
+depends_on:18:14
+0:exp:16:int:448:exp:1
 
 PSA ECC_PUBLIC_KEY(MONTGOMERY) 255-bit
-0:exp:18:int:255:exp:14
+0:exp:17:int:255:exp:13
 
 PSA ECC_PUBLIC_KEY(MONTGOMERY) 448-bit
-0:exp:18:int:448:exp:14
+0:exp:17:int:448:exp:13
 
 PSA ECC_KEY_PAIR(SECP_K1) 192-bit
-depends_on:15:25
-0:exp:19:int:192:exp:1
-
-PSA ECC_KEY_PAIR(SECP_K1) 225-bit
-depends_on:15:26:10
-0:exp:19:int:225:exp:1
+depends_on:19:14
+0:exp:18:int:192:exp:1
 
 PSA ECC_KEY_PAIR(SECP_K1) 256-bit
-depends_on:15:27
-0:exp:19:int:256:exp:1
+depends_on:20:14
+0:exp:18:int:256:exp:1
 
 PSA ECC_PUBLIC_KEY(SECP_K1) 192-bit
-0:exp:20:int:192:exp:14
+0:exp:19:int:192:exp:13
 
 PSA ECC_PUBLIC_KEY(SECP_K1) 225-bit
-0:exp:20:int:225:exp:14
+0:exp:19:int:225:exp:13
 
 PSA ECC_PUBLIC_KEY(SECP_K1) 256-bit
-0:exp:20:int:256:exp:14
+0:exp:19:int:256:exp:13
 
 PSA ECC_KEY_PAIR(SECP_R1) 224-bit
-depends_on:15:28
-0:exp:21:int:224:exp:1
+depends_on:21:14
+0:exp:20:int:224:exp:1
 
 PSA ECC_KEY_PAIR(SECP_R1) 256-bit
-depends_on:15:29
-0:exp:21:int:256:exp:1
+depends_on:22:14
+0:exp:20:int:256:exp:1
 
 PSA ECC_KEY_PAIR(SECP_R1) 384-bit
-depends_on:15:30
-0:exp:21:int:384:exp:1
+depends_on:23:14
+0:exp:20:int:384:exp:1
 
 PSA ECC_KEY_PAIR(SECP_R1) 521-bit
-depends_on:15:31
-0:exp:21:int:521:exp:1
+depends_on:24:14
+0:exp:20:int:521:exp:1
 
 PSA ECC_PUBLIC_KEY(SECP_R1) 224-bit
-0:exp:22:int:224:exp:14
+0:exp:21:int:224:exp:13
 
 PSA ECC_PUBLIC_KEY(SECP_R1) 256-bit
-0:exp:22:int:256:exp:14
+0:exp:21:int:256:exp:13
 
 PSA ECC_PUBLIC_KEY(SECP_R1) 384-bit
-0:exp:22:int:384:exp:14
+0:exp:21:int:384:exp:13
 
 PSA ECC_PUBLIC_KEY(SECP_R1) 521-bit
-0:exp:22:int:521:exp:14
-
-PSA ECC_KEY_PAIR(SECP_R2) 160-bit
-depends_on:15:32:10
-0:exp:23:int:160:exp:1
+0:exp:21:int:521:exp:13
 
 PSA ECC_PUBLIC_KEY(SECP_R2) 160-bit
-0:exp:24:int:160:exp:14
-
-PSA ECC_KEY_PAIR(SECT_K1) 163-bit
-depends_on:15:33:10
-0:exp:25:int:163:exp:1
-
-PSA ECC_KEY_PAIR(SECT_K1) 233-bit
-depends_on:15:34:10
-0:exp:25:int:233:exp:1
-
-PSA ECC_KEY_PAIR(SECT_K1) 239-bit
-depends_on:15:35:10
-0:exp:25:int:239:exp:1
-
-PSA ECC_KEY_PAIR(SECT_K1) 283-bit
-depends_on:15:36:10
-0:exp:25:int:283:exp:1
-
-PSA ECC_KEY_PAIR(SECT_K1) 409-bit
-depends_on:15:37:10
-0:exp:25:int:409:exp:1
-
-PSA ECC_KEY_PAIR(SECT_K1) 571-bit
-depends_on:15:38:10
-0:exp:25:int:571:exp:1
+0:exp:22:int:160:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_K1) 163-bit
-0:exp:26:int:163:exp:14
+0:exp:23:int:163:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_K1) 233-bit
-0:exp:26:int:233:exp:14
+0:exp:23:int:233:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_K1) 239-bit
-0:exp:26:int:239:exp:14
+0:exp:23:int:239:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_K1) 283-bit
-0:exp:26:int:283:exp:14
+0:exp:23:int:283:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_K1) 409-bit
-0:exp:26:int:409:exp:14
+0:exp:23:int:409:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_K1) 571-bit
-0:exp:26:int:571:exp:14
-
-PSA ECC_KEY_PAIR(SECT_R1) 163-bit
-depends_on:15:39:10
-0:exp:27:int:163:exp:1
-
-PSA ECC_KEY_PAIR(SECT_R1) 233-bit
-depends_on:15:40:10
-0:exp:27:int:233:exp:1
-
-PSA ECC_KEY_PAIR(SECT_R1) 283-bit
-depends_on:15:41:10
-0:exp:27:int:283:exp:1
-
-PSA ECC_KEY_PAIR(SECT_R1) 409-bit
-depends_on:15:42:10
-0:exp:27:int:409:exp:1
-
-PSA ECC_KEY_PAIR(SECT_R1) 571-bit
-depends_on:15:43:10
-0:exp:27:int:571:exp:1
+0:exp:23:int:571:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_R1) 163-bit
-0:exp:28:int:163:exp:14
+0:exp:24:int:163:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_R1) 233-bit
-0:exp:28:int:233:exp:14
+0:exp:24:int:233:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_R1) 283-bit
-0:exp:28:int:283:exp:14
+0:exp:24:int:283:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_R1) 409-bit
-0:exp:28:int:409:exp:14
+0:exp:24:int:409:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_R1) 571-bit
-0:exp:28:int:571:exp:14
-
-PSA ECC_KEY_PAIR(SECT_R2) 163-bit
-depends_on:15:44:10
-0:exp:29:int:163:exp:1
+0:exp:24:int:571:exp:13
 
 PSA ECC_PUBLIC_KEY(SECT_R2) 163-bit
-0:exp:30:int:163:exp:14
-
-PSA ECC_KEY_PAIR(TWISTED_EDWARDS) 255-bit
-depends_on:15:45:10
-0:exp:31:int:255:exp:1
-
-PSA ECC_KEY_PAIR(TWISTED_EDWARDS) 448-bit
-depends_on:15:46:10
-0:exp:31:int:448:exp:1
+0:exp:25:int:163:exp:13
 
 PSA ECC_PUBLIC_KEY(TWISTED_EDWARDS) 255-bit
-0:exp:32:int:255:exp:14
+0:exp:26:int:255:exp:13
 
 PSA ECC_PUBLIC_KEY(TWISTED_EDWARDS) 448-bit
-0:exp:32:int:448:exp:14
+0:exp:26:int:448:exp:13
 
 PSA DH_KEY_PAIR(RFC7919) 2048-bit
-depends_on:47:48
-0:exp:33:int:2048:exp:1
+depends_on:25:26
+0:exp:27:int:2048:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 3072-bit
-depends_on:47:49
-0:exp:33:int:3072:exp:1
+depends_on:27:26
+0:exp:27:int:3072:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 4096-bit
-depends_on:47:50
-0:exp:33:int:4096:exp:1
+depends_on:28:26
+0:exp:27:int:4096:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 6144-bit
-depends_on:47:51
-0:exp:33:int:6144:exp:1
+depends_on:29:26
+0:exp:27:int:6144:exp:1
 
 PSA DH_KEY_PAIR(RFC7919) 8192-bit
-depends_on:47:52
-0:exp:33:int:8192:exp:1
+depends_on:30:26
+0:exp:27:int:8192:exp:1
 
 PSA DH_PUBLIC_KEY(RFC7919) 2048-bit
-0:exp:34:int:2048:exp:14
+0:exp:28:int:2048:exp:13
 
 PSA DH_PUBLIC_KEY(RFC7919) 3072-bit
-0:exp:34:int:3072:exp:14
+0:exp:28:int:3072:exp:13
 
 PSA DH_PUBLIC_KEY(RFC7919) 4096-bit
-0:exp:34:int:4096:exp:14
+0:exp:28:int:4096:exp:13
 
 PSA DH_PUBLIC_KEY(RFC7919) 6144-bit
-0:exp:34:int:6144:exp:14
+0:exp:28:int:6144:exp:13
 
 PSA DH_PUBLIC_KEY(RFC7919) 8192-bit
-0:exp:34:int:8192:exp:14
+0:exp:28:int:8192:exp:13
 

@@ -875,7 +875,7 @@ static int setup_spake2p_endpoint_err(psa_pake_operation_t *op,
     if (role == PSA_PAKE_ROLE_CLIENT) {
         psa_set_key_type(&attributes, PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
         if (n == 8) { // wrong w0
-            memset(w0, 0, 32);
+            memset(w0, 0xFF, 32);
             memcpy(w0 + 32, spake2p_w01_0 + 32, 32);
             TEST_ASSERT(psa_import_key(&attributes, w0, 64, key) == PSA_ERROR_INVALID_ARGUMENT);
             return 1;
@@ -1701,7 +1701,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
     send_count[0] = (uint8_t)count;
     send_count[1] = (uint8_t)(count >> 8);
 
-    if (n & 1) {
+    if (ssid == NULL || n & 1) {
         alg = PSA_ALG_WPA3_SAE_FIXED(PSA_ALG_SHA_256);
     } else {
         alg = PSA_ALG_WPA3_SAE_GDH(PSA_ALG_SHA_256);
@@ -1713,11 +1713,11 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
 
     if (ssid != NULL) { // use H2E
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-        psa_set_key_algorithm(&attributes, PSA_ALG_WPA3_SAE_PT(PSA_ALG_SHA_256));
+        psa_set_key_algorithm(&attributes, PSA_ALG_WPA3_SAE_H2E(PSA_ALG_SHA_256));
         psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
         TEST_ASSERT(psa_import_key(&attributes, (const uint8_t*)pw, strlen(pw), &key) == PSA_SUCCESS);
 
-        TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_WPA3_SAE_PT(PSA_ALG_SHA_256)) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_WPA3_SAE_H2E(PSA_ALG_SHA_256)) == PSA_SUCCESS);
         TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_SALT, (const uint8_t*)ssid, strlen(ssid)) == PSA_SUCCESS);
         TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_PASSWORD, key) == PSA_SUCCESS);
         if (pwid != NULL) {
@@ -1727,7 +1727,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
         psa_set_key_algorithm(&attributes, alg);
         psa_set_key_bits(&attributes, 256);
-        psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_PT(PSA_ECC_FAMILY_SECP_R1));
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1));
         TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &ekey) == PSA_SUCCESS);
         TEST_ASSERT(psa_export_key(ekey, data, sizeof data, &length1) == PSA_SUCCESS);
         if (n == 4) {
@@ -1898,10 +1898,10 @@ static int setup_sae_endpoint_err(psa_pake_operation_t *op,
 
     if (ssid != NULL) { // use H2E
         psa_set_key_usage_flags(&pw_attr, PSA_KEY_USAGE_DERIVE);
-        psa_set_key_algorithm(&pw_attr, PSA_ALG_WPA3_SAE_PT(PSA_ALG_SHA_256));
+        psa_set_key_algorithm(&pw_attr, PSA_ALG_WPA3_SAE_H2E(PSA_ALG_SHA_256));
         psa_set_key_type(&pw_attr, PSA_KEY_TYPE_PASSWORD);
         TEST_ASSERT(psa_import_key(&pw_attr, (const uint8_t*)"password", 8, &pwkey) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_WPA3_SAE_PT(PSA_ALG_SHA_256)) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_WPA3_SAE_H2E(PSA_ALG_SHA_256)) == PSA_SUCCESS);
         TEST_ASSERT(psa_key_derivation_input_bytes(&kdf, PSA_KEY_DERIVATION_INPUT_SALT, (const uint8_t*)ssid, strlen(ssid)) == PSA_SUCCESS);
         TEST_ASSERT(psa_key_derivation_input_key(&kdf, PSA_KEY_DERIVATION_INPUT_PASSWORD, pwkey) == PSA_SUCCESS);
         TEST_ASSERT(psa_destroy_key(pwkey) == PSA_SUCCESS);
@@ -1910,7 +1910,7 @@ static int setup_sae_endpoint_err(psa_pake_operation_t *op,
             psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
             expected = PSA_ERROR_INVALID_ARGUMENT;
         } else {
-            psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_PT(PSA_ECC_FAMILY_SECP_R1));
+            psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1));
         }
 
         psa_set_key_bits(&attributes, 256);
@@ -2098,6 +2098,118 @@ exit:
 
 #endif // PSA_WANT_ALG_WPA3_SAE
 
+#ifdef PSA_WANT_ECC_SECP_K1_256
+#ifdef PSA_WANT_ALG_ECDH
+static const uint8_t ecdh_p256k1_skey1[32] = {
+    0xc2, 0xcd, 0xf0, 0xa8, 0xb0, 0xa8, 0x3b, 0x35, 0xac, 0xe5, 0x3f, 0x09, 0x7b, 0x5e, 0x6e, 0x6a,
+    0x0a, 0x1f, 0x2d, 0x40, 0x53, 0x5e, 0xff, 0x1c, 0xf4, 0x34, 0xf5, 0x2a, 0x43, 0xd5, 0x9d, 0x8f};
+static const uint8_t ecdh_p256k1_pkey1[65] = {
+    0x04,
+    0x6f, 0xcc, 0x37, 0xea, 0x5e, 0x9e, 0x09, 0xfe, 0xc6, 0xc8, 0x3e, 0x5f, 0xbd, 0x7a, 0x74, 0x5e,
+    0x3e, 0xee, 0x81, 0xd1, 0x6e, 0xbd, 0x86, 0x1c, 0x9e, 0x66, 0xf5, 0x55, 0x18, 0xc1, 0x97, 0x98,
+    0x4e, 0x9f, 0x11, 0x3c, 0x07, 0xf8, 0x75, 0x69, 0x1d, 0xf8, 0xaf, 0xc1, 0x02, 0x94, 0x96, 0xfc,
+    0x4c, 0xb9, 0x50, 0x9b, 0x39, 0xdc, 0xd3, 0x8f, 0x25, 0x1a, 0x83, 0x35, 0x9c, 0xc8, 0xb4, 0xf7};
+static const uint8_t ecdh_p256k1_skey2[32] = {
+    0x88, 0xd3, 0xad, 0x12, 0x93, 0xd7, 0xce, 0x5e, 0xd6, 0x8d, 0xaf, 0xeb, 0xc0, 0xd1, 0x4d, 0xa5,
+    0x8b, 0xee, 0x5e, 0x56, 0x70, 0xa1, 0x6d, 0xf7, 0xb4, 0x89, 0x21, 0x18, 0x54, 0xde, 0xab, 0x49};
+static const uint8_t ecdh_p256k1_pkey2[65] = {
+    0x04,
+    0x57, 0xc6, 0x28, 0xc8, 0x6c, 0x52, 0x0d, 0x06, 0x9b, 0x49, 0xef, 0xc0, 0x6f, 0x91, 0xcc, 0xb3,
+    0x03, 0xc8, 0x9f, 0x73, 0xf4, 0xa5, 0xf9, 0x14, 0x60, 0x0b, 0xa8, 0x15, 0x73, 0xf5, 0x5a, 0xf7,
+    0x12, 0x81, 0xa8, 0x3a, 0xc4, 0xde, 0x68, 0x4a, 0xd5, 0xe5, 0xba, 0x22, 0xd9, 0x65, 0xc9, 0x42,
+    0x4b, 0xaa, 0x32, 0x70, 0x56, 0x31, 0xbd, 0xd9, 0xbc, 0x37, 0xdf, 0xbe, 0xe7, 0x7f, 0xc9, 0x88};
+
+static int test_ecdh_p256k1()
+{
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key1 = 0, key2 = 0;
+    uint8_t pub1[65], pub2[65];
+    uint8_t sec1[32], sec2[32];
+    size_t len1, len2;
+    int res = 0;
+
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_ECDH);
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1));
+    TEST_ASSERT(psa_import_key(&key_attr, ecdh_p256k1_skey1, sizeof ecdh_p256k1_skey1, &key1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_import_key(&key_attr, ecdh_p256k1_skey2, sizeof ecdh_p256k1_skey2, &key2) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_export_public_key(key1, pub1, sizeof pub1, &len1) == PSA_SUCCESS);
+    ASSERT_COMPARE(pub1, len1, ecdh_p256k1_pkey1, sizeof ecdh_p256k1_pkey1);
+    TEST_ASSERT(psa_export_public_key(key2, pub2, sizeof pub2, &len2) == PSA_SUCCESS);
+    ASSERT_COMPARE(pub2, len2, ecdh_p256k1_pkey2, sizeof ecdh_p256k1_pkey2);
+
+    TEST_ASSERT(psa_raw_key_agreement(PSA_ALG_ECDH, key1, pub2, sizeof pub2, sec1, sizeof sec1, &len1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_raw_key_agreement(PSA_ALG_ECDH, key2, pub1, sizeof pub1, sec2, sizeof sec2, &len2) == PSA_SUCCESS);
+    ASSERT_COMPARE(sec1, len1, sec2, len2);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key2) == PSA_SUCCESS);
+
+    return res;
+}
+#endif // PSA_WANT_ALG_ECDH
+
+#ifdef PSA_WANT_ALG_ECDSA
+static const uint8_t ecdsa_p256k1_hash[32] = {
+    0x4b, 0x68, 0x8d, 0xf4, 0x0b, 0xce, 0xdb, 0xe6, 0x41, 0xdd, 0xb1, 0x6f, 0xf0, 0xa1, 0x84, 0x2d,
+    0x9c, 0x67, 0xea, 0x1c, 0x3b, 0xf6, 0x3f, 0x3e, 0x04, 0x71, 0xba, 0xa6, 0x64, 0x53, 0x1d, 0x1a};
+static const uint8_t ecdsa_p256k1_key[32] = {
+    0xeb, 0xb2, 0xc0, 0x82, 0xfd, 0x77, 0x27, 0x89, 0x0a, 0x28, 0xac, 0x82, 0xf6, 0xbd, 0xf9, 0x7b,
+    0xad, 0x8d, 0xe9, 0xf5, 0xd7, 0xc9, 0x02, 0x86, 0x92, 0xde, 0x1a, 0x25, 0x5c, 0xad, 0x3e, 0x0f};
+static const uint8_t ecdsa_p256k1_pub[65] = {
+    0x04,
+    0x77, 0x9d, 0xd1, 0x97, 0xa5, 0xdf, 0x97, 0x7e, 0xd2, 0xcf, 0x6c, 0xb3, 0x1d, 0x82, 0xd4, 0x33,
+    0x28, 0xb7, 0x90, 0xdc, 0x6b, 0x3b, 0x7d, 0x44, 0x37, 0xa4, 0x27, 0xbd, 0x58, 0x47, 0xdf, 0xcd,
+    0xe9, 0x4b, 0x72, 0x4a, 0x55, 0x5b, 0x6d, 0x01, 0x7b, 0xb7, 0x60, 0x7c, 0x3e, 0x32, 0x81, 0xda,
+    0xf5, 0xb1, 0x69, 0x9d, 0x6e, 0xf4, 0x12, 0x49, 0x75, 0xc9, 0x23, 0x7b, 0x91, 0x7d, 0x42, 0x6f};
+static const uint8_t ecdsa_p256k1_rnd[32] = {
+    0x49, 0xa0, 0xd7, 0xb7, 0x86, 0xec, 0x9c, 0xde, 0x0d, 0x07, 0x21, 0xd7, 0x28, 0x04, 0xbe, 0xfd,
+    0x06, 0x57, 0x1c, 0x97, 0x4b, 0x19, 0x1e, 0xfb, 0x42, 0xec, 0xf3, 0x22, 0xba, 0x9d, 0xdd, 0x9a};
+static const uint8_t ecdsa_p256k1_sig[64] = {
+    0x24, 0x10, 0x97, 0xef, 0xbf, 0x8b, 0x63, 0xbf, 0x14, 0x5c, 0x89, 0x61, 0xdb, 0xdf, 0x10, 0xc3,
+    0x10, 0xef, 0xbb, 0x3b, 0x26, 0x76, 0xbb, 0xc0, 0xf8, 0xb0, 0x85, 0x05, 0xc9, 0xe2, 0xf7, 0x95,
+    0x02, 0x10, 0x06, 0xb7, 0x83, 0x86, 0x09, 0x33, 0x9e, 0x8b, 0x41, 0x5a, 0x7f, 0x9a, 0xcb, 0x1b,
+    0x66, 0x18, 0x28, 0x13, 0x1a, 0xef, 0x1e, 0xcb, 0xc7, 0x95, 0x5d, 0xfb, 0x01, 0xf3, 0xca, 0x0e};
+
+static int test_ecdsa_p256k1()
+{
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0, pkey = 0;
+    uint8_t pub[65], sig[64];
+    size_t len;
+    int res = 0;
+
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_HASH);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1));
+    TEST_ASSERT(psa_import_key(&key_attr, ecdsa_p256k1_key, sizeof ecdsa_p256k1_key, &key) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_export_public_key(key, pub, sizeof pub, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(pub, len, ecdsa_p256k1_pub, sizeof ecdsa_p256k1_pub);
+
+    oberon_test_drbg_setup(ecdsa_p256k1_rnd, sizeof ecdsa_p256k1_rnd);
+    TEST_ASSERT(psa_sign_hash(key, PSA_ALG_ECDSA(PSA_ALG_SHA_256), ecdsa_p256k1_hash, sizeof ecdsa_p256k1_hash, sig, sizeof sig, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(sig, len, ecdsa_p256k1_sig, sizeof ecdsa_p256k1_sig);
+
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_HASH);
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1));
+    TEST_ASSERT(psa_import_key(&key_attr, ecdsa_p256k1_pub, sizeof ecdsa_p256k1_pub, &pkey) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_verify_hash(pkey, PSA_ALG_ECDSA(PSA_ALG_SHA_256), ecdsa_p256k1_hash, sizeof ecdsa_p256k1_hash, sig, len) == PSA_SUCCESS);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(pkey) == PSA_SUCCESS);
+
+    return res;
+}
+#endif // PSA_WANT_ALG_ECDSA
+#endif // PSA_WANT_ECC_SECP_K1_256
+
 
 int main(void)
 {
@@ -2170,6 +2282,15 @@ int main(void)
         TEST_ASSERT(test_sae_err("ssid", i));
     }
 #endif
+
+#ifdef PSA_WANT_ECC_SECP_K1_256
+#ifdef PSA_WANT_ALG_ECDH
+    TEST_ASSERT(test_ecdh_p256k1());
+#endif // PSA_WANT_ALG_ECDH
+#ifdef PSA_WANT_ALG_ECDSA
+    TEST_ASSERT(test_ecdsa_p256k1());
+#endif // PSA_WANT_ALG_ECDSA
+#endif // PSA_WANT_ECC_SECP_K1_256
 
     return 0;
 exit:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -12,6 +12,8 @@
 #include "oberon_asymmetric_signature.h"
 
 #include "oberon_ecdsa.h"
+#include "oberon_lms.h"
+#include "oberon_xmss.h"
 #include "oberon_rsa.h"
 
 
@@ -151,6 +153,46 @@ psa_status_t oberon_verify_message(
             signature, signature_length);
     } else
 #endif /* PSA_NEED_OBERON_ECDSA_VERIFY */
+
+#ifdef PSA_NEED_OBERON_LMS_VERIFY
+    if (type == PSA_KEY_TYPE_LMS_PUBLIC_KEY) {
+        return oberon_lms_verify_message(
+            attributes, key, key_length,
+            alg,
+            input, input_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_LMS_VERIFY */
+
+#ifdef PSA_NEED_OBERON_HSS_VERIFY
+    if (type == PSA_KEY_TYPE_HSS_PUBLIC_KEY) {
+        return oberon_hss_verify_message(
+            attributes, key, key_length,
+            alg,
+            input, input_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_HSS_VERIFY */
+
+#ifdef PSA_NEED_OBERON_XMSS_VERIFY
+    if (type == PSA_KEY_TYPE_XMSS_PUBLIC_KEY) {
+        return oberon_xmss_verify_message(
+            attributes, key, key_length,
+            alg,
+            input, input_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_XMSS_VERIFY */
+
+#ifdef PSA_NEED_OBERON_XMSS_MT_VERIFY
+    if (type == PSA_KEY_TYPE_XMSS_MT_PUBLIC_KEY) {
+        return oberon_xmssmt_verify_message(
+            attributes, key, key_length,
+            alg,
+            input, input_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_XMSS_MT_VERIFY */
 
     {
         (void)key;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -271,7 +271,7 @@ psa_status_t oberon_wpa3_sae_setup(
     operation->pmk_length = (uint8_t)pmk_length;
     operation->keys_set = 0;
     operation->salt_set = 0;
-    operation->use_h2e = PSA_KEY_TYPE_IS_WPA3_SAE_PT(type);
+    operation->use_h2e = PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type);
     return PSA_SUCCESS;
 }
 
@@ -460,7 +460,7 @@ psa_status_t oberon_derive_wpa3_sae_pt_key(
 
     switch (type) {
 #ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256
-    case PSA_KEY_TYPE_WPA3_SAE_PT(PSA_ECC_FAMILY_SECP_R1):
+    case PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1):
         switch (bits) {
         case 256: 
             if (input_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
@@ -502,7 +502,7 @@ psa_status_t oberon_import_wpa3_sae_pt_key(
 
     switch (type) {
 #ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
-    case PSA_KEY_TYPE_WPA3_SAE_PT(PSA_ECC_FAMILY_SECP_R1):
+    case PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1):
         switch (data_length) {
         case 64:
             if (bits != 0 && bits != 256) return PSA_ERROR_INVALID_ARGUMENT;

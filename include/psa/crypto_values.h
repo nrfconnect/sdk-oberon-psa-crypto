@@ -1279,6 +1279,15 @@
  */
 #define PSA_ALG_CCM_STAR_NO_TAG                 ((psa_algorithm_t) 0x04c01300)
 
+/** The CCM/CCM* wildcard algorithm.
+ * 
+ * If a block-cipher key specifies PSA_ALG_CCM_STAR_ANY_TAG as its permitted
+ * algorithm, then the key can be used with the PSA_ALG_CCM_STAR_NO_TAG
+ * unauthenticated cipher, the PSA_ALG_CCM AEAD algorithm, and truncated
+ * PSA_ALG_CCM AEAD algorithms.
+ */
+#define PSA_ALG_CCM_STAR_ANY_TAG                ((psa_algorithm_t) 0x04c09300)
+
 /** The GCM authenticated encryption algorithm.
  *
  * The underlying block cipher is determined by the key type.
@@ -1295,6 +1304,10 @@
  * Implementations must support 16-byte tags and should reject other sizes.
  */
 #define PSA_ALG_CHACHA20_POLY1305               ((psa_algorithm_t) 0x05100500)
+
+/** The XChacha20-Poly1305 AEAD algorithm.
+ */
+#define PSA_ALG_XCHACHA20_POLY1305              ((psa_algorithm_t) 0x05100600)
 
 /* In the encoding of an AEAD algorithm, the bits corresponding to
  * PSA_ALG_AEAD_TAG_LENGTH_MASK encode the length of the AEAD tag.
@@ -1362,6 +1375,7 @@
         PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_CCM) \
         PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_GCM) \
         PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_CHACHA20_POLY1305) \
+        PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, PSA_ALG_XCHACHA20_POLY1305) \
         0)
 #define PSA_ALG_AEAD_WITH_DEFAULT_LENGTH_TAG_CASE(aead_alg, ref)         \
     PSA_ALG_AEAD_WITH_SHORTENED_TAG(aead_alg, 0) ==                      \
@@ -1705,7 +1719,9 @@
  *         supported algorithm identifier.
  */
 #define PSA_ALG_IS_SIGN_MESSAGE(alg)                                    \
-    (PSA_ALG_IS_SIGN_HASH(alg) || (alg) == PSA_ALG_PURE_EDDSA)
+    (PSA_ALG_IS_SIGN_HASH(alg) || (alg) == PSA_ALG_PURE_EDDSA ||        \
+     (alg == PSA_ALG_LMS) || (alg == PSA_ALG_HSS) ||                    \
+     (alg == PSA_ALG_XMSS) || (alg == PSA_ALG_XMSS_MT))
 
 /** Whether the specified algorithm is a hash-and-sign algorithm.
  *
@@ -2284,23 +2300,36 @@
 #define PSA_ALG_KEY_AGREEMENT_GET_BASE(alg)                             \
     (((alg) & PSA_ALG_KEY_AGREEMENT_MASK) | PSA_ALG_CATEGORY_KEY_AGREEMENT)
 
-/** Whether the specified algorithm is a raw key agreement algorithm.
+/** Whether the specified algorithm is a standalone key agreement algorithm.
  *
- * A raw key agreement algorithm is one that does not specify
+ * A standalone key agreement algorithm is one that does not specify
  * a key derivation function.
- * Usually, raw key agreement algorithms are constructed directly with
- * a \c PSA_ALG_xxx macro while non-raw key agreement algorithms are
+ * Usually, standalone key agreement algorithms are constructed directly with
+ * a \c PSA_ALG_xxx macro while non-standalone key agreement algorithms are
  * constructed with #PSA_ALG_KEY_AGREEMENT().
  *
  * \param alg An algorithm identifier (value of type #psa_algorithm_t).
  *
- * \return 1 if \p alg is a raw key agreement algorithm, 0 otherwise.
+ * \return 1 if \p alg is a standalone key agreement algorithm, 0 otherwise.
  *         This macro may return either 0 or 1 if \p alg is not a supported
  *         algorithm identifier.
  */
-#define PSA_ALG_IS_RAW_KEY_AGREEMENT(alg)                               \
-    (PSA_ALG_IS_KEY_AGREEMENT(alg) &&                                   \
-     PSA_ALG_KEY_AGREEMENT_GET_KDF(alg) == PSA_ALG_CATEGORY_KEY_DERIVATION)
+#define PSA_ALG_IS_STANDALONE_KEY_AGREEMENT(alg)                        \
+    (((alg) & (PSA_ALG_CATEGORY_MASK | ~PSA_ALG_KEY_AGREEMENT_MASK)) == \
+     PSA_ALG_CATEGORY_KEY_AGREEMENT)
+
+/** Whether the specified algorithm is a raw key agreement algorithm.
+ *
+ * This is the original API name for PSA_ALG_IS_STANDALONE_KEY_AGREEMENT()..
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a standalone key agreement algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \p alg is not a supported
+ *         algorithm identifier.
+ */
+#define PSA_ALG_IS_RAW_KEY_AGREEMENT(alg)   \
+    PSA_ALG_IS_STANDALONE_KEY_AGREEMENT(alg)
 
 #define PSA_ALG_IS_KEY_DERIVATION_OR_AGREEMENT(alg)     \
     ((PSA_ALG_IS_KEY_DERIVATION(alg) || PSA_ALG_IS_KEY_AGREEMENT(alg)))

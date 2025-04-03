@@ -174,7 +174,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
  * return   1 if it is,
  *          0 if it isn't.
  *
- * TODO: we use this in multiple test suites. Move it to tests/src.
+ * TODO: we use this in multiple test suites. Move it to framework/tests/src.
  */
 static int buffer_is_all_zero(const uint8_t *buf, size_t size)
 {

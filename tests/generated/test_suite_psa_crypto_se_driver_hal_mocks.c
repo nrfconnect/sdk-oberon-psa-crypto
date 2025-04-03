@@ -359,6 +359,9 @@ static psa_status_t mock_export_public(psa_drv_se_context_t *context,
     return mock_export_public_data.return_value;
 }
 
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT) && \
+    defined(PSA_WANT_ALG_ECDSA) && \
+    defined(PSA_WANT_ALG_SHA_256)
 static psa_status_t mock_sign(psa_drv_se_context_t *context,
                               psa_key_slot_number_t key_slot,
                               psa_algorithm_t alg,
@@ -381,7 +384,9 @@ static psa_status_t mock_sign(psa_drv_se_context_t *context,
 
     return mock_sign_data.return_value;
 }
+#endif
 
+#if defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ALG_SHA_256)
 static psa_status_t mock_verify(psa_drv_se_context_t *context,
                                 psa_key_slot_number_t key_slot,
                                 psa_algorithm_t alg,
@@ -402,6 +407,7 @@ static psa_status_t mock_verify(psa_drv_se_context_t *context,
 
     return mock_verify_data.return_value;
 }
+#endif
 
 static psa_status_t mock_allocate(psa_drv_se_context_t *drv_context,
                                   void *persistent_data,
@@ -434,7 +440,7 @@ static psa_status_t mock_destroy(psa_drv_se_context_t *context,
     return mock_destroy_data.return_value;
 }
 
-#line 282 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#line 288 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_init(int location_arg,
                int expected_register_status_arg,
                int driver_status_arg,
@@ -476,7 +482,7 @@ static void test_mock_init_wrapper( void ** params )
 
     test_mock_init( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint );
 }
-#line 320 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#line 326 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_import(int mock_alloc_return_value,
                  int mock_import_return_value,
                  int bits,
@@ -548,7 +554,7 @@ static void test_mock_import_wrapper( void ** params )
 
     test_mock_import( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
-#line 388 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#line 394 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_export(int mock_export_return_value, int expected_result)
 {
     psa_drv_se_t driver;
@@ -604,7 +610,7 @@ static void test_mock_export_wrapper( void ** params )
 
     test_mock_export( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 440 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#line 446 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_generate(int mock_alloc_return_value,
                    int mock_generate_return_value,
                    int expected_result)
@@ -672,7 +678,7 @@ static void test_mock_generate_wrapper( void ** params )
 
     test_mock_generate( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 504 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#line 510 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_export_public(int mock_export_public_return_value,
                         int expected_result)
 {
@@ -726,7 +732,10 @@ static void test_mock_export_public_wrapper( void ** params )
 
     test_mock_export_public( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 554 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_ALG_SHA_256)
+#line 560 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_sign(int mock_sign_return_value, int expected_result)
 {
     psa_drv_se_t driver;
@@ -791,7 +800,12 @@ static void test_mock_sign_wrapper( void ** params )
 
     test_mock_sign( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 615 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
+#endif /* PSA_WANT_ALG_SHA_256 */
+#endif /* PSA_WANT_ALG_ECDSA */
+#endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT */
+#if defined(PSA_WANT_ALG_ECDSA)
+#if defined(PSA_WANT_ALG_SHA_256)
+#line 621 "tests/suites/test_suite_psa_crypto_se_driver_hal_mocks.function"
 static void test_mock_verify(int mock_verify_return_value, int expected_result)
 {
     psa_drv_se_t driver;
@@ -854,6 +868,8 @@ static void test_mock_verify_wrapper( void ** params )
 
     test_mock_verify( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
+#endif /* PSA_WANT_ALG_SHA_256 */
+#endif /* PSA_WANT_ALG_ECDSA */
 #endif /* MBEDTLS_PSA_CRYPTO_SE_C */
 
 
@@ -1032,14 +1048,14 @@ TestWrapper_t test_funcs[] =
 #endif
 /* Function Id: 5 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
+#if defined(MBEDTLS_PSA_CRYPTO_SE_C) && defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT) && defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ALG_SHA_256)
     test_mock_sign_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 6 */
 
-#if defined(MBEDTLS_PSA_CRYPTO_SE_C)
+#if defined(MBEDTLS_PSA_CRYPTO_SE_C) && defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ALG_SHA_256)
     test_mock_verify_wrapper,
 #else
     NULL,

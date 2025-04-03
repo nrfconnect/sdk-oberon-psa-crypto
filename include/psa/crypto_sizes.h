@@ -123,9 +123,17 @@
  * HMAC-SHA3-512. */
 /* Note: PSA_HASH_MAX_SIZE should be kept in sync with MBEDTLS_MD_MAX_SIZE,
  * see the note on MBEDTLS_MD_MAX_SIZE for details. */
-#if defined(PSA_WANT_ALG_SHA3_224)
+#if defined(PSA_WANT_ALG_SHAKE128_256)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 168u
+#elif defined(PSA_WANT_ALG_SHA3_224)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 144u
 #elif defined(PSA_WANT_ALG_SHA3_256)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 136u
+#elif defined(PSA_WANT_ALG_SHAKE256_192)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 136u
+#elif defined(PSA_WANT_ALG_SHAKE256_256)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 136u
+#elif defined(PSA_WANT_ALG_SHAKE256_512)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 136u
 #elif defined(PSA_WANT_ALG_SHA_512)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 128u
@@ -137,20 +145,24 @@
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 72u
 #elif defined(PSA_WANT_ALG_SHA_256)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
+#elif defined(PSA_WANT_ALG_SHA_256_192)
+#define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
 #elif defined(PSA_WANT_ALG_SHA_224)
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
 #else /* SHA-1 or smaller */
 #define PSA_HMAC_MAX_HASH_BLOCK_SIZE 64u
 #endif
 
-#if defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA3_512)
+#if defined(PSA_WANT_ALG_SHA_512) || defined(PSA_WANT_ALG_SHA3_512) || defined(PSA_WANT_ALG_SHAKE256_512)
 #define PSA_HASH_MAX_SIZE 64u
 #elif defined(PSA_WANT_ALG_SHA_384) || defined(PSA_WANT_ALG_SHA3_384)
 #define PSA_HASH_MAX_SIZE 48u
-#elif defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA3_256)
+#elif defined(PSA_WANT_ALG_SHA_256) || defined(PSA_WANT_ALG_SHA3_256) || defined(PSA_WANT_ALG_SHAKE256_256)
 #define PSA_HASH_MAX_SIZE 32u
 #elif defined(PSA_WANT_ALG_SHA_224) || defined(PSA_WANT_ALG_SHA3_224)
 #define PSA_HASH_MAX_SIZE 28u
+#elif defined(PSA_WANT_ALG_SHA_256_192) || defined(PSA_WANT_ALG_SHAKE256_192)
+#define PSA_HASH_MAX_SIZE 24u
 #else /* SHA-1 or smaller */
 #define PSA_HASH_MAX_SIZE 20u
 #endif
@@ -262,13 +274,20 @@
 
 /* The maximum size of an ECC key on this implementation, in bits.
  * This is a vendor-specific macro. */
-#if defined(PSA_WANT_ECC_SECP_R1_521)           /*!!OM*/
+/* !!OM
+ * An extra bit is included in the size of TWISTED_EDWARDS_448 to make
+ * buffer[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)],
+ * PSA_ECDSA_SIGNATURE_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS), and
+ * PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
+ * work correctly when ED448 is the largest curve.
+ * These terms are frequently used at various places in PSA and mbedTLS. */
+#if defined(PSA_WANT_ECC_SECP_R1_521)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 521u
 #elif defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 512u
-#elif defined(PSA_WANT_ECC_MONTGOMERY_448)
-#define PSA_VENDOR_ECC_MAX_CURVE_BITS 448u
 #elif defined(PSA_WANT_ECC_TWISTED_EDWARDS_448)
+#define PSA_VENDOR_ECC_MAX_CURVE_BITS 449u
+#elif defined(PSA_WANT_ECC_MONTGOMERY_448)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 448u
 #elif defined(PSA_WANT_ECC_SECP_R1_384)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 384u
@@ -295,6 +314,22 @@
 #else
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 0u
 #endif
+
+/* The maximum size of an LMS key on this implementation, in bits.
+ * This is a vendor-specific macro. */
+#define PSA_VENDOR_LMS_MAX_CURVE_BITS 256u
+
+/* The maximum size of an HSS key on this implementation, in bits.
+ * This is a vendor-specific macro. */
+#define PSA_VENDOR_HSS_MAX_CURVE_BITS 256u
+
+/* The maximum size of an XMSS key on this implementation, in bits.
+ * This is a vendor-specific macro. */
+#define PSA_VENDOR_XMSS_MAX_CURVE_BITS 256u
+
+/* The maximum size of an XMSS^MT key on this implementation, in bits.
+ * This is a vendor-specific macro. */
+#define PSA_VENDOR_XMSS_MT_MAX_CURVE_BITS 256u
 
 /** This macro returns the maximum supported length of the PSK for the
  * TLS-1.2 PSK-to-MS key derivation
@@ -494,6 +529,8 @@
      0u : \
      (key_type) == PSA_KEY_TYPE_CHACHA20 && \
      MBEDTLS_PSA_ALG_AEAD_EQUAL(alg, PSA_ALG_CHACHA20_POLY1305) ? 12u : \
+     (key_type) == PSA_KEY_TYPE_XCHACHA20 && \
+     MBEDTLS_PSA_ALG_AEAD_EQUAL(alg, PSA_ALG_XCHACHA20_POLY1305) ? 24u : \
      0u)
 
 /** The maximum default nonce size among all supported pairs of key types and
@@ -925,6 +962,38 @@
 #define PSA_KEY_EXPORT_SRP_KEY_PAIR_MAX_SIZE(key_bits)   \
     (PSA_HASH_MAX_SIZE)
 
+/* Maximum size of the export encoding of an LMS public key.
+ *
+ * An LMS public key consists of 24 + n bytes, where n is the number of
+ * bytes of the output of the hash function (24 or 32).
+ */
+#define PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(key_bits)   \
+    (24 + PSA_BITS_TO_BYTES(key_bits))
+
+/* Maximum size of the export encoding of an HSS public key.
+ *
+ * A HSS public key consists of 28 + n bytes, where n is the number of
+ * bytes of the output of the hash function (24 or 32).
+ */
+#define PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(key_bits)   \
+    (28 + PSA_BITS_TO_BYTES(key_bits))
+
+/* Maximum size of the export encoding of an XMSS public key.
+ *
+ * An XMSS public key consists of 4 + 2 * n bytes, where n is the number
+ * of bytes of the output of the hash function (24 or 32).
+ */
+#define PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(key_bits)   \
+    (4 + 2 * PSA_BITS_TO_BYTES(key_bits))
+
+/* Maximum size of the export encoding of an XMSS^MT public key.
+ *
+ * An XMSS^MT public key consists of 4 + 2 * n bytes, where n is the number
+ * of bytes of the output of the hash function (24 or 32).
+ */
+#define PSA_KEY_EXPORT_XMSS_MT_PUBLIC_KEY_MAX_SIZE(key_bits)   \
+    (4 + 2 * PSA_BITS_TO_BYTES(key_bits))
+
 /** Sufficient output buffer size for psa_export_key() or
  * psa_export_public_key().
  *
@@ -979,6 +1048,10 @@
      PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) == PSA_ECC_FAMILY_MONTGOMERY ? PSA_BITS_TO_BYTES(key_bits) : \
      PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) ? PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(key_bits) :      \
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
+     (key_type) == PSA_KEY_TYPE_LMS_PUBLIC_KEY ? PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_HSS_PUBLIC_KEY ? PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_XMSS_PUBLIC_KEY ? PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_XMSS_MT_PUBLIC_KEY ? PSA_KEY_EXPORT_XMSS_MT_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      0u)
 
 /** Sufficient output buffer size for psa_export_public_key().
@@ -1034,6 +1107,10 @@
      PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) == PSA_ECC_FAMILY_TWISTED_EDWARDS ? PSA_BITS_TO_BYTES(key_bits + 1) : \
      PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) == PSA_ECC_FAMILY_MONTGOMERY ? PSA_BITS_TO_BYTES(key_bits) : \
      PSA_KEY_TYPE_IS_ECC(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_LMS_PUBLIC_KEY ? PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_HSS_PUBLIC_KEY ? PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_XMSS_PUBLIC_KEY ? PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_XMSS_MT_PUBLIC_KEY ? PSA_KEY_EXPORT_XMSS_MT_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      0u)
 
 /** Sufficient buffer size for exporting any asymmetric key pair.
@@ -1128,6 +1205,34 @@
 #define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
     PSA_KEY_EXPORT_SRP_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #endif
+#if defined(PSA_WANT_KEY_TYPE_LMS_PUBLIC_KEY) && \
+    (PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_LMS_MAX_CURVE_BITS) > \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
+    PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_LMS_MAX_CURVE_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_HSS_PUBLIC_KEY) && \
+    (PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_HSS_MAX_CURVE_BITS) > \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
+    PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_HSS_MAX_CURVE_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_XMSS_PUBLIC_KEY) && \
+    (PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_XMSS_MAX_CURVE_BITS) > \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
+    PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_XMSS_MAX_CURVE_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_XMSS_MT_PUBLIC_KEY) && \
+    (PSA_KEY_EXPORT_XMSS_MT_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_XMSS_MT_MAX_CURVE_BITS) > \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
+    PSA_KEY_EXPORT_XMSS_MT_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_XMSS_MT_MAX_CURVE_BITS)
+#endif
 
 #define PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE \
     ((PSA_EXPORT_KEY_PAIR_MAX_SIZE > PSA_EXPORT_PUBLIC_KEY_MAX_SIZE) ? \
@@ -1180,6 +1285,23 @@
 #define PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE    PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #endif
 
+/** Maximum key length for ciphers.
+ *
+ * Since there is no additional PSA_WANT_xxx symbol to specifiy the size of
+ * the key once a cipher is enabled (as it happens for asymmetric keys for
+ * example), the maximum key length is taken into account for each cipher.
+ * The resulting value will be the maximum cipher's key length given depending
+ * on which ciphers are enabled.
+ */
+#if (defined(PSA_WANT_KEY_TYPE_AES) || defined(PSA_WANT_KEY_TYPE_ARIA) || \
+    defined(PSA_WANT_KEY_TYPE_CAMELLIA) || defined(PSA_WANT_KEY_TYPE_CHACHA20))
+#define PSA_CIPHER_MAX_KEY_LENGTH       32u
+#elif defined(PSA_WANT_KEY_TYPE_DES)
+#define PSA_CIPHER_MAX_KEY_LENGTH       24u
+#else
+#define PSA_CIPHER_MAX_KEY_LENGTH       0u
+#endif
+
 /** The default IV size for a cipher algorithm, in bytes.
  *
  * The IV that is generated as part of a call to #psa_cipher_encrypt() is always
@@ -1214,6 +1336,8 @@
       (alg) == PSA_ALG_CBC_PKCS7) ? PSA_BLOCK_CIPHER_BLOCK_LENGTH(key_type) : \
      (key_type) == PSA_KEY_TYPE_CHACHA20 && \
      (alg) == PSA_ALG_STREAM_CIPHER ? 12u : \
+     (key_type) == PSA_KEY_TYPE_XCHACHA20 && \
+     (alg) == PSA_ALG_STREAM_CIPHER ? 24u : \
      (alg) == PSA_ALG_CCM_STAR_NO_TAG ? 13u : \
      0u)
 
@@ -1221,7 +1345,11 @@
  *
  * See also #PSA_CIPHER_IV_LENGTH().
  */
+#if defined(PSA_WANT_KEY_TYPE_XCHACHA20)
+#define PSA_CIPHER_IV_MAX_SIZE 24u
+#else
 #define PSA_CIPHER_IV_MAX_SIZE 16u
+#endif
 
 /** The maximum size of the output of psa_cipher_encrypt(), in bytes.
  *

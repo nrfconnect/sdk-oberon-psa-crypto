@@ -226,8 +226,9 @@ psa_status_t psa_validate_unstructured_key_bit_size(psa_key_type_t type,
             }
             break;
 #endif
-#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
+#if defined(PSA_WANT_KEY_TYPE_CHACHA20) || defined(PSA_WANT_KEY_TYPE_XCHACHA20)
         case PSA_KEY_TYPE_CHACHA20:
+        case PSA_KEY_TYPE_XCHACHA20:
             if (bits != 256) {
                 return PSA_ERROR_INVALID_ARGUMENT;
             }
@@ -482,6 +483,15 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
         ((policy_alg & PSA_ALG_AEAD_AT_LEAST_THIS_LENGTH_FLAG) != 0)) {
         return PSA_ALG_AEAD_GET_TAG_LENGTH(policy_alg) <=
                PSA_ALG_AEAD_GET_TAG_LENGTH(requested_alg);
+    }
+   /* If the policy is the PSA_ALG_CCM_STAR_ANY_TAG wildcard algorithm,
+    * the the key can be used with the PSA_ALG_CCM_STAR_NO_TAG
+    * unauthenticated cipher, the PSA_ALG_CCM AEAD algorithm, and truncated
+    * PSA_ALG_CCM AEAD algorithms. */
+    if (policy_alg == PSA_ALG_CCM_STAR_ANY_TAG) {
+        return requested_alg == PSA_ALG_CCM_STAR_NO_TAG ||
+            (PSA_ALG_AEAD_WITH_SHORTENED_TAG(requested_alg, 0) ==
+             PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0));
     }
     /* If policy_alg is a MAC algorithm of the same base as the requested
      * algorithm, check whether their MAC lengths are compatible. */
@@ -2952,6 +2962,13 @@ static psa_status_t psa_aead_check_nonce_length(psa_algorithm_t alg,
             }
             break;
 #endif /* PSA_WANT_ALG_CHACHA20_POLY1305 */
+#if defined(PSA_WANT_ALG_XCHACHA20_POLY1305)
+        case PSA_ALG_XCHACHA20_POLY1305:
+            if (nonce_length == 24) {
+                return PSA_SUCCESS;
+            }
+            break;
+#endif /* PSA_WANT_ALG_XCHACHA20_POLY1305 */
         default:
             (void) nonce_length;
             return PSA_ERROR_NOT_SUPPORTED;
@@ -3094,14 +3111,15 @@ static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
             break;
 #endif /* PSA_WANT_ALG_GCM */
 
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305) || defined(PSA_WANT_ALG_XCHACHA20_POLY1305)
         case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0):
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_XCHACHA20_POLY1305, 0):
             /* We only support the default tag length. */
             if (tag_len != 16) {
                 return PSA_ERROR_INVALID_ARGUMENT;
             }
             break;
-#endif /* PSA_WANT_ALG_CHACHA20_POLY1305 */
+#endif /* PSA_WANT_ALG_CHACHA20_POLY1305 || PSA_WANT_ALG_XCHACHA20_POLY1305 */
 
         default:
             (void) tag_len;
@@ -3336,11 +3354,12 @@ psa_status_t psa_aead_set_lengths(psa_aead_operation_t *operation,
             }
             break;
 #endif /* PSA_WANT_ALG_CCM */
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+#if defined(PSA_WANT_ALG_CHACHA20_POLY1305) || defined(PSA_WANT_ALG_XCHACHA20_POLY1305)
         case PSA_ALG_CHACHA20_POLY1305:
+        case PSA_ALG_XCHACHA20_POLY1305:
             /* No length restrictions for ChaChaPoly. */
             break;
-#endif /* PSA_WANT_ALG_CHACHA20_POLY1305 */
+#endif /* PSA_WANT_ALG_CHACHA20_POLY1305 || PSA_WANT_ALG_XCHACHA20_POLY1305 */
         default:
             break;
     }
@@ -3802,8 +3821,8 @@ static psa_status_t psa_key_derivation_check_state(
     } else
 #endif /* PSA_WANT_ALG_SRP_PASSWORD_HASH */
 
-#ifdef PSA_WANT_ALG_WPA3_SAE_PT
-    if (PSA_ALG_IS_WPA3_SAE_PT(alg)) {
+#ifdef PSA_WANT_ALG_WPA3_SAE_H2E
+    if (PSA_ALG_IS_WPA3_SAE_H2E(alg)) {
         switch (step) {
         case PSA_KEY_DERIVATION_INPUT_SALT:
             if (operation->salt_set) return PSA_ERROR_BAD_STATE;
@@ -3911,6 +3930,29 @@ psa_status_t psa_key_derivation_output_bytes(
     return psa_key_derivation_output_bytes_internal(operation, output, output_length);
 }
 
+#ifdef PSA_WANT_KEY_TYPE_WPA3_SAE_PT
+static psa_status_t psa_wpa3_sae_pt_check_hash(psa_algorithm_t alg, psa_key_type_t key_type, size_t bits)
+{
+    psa_algorithm_t hash;
+    if (!PSA_ALG_IS_WPA3_SAE_H2E(alg)) return PSA_ERROR_INVALID_ARGUMENT;
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(key_type)) {
+        if (bits <= 256) hash = PSA_ALG_SHA_256;
+        else if (bits <= 384) hash = PSA_ALG_SHA_384;
+        else hash = PSA_ALG_SHA_512;
+    } else if (PSA_KEY_TYPE_IS_WPA3_SAE_DH_PT(key_type)) {
+        if (bits <= 2048) hash = PSA_ALG_SHA_256;
+        else if (bits <= 3072) hash = PSA_ALG_SHA_384;
+        else hash = PSA_ALG_SHA_512;
+    } else {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    if (PSA_ALG_GET_HASH(alg) != hash) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    return PSA_SUCCESS;
+}
+#endif
+
 static psa_status_t psa_generate_derived_key_internal(
     psa_key_slot_t *slot,
     size_t bits,
@@ -3953,6 +3995,8 @@ static psa_status_t psa_generate_derived_key_internal(
 #endif /* PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_DERIVE */
 #ifdef PSA_WANT_KEY_TYPE_WPA3_SAE_PT
     } else if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+        status = psa_wpa3_sae_pt_check_hash(operation->alg, type, bits);
+        if (status != PSA_SUCCESS) return status;
         storage_size = bytes * 2u;  // x : y
         bytes = PSA_HASH_LENGTH(operation->alg);
         calculate_key = 1;
@@ -4256,9 +4300,23 @@ static psa_status_t psa_key_derivation_input_internal(
     status = psa_key_derivation_check_state(operation, step);
     if (status != PSA_SUCCESS) goto exit;
 
-    status = psa_key_derivation_check_input_type(step, key_type);
-    if (status != PSA_SUCCESS) {
-        goto exit;
+    if (operation->alg == PSA_ALG_SP800_108_COUNTER_CMAC &&
+        step == PSA_KEY_DERIVATION_INPUT_SECRET) {
+        // key must be a block-cipher key
+        // psa_key_derivation_input_bytes (key_type == PSA_KEY_TYPE_NONE) is not allowed
+        if ((key_type & ~0xFF) != PSA_KEY_TYPE_AES) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+    } else if (PSA_ALG_IS_SP800_108_COUNTER_HMAC(operation->alg) &&
+        step == PSA_KEY_DERIVATION_INPUT_SECRET &&
+        key_type == PSA_KEY_TYPE_HMAC) {
+        // ok
+    } else {
+        status = psa_key_derivation_check_input_type(step, key_type);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
     }
 
     status = psa_driver_wrapper_key_derivation_input_bytes(operation, step, data, data_length);
@@ -4459,7 +4517,7 @@ psa_status_t psa_raw_key_agreement(psa_algorithm_t alg,
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot = NULL;
 
-    if (!PSA_ALG_IS_KEY_AGREEMENT(alg)) {
+    if (!PSA_ALG_IS_STANDALONE_KEY_AGREEMENT(alg)) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }
@@ -4491,6 +4549,35 @@ exit:
     unlock_status = psa_unregister_read_under_mutex(slot);
 
     return (status == PSA_SUCCESS) ? unlock_status : status;
+}
+
+psa_status_t psa_key_agreement(mbedtls_svc_key_id_t private_key,
+    const uint8_t *peer_key,
+    size_t peer_key_length,
+    psa_algorithm_t alg,
+    const psa_key_attributes_t *attributes,
+    mbedtls_svc_key_id_t *key)
+{
+    psa_status_t status;
+    uint8_t shared_secret[PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE];
+    size_t shared_secret_len;
+    psa_key_type_t key_type;
+
+    *key = MBEDTLS_SVC_KEY_ID_INIT;
+
+    key_type = psa_get_key_type(attributes);
+    if (key_type != PSA_KEY_TYPE_DERIVE && key_type != PSA_KEY_TYPE_RAW_DATA
+        && key_type != PSA_KEY_TYPE_HMAC && key_type != PSA_KEY_TYPE_PASSWORD) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    status = psa_raw_key_agreement(alg, private_key, peer_key, peer_key_length,
+        shared_secret, sizeof(shared_secret), &shared_secret_len);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    return psa_import_key(attributes, shared_secret, shared_secret_len, key);
 }
 
 
@@ -4558,13 +4645,21 @@ psa_status_t psa_pake_setup(psa_pake_operation_t *operation,
                 goto exit;
             }
         } else if (PSA_ALG_IS_WPA3_SAE(alg)) {
-            if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(ktype)) {
-                if (family != PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(ktype) ||
+            if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(ktype)) {
+                if (ptype != PSA_PAKE_PRIMITIVE_TYPE_ECC ||
+                    family != PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(ktype) ||
                     bits != slot->attr.bits) {
                     status = PSA_ERROR_INVALID_ARGUMENT;
                     goto exit;
                 }
-            } else if (ktype != PSA_KEY_TYPE_PASSWORD) {
+            } else if (PSA_KEY_TYPE_IS_WPA3_SAE_DH_PT(ktype)) {
+                if (ptype != PSA_PAKE_PRIMITIVE_TYPE_DH || 
+                    family != PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(ktype) ||
+                    bits != slot->attr.bits) {
+                    status = PSA_ERROR_INVALID_ARGUMENT;
+                    goto exit;
+                }
+            } else if (ktype != PSA_KEY_TYPE_PASSWORD || PSA_ALG_IS_WPA3_SAE_GDH(alg)) {
                 status = PSA_ERROR_INVALID_ARGUMENT;
                 goto exit;
             }
@@ -5212,9 +5307,9 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation)
 /****************************************************************/
 
 psa_status_t oberon_psa_wrap_key(
-    psa_key_id_t wrapping_key,
+    mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
-    psa_key_id_t key,
+    mbedtls_svc_key_id_t key,
     uint8_t *data,
     size_t data_size,
     size_t *data_length)
@@ -5263,11 +5358,11 @@ exit:
 
 psa_status_t oberon_psa_unwrap_key(
     const psa_key_attributes_t *attributes,
-    psa_key_id_t wrapping_key,
+    mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
     const uint8_t *data,
     size_t data_length,
-    psa_key_id_t *key)
+    mbedtls_svc_key_id_t *key)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -5519,6 +5614,7 @@ exit:
 /* Module setup */
 /****************************************************************/
 
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
     void (* entropy_init)(mbedtls_entropy_context *ctx),
     void (* entropy_free)(mbedtls_entropy_context *ctx))
@@ -5527,6 +5623,7 @@ psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
     (void)entropy_free;
     return PSA_SUCCESS;
 }
+#endif
 
 void mbedtls_psa_crypto_free(void)
 {

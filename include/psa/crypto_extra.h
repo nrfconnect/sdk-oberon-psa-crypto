@@ -41,6 +41,16 @@ extern "C" {
 #define MBEDTLS_PSA_KEY_SLOT_COUNT 32
 #endif
 
+/* If the size of static key slots is not explicitly defined by the user, then
+ * set it to the maximum between PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE and
+ * PSA_CIPHER_MAX_KEY_LENGTH.
+ * See mbedtls_config.h for the definition. */
+#if !defined(MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE)
+#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE  \
+    ((PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE > PSA_CIPHER_MAX_KEY_LENGTH) ? \
+     PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE : PSA_CIPHER_MAX_KEY_LENGTH)
+#endif /* !MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE*/
+
 /** \addtogroup attributes
  * @{
  */
@@ -163,6 +173,14 @@ static inline void psa_clear_key_slot_number(
  * specified in \p attributes.
  *
  * \param[in] attributes        The attributes of the existing key.
+ *                              - The lifetime must be a persistent lifetime
+ *                                in a secure element. Volatile lifetimes are
+ *                                not currently supported.
+ *                              - The key identifier must be in the valid
+ *                                range for persistent keys.
+ *                              - The key type and size must be specified and
+ *                                must be consistent with the key material
+ *                                in the secure element.
  *
  * \retval #PSA_SUCCESS
  *         The key was successfully registered.
@@ -476,7 +494,7 @@ psa_status_t mbedtls_psa_external_get_random(
  * #PSA_KEY_ID_VENDOR_MIN and #PSA_KEY_ID_VENDOR_MAX and must not intersect
  * with any other set of implementation-chosen key identifiers.
  *
- * This value is part of the library's ABI since changing it would invalidate
+ * This value is part of the library's API since changing it would invalidate
  * the values of built-in key identifiers in applications.
  */
 #define MBEDTLS_PSA_KEY_ID_BUILTIN_MIN          ((psa_key_id_t) 0x7fff0000)
@@ -561,6 +579,35 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 #endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
 
 /** @} */
+
+/** \defgroup psa_crypto_client Functions defined by a client provider
+ *
+ * The functions in this group are meant to be implemented by providers of
+ * the PSA Crypto client interface. They are provided by the library when
+ * #MBEDTLS_PSA_CRYPTO_C is enabled.
+ *
+ * \note All functions in this group are experimental, as using
+ *       alternative client interface providers is experimental.
+ *
+ * @{
+ */
+
+/** Check if PSA is capable of handling the specified hash algorithm.
+ *
+ * This means that PSA core was built with the corresponding PSA_WANT_ALG_xxx
+ * set and that psa_crypto_init has already been called.
+ *
+ * \note When using Mbed TLS version of PSA core (i.e. MBEDTLS_PSA_CRYPTO_C is
+ *       set) for now this function only checks the state of the driver
+ *       subsystem, not the algorithm. This might be improved in the future.
+ *
+ * \param hash_alg  The hash algorithm.
+ *
+ * \return 1 if the PSA can handle \p hash_alg, 0 otherwise.
+ */
+int psa_can_do_hash(psa_algorithm_t hash_alg);
+
+/**@}*/
 
 /** \addtogroup crypto_types
  * @{
@@ -668,39 +715,60 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
                          ((type) & PSA_KEY_TYPE_SRP_GROUP_MASK) : \
                          0))
 
-#define PSA_KEY_TYPE_WPA3_SAE_PT_BASE          ((psa_key_type_t) 0x7800)
-#define PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK       ((psa_key_type_t) 0x00ff)
+#define PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE      ((psa_key_type_t) 0x3280)
+#define PSA_KEY_TYPE_WPA3_SAE_DH_PT_BASE       ((psa_key_type_t) 0x3300)
+#define PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK       ((psa_key_type_t) 0x007f)
 
-/** WPA3-SAE-PT key.
+/** WPA3-SAE-PT ECC key.
  *
  * The key is used to store the out of band calculated group element
  * used in the Hash-To-Element variant of WPA3-SAE. It can be used as
  * input to the WPA3-SAE PAKE instead of a password key.
  *
- * \param group A value of type ::psa_ec_family_t or ::psa_dh_family_t
- *              that identifies the group to be used.
+ * \param group A value of type ::psa_ec_family_t that identifies the
+ *              group to be used.
  */
-#define PSA_KEY_TYPE_WPA3_SAE_PT(group) \
-    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_PT_BASE | (group)))
+#define PSA_KEY_TYPE_WPA3_SAE_ECC_PT(group) \
+    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE | (group)))
+
+/** WPA3-SAE-PT DH key.
+ *
+ * The key is used to store the out of band calculated group element
+ * used in the Hash-To-Element variant of WPA3-SAE. It can be used as
+ * input to the WPA3-SAE PAKE instead of a password key.
+ *
+ * \param group A value of type ::psa_dh_family_t that identifies the
+ *              group to be used.
+ */
+#define PSA_KEY_TYPE_WPA3_SAE_DH_PT(group) \
+    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_DH_PT_BASE | (group)))
 
  /** Whether a key type is a WPA3-SAE-PT. */
 #define PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)                    \
+    ((((type) - (1 << 7)) & ~0x00ff) ==                      \
+     (PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE - (1 << 7)))
+ /** Whether a key type is a WPA3-SAE-ECC-PT. */
+#define PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type)                \
     (((type) & ~PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) ==         \
-     PSA_KEY_TYPE_WPA3_SAE_PT_BASE)
+     PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE)
+ /** Whether a key type is a WPA3-SAE-DH-PT. */
+#define PSA_KEY_TYPE_IS_WPA3_SAE_DH_PT(type)                 \
+    (((type) & ~PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) ==         \
+     PSA_KEY_TYPE_WPA3_SAE_DH_PT_BASE)
  /** Extract the group from a WPA3-SAE key type. */
 #define PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(type)            \
     ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type) ? \
       ((type) & PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) :          \
       0))
 
-#define PSA_ALG_WPA3_SAE_PT_BASE          ((psa_algorithm_t) 0x08800400)
+#define PSA_ALG_WPA3_SAE_H2E_BASE         ((psa_algorithm_t) 0x08800400)
 /** The WPA3-SAE password to PT KDF.
  * It takes the password p, a salt (uuid), and optionally a password id.
  * 
  * This key derivation algorithm uses the following inputs, which must be
  * provided in the following order:
  * - #PSA_KEY_DERIVATION_INPUT_SALT for the uuid.
- * - #PSA_KEY_DERIVATION_INPUT_SECRET for the password.
+ * - #PSA_KEY_DERIVATION_INPUT_PASSWORD for the password.
  * - optionally; #PSA_KEY_DERIVATION_INPUT_INFO for the password id.
  * The output has to be read as a key of type PSA_KEY_TYPE_WPA3_SAE_PT.
  *
@@ -711,20 +779,20 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * \return              Unspecified if \p hash_alg is not a supported
  *                      hash algorithm.
  */
-#define PSA_ALG_WPA3_SAE_PT(hash_alg)                            \
-    (PSA_ALG_WPA3_SAE_PT_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_WPA3_SAE_H2E(hash_alg)                            \
+    (PSA_ALG_WPA3_SAE_H2E_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
 
 /** Whether the specified algorithm is a key derivation algorithm constructed
- * using #PSA_ALG_WPA3_SAE_PT(\p hash_alg).
+ * using #PSA_ALG_WPA3_SAE_H2E(\p hash_alg).
  *
  * \param alg An algorithm identifier (value of type #psa_algorithm_t).
  *
- * \return 1 if \p alg is a key derivation algorithm constructed using #PSA_ALG_WPA3_SAE_PT(),
+ * \return 1 if \p alg is a key derivation algorithm constructed using #PSA_ALG_WPA3_SAE_H2E(),
  *         0 otherwise. This macro may return either 0 or 1 if \c alg is not a supported
  *         key derivation algorithm identifier.
  */
-#define PSA_ALG_IS_WPA3_SAE_PT(alg)                         \
-    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_PT_BASE)
+#define PSA_ALG_IS_WPA3_SAE_H2E(alg)                         \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_H2E_BASE)
 
 #define PSA_ALG_CATEGORY_PAKE                   ((psa_algorithm_t) 0x0a000000)
 
@@ -2229,9 +2297,9 @@ static inline void psa_pake_cs_set_key_confirmation(
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
 psa_status_t oberon_psa_wrap_key(
-    psa_key_id_t wrapping_key,
+    mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
-    psa_key_id_t key,
+    mbedtls_svc_key_id_t key,
     uint8_t *data,
     size_t data_size,
     size_t *data_length);
@@ -2270,11 +2338,130 @@ psa_status_t oberon_psa_wrap_key(
  */
 psa_status_t oberon_psa_unwrap_key(
     const psa_key_attributes_t *attributes,
-    psa_key_id_t wrapping_key,
+    mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
     const uint8_t *data,
     size_t data_length,
-    psa_key_id_t *key);
+    mbedtls_svc_key_id_t *key);
+
+
+/** The SHA-256/192 message digest algorithm.
+ *
+ * SHA-256/192 is the first 192 bits (24 bytes) of the SHA-256 output.
+ * SHA-256 is defined in [FIPS180-4].
+ */
+#define PSA_ALG_SHA_256_192 ((psa_algorithm_t)0x0200000E)
+
+/** The SHAKE128/256 message digest algorithm.
+ *
+ * SHAKE128/256 is the first 256 bits (32 bytes) of the SHAKE128 output.
+ * SHAKE128 is defined in [FIPS202].
+ */
+#define PSA_ALG_SHAKE128_256 ((psa_algorithm_t)0x02000016)
+
+/** The SHAKE256/192 message digest algorithm.
+ *
+ * SHAKE256/192 is the first 192 bits (24 bytes) of the SHAKE256 output.
+ * SHAKE256 is defined in [FIPS202].
+ */
+#define PSA_ALG_SHAKE256_192 ((psa_algorithm_t)0x02000017)
+
+ /** The SHAKE256/256 message digest algorithm.
+  *
+  * SHAKE256/256 is the first 256 bits (32 bytes) of the SHAKE256 output.
+  * SHAKE256 is defined in [FIPS202].
+  */
+#define PSA_ALG_SHAKE256_256 ((psa_algorithm_t)0x02000018)
+
+
+ /** LMS signature algorithm
+ *
+ * This is the LMS stateful hash-based signature algorithm, defined by
+ * Leighton-Micali Hash-Based Signatures [RFC8554]. LMS requires an
+ * LMS key. The key and the signature must both encode the same LMS
+ * parameter set, which is used for the verification procedure.
+ * This message-signature algorithm can only be used with the
+ * psa_verify_message() function.
+ */
+#define PSA_ALG_LMS ((psa_algorithm_t) 0x06004800)
+
+/** HSS signature algorithm
+ *
+ * This is the HSS stateful hash-based signature algorithm, defined by
+ * Leighton-Micali Hash-Based Signatures [RFC8554]. HSS requires an
+ * HSS key. The key and the signature must both encode the same HSS
+ * parameter set, which is used for the verification procedure.
+ * This message-signature algorithm can only be used with the
+ * psa_verify_message() function.
+ */
+#define PSA_ALG_HSS ((psa_algorithm_t) 0x06004900)
+
+/** LMS public key.
+ *
+ * The parameterization of an LMS key is fully encoded in the key data.
+ * The key attribute size of an LMS public key is output length, in bits,
+ * of the hash function identified by the LMS parameter set.
+ * To construct an LMS public key, it must be imported.
+ * The data format for import or export of the public key is the encoded
+ * lms_public_key structure, defined in [RFC8554] §3.
+ */
+#define PSA_KEY_TYPE_LMS_PUBLIC_KEY ((psa_key_type_t)0x4007)
+
+/** HSS public key.
+ *
+ * The parameterization of an HSS key is fully encoded in the key data.
+ * The key attribute size of an HSS public key is output length, in bits,
+ * of the hash function identified by the HSS parameter set.
+ * To construct an HSS public key, it must be imported.
+ * The data format for import or export of the public key is the encoded
+ * hss_public_key structure, defined in [RFC8554] §3.
+ */
+#define PSA_KEY_TYPE_HSS_PUBLIC_KEY ((psa_key_type_t)0x4008)
+
+
+ /** XMSS signature algorithm
+ *
+ * This is the XMSS stateful hash-based signature algorithm, defined by
+ * XMSS: eXtended Merkle Signature Scheme [RFC8391]. XMSS requires an
+ * XMSS key. The key and the signature must both encode the same XMSS
+ * parameter set, which is used for the verification procedure.
+ * This message-signature algorithm can only be used with the
+ * psa_verify_message() function.
+ */
+#define PSA_ALG_XMSS ((psa_algorithm_t) 0x06004A00)
+
+/** XMSS^MT signature algorithm
+ *
+ * This is the XMSS^MT stateful hash-based signature algorithm, defined by
+ * XMSS: eXtended Merkle Signature Scheme [RFC8391]. XMSS^MT requires an
+ * XMSS^MT key. The key and the signature must both encode the same XMSS^MT
+ * parameter set, which is used for the verification procedure.
+ * This message-signature algorithm can only be used with the
+ * psa_verify_message() function.
+ */
+#define PSA_ALG_XMSS_MT ((psa_algorithm_t) 0x06004B00)
+
+/** XMSS public key.
+ *
+ * The parameterization of an XMSS key is fully encoded in the key data.
+ * The key attribute size of an XMSS public key is output length, in bits,
+ * of the hash function identified by the XMSS parameter set.
+ * To construct an XMSS public key, it must be imported.
+ * The data format for import or export of the public key is the encoded
+ * xmss_public_key structure, defined in [RFC8391] §3.
+ */
+#define PSA_KEY_TYPE_XMSS_PUBLIC_KEY ((psa_key_type_t)0x400B)
+
+/** XMSS^MT public key.
+ *
+ * The parameterization of an XMSS^MT key is fully encoded in the key data.
+ * The key attribute size of an XMSS^MT public key is output length, in bits,
+ * of the hash function identified by the XMSS^MT parameter set.
+ * To construct an XMSS^MT public key, it must be imported.
+ * The data format for import or export of the public key is the encoded
+ * xmssmt_public_key structure, defined in [RFC8391] Appendix C.3.
+ */
+#define PSA_KEY_TYPE_XMSS_MT_PUBLIC_KEY ((psa_key_type_t)0x400D)
 
 
 #ifdef __cplusplus

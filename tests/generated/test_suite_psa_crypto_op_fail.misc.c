@@ -398,11 +398,8 @@ static void test_sign_fail(int key_type_arg, data_t *key_data,
     size_t length = SIZE_MAX;
     psa_sign_hash_interruptible_operation_t sign_operation =
         psa_sign_hash_interruptible_operation_init();
-
     psa_verify_hash_interruptible_operation_t verify_operation =
         psa_verify_hash_interruptible_operation_init();
-
-
 
     PSA_INIT();
 
@@ -427,8 +424,8 @@ static void test_sign_fail(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_sign_hash_abort(&sign_operation));
 
     if (!private_only) {
-        /* Determine a plausible signature size to avoid an INVALID_SIGNATURE
-         * error based on this. */
+        /* Construct a signature candidate of a plausible size to avoid an
+         * INVALID_SIGNATURE error based on an early size verification. */
         PSA_ASSERT(psa_get_key_attributes(key_id, &attributes));
         size_t key_bits = psa_get_key_bits(&attributes);
         size_t output_length = sizeof(output);
@@ -452,6 +449,8 @@ static void test_sign_fail(int key_type_arg, data_t *key_data,
     }
 
 exit:
+    psa_sign_hash_abort(&sign_operation);
+    psa_verify_hash_abort(&verify_operation);
     psa_destroy_key(key_id);
     psa_reset_key_attributes(&attributes);
     PSA_DONE();
@@ -463,7 +462,7 @@ static void test_sign_fail_wrapper( void ** params )
 
     test_sign_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 287 "tests/suites/test_suite_psa_crypto_op_fail.function"
+#line 286 "tests/suites/test_suite_psa_crypto_op_fail.function"
 static void test_asymmetric_encryption_fail(int key_type_arg, data_t *key_data,
                                 int alg_arg, int private_only,
                                 int expected_status_arg)
@@ -515,7 +514,7 @@ static void test_asymmetric_encryption_fail_wrapper( void ** params )
 
     test_asymmetric_encryption_fail( ((mbedtls_test_argument_t *) params[0])->sint, &data1, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
-#line 334 "tests/suites/test_suite_psa_crypto_op_fail.function"
+#line 333 "tests/suites/test_suite_psa_crypto_op_fail.function"
 static void test_key_derivation_fail(int alg_arg, int expected_status_arg)
 {
     psa_status_t expected_status = expected_status_arg;
@@ -537,7 +536,7 @@ static void test_key_derivation_fail_wrapper( void ** params )
 
     test_key_derivation_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 352 "tests/suites/test_suite_psa_crypto_op_fail.function"
+#line 351 "tests/suites/test_suite_psa_crypto_op_fail.function"
 static void test_key_agreement_fail(int key_type_arg, data_t *key_data,
                         int alg_arg, int private_only,
                         int expected_status_arg)
@@ -664,6 +663,21 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
                 *out_value = PSA_ERROR_NOT_SUPPORTED;
             }
             break;
+        case 6:
+            {
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+            }
+            break;
+        case 7:
+            {
+                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256);
+            }
+            break;
+        case 8:
+            {
+                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
+            }
+            break;
 #endif
 
 #line 82 "suites/main_test.function"
@@ -746,6 +760,60 @@ static int dep_check(int dep_id)
         case 5:
             {
 #if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 6:
+            {
+#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 7:
+            {
+#if defined(PSA_WANT_ALG_ECDSA)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 8:
+            {
+#if defined(PSA_WANT_ECC_SECP_R1_192)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 9:
+            {
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 10:
+            {
+#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 11:
+            {
+#if !defined(PSA_WANT_ALG_ECDSA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;

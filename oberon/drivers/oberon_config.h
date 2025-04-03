@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -68,6 +68,14 @@
     #endif
     #define PSA_NEED_OBERON_AEAD_DRIVER 1
     #define PSA_NEED_OBERON_CHACHA20_POLY1305 1
+#endif
+
+#if defined(PSA_WANT_ALG_XCHACHA20_POLY1305) && !defined(PSA_ACCEL_XCHACHA20_POLY1305)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for CHACHA20_POLY1305"
+    #endif
+    #define PSA_NEED_OBERON_AEAD_DRIVER 1
+    #define PSA_NEED_OBERON_XCHACHA20_POLY1305 1
 #endif
 
 /* Oberon Cipher Driver */
@@ -201,6 +209,15 @@
     #define PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 1
 #endif
 
+#if defined(PSA_WANT_KEY_TYPE_XCHACHA20) && defined(PSA_WANT_ALG_STREAM_CIPHER) &&                                      \
+    !defined(PSA_ACCEL_STREAM_CIPHER_XCHACHA20)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for STREAM_CIPHER_CHACHA20"
+    #endif
+    #define PSA_NEED_OBERON_CIPHER_DRIVER 1
+    #define PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20 1
+#endif
+
 /* Oberon Key Agreement Driver */
 
 #if defined(PSA_WANT_ALG_ECDH) && defined(PSA_WANT_ECC_SECP_R1_224) && !defined(PSA_ACCEL_ECDH_SECP_R1_224)
@@ -237,6 +254,15 @@
     #define PSA_NEED_OBERON_KEY_AGREEMENT_DRIVER 1
     #define PSA_NEED_OBERON_ECDH 1
     #define PSA_NEED_OBERON_ECDH_SECP_R1_521 1
+#endif
+
+#if defined(PSA_WANT_ALG_ECDH) && defined(PSA_WANT_ECC_SECP_K1_256) && !defined(PSA_ACCEL_ECDH_SECP_K1_256)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ECDH_SECP_K1_256"
+    #endif
+    #define PSA_NEED_OBERON_KEY_AGREEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_ECDH 1
+    #define PSA_NEED_OBERON_ECDH_SECP_K1_256 1
 #endif
 
 #if defined(PSA_WANT_ALG_ECDH) && defined(PSA_WANT_ECC_MONTGOMERY_255) && !defined(PSA_ACCEL_ECDH_MONTGOMERY_255)
@@ -351,6 +377,28 @@
     #endif
 #endif
 
+#if defined(PSA_WANT_ALG_ANY_ECDSA) && defined(PSA_WANT_ECC_SECP_K1_256)
+    #if (defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA_1)) || \
+        (defined(PSA_WANT_ALG_SHA_224) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA_224)) || \
+        (defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA_256)) || \
+        (defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA_384)) || \
+        (defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA_512)) || \
+        (defined(PSA_WANT_ALG_SHA3_224) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA3_224)) || \
+        (defined(PSA_WANT_ALG_SHA3_256) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA3_256)) || \
+        (defined(PSA_WANT_ALG_SHA3_384) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA3_384)) || \
+        (defined(PSA_WANT_ALG_SHA3_512) && !defined(PSA_ACCEL_ECDSA_SECP_K1_256_SHA3_512))
+        #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
+        #define PSA_NEED_OBERON_ECDSA_VERIFY 1
+        #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+            #define PSA_NEED_OBERON_ECDSA_SIGN 1
+        #endif
+        #define PSA_NEED_OBERON_ECDSA_SECP_K1_256 1
+    #endif
+    #if defined(PSA_HW_DRIVERS_ONLY) && defined(PSA_NEED_OBERON_ECDSA_VERIFY)
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ECDSA_SECP_K1_256"
+    #endif
+#endif
+
 #if defined(PSA_WANT_ALG_PURE_EDDSA)
     #if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255) && !defined(PSA_ACCEL_PURE_EDDSA_TWISTED_EDWARDS_255)
         #ifdef PSA_HW_DRIVERS_ONLY
@@ -398,6 +446,38 @@
         #define PSA_NEED_OBERON_ECDSA_SIGN 1
     #endif
     #define PSA_NEED_OBERON_ED448PH 1
+#endif
+
+#if defined(PSA_WANT_ALG_LMS) && !defined(PSA_ACCEL_LMS)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for LMS"
+    #endif
+    #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
+    #define PSA_NEED_OBERON_LMS_VERIFY 1
+#endif
+
+#if defined(PSA_WANT_ALG_HSS) && !defined(PSA_ACCEL_HSS)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HSS"
+    #endif
+    #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
+    #define PSA_NEED_OBERON_HSS_VERIFY 1
+#endif
+
+#if defined(PSA_WANT_ALG_XMSS) && !defined(PSA_ACCEL_XMSS)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for XMSS"
+    #endif
+    #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
+    #define PSA_NEED_OBERON_XMSS_VERIFY 1
+#endif
+
+#if defined(PSA_WANT_ALG_XMSS_MT) && !defined(PSA_ACCEL_XMSS_MT)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for XMSS_MT"
+    #endif
+    #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
+    #define PSA_NEED_OBERON_XMSS_MT_VERIFY 1
 #endif
 
 #if defined(PSA_NEED_OBERON_ECDSA_VERIFY) && defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
@@ -988,6 +1068,14 @@
     #define PSA_NEED_OBERON_SHA_512 1
 #endif
 
+#if defined(PSA_WANT_ALG_SHA_256_192) && !defined(PSA_ACCEL_SHA_256_192)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHA_256_192"
+#endif
+#define PSA_NEED_OBERON_HASH_DRIVER 1
+#define PSA_NEED_OBERON_SHA_256_192 1
+#endif
+
 #if defined(PSA_WANT_ALG_SHA3_224) && !defined(PSA_ACCEL_SHA3_224)
     #ifdef PSA_HW_DRIVERS_ONLY
         #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHA3_224"
@@ -1022,6 +1110,33 @@
     #define PSA_NEED_OBERON_HASH_DRIVER 1
     #define PSA_NEED_OBERON_SHA3 1
     #define PSA_NEED_OBERON_SHA3_512 1
+#endif
+
+#if defined(PSA_WANT_ALG_SHAKE128_256) && !defined(PSA_ACCEL_SHAKE128_256)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHAKE128_256"
+    #endif
+    #define PSA_NEED_OBERON_HASH_DRIVER 1
+    #define PSA_NEED_OBERON_SHAKE 1
+    #define PSA_NEED_OBERON_SHAKE128_256 1
+#endif
+
+#if defined(PSA_WANT_ALG_SHAKE256_192) && !defined(PSA_ACCEL_SHAKE256_192)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHAKE256_192"
+    #endif
+    #define PSA_NEED_OBERON_HASH_DRIVER 1
+    #define PSA_NEED_OBERON_SHAKE 1
+    #define PSA_NEED_OBERON_SHAKE256_192 1
+#endif
+
+#if defined(PSA_WANT_ALG_SHAKE256_256) && !defined(PSA_ACCEL_SHAKE256_256)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHAKE256_256"
+    #endif
+    #define PSA_NEED_OBERON_HASH_DRIVER 1
+    #define PSA_NEED_OBERON_SHAKE 1
+    #define PSA_NEED_OBERON_SHAKE256_256 1
 #endif
 
 #if defined(PSA_WANT_ALG_SHAKE256_512) && !defined(PSA_ACCEL_SHAKE256_512)
@@ -1230,6 +1345,55 @@
         #define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_521 1
     #endif
 #endif // defined(PSA_WANT_ECC_SECP_R1_521)
+
+#if defined(PSA_WANT_ECC_SECP_K1_256)
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) &&                                                            \
+        !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP 1
+#define PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256 1
+#endif
+#endif // defined(PSA_WANT_ECC_SECP_K1_256)
 
 #if defined(PSA_WANT_ECC_MONTGOMERY_255)
     #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_MONTGOMERY_255)
@@ -1460,6 +1624,39 @@
     #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
     #define PSA_NEED_OBERON_KEY_TYPE_RSA_KEY_PAIR_EXPORT 1
 #endif
+
+#if defined(PSA_WANT_KEY_TYPE_LMS_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_LMS_PUBLIC_KEY)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_LMS_PUBLIC_KEY"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_LMS_PUBLIC_KEY 1
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_HSS_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_HSS_PUBLIC_KEY)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_HSS_PUBLIC_KEY"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_HSS_PUBLIC_KEY 1
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_XMSS_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_XMSS_PUBLIC_KEY)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_XMSS_PUBLIC_KEY"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_XMSS_PUBLIC_KEY 1
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_XMSS_MT_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_XMSS_MT_PUBLIC_KEY)
+#ifdef PSA_HW_DRIVERS_ONLY
+#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_XMSS_MT_PUBLIC_KEY"
+#endif
+#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+#define PSA_NEED_OBERON_KEY_TYPE_XMSS_MT_PUBLIC_KEY 1
+#endif
+
 
 /* Oberon MAC Driver */
 
@@ -1737,12 +1934,12 @@
     #define PSA_NEED_OBERON_SRP_PASSWORD_HASH 1
 #endif
 
-#if defined(PSA_WANT_ALG_WPA3_SAE_PT) && !defined(PSA_ACCEL_WPA3_SAE_PT)
+#if defined(PSA_WANT_ALG_WPA3_SAE_H2E) && !defined(PSA_ACCEL_WPA3_SAE_H2E)
     #ifdef PSA_HW_DRIVERS_ONLY
         #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for WPA3_SAE_PT"
     #endif
     #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
-    #define PSA_NEED_OBERON_WPA3_SAE_PT 1
+    #define PSA_NEED_OBERON_WPA3_SAE_H2E 1
 #endif
 
 #if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC)

@@ -34,6 +34,8 @@ set(OBERON_SOURCES
         oberon_key_management.h
         oberon_key_wrap.c
         oberon_key_wrap.h
+        oberon_lms.c
+        oberon_lms.h
         oberon_mac.c
         oberon_mac.h
         oberon_pake.c
@@ -46,6 +48,8 @@ set(OBERON_SOURCES
         oberon_srp.h
         oberon_wpa3_sae.c
         oberon_wpa3_sae.h
+        oberon_xmss.c
+        oberon_xmss.h
 )
 
 target_sources(${PROJECT_NAME} PRIVATE ${OBERON_SOURCES})

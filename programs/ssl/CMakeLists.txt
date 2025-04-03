@@ -46,10 +46,10 @@ set(src_tls
 
 set(src_tls_helpers
         ${MBEDTLS_ROOT}/tests/src/certs.c
-        ${MBEDTLS_ROOT}/tests/src/helpers.c
-        ${MBEDTLS_ROOT}/tests/src/psa_crypto_helpers.c
+        ${MBEDTLS_ROOT}/framework/tests/src/helpers.c
+        ${MBEDTLS_ROOT}/framework/tests/src/psa_crypto_helpers.c
         ${MBEDTLS_ROOT}/programs/ssl/ssl_test_lib.c
-        ${MBEDTLS_ROOT}/programs/test/query_config.h
+        ${MBEDTLS_ROOT}/framework/tests/programs/query_config.h
         ${MBEDTLS_ROOT}/programs/test/query_config.c
 )
 
@@ -91,9 +91,9 @@ set(src_mbedtls_legacy
 
 if (CONFIG_MBEDTLS_SSL_TESTS)
 
-    if(NOT EXISTS "${MBEDTLS_ROOT}/library/pk_ecc.c")
+    if(NOT EXISTS "${MBEDTLS_ROOT}/framework/tests/src/helpers.c")
         message(FATAL_ERROR
-                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.2.")
+                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.3.")
     endif()
 
     message(STATUS "CONFIG_MBEDTLS_SSL_TESTS: ${CONFIG_MBEDTLS_SSL_TESTS}")
@@ -161,9 +161,10 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
     # add mbedtls includes
-    target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/programs/test)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/programs)
     target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/include)
 
+    target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/include)
     target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/tests/include)
     target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/library)
 
@@ -203,9 +204,10 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
         # add mbedtls includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/programs/test)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/programs)
         target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/include)
 
+        target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/include)
         target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/tests/include)
         target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/library)
         
@@ -243,7 +245,7 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
                 ${MBEDTLS_ROOT}/library/ctr_drbg.c
                 ${MBEDTLS_ROOT}/library/entropy.c
                 ${MBEDTLS_ROOT}/library/entropy_poll.c
-                ${MBEDTLS_ROOT}/tests/src/random.c
+                ${MBEDTLS_ROOT}/framework/tests/src/random.c
             )
 
             # test helpers
@@ -271,9 +273,10 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
             # add mbedtls includes
-            target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/programs/test)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/programs)
             target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/include)
 
+            target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/include)
             target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/tests/include)
             target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/library)
 

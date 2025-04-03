@@ -292,125 +292,95 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 10:
             {
-                *out_value = PSA_KEY_TYPE_PEPPER;
+                *out_value = PSA_KEY_TYPE_RAW_DATA;
             }
             break;
         case 11:
             {
-                *out_value = PSA_KEY_TYPE_RAW_DATA;
+                *out_value = PSA_KEY_TYPE_RSA_KEY_PAIR;
             }
             break;
         case 12:
             {
-                *out_value = PSA_KEY_TYPE_RSA_KEY_PAIR;
+                *out_value = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
             }
             break;
         case 13:
             {
-                *out_value = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
+                *out_value = PSA_ERROR_INVALID_ARGUMENT;
             }
             break;
         case 14:
             {
-                *out_value = PSA_ERROR_INVALID_ARGUMENT;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
             }
             break;
         case 15:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
             }
             break;
         case 16:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY);
             }
             break;
         case 17:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_MONTGOMERY);
             }
             break;
         case 18:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_MONTGOMERY);
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
             }
             break;
         case 19:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1);
             }
             break;
         case 20:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_K1);
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
             }
             break;
         case 21:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1);
             }
             break;
         case 22:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R2);
             }
             break;
         case 23:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R2);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_K1);
             }
             break;
         case 24:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R2);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_R1);
             }
             break;
         case 25:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_K1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_R2);
             }
             break;
         case 26:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_K1);
+                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS);
             }
             break;
         case 27:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R1);
-            }
-            break;
-        case 28:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_R1);
-            }
-            break;
-        case 29:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R2);
-            }
-            break;
-        case 30:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECT_R2);
-            }
-            break;
-        case 31:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS);
-            }
-            break;
-        case 32:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS);
-            }
-            break;
-        case 33:
-            {
                 *out_value = PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919);
             }
             break;
-        case 34:
+        case 28:
             {
                 *out_value = PSA_KEY_TYPE_DH_PUBLIC_KEY(PSA_DH_FAMILY_RFC7919);
             }
@@ -532,7 +502,7 @@ static int dep_check(int dep_id)
             break;
         case 9:
             {
-#if defined(PSA_WANT_KEY_TYPE_PEPPER)
+#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -541,7 +511,7 @@ static int dep_check(int dep_id)
             break;
         case 10:
             {
-#if defined(DEPENDENCY_NOT_IMPLEMENTED_YET)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1024)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -550,7 +520,7 @@ static int dep_check(int dep_id)
             break;
         case 11:
             {
-#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -559,7 +529,7 @@ static int dep_check(int dep_id)
             break;
         case 12:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1536)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -568,7 +538,7 @@ static int dep_check(int dep_id)
             break;
         case 13:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1024)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -577,7 +547,7 @@ static int dep_check(int dep_id)
             break;
         case 14:
             {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1536)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -586,7 +556,7 @@ static int dep_check(int dep_id)
             break;
         case 15:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -595,7 +565,7 @@ static int dep_check(int dep_id)
             break;
         case 16:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_160)
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -604,7 +574,7 @@ static int dep_check(int dep_id)
             break;
         case 17:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_192)
+#if defined(PSA_WANT_ECC_MONTGOMERY_255)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -613,7 +583,7 @@ static int dep_check(int dep_id)
             break;
         case 18:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_224)
+#if defined(PSA_WANT_ECC_MONTGOMERY_448)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -622,7 +592,7 @@ static int dep_check(int dep_id)
             break;
         case 19:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
+#if defined(PSA_WANT_ECC_SECP_K1_192)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -631,7 +601,7 @@ static int dep_check(int dep_id)
             break;
         case 20:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_320)
+#if defined(PSA_WANT_ECC_SECP_K1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -640,7 +610,7 @@ static int dep_check(int dep_id)
             break;
         case 21:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
+#if defined(PSA_WANT_ECC_SECP_R1_224)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -649,7 +619,7 @@ static int dep_check(int dep_id)
             break;
         case 22:
             {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
+#if defined(PSA_WANT_ECC_SECP_R1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -658,7 +628,7 @@ static int dep_check(int dep_id)
             break;
         case 23:
             {
-#if defined(PSA_WANT_ECC_MONTGOMERY_255)
+#if defined(PSA_WANT_ECC_SECP_R1_384)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -667,7 +637,7 @@ static int dep_check(int dep_id)
             break;
         case 24:
             {
-#if defined(PSA_WANT_ECC_MONTGOMERY_448)
+#if defined(PSA_WANT_ECC_SECP_R1_521)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -676,7 +646,7 @@ static int dep_check(int dep_id)
             break;
         case 25:
             {
-#if defined(PSA_WANT_ECC_SECP_K1_192)
+#if defined(PSA_WANT_DH_RFC7919_2048)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -685,7 +655,7 @@ static int dep_check(int dep_id)
             break;
         case 26:
             {
-#if defined(PSA_WANT_ECC_SECP_K1_225)
+#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -694,7 +664,7 @@ static int dep_check(int dep_id)
             break;
         case 27:
             {
-#if defined(PSA_WANT_ECC_SECP_K1_256)
+#if defined(PSA_WANT_DH_RFC7919_3072)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -703,7 +673,7 @@ static int dep_check(int dep_id)
             break;
         case 28:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_224)
+#if defined(PSA_WANT_DH_RFC7919_4096)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -712,204 +682,6 @@ static int dep_check(int dep_id)
             break;
         case 29:
             {
-#if defined(PSA_WANT_ECC_SECP_R1_256)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 30:
-            {
-#if defined(PSA_WANT_ECC_SECP_R1_384)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 31:
-            {
-#if defined(PSA_WANT_ECC_SECP_R1_521)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 32:
-            {
-#if defined(PSA_WANT_ECC_SECP_R2_160)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 33:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_163)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 34:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_233)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 35:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_239)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 36:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_283)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 37:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_409)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 38:
-            {
-#if defined(PSA_WANT_ECC_SECT_K1_571)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 39:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_163)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 40:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_233)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 41:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_283)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 42:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_409)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 43:
-            {
-#if defined(PSA_WANT_ECC_SECT_R1_571)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 44:
-            {
-#if defined(PSA_WANT_ECC_SECT_R2_163)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 45:
-            {
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 46:
-            {
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_448)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 47:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 48:
-            {
-#if defined(PSA_WANT_DH_RFC7919_2048)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 49:
-            {
-#if defined(PSA_WANT_DH_RFC7919_3072)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 50:
-            {
-#if defined(PSA_WANT_DH_RFC7919_4096)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 51:
-            {
 #if defined(PSA_WANT_DH_RFC7919_6144)
                 ret = DEPENDENCY_SUPPORTED;
 #else
@@ -917,7 +689,7 @@ static int dep_check(int dep_id)
 #endif
             }
             break;
-        case 52:
+        case 30:
             {
 #if defined(PSA_WANT_DH_RFC7919_8192)
                 ret = DEPENDENCY_SUPPORTED;

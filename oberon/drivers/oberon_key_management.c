@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -11,10 +11,12 @@
 #include "psa/crypto.h"
 #include "oberon_key_management.h"
 #include "oberon_ec_keys.h"
+#include "oberon_lms.h"
 #include "oberon_rsa.h"
 #include "oberon_spake2p.h"
 #include "oberon_srp.h"
 #include "oberon_wpa3_sae.h"
+#include "oberon_xmss.h"
 
 
 psa_status_t oberon_export_public_key(
@@ -107,8 +109,40 @@ psa_status_t oberon_import_key(
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SRP_6_KEY_PAIR_IMPORT */
 
+#ifdef PSA_NEED_OBERON_KEY_TYPE_LMS_PUBLIC_KEY
+    if (type == PSA_KEY_TYPE_LMS_PUBLIC_KEY) {
+        return oberon_import_lms_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_LMS_PUBLIC_KEY */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_HSS_PUBLIC_KEY
+    if (type == PSA_KEY_TYPE_HSS_PUBLIC_KEY) {
+        return oberon_import_hss_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_HSS_PUBLIC_KEY */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_XMSS_PUBLIC_KEY
+    if (type == PSA_KEY_TYPE_XMSS_PUBLIC_KEY) {
+        return oberon_import_xmss_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_XMSS_PUBLIC_KEY */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_XMSS_MT_PUBLIC_KEY
+    if (type == PSA_KEY_TYPE_XMSS_MT_PUBLIC_KEY) {
+        return oberon_import_xmssmt_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_XMSS_MT_PUBLIC_KEY */
+
 #ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
-    if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type)) {
         return oberon_import_wpa3_sae_pt_key(
             attributes, data, data_length,
             key, key_size, key_length, key_bits);
@@ -174,7 +208,7 @@ psa_status_t oberon_derive_key(
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
 
 #ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
-    if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type)) {
         return oberon_derive_wpa3_sae_pt_key(
             attributes, input, input_length,
             key, key_size, key_length);

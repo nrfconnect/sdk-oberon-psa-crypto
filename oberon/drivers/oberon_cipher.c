@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -19,7 +19,7 @@
 #if defined(PSA_NEED_OBERON_CBC_PKCS7_AES) || defined(PSA_NEED_OBERON_CBC_NO_PADDING_AES) || defined(PSA_NEED_OBERON_ECB_NO_PADDING_AES)
 #include "ocrypto_aes_cbc_pkcs.h"
 #endif
-#ifdef PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20
+#if defined(PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20) || defined(PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20)
 #include "ocrypto_chacha20.h"
 #endif
 
@@ -52,9 +52,21 @@ static psa_status_t oberon_cipher_setup(
         ocrypto_chacha20_init((ocrypto_chacha20_ctx*)operation->ctx, NULL, 0, key, 0);
         operation->decrypt = decrypt;
         operation->alg = alg;
+        operation->iv_size = 12;
         return PSA_SUCCESS;
     }
 #endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 */
+#ifdef PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20
+    _Static_assert(sizeof operation->ctx >= sizeof(ocrypto_chacha20_ctx), "oberon_cipher_operation_t.ctx too small");
+    if (alg == PSA_ALG_STREAM_CIPHER && psa_get_key_type(attributes) == PSA_KEY_TYPE_XCHACHA20) {
+        if (key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
+        ocrypto_chacha20_init((ocrypto_chacha20_ctx*)operation->ctx, NULL, 0, key, 0);
+        operation->decrypt = decrypt;
+        operation->alg = alg;
+        operation->iv_size = 24;
+        return PSA_SUCCESS;
+    }
+#endif /* PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20 */
 
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
     if (key_length != 16 && key_length != 24 && key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
@@ -121,12 +133,12 @@ psa_status_t oberon_cipher_set_iv(
     const uint8_t *iv, size_t iv_length)
 {
     switch (operation->alg) {
-#ifdef PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20
+#if defined(PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20) || defined(PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20)
     case PSA_ALG_STREAM_CIPHER:
-        if (iv_length != 12) return PSA_ERROR_INVALID_ARGUMENT;
-        ocrypto_chacha20_init((ocrypto_chacha20_ctx*)operation->ctx, iv, 12, NULL, 0);
+        if (iv_length != operation->iv_size) return PSA_ERROR_INVALID_ARGUMENT;
+        ocrypto_chacha20_init((ocrypto_chacha20_ctx*)operation->ctx, iv, iv_length, NULL, 0);
         break;
-#endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 */
+#endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 || PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20 */
 #ifdef PSA_NEED_OBERON_CTR_AES
     case PSA_ALG_CTR:
         if (iv_length != 16) return PSA_ERROR_INVALID_ARGUMENT;
@@ -167,13 +179,13 @@ psa_status_t oberon_cipher_update(
     size_t out_len;
     
     switch (operation->alg) {
-#ifdef PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20
+#if defined(PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20) || defined(PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20)
     case PSA_ALG_STREAM_CIPHER:
         if (output_size < input_length) return PSA_ERROR_BUFFER_TOO_SMALL;
         ocrypto_chacha20_update((ocrypto_chacha20_ctx*)operation->ctx, output, input, input_length);
         *output_length = input_length;
         break;
-#endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 */
+#endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 || PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20 */
 #if defined(PSA_NEED_OBERON_CTR_AES) || defined(PSA_NEED_OBERON_CCM_STAR_NO_TAG_AES)
 #ifdef PSA_NEED_OBERON_CTR_AES
     case PSA_ALG_CTR:
@@ -276,7 +288,7 @@ typedef union {
 #if defined(PSA_NEED_OBERON_CBC_PKCS7_AES) || defined(PSA_NEED_OBERON_CBC_NO_PADDING_AES) || defined(PSA_NEED_OBERON_ECB_NO_PADDING_AES)
     ocrypto_aes_cbc_pkcs_ctx cbc;
 #endif
-#ifdef PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20
+#if defined(PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20) || defined(PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20)
     ocrypto_chacha20_ctx ch;
 #endif
     int dummy;
@@ -304,6 +316,17 @@ psa_status_t oberon_cipher_encrypt(
         return PSA_SUCCESS;
     }
 #endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 */
+#ifdef PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20
+    if (alg == PSA_ALG_STREAM_CIPHER && psa_get_key_type(attributes) == PSA_KEY_TYPE_XCHACHA20) {
+        if (key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
+        if (iv_length != 24) return PSA_ERROR_INVALID_ARGUMENT;
+        if (output_size < input_length) return PSA_ERROR_BUFFER_TOO_SMALL;
+        *output_length = input_length;
+        ocrypto_chacha20_init(&ctx.ch, iv, iv_length, key, 0);
+        ocrypto_chacha20_update(&ctx.ch, output, input, input_length);
+        return PSA_SUCCESS;
+    }
+#endif /* PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20 */
 
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
     if (key_length != 16 && key_length != 24 && key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
@@ -397,6 +420,17 @@ psa_status_t oberon_cipher_decrypt(
         return PSA_SUCCESS;
     }
 #endif /* PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20 */
+#ifdef PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20
+    if (alg == PSA_ALG_STREAM_CIPHER && psa_get_key_type(attributes) == PSA_KEY_TYPE_XCHACHA20) {
+        if (input_length < 24) return PSA_ERROR_INVALID_ARGUMENT;
+        if (key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
+        if (output_size < input_length - 24) return PSA_ERROR_BUFFER_TOO_SMALL;
+        *output_length = input_length - 24;
+        ocrypto_chacha20_init(&ctx.ch, input, 24, key, 0);
+        ocrypto_chacha20_update(&ctx.ch, output, input + 24, input_length - 24);
+        return PSA_SUCCESS;
+    }
+#endif /* PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20 */
 
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
     if (key_length != 16 && key_length != 24 && key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -23,6 +23,7 @@ typedef struct {
     uint32_t ctx[70];
     psa_algorithm_t alg;
     uint8_t decrypt;
+    uint8_t iv_size;
 } oberon_cipher_operation_t;
 
 

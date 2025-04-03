@@ -193,6 +193,12 @@ int main(void)
     t1 = cpucycles();
     printf("SHA-512 (1024 bytes):                %lld cycles\r\n", t1 - t0);
 
+    t0 = cpucycles();
+    status = psa_hash_compute(PSA_ALG_SHA3_256, data, 1024, data, sizeof data, &length);
+    if (status) goto error;
+    t1 = cpucycles();
+    printf("SHA3-256 (1024 bytes):               %lld cycles\r\n", t1 - t0);
+
     psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_256));

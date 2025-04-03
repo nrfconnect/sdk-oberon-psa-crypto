@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -35,7 +35,7 @@ typedef enum {
     OBERON_ECJPAKE_TO_PMS_ALG = 8,
     OBERON_SP800_108_COUNTER_ALG = 9,
     OBERON_SRP_PASSWORD_HASH_ALG = 10,
-    OBERON_WPA3_SAE_PT_ALG = 11,
+    OBERON_WPA3_SAE_H2E_ALG = 11,
 } oberon_kdf_alg;
 
 typedef struct {

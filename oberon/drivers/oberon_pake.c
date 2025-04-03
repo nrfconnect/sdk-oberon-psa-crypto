@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -319,6 +319,6 @@ psa_status_t oberon_pake_abort(
 #endif /* PSA_NEED_OBERON_WPA3_SAE */
     {
         (void)operation;
-        return PSA_ERROR_BAD_STATE;
+        return PSA_SUCCESS;
     }
 }

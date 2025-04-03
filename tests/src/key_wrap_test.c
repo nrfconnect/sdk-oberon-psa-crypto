@@ -542,6 +542,38 @@ exit:
 }
 #endif // PSA_WANT_ALG_AES_KWP
 
+#if defined(PSA_WANT_ALG_CCM) && defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+static const uint8_t aes_key[] = {
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+
+static int test_aes_ccm_wildcard()
+{
+    psa_key_id_t key = 0;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t ct[32];
+    size_t length;
+
+    psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_ENCRYPT);
+    psa_set_key_algorithm(&attributes, PSA_ALG_CCM_STAR_ANY_TAG);
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
+    TEST_ASSERT(psa_import_key(&attributes, aes_key, sizeof aes_key, &key) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_cipher_encrypt(key, PSA_ALG_CCM_STAR_NO_TAG, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_encrypt(key, PSA_ALG_CCM, aes_key, 13, NULL, 0, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_encrypt(key, PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 12), aes_key, 13, NULL, 0, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_cipher_encrypt(key, PSA_ALG_CCM_STAR_ANY_TAG, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_ERROR_NOT_SUPPORTED);
+    TEST_ASSERT(psa_cipher_encrypt(key, PSA_ALG_CTR, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_ERROR_NOT_PERMITTED);
+    TEST_ASSERT(psa_aead_encrypt(key, PSA_ALG_GCM, aes_key, 13, NULL, 0, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_ERROR_NOT_PERMITTED);
+    TEST_ASSERT(psa_aead_encrypt(key, PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 12), aes_key, 13, NULL, 0, aes_key, sizeof aes_key, ct, sizeof ct, &length) == PSA_ERROR_NOT_PERMITTED);
+
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    return 1;
+exit:
+    psa_destroy_key(key);
+    return 0;
+}
+#endif // PSA_WANT_ALG_CCM && PSA_WANT_ALG_CCM_STAR_NO_TAG
 
 int main(void)
 {
@@ -561,6 +593,10 @@ int main(void)
     for (i = 1; i <= 25; i++) {
         TEST_ASSERT(test_aes_kwp_err(i));
     }
+#endif
+
+#if defined(PSA_WANT_ALG_CCM) && defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
+    TEST_ASSERT(test_aes_ccm_wildcard());
 #endif
 
     return 0;

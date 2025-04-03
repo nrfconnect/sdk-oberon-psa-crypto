@@ -15,7 +15,7 @@ if(DEFINED OCRYPTO_ROOT)
 else()
     set(OCRYPTO_ROOT ${OBERON_PSA_DIR}/oberon/drivers/ocrypto)
 endif()
-if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_types.h")
+if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_types_p256.h")
     message(FATAL_ERROR
             "Path ${OCRYPTO_ROOT} does not contain valid ocrypto sources. \
             Please provide -DOCRYPTO_ROOT=path/to/ocrypto/sources or copy \
@@ -49,16 +49,20 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p224.h"
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p256.c"
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p256.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_curve_p256k1.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_curve_p256k1.h"
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p384.c"
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p384.h"
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p521.c"
         "${OCRYPTO_ROOT}/src/ocrypto_curve_p521.h"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdh_p224.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdh_p256.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_ecdh_p256k1.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdh_p384.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdh_p521.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdsa_p224.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdsa_p256.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_ecdsa_p256k1.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdsa_p384.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecdsa_p521.c"
         "${OCRYPTO_ROOT}/src/ocrypto_ecjpake_p256.c"
@@ -78,6 +82,8 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_mod_p224.h"
         "${OCRYPTO_ROOT}/src/ocrypto_mod_p256.c"
         "${OCRYPTO_ROOT}/src/ocrypto_mod_p256.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_mod_p256k1.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_mod_p256k1.h"
         "${OCRYPTO_ROOT}/src/ocrypto_mod_p384.c"
         "${OCRYPTO_ROOT}/src/ocrypto_mod_p384.h"
         "${OCRYPTO_ROOT}/src/ocrypto_mod_p521.c"
@@ -94,6 +100,8 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_sc_p224.h"
         "${OCRYPTO_ROOT}/src/ocrypto_sc_p256.c"
         "${OCRYPTO_ROOT}/src/ocrypto_sc_p256.h"
+        "${OCRYPTO_ROOT}/src/ocrypto_sc_p256k1.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_sc_p256k1.h"
         "${OCRYPTO_ROOT}/src/ocrypto_sc_p384.c"
         "${OCRYPTO_ROOT}/src/ocrypto_sc_p384.h"
         "${OCRYPTO_ROOT}/src/ocrypto_sc_p521.c"
@@ -136,6 +144,7 @@ set(OCRYPTO_PLATFORM_SOURCES
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_mod448_base.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_mod_p224_base.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_mod_p256_base.c"
+        "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_mod_p256k1_base.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_mod_p384_base.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_mod_p521_base.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_poly1305_mul.c"
@@ -219,6 +228,8 @@ set(OBERON_SOURCES
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_management.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_wrap.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_wrap.h
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_lms.c
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_lms.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_mac.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_mac.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_pake.c
@@ -231,6 +242,8 @@ set(OBERON_SOURCES
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_srp.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.h
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xmss.c
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xmss.h
 )
 
 # Demo drivers

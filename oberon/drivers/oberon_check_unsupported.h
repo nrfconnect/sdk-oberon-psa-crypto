@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -124,25 +124,6 @@
     #endif
     #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_224)
         #error "No software implementation for secp-k1-224 key pair derive"
-    #endif
-#endif
-
-#if defined(PSA_WANT_ECC_SECP_K1_256)
-    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256)
-        #error "No software implementation for secp-k1-256 public key"
-    #endif
-    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256)
-        #error "No software implementation for secp-k1-256 key pair import"
-    #endif
-    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256)
-        #error "No software implementation for secp-k1-256 key pair export"
-    #endif
-    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && \
-        !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256)
-        #error "No software implementation for secp-k1-256 key pair generate"
-    #endif
-    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256)
-        #error "No software implementation for secp-k1-256 key pair derive"
     #endif
 #endif
 

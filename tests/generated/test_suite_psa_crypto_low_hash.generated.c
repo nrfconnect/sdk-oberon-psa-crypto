@@ -160,6 +160,7 @@ static int restore_output(FILE *out_stream, int dup_fd)
 
 #define TEST_SUITE_ACTIVE
 
+#if defined(MBEDTLS_PSA_CRYPTO_C)
 #if defined(MBEDTLS_PSA_BUILTIN_HASH)
 #line 2 "tests/suites/test_suite_psa_crypto_low_hash.function"
 /*
@@ -384,6 +385,7 @@ static void test_hash_empty_wrapper( void ** params )
     test_hash_empty( ((mbedtls_test_argument_t *) params[0])->sint, &data1 );
 }
 #endif /* MBEDTLS_PSA_BUILTIN_HASH */
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 
 #line 54 "suites/main_test.function"
@@ -414,7 +416,7 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
 
     switch (exp_id) {
     
-#if defined(MBEDTLS_PSA_BUILTIN_HASH)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_BUILTIN_HASH)
 
         case 0:
             {
@@ -478,7 +480,7 @@ static int dep_check(int dep_id)
 
     switch (dep_id) {
     
-#if defined(MBEDTLS_PSA_BUILTIN_HASH)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_BUILTIN_HASH)
 
         case 0:
             {
@@ -570,21 +572,21 @@ TestWrapper_t test_funcs[] =
 {
     /* Function Id: 0 */
 
-#if defined(MBEDTLS_PSA_BUILTIN_HASH)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_BUILTIN_HASH)
     test_hash_valid_one_shot_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 1 */
 
-#if defined(MBEDTLS_PSA_BUILTIN_HASH)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_BUILTIN_HASH)
     test_hash_valid_multipart_wrapper,
 #else
     NULL,
 #endif
 /* Function Id: 2 */
 
-#if defined(MBEDTLS_PSA_BUILTIN_HASH)
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_BUILTIN_HASH)
     test_hash_empty_wrapper,
 #else
     NULL,

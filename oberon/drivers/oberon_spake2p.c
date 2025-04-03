@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2024 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -135,13 +135,15 @@ static psa_status_t oberon_get_confirmation_keys(
     uint8_t Z[P256_POINT_SIZE];
     uint8_t V[P256_POINT_SIZE];
     size_t hash_len, conf_len = 0, shared_len = 0, mac_len = 0;
+    int res;
 
     // add Z, V, and w0 to TT
     if (op->role == PSA_PAKE_ROLE_CLIENT) {
-        ocrypto_spake2p_p256_get_ZV(Z, V, op->w0, &op->w1L[1], op->xy, op->YX, N, NULL);
+        res = ocrypto_spake2p_p256_get_ZV(Z, V, op->w0, &op->w1L[1], op->xy, op->YX, N, NULL);
     } else {
-        ocrypto_spake2p_p256_get_ZV(Z, V, op->w0, NULL, op->xy, op->YX, M, op->w1L);
+        res = ocrypto_spake2p_p256_get_ZV(Z, V, op->w0, NULL, op->xy, op->YX, M, op->w1L);
     }
+    if (res) return PSA_ERROR_INVALID_ARGUMENT;
     status = oberon_update_hash_with_prefix(&op->hash_op, Z, P256_POINT_SIZE);
     if (status) return status;
     status = oberon_update_hash_with_prefix(&op->hash_op, V, P256_POINT_SIZE);
@@ -330,6 +332,9 @@ psa_status_t oberon_spake2p_setup(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
+    operation->prover_len = 0;
+    operation->verifier_len = 0;
+
     // prepare TT calculation
     operation->alg = psa_pake_cs_get_algorithm(cipher_suite);
     return psa_driver_wrapper_hash_setup(&operation->hash_op, PSA_ALG_GET_HASH(operation->alg));
@@ -478,7 +483,6 @@ psa_status_t oberon_derive_spake2p_key(
         if (input_length != 80) return PSA_ERROR_INVALID_ARGUMENT;
         if (key_size < 64) return PSA_ERROR_BUFFER_TOO_SMALL;
         ocrypto_spake2p_p256_reduce(key, input, 40);           // w0s -> w0
-        if (!oberon_ct_compare_zero(key, 32)) return PSA_ERROR_INVALID_ARGUMENT;
         ocrypto_spake2p_p256_reduce(key + 32, input + 40, 40); // w1s -> w1
         if (!oberon_ct_compare_zero(key + 32, 32)) return PSA_ERROR_INVALID_ARGUMENT;
         *key_length = 64;
@@ -513,11 +517,10 @@ psa_status_t oberon_import_spake2p_key(
     case PSA_KEY_TYPE_SPAKE2P_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1):
         if (data_length != 64) return PSA_ERROR_NOT_SUPPORTED;
         if (bits != 0 && (bits != 256)) return PSA_ERROR_INVALID_ARGUMENT;
-        if (!oberon_ct_compare_zero(data, 32)) return PSA_ERROR_INVALID_ARGUMENT;
-        res = ocrypto_ecdh_p256_secret_key_check(data);
+        res = ocrypto_ecdh_p256_secret_key_check(data); // w0
         if (res) return PSA_ERROR_INVALID_ARGUMENT; // out of range
         if (!oberon_ct_compare_zero(data + 32, 32)) return PSA_ERROR_INVALID_ARGUMENT;
-        res = ocrypto_ecdh_p256_secret_key_check(data + 32);
+        res = ocrypto_ecdh_p256_secret_key_check(data + 32); // w1
         if (res) return PSA_ERROR_INVALID_ARGUMENT; // out of range
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT_SECP_R1_256 */
@@ -526,11 +529,10 @@ psa_status_t oberon_import_spake2p_key(
     case PSA_KEY_TYPE_SPAKE2P_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1):
         if (data_length != 32 + 65) return PSA_ERROR_NOT_SUPPORTED;
         if (bits != 0 && (bits != 256)) return PSA_ERROR_INVALID_ARGUMENT;
-        if (!oberon_ct_compare_zero(data, 32)) return PSA_ERROR_INVALID_ARGUMENT;
-        res = ocrypto_ecdh_p256_secret_key_check(data);
+        res = ocrypto_ecdh_p256_secret_key_check(data); // w0
         if (res) return PSA_ERROR_INVALID_ARGUMENT; // out of range
         if (data[32] != 0x04) return PSA_ERROR_INVALID_ARGUMENT;
-        res = ocrypto_ecdh_p256_public_key_check(&data[33]);
+        res = ocrypto_ecdh_p256_public_key_check(&data[33]); // L
         if (res) return PSA_ERROR_INVALID_ARGUMENT; // point not on curve
         break;
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_PUBLIC_KEY_SECP_R1_256 */
