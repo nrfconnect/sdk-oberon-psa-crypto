@@ -89,7 +89,7 @@ psa_status_t oberon_export_ec_public_key(
     _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "EC Keys Oberon driver: ocrypto version incompatible");
     int res = 1;
-    size_t bits = psa_get_key_bits(attributes);
+    __attribute__((unused)) size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
 
     if (PSA_KEY_TYPE_IS_PUBLIC_KEY(type)) {
