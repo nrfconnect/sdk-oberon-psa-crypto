@@ -84,6 +84,7 @@ static psa_status_t xmss_prf(
 
     adrs[31] = (uint8_t)mask;
 
+    memset(hash_op, 0, sizeof *hash_op);
     status = psa_driver_wrapper_hash_setup(hash_op, hash_alg);
     if (status) goto exit;
     if (n == 32) {
@@ -114,11 +115,12 @@ static psa_status_t xmss_get_message_hash(
     uint8_t *hash, const uint8_t *rand, const uint8_t *root, const uint8_t *msg, size_t msg_len,
     uint64_t idx, uint32_t n, psa_algorithm_t hash_alg)
 {
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     uint8_t pre[32];
     size_t length;
     psa_status_t status;
 
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     if (n == 32) {
@@ -155,7 +157,7 @@ exit:
 static psa_status_t ots_hash(
     uint8_t *hash, const uint8_t *node, const uint8_t *seed, uint8_t adrs[32], uint32_t n, psa_algorithm_t hash_alg)
 {
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     uint8_t pre[32], key[32], bm[32];
     size_t length;
     psa_status_t status;
@@ -165,6 +167,7 @@ static psa_status_t ots_hash(
 
     oberon_xor(bm, bm, node, n);
 
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     if (n == 32) {
@@ -195,7 +198,7 @@ static psa_status_t rand_hash(
     uint8_t *hash, const uint8_t *left, const uint8_t *right, const uint8_t *seed, uint8_t adrs[32],
     uint32_t n, psa_algorithm_t hash_alg)
 {
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     uint8_t pre[32], key[32], bm0[32], bm1[32];
     size_t length;
     psa_status_t status;
@@ -207,6 +210,7 @@ static psa_status_t rand_hash(
     oberon_xor(bm0, bm0, left, n);
     oberon_xor(bm1, bm1, right, n);
 
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     if (n == 32) {

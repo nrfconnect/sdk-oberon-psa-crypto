@@ -35,6 +35,7 @@ static psa_status_t setup_hmac(
     psa_set_key_type(&attr, PSA_KEY_TYPE_HMAC);
     psa_set_key_bits(&attr, PSA_BYTES_TO_BITS(key_len));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
+    memset(mac_op, 0, sizeof *mac_op);
     return psa_driver_wrapper_mac_sign_setup(mac_op, &attr, key, key_len, PSA_ALG_HMAC(PSA_ALG_SHA_256));
 }
 

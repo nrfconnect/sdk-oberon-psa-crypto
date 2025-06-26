@@ -197,6 +197,7 @@ static psa_status_t ctr_drbg_reset(
     psa_driver_wrapper_cipher_abort(&context->aes_op);
 
     // restart generator with new key
+    memset(&context->aes_op, 0, sizeof context->aes_op);
     status = psa_driver_wrapper_cipher_encrypt_setup(
         &context->aes_op,
         &attributes, seed, KEY_LEN,

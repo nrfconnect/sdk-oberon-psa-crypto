@@ -149,12 +149,13 @@ _PSA Unified Driver Interface_: Deprecated name, see _PSA Crypto Driver API_.
 _System crypto configuration_: Part of the _crypto configuration_ that configures
 what cryptographic algorithms, key types, and key sizes an application "wants".
 Furthermore, it configures what _hardware drivers_ should be used for which
-crypto features that an application actually "wants". Both of these configuration
-elements are located in file `include/psa/crypto_config.h`. The use of _Oberon
-drivers_ must not be specified, as they will be included automatically as needed
-if the _hardware drivers_ don't provide all necessary algorithms, key types or
-key sizes. If the application consists of several clients of the _PSA Certified
-Crypto Driver API_, then the union of all their "wants" must be specified.
+crypto features that an application actually "wants". There are examples of such
+configuration files in `oberon/platforms/demo/example_config`.
+The use of _Oberon drivers_ must not be specified, as they will be included
+automatically as fallbacks - as needed if the _hardware drivers_ don't provide
+all necessary algorithms, key types or key sizes. If the application consists of
+several clients of the _PSA Certified Crypto Driver API_, then the union of all
+their "wants" must be specified.
 
 _System crypto configurator_: Developer or systems integrator who sets up the
 _system crypto configuration_ for an application. Needs insight into what crypto

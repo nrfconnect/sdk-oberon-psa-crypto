@@ -480,6 +480,44 @@
     #define PSA_NEED_OBERON_XMSS_MT_VERIFY 1
 #endif
 
+#if defined(PSA_WANT_ALG_ML_DSA) && !defined(PSA_ACCEL_ML_DSA)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ML_DSA"
+    #endif
+    #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
+    #define PSA_NEED_OBERON_ML_DSA_VERIFY 1
+    #if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC)
+        #define PSA_NEED_OBERON_ML_DSA_SIGN 1
+    #endif
+    #define PSA_NEED_OBERON_ML_DSA 1
+    #ifdef PSA_WANT_ML_DSA_KEY_SIZE_44
+        #define PSA_NEED_OBERON_ML_DSA_44
+    #endif
+    #ifdef PSA_WANT_ML_DSA_KEY_SIZE_65
+        #define PSA_NEED_OBERON_ML_DSA_65
+    #endif
+    #ifdef PSA_WANT_ML_DSA_KEY_SIZE_87
+        #define PSA_NEED_OBERON_ML_DSA_87
+    #endif
+#endif
+
+#if defined(PSA_WANT_ALG_ML_KEM) && !defined(PSA_ACCEL_ML_KEM)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ML_KEM"
+    #endif
+    #define PSA_NEED_OBERON_KEY_ENCAPSULATION_DRIVER 1
+    #define PSA_NEED_OBERON_ML_KEM 1
+    #ifdef PSA_WANT_ML_KEM_KEY_SIZE_512
+        #define PSA_NEED_OBERON_ML_KEM_512
+    #endif
+    #ifdef PSA_WANT_ML_KEM_KEY_SIZE_768
+        #define PSA_NEED_OBERON_ML_KEM_768
+    #endif
+    #ifdef PSA_WANT_ML_KEM_KEY_SIZE_1024
+        #define PSA_NEED_OBERON_ML_KEM_1024
+    #endif
+#endif
+
 #if defined(PSA_NEED_OBERON_ECDSA_VERIFY) && defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
     #define PSA_NEED_OBERON_ECDSA_DETERMINISTIC 1
 #endif
@@ -1626,35 +1664,79 @@
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_LMS_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_LMS_PUBLIC_KEY)
-#ifdef PSA_HW_DRIVERS_ONLY
-#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_LMS_PUBLIC_KEY"
-#endif
-#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
-#define PSA_NEED_OBERON_KEY_TYPE_LMS_PUBLIC_KEY 1
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_LMS_PUBLIC_KEY"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_LMS_PUBLIC_KEY 1
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_HSS_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_HSS_PUBLIC_KEY)
-#ifdef PSA_HW_DRIVERS_ONLY
-#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_HSS_PUBLIC_KEY"
-#endif
-#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
-#define PSA_NEED_OBERON_KEY_TYPE_HSS_PUBLIC_KEY 1
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_HSS_PUBLIC_KEY"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_HSS_PUBLIC_KEY 1
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_XMSS_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_XMSS_PUBLIC_KEY)
-#ifdef PSA_HW_DRIVERS_ONLY
-#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_XMSS_PUBLIC_KEY"
-#endif
-#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
-#define PSA_NEED_OBERON_KEY_TYPE_XMSS_PUBLIC_KEY 1
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_XMSS_PUBLIC_KEY"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_XMSS_PUBLIC_KEY 1
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_XMSS_MT_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_XMSS_MT_PUBLIC_KEY)
-#ifdef PSA_HW_DRIVERS_ONLY
-#error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_XMSS_MT_PUBLIC_KEY"
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_XMSS_MT_PUBLIC_KEY"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_XMSS_MT_PUBLIC_KEY 1
 #endif
-#define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
-#define PSA_NEED_OBERON_KEY_TYPE_XMSS_MT_PUBLIC_KEY 1
+
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ML_DSA_PUBLIC_KEY"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_ML_DSA_PUBLIC_KEY 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT 1
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ML_KEM_PUBLIC_KEY)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ML_KEM_PUBLIC_KEY"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_ML_KEM_PUBLIC_KEY 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT 1
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT"
+    #endif
+    #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
+    #define PSA_NEED_OBERON_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT 1
 #endif
 
 
@@ -1726,37 +1808,22 @@
 
 #if defined(PSA_WANT_ALG_HKDF)
     #if defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_HKDF_SHA_1)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_SHA_1"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_224) && !defined(PSA_ACCEL_HKDF_SHA_224)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_SHA_224"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_HKDF_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_HKDF_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_HKDF_SHA_512)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_SHA_512"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF 1
     #endif
@@ -1764,37 +1831,22 @@
 
 #if defined(PSA_WANT_ALG_HKDF_EXTRACT)
     #if defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_HKDF_EXTRACT_SHA_1)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXTRACT_SHA_1"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXTRACT 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_224) && !defined(PSA_ACCEL_HKDF_EXTRACT_SHA_224)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXTRACT_SHA_224"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXTRACT 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_HKDF_EXTRACT_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXTRACT_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXTRACT 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_HKDF_EXTRACT_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXTRACT_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXTRACT 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_HKDF_EXTRACT_SHA_512)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXTRACT_SHA_512"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXTRACT 1
     #endif
@@ -1802,37 +1854,22 @@
 
 #if defined(PSA_WANT_ALG_HKDF_EXPAND)
     #if defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_HKDF_EXPAND_SHA_1)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXPAND_SHA_1"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXPAND 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_224) && !defined(PSA_ACCEL_HKDF_EXPAND_SHA_224)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXPAND_SHA_224"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXPAND 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_HKDF_EXPAND_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXPAND_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXPAND 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_HKDF_EXPAND_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXPAND_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXPAND 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_HKDF_EXPAND_SHA_512)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for HKDF_EXPAND_SHA_512"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_HKDF_EXPAND 1
     #endif
@@ -1840,16 +1877,10 @@
 
 #if defined(PSA_WANT_ALG_TLS12_PRF)
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_TLS12_PRF_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for TLS12_PRF_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_TLS12_PRF 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_TLS12_PRF_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for TLS12_PRF_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_TLS12_PRF 1
     #endif
@@ -1857,16 +1888,10 @@
 
 #if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_TLS12_PSK_TO_MS_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for TLS12_PSK_TO_MS_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_TLS12_PSK_TO_MS 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_TLS12_PSK_TO_MS_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for TLS12_PSK_TO_MS_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_TLS12_PSK_TO_MS 1
     #endif
@@ -1874,116 +1899,71 @@
 
 #if defined(PSA_WANT_ALG_PBKDF2_HMAC)
     #if defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_PBKDF2_HMAC_SHA_1)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PBKDF2_HMAC_SHA_1"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_PBKDF2_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_224) && !defined(PSA_ACCEL_PBKDF2_HMAC_SHA_224)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PBKDF2_HMAC_SHA_224"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_PBKDF2_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_PBKDF2_HMAC_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PBKDF2_HMAC_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_PBKDF2_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_PBKDF2_HMAC_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PBKDF2_HMAC_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_PBKDF2_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_PBKDF2_HMAC_SHA_512)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PBKDF2_HMAC_SHA_512"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_PBKDF2_HMAC 1
     #endif
 #endif // defined(PSA_WANT_ALG_PBKDF2_HMAC)
 
 #if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128) && !defined(PSA_ACCEL_PBKDF2_AES_CMAC_PRF_128)
-    #ifdef PSA_HW_DRIVERS_ONLY
-        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PBKDF2_AES_CMAC_PRF_128"
-    #endif
     #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
     #define PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128 1
 #endif
 
 #if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS) && !defined(PSA_ACCEL_TLS12_ECJPAKE_TO_PMS)
-    #ifdef PSA_HW_DRIVERS_ONLY
-        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for TLS12_ECJPAKE_TO_PMS"
-    #endif
     #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
     #define PSA_NEED_OBERON_TLS12_ECJPAKE_TO_PMS 1
 #endif
 
 #if defined(PSA_WANT_ALG_SRP_PASSWORD_HASH) && !defined(PSA_ACCEL_SRP_PASSWORD_HASH)
-    #ifdef PSA_HW_DRIVERS_ONLY
-        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SRP_PASSWORD_HASH"
-    #endif
     #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
     #define PSA_NEED_OBERON_SRP_PASSWORD_HASH 1
 #endif
 
 #if defined(PSA_WANT_ALG_WPA3_SAE_H2E) && !defined(PSA_ACCEL_WPA3_SAE_H2E)
-    #ifdef PSA_HW_DRIVERS_ONLY
-        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for WPA3_SAE_PT"
-    #endif
     #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
     #define PSA_NEED_OBERON_WPA3_SAE_H2E 1
 #endif
 
 #if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC)
     #if defined(PSA_WANT_ALG_SHA_1) && !defined(PSA_ACCEL_SP800_108_COUNTER_HMA_SHA_1)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SP800_108_COUNTER_HMA_SHA_1"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_SP800_108_COUNTER_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_224) && !defined(PSA_ACCEL_SP800_108_COUNTER_HMA_SHA_224)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SP800_108_COUNTER_HMA_SHA_224"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_SP800_108_COUNTER_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_SP800_108_COUNTER_HMA_SHA_256)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SP800_108_COUNTER_HMA_SHA_256"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_SP800_108_COUNTER_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_SP800_108_COUNTER_HMA_SHA_384)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SP800_108_COUNTER_HMA_SHA_384"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_SP800_108_COUNTER_HMAC 1
     #endif
     #if defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_SP800_108_COUNTER_HMA_SHA_512)
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SP800_108_COUNTER_HMA_SHA_512"
-        #endif
         #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
         #define PSA_NEED_OBERON_SP800_108_COUNTER_HMAC 1
     #endif
 #endif // defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC)
 
 #if defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC) && !defined(PSA_ACCEL_SP800_108_COUNTER_CMAC)
-    #ifdef PSA_HW_DRIVERS_ONLY
-        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SP800_108_COUNTER_CMAC"
-    #endif
     #define PSA_NEED_OBERON_KEY_DERIVATION_DRIVER 1
     #define PSA_NEED_OBERON_SP800_108_COUNTER_CMAC 1
 #endif
@@ -2167,18 +2147,12 @@
         #if defined(PSA_ACCEL_GENERATE_RANDOM)
             #error "No more than one DRBG_DRIVER usage must be defined."
         #endif
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, conflicts with PSA_USE_CTR_DRBG_DRIVER"
-        #endif
         #define PSA_NEED_OBERON_CTR_DRBG_DRIVER 1
         #define PSA_ACCEL_GENERATE_RANDOM
     #endif
     #if defined(PSA_USE_HMAC_DRBG_DRIVER)
         #if defined(PSA_ACCEL_GENERATE_RANDOM)
             #error "No more than one DRBG_DRIVER usage must be defined."
-        #endif
-        #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, conflicts with PSA_USE_HMAC_DRBG_DRIVER"
         #endif
         #define PSA_NEED_OBERON_HMAC_DRBG_DRIVER 1
         #define PSA_ACCEL_GENERATE_RANDOM

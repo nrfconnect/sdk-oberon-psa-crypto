@@ -131,7 +131,7 @@ static psa_status_t oberon_get_confirmation_keys(
 {
     psa_status_t status;
     psa_algorithm_t hkdf_alg = PSA_ALG_HKDF(PSA_ALG_GET_HASH(op->alg));
-    psa_key_derivation_operation_t kdf_op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_derivation_operation_t kdf_op;
     uint8_t Z[P256_POINT_SIZE];
     uint8_t V[P256_POINT_SIZE];
     size_t hash_len, conf_len = 0, shared_len = 0, mac_len = 0;
@@ -187,6 +187,7 @@ static psa_status_t oberon_get_confirmation_keys(
         }
 #endif
         conf_len = mac_len;
+        memset(&kdf_op, 0, sizeof kdf_op);
         status = psa_driver_wrapper_key_derivation_setup(&kdf_op, hkdf_alg);
         if (status) goto exit;
         status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_INFO, (uint8_t *)"SharedKey", 9);
@@ -204,6 +205,7 @@ static psa_status_t oberon_get_confirmation_keys(
     op->mac_len = (uint8_t)mac_len;
 
     // get K_confirmP & K_confirmV
+    memset(&kdf_op, 0, sizeof kdf_op);
     status = psa_driver_wrapper_key_derivation_setup(&kdf_op, hkdf_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_INFO, (uint8_t *)"ConfirmationKeys", 16);
@@ -331,9 +333,6 @@ psa_status_t oberon_spake2p_setup(
     } else {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
-
-    operation->prover_len = 0;
-    operation->verifier_len = 0;
 
     // prepare TT calculation
     operation->alg = psa_pake_cs_get_algorithm(cipher_suite);

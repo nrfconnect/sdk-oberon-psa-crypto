@@ -1,5 +1,46 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.5.0
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.0>
+24-Jun-2025 (cac3da0)
+
+Oberon crypto software drivers require _ocrypto_ version 3.9.1 or later.
+
+### Compatibility
+- PSA Certified Crypto API specifications
+  - Core specification: 1.3.0 including former PAKE extensions for EC-JPAKE and SPAKE2+
+    [IHI0086-PSA_Certified_Crypto_API-1.3.0.pdf](https://arm-software.github.io/psa-api/crypto/1.3/IHI0086-PSA_Certified_Crypto_API-1.3.0.pdf).
+  - SRP PAKE extension according to
+    [Add support for the SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
+  - WPA3 PAKE extension according to
+    [Dragonfly PAKE for WPA3 use cases](https://github.com/ARM-software/psa-api/issues/203).
+  - LMS/HSS/XMSS/XMSS^MT/ML-KEM/ML-DSA PQC extensions according to
+    PSA Crypto API 1.3 PQC Extension beta 0
+    [AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.0.pdf](https://arm-software.github.io/psa-api/crypto/1.3/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.0.pdf).
+- PSA Certified APIs Architecture Test Suite v1.8.
+- Mbed TLS 3.6.1 or later.
+
+### New Features
+- Add support for ML-KEM (aka Kyber, PQC key encapsulation mechanism).
+  - Based on [FIPS - Module-Lattice-Based Key-Encapsulation Mechanism Standard](https://csrc.nist.gov/pubs/fips/203/final).
+  - With support for security levels ML-KEM-512, ML-KEM-768, ML-KEM-1024.
+  - This is a pure software implementation (no driver chaining, thus no hardware-accelerated hashing).
+- Add support for ML-DSA (aka Dilithium, PQC digital signature algorithm).
+  - Based on [FIPS - Module-Lattice-Based Digital Signature Standard](https://csrc.nist.gov/pubs/fips/204/final).
+  - With support for security levels ML-DSA-44, ML-DSA-65, ML-DSA-87.
+  - This is a pure software implementation (no driver chaining, thus no hardware-accelerated hashing).
+
+### Improvements
+- Let PSA Crypto Core perform necessary initializations of inputs to drivers
+  (and thereby compatibility to GCC 15).
+- Improve opaque key support with regard to `psa_get_and_lock_transparent_key_slot_with_policy`
+  and `psa_get_and_lock_key_slot_with_policy`.
+- Remove platform configuration files from root directory.
+- Improve configuration-based code elimination for unused software crypto driver code.
+- Clean up cycle tests.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.4.0
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.4.0>
 3-Apr-2025 (2df55af)
@@ -14,7 +55,7 @@ Oberon crypto software drivers require _ocrypto_ version 3.8.x.
     [Add support for the SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
   - WPA3 PAKE extension according to
     [Dragonfly PAKE for WPA3 use cases](https://github.com/ARM-software/psa-api/issues/203).
-  - LMS/HSS/XMSS/XMSS^MT PQC extension according to PSA Crypto API 1.3 PQC Extension beta 0 release candidate 1
+  - LMS/HSS/XMSS/XMSS^MT PQC extension according to PSA Crypto API 1.3 PQC Extension beta 0
     [AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.0.pdf](https://arm-software.github.io/psa-api/crypto/1.3/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.0.pdf).
 - PSA Certified APIs Architecture Test Suite v1.8.
 - Aligned with PSA Crypto core from Mbed TLS 3.6.3.

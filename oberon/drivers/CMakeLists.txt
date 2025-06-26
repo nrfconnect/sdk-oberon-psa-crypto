@@ -30,6 +30,8 @@ set(OBERON_SOURCES
         oberon_key_agreement.h
         oberon_key_derivation.c
         oberon_key_derivation.h
+        oberon_key_encapsulation.c
+        oberon_key_encapsulation.h
         oberon_key_management.c
         oberon_key_management.h
         oberon_key_wrap.c
@@ -38,6 +40,10 @@ set(OBERON_SOURCES
         oberon_lms.h
         oberon_mac.c
         oberon_mac.h
+        oberon_ml_dsa.c
+        oberon_ml_dsa.h
+        oberon_ml_kem.c
+        oberon_ml_kem.h
         oberon_pake.c
         oberon_pake.h
         oberon_rsa.c

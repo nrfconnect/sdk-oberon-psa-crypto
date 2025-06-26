@@ -17,31 +17,36 @@
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_R1_224) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_R1_224) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_R1_224) || \
-    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_224)
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_224) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_224)
 #include "ocrypto_ecdh_p224.h"
 #endif
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_R1_256) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_R1_256) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_R1_256) || \
-    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_256)
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_256) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_256)
 #include "ocrypto_ecdh_p256.h"
 #endif
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_R1_384) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_R1_384) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_R1_384) || \
-    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_384)
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_384) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_384)
 #include "ocrypto_ecdh_p384.h"
 #endif
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_R1_521) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_R1_521) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_R1_521) || \
-    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_521)
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_521) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_521)
 #include "ocrypto_ecdh_p521.h"
 #endif
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_K1_256) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_K1_256) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_K1_256) || \
-    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256)
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_K1_256) || \
+    defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_256)
 #include "ocrypto_ecdh_p256k1.h"
 #endif
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_MONTGOMERY_255) || \
@@ -176,6 +181,7 @@ psa_status_t oberon_export_ec_public_key(
 
     default:
         (void)res;
+        (void)bits;
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
@@ -540,6 +546,7 @@ psa_status_t oberon_generate_ec_key(
 
     default:
         (void)key;
+        (void)key_size;
         (void)res;
         (void)status;
         return PSA_ERROR_NOT_SUPPORTED;
@@ -621,7 +628,7 @@ psa_status_t oberon_derive_ec_key(
             c >>= 8;
         } while (i > 0);
 
-        res = ocrypto_ecdh_p256_secret_key_check(key);
+        res = ocrypto_ecdh_p256k1_secret_key_check(key);
         // repeat if input out of range
         if (res || !oberon_ct_compare_zero(key, input_length)) return PSA_ERROR_INSUFFICIENT_DATA;
         break;

@@ -24,6 +24,13 @@ extern "C" {
         const uint8_t *key, size_t key_length,
         uint8_t *data, size_t data_size, size_t *data_length);
 
+    psa_status_t cc3xx_import_rsa_key(
+        const psa_key_attributes_t *attributes,
+        const uint8_t *data, size_t data_length,
+        uint8_t *key, size_t key_size, size_t *key_length,
+        size_t *key_bits);
+
+
     psa_status_t cc3xx_rsa_sign_hash(
         const psa_key_attributes_t *attributes,
         const uint8_t *key, size_t key_length,

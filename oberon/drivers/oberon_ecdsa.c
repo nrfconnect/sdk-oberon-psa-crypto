@@ -103,10 +103,11 @@ static psa_status_t deterministic_ecdsa_hmac(
     const uint8_t *sk, const uint8_t *hash, size_t key_len,
     uint8_t *hmac)
 {
-    psa_mac_operation_t operation = PSA_MAC_OPERATION_INIT;
+    psa_mac_operation_t operation;
     psa_status_t status;
     size_t length;
 
+    memset(&operation, 0, sizeof operation);
     status = psa_driver_wrapper_mac_sign_setup(
         &operation,
         attr, key, hash_len,
@@ -302,8 +303,13 @@ psa_status_t oberon_ecdsa_sign_hash(
 
     default:
         (void)key;
+        (void)key_length;
         (void)alg;
         (void)signature;
+        (void)signature_size;
+        (void)signature_length;
+        (void)hash;
+        (void)hash_length;
         (void)ek;
         (void)status;
         (void)res;

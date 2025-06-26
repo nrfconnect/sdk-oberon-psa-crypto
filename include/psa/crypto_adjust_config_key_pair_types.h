@@ -68,6 +68,20 @@
 #define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_BASIC 1
 #endif
 
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT) || \
+    defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT) || \
+    defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE) || \
+    defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE)
+#define PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC 1
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT) || \
+    defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT) || \
+    defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_GENERATE) || \
+    defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_DERIVE)
+#define PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC 1
+#endif
+
 /*****************************************************************
  * BASIC -> corresponding PUBLIC
  ****************************************************************/

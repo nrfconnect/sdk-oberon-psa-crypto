@@ -1,27 +1,18 @@
-/*
- *  Copyright Oberon microsystems AG, Switzerland
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+//
+// This software is the intellectual property of Oberon microsystems AG, Switzerland.
+//
+
 
 #include "psa/crypto.h"
+#include "psa_crypto_driver_wrappers.h"
 #include "test_cycles.h"
-#include "mbedtls/build_info.h"
-
+#include "psa/crypto_config.h"
+#if defined(MBEDTLS_TARGET)
+#include "fake_external_rng_for_test.h"
+#endif
 
 static const uint8_t key_data[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+                                    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
 
 static const uint8_t ecc_key_pair[] = { 
     0x04, 0x51, 0x5c, 0x3d, 0x6e, 0xb9, 0xe3, 0x96, 0xb9, 0x04, 0xd3, 0xfe, 0xca, 0x7f, 0x54, 0xfd, 
@@ -36,45 +27,38 @@ static const uint8_t ecc_sig[] = {
     0x9f, 0x1f, 0xc7, 0x85, 0x7a, 0xa7, 0x20, 0xe2, 0x02, 0x4b, 0x3c, 0x81, 0x80, 0xe5, 0xf2, 0x7c, 
     0x19, 0x92, 0xbc, 0x29, 0x30, 0xa9, 0xd5, 0x14, 0xa0, 0x5d, 0x0c, 0xb2, 0xf3, 0xe1, 0x68, 0x73};
 
-static const uint8_t msg_data[1024] = 
-    "the brown fox jumps over the dog" 
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog"
-    "the brown fox jumps over the dog";
-
-static const uint8_t ecc_key_pair1[] = { 0x04,
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
-    0x79, 0xb5, 0x56, 0x2e, 0x8f, 0xe6, 0x54, 0xf9, 0x40, 0x78, 0xb1, 0x12, 0xe8, 0xa9, 0x8b, 0xa7, 
-    0x90, 0x1f, 0x85, 0x3a, 0xe6, 0x95, 0xbe, 0xd7, 0xe0, 0xe3, 0x91, 0x0b, 0xad, 0x04, 0x96, 0x64};
+static const uint8_t msg_data[1024] = "the brown fox jumps over the dog" 
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog"
+                                        "the brown fox jumps over the dog";
 
 static const uint8_t ecc_key1[] = { 
     0x79, 0xb5, 0x56, 0x2e, 0x8f, 0xe6, 0x54, 0xf9, 0x40, 0x78, 0xb1, 0x12, 0xe8, 0xa9, 0x8b, 0xa7, 
@@ -85,6 +69,7 @@ static const uint8_t ecc_sig1[] = {
     0x9d, 0xab, 0x65, 0xb0, 0x2a, 0x55, 0x67, 0xaf, 0xf6, 0x90, 0xcf, 0xc7, 0x3a, 0x56, 0x5e, 0xd4, 
     0x0b, 0xb1, 0x45, 0x65, 0x2b, 0x51, 0x87, 0x17, 0xa5, 0x38, 0xb8, 0xa6, 0x31, 0x26, 0x30, 0xe8, 
     0xff, 0x8a, 0x55, 0xd1, 0x25, 0x96, 0xdf, 0xf4, 0xad, 0x35, 0xcc, 0x38, 0x05, 0xc6, 0x7b, 0x0b};
+
 
 const uint8_t rsa_key_1024[] = {
     0x30, 0x82, 0x02, 0x5e, 0x02, 0x01, 0x00, 0x02, 0x81, 0x81, 0x00, 0xaf, 0x05,
@@ -349,21 +334,14 @@ int main(void)
     psa_key_derivation_operation_t kdf_op = PSA_KEY_DERIVATION_OPERATION_INIT;
     size_t length, pk_len, i;
 
-#ifdef PSA_CRYPTO_CORE_OBERON
-    printf("Speed tests (cycles)                 Oberon PSA Crypto\r\n");
-#elif defined MBEDTLS_VERSION_STRING_FULL
-    printf("Speed tests (cycles)                 " MBEDTLS_VERSION_STRING_FULL "\r\n");
-#else
-    printf("Speed tests (cycles)                 TF-PSA-Crypto\r\n");
-#endif
-  
+    printf("Speed tests (cycles)                 Oberon PSA Crypto Drivers\r\n");
+
     status = psa_crypto_init();
-    if (status) goto error;
 
     printf("SHA-256 (1024 bytes):                ");
 #if defined(PSA_WANT_ALG_SHA_256)
     t0 = cpucycles();
-    status = psa_hash_compute(PSA_ALG_SHA_256, data, 1024, data, sizeof data, &length);
+    status = psa_driver_wrapper_hash_compute(PSA_ALG_SHA_256, data, 1024, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -374,7 +352,7 @@ int main(void)
     printf("SHA-512 (1024 bytes):                ");
 #if defined(PSA_WANT_ALG_SHA_512)
     t0 = cpucycles();
-    status = psa_hash_compute(PSA_ALG_SHA_512, data, 1024, data, sizeof data, &length);
+    status = psa_driver_wrapper_hash_compute(PSA_ALG_SHA_512, data, 1024, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -385,7 +363,7 @@ int main(void)
     printf("SHA3-256 (1024 bytes):               ");
 #if defined(PSA_WANT_ALG_SHA3_256)
     t0 = cpucycles();
-    status = psa_hash_compute(PSA_ALG_SHA3_256, data, 1024, data, sizeof data, &length);
+    status = psa_driver_wrapper_hash_compute(PSA_ALG_SHA3_256, data, 1024, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -399,13 +377,10 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_mac_compute(key, PSA_ALG_HMAC(PSA_ALG_SHA_256), data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_mac_compute(&attr, key_data, 32, PSA_ALG_HMAC(PSA_ALG_SHA_256), data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -416,13 +391,10 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_HMAC(PSA_ALG_SHA_512));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_mac_compute(key, PSA_ALG_HMAC(PSA_ALG_SHA_512), data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_mac_compute(&attr, key_data, 32, PSA_ALG_HMAC(PSA_ALG_SHA_512), data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -435,10 +407,8 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_CMAC);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_mac_compute(key, PSA_ALG_CMAC, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_mac_compute(&attr, key_data, 32, PSA_ALG_CMAC, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
     psa_destroy_key(key);
@@ -450,17 +420,17 @@ int main(void)
     printf("HKDF-SHA-256:                        ");
 #if defined(PSA_WANT_ALG_HKDF)
     t0 = cpucycles();
-    status = psa_key_derivation_setup(&kdf_op, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, PSA_ALG_HKDF(PSA_ALG_SHA_256));
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_INFO, (uint8_t*)"Info", 4);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_INFO, (uint8_t*)"Info", 4);
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, 32);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, 32);
     if (status) goto error;
-    status = psa_key_derivation_output_bytes(&kdf_op, data, 32);
+    status = psa_driver_wrapper_key_derivation_output_bytes(&kdf_op, data, 32);
     if (status) goto error;
-    status = psa_key_derivation_abort(&kdf_op);
+    status = psa_driver_wrapper_key_derivation_abort(&kdf_op);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -471,17 +441,17 @@ int main(void)
     printf("PBKDF2-SHA-256 (100 iterations):     ");
 #if defined(PSA_WANT_ALG_PBKDF2_HMAC)
     t0 = cpucycles();
-    status = psa_key_derivation_setup(&kdf_op, PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256));
+    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256));
     if (status) goto error;
-    status = psa_key_derivation_input_integer(&kdf_op, PSA_KEY_DERIVATION_INPUT_COST, 100);
+    status = psa_driver_wrapper_key_derivation_input_integer(&kdf_op, PSA_KEY_DERIVATION_INPUT_COST, 100);
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_PASSWORD, key_data, 16);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_PASSWORD, key_data, 16);
     if (status) goto error;
-    status = psa_key_derivation_output_bytes(&kdf_op, data, 32);
+    status = psa_driver_wrapper_key_derivation_output_bytes(&kdf_op, data, 32);
     if (status) goto error;
-    status = psa_key_derivation_abort(&kdf_op);
+    status = psa_driver_wrapper_key_derivation_abort(&kdf_op);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -492,17 +462,17 @@ int main(void)
     printf("PBKDF2-CMAC-PRF128 (100 iterations): ");
 #if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
     t0 = cpucycles();
-    status = psa_key_derivation_setup(&kdf_op, PSA_ALG_PBKDF2_AES_CMAC_PRF_128);
+    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, PSA_ALG_PBKDF2_AES_CMAC_PRF_128);
     if (status) goto error;
-    status = psa_key_derivation_input_integer(&kdf_op, PSA_KEY_DERIVATION_INPUT_COST, 100);
+    status = psa_driver_wrapper_key_derivation_input_integer(&kdf_op, PSA_KEY_DERIVATION_INPUT_COST, 100);
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
     if (status) goto error;
-    status = psa_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_PASSWORD, key_data, 16);
+    status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_PASSWORD, key_data, 16);
     if (status) goto error;
-    status = psa_key_derivation_output_bytes(&kdf_op, data, 32);
+    status = psa_driver_wrapper_key_derivation_output_bytes(&kdf_op, data, 32);
     if (status) goto error;
-    status = psa_key_derivation_abort(&kdf_op);
+    status = psa_driver_wrapper_key_derivation_abort(&kdf_op);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -516,17 +486,14 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_ECB_NO_PADDING);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_encrypt_setup(&cipher_op, key, PSA_ALG_ECB_NO_PADDING);
+    status = psa_driver_wrapper_cipher_encrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_ECB_NO_PADDING);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, NULL, 0, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, NULL, 0, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -536,17 +503,14 @@ int main(void)
 #if defined(PSA_WANT_ALG_ECB_NO_PADDING)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_decrypt_setup(&cipher_op, key, PSA_ALG_ECB_NO_PADDING);
+    status = psa_driver_wrapper_cipher_decrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_ECB_NO_PADDING);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, NULL, 0, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, NULL, 0, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -557,19 +521,16 @@ int main(void)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_algorithm(&attr, PSA_ALG_CBC_PKCS7);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_encrypt_setup(&cipher_op, key, PSA_ALG_CBC_PKCS7);
+    status = psa_driver_wrapper_cipher_encrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_CBC_PKCS7);
     if (status) goto error;
-    status = psa_cipher_set_iv(&cipher_op, key_data, 16);
+    status = psa_driver_wrapper_cipher_set_iv(&cipher_op, key_data, 16);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, 1020, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, 1020, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, data + length, sizeof data - length, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, data + length, sizeof data - length, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -579,19 +540,16 @@ int main(void)
 #if defined(PSA_WANT_ALG_CBC_PKCS7)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_decrypt_setup(&cipher_op, key, PSA_ALG_CBC_PKCS7);
+    status = psa_driver_wrapper_cipher_decrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_CBC_PKCS7);
     if (status) goto error;
-    status = psa_cipher_set_iv(&cipher_op, key_data, 16);
+    status = psa_driver_wrapper_cipher_set_iv(&cipher_op, key_data, 16);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, data + length, sizeof data - length, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -602,19 +560,16 @@ int main(void)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_algorithm(&attr, PSA_ALG_CTR);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_encrypt_setup(&cipher_op, key, PSA_ALG_CTR);
+    status = psa_driver_wrapper_cipher_encrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_CTR);
     if (status) goto error;
-    status = psa_cipher_set_iv(&cipher_op, key_data, 16);
+    status = psa_driver_wrapper_cipher_set_iv(&cipher_op, key_data, 16);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, NULL, 0, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, NULL, 0, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -624,19 +579,16 @@ int main(void)
 #if defined(PSA_WANT_ALG_CTR)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_decrypt_setup(&cipher_op, key, PSA_ALG_CTR);
+    status = psa_driver_wrapper_cipher_decrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_CTR);
     if (status) goto error;
-    status = psa_cipher_set_iv(&cipher_op, key_data, 16);
+    status = psa_driver_wrapper_cipher_set_iv(&cipher_op, key_data, 16);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, NULL, 0, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, NULL, 0, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -647,21 +599,18 @@ int main(void)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_algorithm(&attr, PSA_ALG_CCM);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_aead_encrypt_setup(&aead_op, key, PSA_ALG_CCM);
+    status = psa_driver_wrapper_aead_encrypt_setup(&aead_op, &attr, key_data, 32, PSA_ALG_CCM);
     if (status) goto error;
-    status = psa_aead_set_lengths(&aead_op, 0, sizeof data);
+    status = psa_driver_wrapper_aead_set_lengths(&aead_op, 0, sizeof data);
     if (status) goto error;
-    status = psa_aead_set_nonce(&aead_op, key_data, 13);
+    status = psa_driver_wrapper_aead_set_nonce(&aead_op, key_data, 13);
     if (status) goto error;
-    status = psa_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_aead_finish(&aead_op, NULL, 0, &length, tag, sizeof tag, &length);
+    status = psa_driver_wrapper_aead_finish(&aead_op, NULL, 0, &length, tag, sizeof tag, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -671,21 +620,18 @@ int main(void)
 #if defined(PSA_WANT_ALG_CCM)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_aead_decrypt_setup(&aead_op, key, PSA_ALG_CCM);
+    status = psa_driver_wrapper_aead_decrypt_setup(&aead_op, &attr, key_data, 32, PSA_ALG_CCM);
     if (status) goto error;
-    status = psa_aead_set_lengths(&aead_op, 0, sizeof data);
+    status = psa_driver_wrapper_aead_set_lengths(&aead_op, 0, sizeof data);
     if (status) goto error;
-    status = psa_aead_set_nonce(&aead_op, key_data, 13);
+    status = psa_driver_wrapper_aead_set_nonce(&aead_op, key_data, 13);
     if (status) goto error;
-    status = psa_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_aead_verify(&aead_op, NULL, 0, &length, tag, sizeof tag);
+    status = psa_driver_wrapper_aead_verify(&aead_op, NULL, 0, &length, tag, sizeof tag);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -696,19 +642,16 @@ int main(void)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_algorithm(&attr, PSA_ALG_GCM);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_aead_encrypt_setup(&aead_op, key, PSA_ALG_GCM);
+    status = psa_driver_wrapper_aead_encrypt_setup(&aead_op, &attr, key_data, 32, PSA_ALG_GCM);
     if (status) goto error;
-    status = psa_aead_set_nonce(&aead_op, key_data, 13);
+    status = psa_driver_wrapper_aead_set_nonce(&aead_op, key_data, 13);
     if (status) goto error;
-    status = psa_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_aead_finish(&aead_op, NULL, 0, &length, tag, sizeof tag, &length);
+    status = psa_driver_wrapper_aead_finish(&aead_op, NULL, 0, &length, tag, sizeof tag, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -718,19 +661,16 @@ int main(void)
 #if defined(PSA_WANT_ALG_GCM)
     psa_set_key_type(&attr, PSA_KEY_TYPE_AES);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_aead_decrypt_setup(&aead_op, key, PSA_ALG_GCM);
+    status = psa_driver_wrapper_aead_decrypt_setup(&aead_op, &attr, key_data, 32, PSA_ALG_GCM);
     if (status) goto error;
-    status = psa_aead_set_nonce(&aead_op, key_data, 13);
+    status = psa_driver_wrapper_aead_set_nonce(&aead_op, key_data, 13);
     if (status) goto error;
-    status = psa_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_aead_verify(&aead_op, NULL, 0, &length, tag, sizeof tag);
+    status = psa_driver_wrapper_aead_verify(&aead_op, NULL, 0, &length, tag, sizeof tag);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -742,19 +682,16 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_STREAM_CIPHER);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_encrypt_setup(&cipher_op, key, PSA_ALG_STREAM_CIPHER);
+    status = psa_driver_wrapper_cipher_encrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_STREAM_CIPHER);
     if (status) goto error;
-    status = psa_cipher_set_iv(&cipher_op, key_data, 12);
+    status = psa_driver_wrapper_cipher_set_iv(&cipher_op, key_data, 12);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, NULL, 0, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, NULL, 0, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -762,20 +699,20 @@ int main(void)
 
     printf("CHACHA20 dec (1024 bytes):           ");
 #if defined(PSA_WANT_ALG_STREAM_CIPHER) && defined(PSA_WANT_KEY_TYPE_CHACHA20)
+    psa_set_key_type(&attr, PSA_KEY_TYPE_CHACHA20);
+    psa_set_key_bits(&attr, 256);
+    psa_set_key_algorithm(&attr, PSA_ALG_STREAM_CIPHER);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_cipher_decrypt_setup(&cipher_op, key, PSA_ALG_STREAM_CIPHER);
+    status = psa_driver_wrapper_cipher_decrypt_setup(&cipher_op, &attr, key_data, 32, PSA_ALG_STREAM_CIPHER);
     if (status) goto error;
-    status = psa_cipher_set_iv(&cipher_op, key_data, 12);
+    status = psa_driver_wrapper_cipher_set_iv(&cipher_op, key_data, 12);
     if (status) goto error;
-    status = psa_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_cipher_update(&cipher_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_cipher_finish(&cipher_op, NULL, 0, &length);
+    status = psa_driver_wrapper_cipher_finish(&cipher_op, NULL, 0, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -783,21 +720,20 @@ int main(void)
 
     printf("Chacha20-Poly1305 enc (1024 bytes):  ");
 #if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
+    psa_set_key_type(&attr, PSA_KEY_TYPE_CHACHA20);
+    psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_CHACHA20_POLY1305);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_aead_encrypt_setup(&aead_op, key, PSA_ALG_CHACHA20_POLY1305);
+    status = psa_driver_wrapper_aead_encrypt_setup(&aead_op, &attr, key_data, 32, PSA_ALG_CHACHA20_POLY1305);
     if (status) goto error;
-    status = psa_aead_set_nonce(&aead_op, key_data, 12);
+    status = psa_driver_wrapper_aead_set_nonce(&aead_op, key_data, 12);
     if (status) goto error;
-    status = psa_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_aead_finish(&aead_op, NULL, 0, &length, tag, sizeof tag, &length);
+    status = psa_driver_wrapper_aead_finish(&aead_op, NULL, 0, &length, tag, sizeof tag, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -806,19 +742,16 @@ int main(void)
     printf("Chacha20-Poly1305 dec (1024 bytes):  ");
 #if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_aead_decrypt_setup(&aead_op, key, PSA_ALG_CHACHA20_POLY1305);
+    status = psa_driver_wrapper_aead_decrypt_setup(&aead_op, &attr, key_data, 32, PSA_ALG_CHACHA20_POLY1305);
     if (status) goto error;
-    status = psa_aead_set_nonce(&aead_op, key_data, 12);
+    status = psa_driver_wrapper_aead_set_nonce(&aead_op, key_data, 12);
     if (status) goto error;
-    status = psa_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
+    status = psa_driver_wrapper_aead_update(&aead_op, data, sizeof data, data, sizeof data, &length);
     if (status) goto error;
-    status = psa_aead_verify(&aead_op, NULL, 0, &length, tag, sizeof tag);
+    status = psa_driver_wrapper_aead_verify(&aead_op, NULL, 0, &length, tag, sizeof tag);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -830,10 +763,8 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_export_public_key(key, pk, sizeof pk, &length);
+    status = psa_driver_wrapper_export_public_key(&attr, key_data, 32, pk, sizeof pk, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -843,12 +774,16 @@ int main(void)
 
     printf("P256 sign hash (32 bytes):           ");
 #if defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_256) && \
-    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) && \
+    defined(PSA_WANT_GENERATE_RANDOM)
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    psa_set_key_bits(&attr, 256);
+    psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
     t0 = cpucycles();
-    status = psa_sign_hash(key, PSA_ALG_ECDSA(PSA_ALG_SHA_256), data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_hash(&attr, pk, 32, PSA_ALG_ECDSA(PSA_ALG_SHA_256), data, 32, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -861,13 +796,10 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH);
-    status = psa_import_key(&attr, ecc_key_pair, 65, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_verify_hash(key, PSA_ALG_ECDSA(PSA_ALG_SHA_256), msg_data, 32, ecc_sig, 64);
+    status = psa_driver_wrapper_verify_hash(&attr, ecc_key_pair, 65, PSA_ALG_ECDSA(PSA_ALG_SHA_256), msg_data, 32, ecc_sig, 64);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -879,54 +811,29 @@ int main(void)
     psa_set_key_bits(&attr, 256);
     psa_set_key_algorithm(&attr, PSA_ALG_ECDH);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_raw_key_agreement(PSA_ALG_ECDH, key, ecc_key_pair, 65, data, sizeof data, &length);
+    status = psa_driver_wrapper_key_agreement(&attr, key_data, 32, PSA_ALG_ECDH, ecc_key_pair, 65, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
 #endif
 
-    printf("Ed25519 public key:                  ");
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255) 
-    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS));
-    psa_set_key_bits(&attr, 255);
-    psa_set_key_algorithm(&attr, PSA_ALG_PURE_EDDSA);
-    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    t0 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_export_public_key(key, pk, sizeof pk, &length);
-    t1 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_destroy_key(key);
-    if (status == PSA_SUCCESS) {
-        printf("%lld\r\n", t1 - t0);
-    } else {
-        printf("NS\r\n");
-    }
-#else
-    printf("skipped\r\n");
-#endif
-
+    printf("Ed25519 public key:                  skipped\n");
     printf("Ed25519 sign (32 bytes):             ");
-#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255) 
+#if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255) && \
+    defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
     psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS));
     psa_set_key_bits(&attr, 255);
     psa_set_key_algorithm(&attr, PSA_ALG_PURE_EDDSA);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
-    status = psa_import_key(&attr, key_data, 32, &key);
     t0 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_sign_message(key, PSA_ALG_PURE_EDDSA, data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_message(&attr, key_data, 32, PSA_ALG_PURE_EDDSA, data, 32, sig, sizeof sig, &length);
+    if (status) goto error;
     t1 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_destroy_key(key);
-    if (status == PSA_SUCCESS) {
-        printf("%lld\r\n", t1 - t0);
-    } else {
-        printf("NS\r\n");
-    }
+    psa_destroy_key(key);
+    printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
 #endif
@@ -939,77 +846,44 @@ int main(void)
     psa_set_key_bits(&attr, 255);
     psa_set_key_algorithm(&attr, PSA_ALG_PURE_EDDSA);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
-  	status = psa_import_key(&attr, ecc_key1, 32, &key);
     t0 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_verify_message(key, PSA_ALG_PURE_EDDSA, msg_data, 32, ecc_sig1, sizeof(ecc_sig1));
+    status = psa_driver_wrapper_verify_message(&attr, ecc_key1, 32, PSA_ALG_PURE_EDDSA, msg_data, 32, ecc_sig1, sizeof(ecc_sig1));
+    if (status) goto error;
     t1 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_destroy_key(key);
-    if (status == PSA_SUCCESS) {
-        printf("%lld\r\n", t1 - t0);
-    } else {
-        printf("NS\r\n");
-    }
+    printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
 #endif
 
-    printf("X25519 public key:                   ");
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) 
-    psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY));
-    psa_set_key_bits(&attr, 255);
-    psa_set_key_algorithm(&attr, PSA_ALG_ECDH);
-    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
-    status = psa_import_key(&attr, key_data, 32, &key);
-    t0 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_export_public_key(key, pk, sizeof pk, &length);
-    t1 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_destroy_key(key);
-    if (status == PSA_SUCCESS) {
-        printf("%lld\r\n", t1 - t0);
-    } else {
-        printf("NS\r\n");
-    }
-#else
-    printf("skipped\r\n");
-#endif
-
+    printf("X25519 public key:                   skipped\n");
     printf("ECDH X25519:                         ");
 #if defined(PSA_WANT_ECC_MONTGOMERY_255) \
-    && defined(PSA_WANT_ALG_ECDH)
+    && (defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) || defined(PSA_WANT_ALG_ECDH))
     psa_set_key_type(&attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY));
     psa_set_key_bits(&attr, 255);
     psa_set_key_algorithm(&attr, PSA_ALG_ECDH);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
-    status = psa_import_key(&attr, key_data, 32, &key);
     t0 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_raw_key_agreement(PSA_ALG_ECDH, key, pk, 32, data, sizeof data, &length);
+    status = psa_driver_wrapper_key_agreement(&attr, key_data, 32, PSA_ALG_ECDH, key_data, 32, data, sizeof data, &length);
+    if (status) goto error;
     t1 = cpucycles();
-    if (status == PSA_SUCCESS) status = psa_destroy_key(key);
-    if (status == PSA_SUCCESS) {
-        printf("%lld\r\n", t1 - t0);
-    } else {
-        printf("NS\r\n");
-    }
+    printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
 #endif
 
     printf("RSA-PSS-1024 sign hash:              ");
 #if defined(PSA_WANT_ALG_RSA_PSS) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
+    defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_1024)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_KEY_PAIR);
     psa_set_key_bits(&attr, 1024);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
-    status = psa_import_key(&attr, rsa_key_1024, sizeof rsa_key_1024, &key);
-    if (status) goto error;
-    status = psa_export_public_key(key, pk, sizeof pk, &pk_len);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_sign_hash(key, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_hash(&attr, rsa_key_1024, sizeof rsa_key_1024, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1017,18 +891,16 @@ int main(void)
 
     printf("RSA-PSS-1024 verify hash:            ");
 #if defined(PSA_WANT_ALG_RSA_PSS) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_1024)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
     psa_set_key_bits(&attr, 1024);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH);
-    status = psa_import_key(&attr, rsa_pk_1024, sizeof rsa_pk_1024, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_verify_hash(key, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, rsa_sig_1024, sizeof rsa_sig_1024);
+    status = psa_driver_wrapper_verify_hash(&attr, rsa_pk_1024, sizeof rsa_pk_1024, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, rsa_sig_1024, sizeof rsa_sig_1024);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1036,18 +908,16 @@ int main(void)
 
     printf("RSA-OAEP-1024 encrypt:               ");
 #if defined(PSA_WANT_ALG_RSA_OAEP) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_1024)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
     psa_set_key_bits(&attr, 1024);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, rsa_pk_1024, sizeof rsa_pk_1024, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_asymmetric_encrypt(key, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), msg_data, 40, NULL, 0, data1, sizeof data1, &length);
+    status = psa_driver_wrapper_asymmetric_encrypt(&attr, rsa_pk_1024, sizeof rsa_pk_1024, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), msg_data, 40, NULL, 0, data1, sizeof data1, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1055,19 +925,17 @@ int main(void)
 
     printf("RSA-OAEP-1024 decrypt:               ");
 #if defined(PSA_WANT_ALG_RSA_OAEP) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_1024)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_KEY_PAIR);
     psa_set_key_bits(&attr, 1024);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, rsa_key_1024, sizeof rsa_key_1024, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_asymmetric_decrypt(key, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), data1, length, NULL, 0, data, sizeof data, &length);
+    status = psa_driver_wrapper_asymmetric_decrypt(&attr, rsa_key_1024, sizeof rsa_key_1024, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), data1, length, NULL, 0, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
-		for(i=0; i != length; i++) if (msg_data[i] != data[i]) goto error;
-    psa_destroy_key(key);
+    for(i=0; i != length; i++) if (msg_data[i] != data[i]) goto error;
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1075,20 +943,16 @@ int main(void)
 
     printf("RSA-PSS-2048 sign hash:              ");
 #if defined(PSA_WANT_ALG_RSA_PSS) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
+    defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_2048)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_KEY_PAIR);
     psa_set_key_bits(&attr, 2048);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
-    status = psa_import_key(&attr, rsa_key_2048, sizeof rsa_key_2048, &key);
-    if (status) goto error;
-    status = psa_export_public_key(key, pk, sizeof pk, &pk_len);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_sign_hash(key, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_hash(&attr, rsa_key_2048, sizeof rsa_key_2048, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), data, 32, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1096,18 +960,16 @@ int main(void)
 
     printf("RSA-PSS-2048 verify hash:            ");
 #if defined(PSA_WANT_ALG_RSA_PSS) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_2048)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
     psa_set_key_bits(&attr, 2048);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH);
-    status = psa_import_key(&attr, rsa_pk_2048, sizeof rsa_pk_2048, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_verify_hash(key, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, rsa_sig_2048, sizeof rsa_sig_2048);
+    status = psa_driver_wrapper_verify_hash(&attr, rsa_pk_2048, sizeof rsa_pk_2048, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, rsa_sig_2048, sizeof rsa_sig_2048);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1115,18 +977,19 @@ int main(void)
 
     printf("RSA-OAEP-2048 encrypt:               ");
 #if defined(PSA_WANT_ALG_RSA_OAEP) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_GENERATE_RANDOM) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_2048)
+    status = psa_crypto_init(); // RSA OAEP will fail, if RNG not initialized
+    if (status) goto error;
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
     psa_set_key_bits(&attr, 2048);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT);
-    status = psa_import_key(&attr, rsa_pk_2048, sizeof rsa_pk_2048, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_asymmetric_encrypt(key, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), msg_data, 100, NULL, 0, data1, sizeof data1, &length);
+    status = psa_driver_wrapper_asymmetric_encrypt(&attr, rsa_pk_2048, sizeof rsa_pk_2048, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), msg_data, 100, NULL, 0, data1, sizeof data1, &length);
     if (status) goto error;
     t1 = cpucycles();
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");
@@ -1134,19 +997,17 @@ int main(void)
 
     printf("RSA-OAEP-2048 decrypt:               ");
 #if defined(PSA_WANT_ALG_RSA_OAEP) && \
-    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+    defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) && \
+    defined(PSA_WANT_RSA_KEY_SIZE_2048)
     psa_set_key_type(&attr, PSA_KEY_TYPE_RSA_KEY_PAIR);
     psa_set_key_bits(&attr, 2048);
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DECRYPT);
-    status = psa_import_key(&attr, rsa_key_2048, sizeof rsa_key_2048, &key);
-    if (status) goto error;
     t0 = cpucycles();
-    status = psa_asymmetric_decrypt(key, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), rsa_data1_2048, 256, NULL, 0, data, sizeof data, &length);
+    status = psa_driver_wrapper_asymmetric_decrypt(&attr, rsa_key_2048, sizeof rsa_key_2048, PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256), rsa_data1_2048, 256, NULL, 0, data, sizeof data, &length);
     if (status) goto error;
     t1 = cpucycles();
 		for(i=0; i != length; i++) if (msg_data[i] != data[i]) goto error;
-    psa_destroy_key(key);
     printf("%lld\r\n", t1 - t0);
 #else
     printf("skipped\r\n");

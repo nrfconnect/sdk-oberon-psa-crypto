@@ -6,18 +6,25 @@ if(NOT "${PLATFORM}" STREQUAL "demo")
 endif()
 
 # MBed TLS tests for PSA Certified Crypto API
-if (CONFIG_MBEDTLS_PSA_TESTS)
+if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
     include(CTest)
 
     message(STATUS "CONFIG_MBEDTLS_PSA_TESTS: Building for ${PLATFORM}")
 
     # add relative path to suites
-    foreach(SUITE ${MBEDTEST_SUITES})
-        list(APPEND TEST_SUITES "generated/${SUITE}")
-    endforeach()    
-    foreach(SUITE ${OBERON_TEST_SUITES})
-        list(APPEND TEST_SUITES "src/${SUITE}")
-    endforeach()
+    if(CONFIG_MBEDTLS_PSA_TESTS)
+        foreach(SUITE ${MBEDTEST_SUITES})
+            list(APPEND TEST_SUITES "generated/${SUITE}")
+        endforeach()
+        foreach(SUITE ${OBERON_TEST_SUITES})
+            list(APPEND TEST_SUITES "src/${SUITE}")
+        endforeach()
+    endif()    
+    if(CONFIG_MBEDTLS_PSA_TESTS_LONG)
+        foreach(SUITE ${MBEDTEST_SUITES_LONG})
+            list(APPEND TEST_SUITES "generated/${SUITE}")
+        endforeach()
+    endif()    
 
     # one pass with threading off, one pass with threading on
     set(THREADING_CONFIG single)
@@ -59,16 +66,18 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
 
                 # add platform specific sources
                 add_subdirectory(drivers drivers/${TEST_CONFIG}-${VARIANT}-${THREADING})
+
+                # use demo psa_crypto_driver_wrappers.c
                 target_sources(${PROJECT_NAME} PRIVATE library/psa_crypto_driver_wrappers.c)
 
                 if(${VARIANT} STREQUAL "pake_inject")
                     target_compile_definitions(${PROJECT_NAME} PRIVATE OBERON_PAKE_INJECT_RANDOM)
-                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/src/oberon_test_drbg.c")
+                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/oberon_test_drbg.c")
                 endif()
                 if(${THREADING} STREQUAL "multi")
                     target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_C)
                     target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_PTHREAD)
-                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/library/threading.c")
+                    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/threading.c)
                 endif()
 
                 # add platform-config specific includes first
@@ -80,50 +89,58 @@ if (CONFIG_MBEDTLS_PSA_TESTS)
                 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
 
                 # add mbed includes
-                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
-                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/library)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/include)
                 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC})
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_INC})
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_CORE})
 
                 foreach(SUITE_FILE ${TEST_SUITES})
                     get_filename_component(SUITE "${SUITE_FILE}" NAME)
 
-                    if((${VARIANT} STREQUAL "pake_inject" AND ${SUITE} STREQUAL "pake_test") OR 
-                        (NOT(${VARIANT} STREQUAL "pake_inject") AND NOT(${SUITE} STREQUAL "pake_test")))
-    
-                        project("${TEST_CONFIG}-${SUITE}-${VARIANT}-${THREADING}")
-                        message(STATUS "Add test suite ${SUITE}")
-                        add_executable(${PROJECT_NAME})
-                        set_target_properties(${PROJECT_NAME} PROPERTIES
-                            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
-                        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.c")
+                    # make sure, CONFIG_MBEDTLS_PSA_TESTS_LONG only run once 
+                    if(NOT(SUITE IN_LIST MBEDTEST_SUITES_LONG) OR 
+                            (${TEST_CONFIG} STREQUAL "crypto_config_oberon" AND 
+                                ((${THREADING_CONFIG} STREQUAL "single") OR (${THREADING} STREQUAL "multi"))))
 
-                        if(UNIX)
-                            set(DATAX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
-                        else()
-                            set(DATAX_DIR "${PROJECT_BINARY_DIR}")
+                        if((${VARIANT} STREQUAL "pake_inject" AND ${SUITE} STREQUAL "pake_test") OR 
+                            (NOT(${VARIANT} STREQUAL "pake_inject") AND NOT(${SUITE} STREQUAL "pake_test")))
+     
+                            project("${TEST_CONFIG}-${SUITE}-${VARIANT}-${THREADING}")
+                            message(STATUS "Add test suite ${SUITE}")
+                            add_executable(${PROJECT_NAME})
+                            set_target_properties(${PROJECT_NAME} PROPERTIES
+                                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
+                            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/${SUITE_FILE}.c")
+
+                            if(UNIX)
+                                set(DATAX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
+                            else()
+                                set(DATAX_DIR "${PROJECT_BINARY_DIR}")
+                            endif()
+
+                            string(FIND ${SUITE_FILE} "generated" INDEX)
+                            if (INDEX EQUAL 0)
+                                add_custom_command(
+                                    TARGET ${PROJECT_NAME} PRE_LINK
+                                    COMMAND ${CMAKE_COMMAND} -E copy
+                                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/${SUITE_FILE}.datax
+                                    ${DATAX_DIR}/
+                                )
+                            endif()
+
+                            # include the same target include directories as the TEST_CONFIG library
+                            target_include_directories("${PROJECT_NAME}" PRIVATE
+                                "$<TARGET_PROPERTY:${TEST_CONFIG}-${VARIANT}-${THREADING}-lib,INCLUDE_DIRECTORIES>"
+                            )
+
+                            # link libraries
+                            target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
+                            target_link_libraries(${PROJECT_NAME} PRIVATE ${TEST_CONFIG}-${VARIANT}-${THREADING}-lib)
+
+                            add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
+                            set_property(TEST ${PROJECT_NAME} PROPERTY LABELS CONFIG_MBEDTLS_PSA_TESTS-${TEST_CONFIG}-${VARIANT}-${THREADING})
                         endif()
-
-                        string(FIND ${SUITE_FILE} "generated" INDEX)
-                        if (INDEX EQUAL 0)
-                            add_custom_command(
-                                TARGET ${PROJECT_NAME} PRE_LINK
-                                COMMAND ${CMAKE_COMMAND} -E copy
-                                ${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.datax
-                                ${DATAX_DIR}/
-                                DEPENDS ${PROJECT_BINARY_DIR}/${SUITE}.datax)
-                        endif()
-
-                        # include the same target include directories as the TEST_CONFIG library
-                        target_include_directories("${PROJECT_NAME}" PRIVATE
-                            "$<TARGET_PROPERTY:${TEST_CONFIG}-${VARIANT}-${THREADING}-lib,INCLUDE_DIRECTORIES>"
-                        )
-
-                        # link libraries
-                        target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
-                        target_link_libraries(${PROJECT_NAME} PRIVATE ${TEST_CONFIG}-${VARIANT}-${THREADING}-lib)
-
-                        add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
-                        set_property(TEST ${PROJECT_NAME} PROPERTY LABELS CONFIG_MBEDTLS_PSA_TESTS-${TEST_CONFIG}-${VARIANT}-${THREADING})
                     endif()
                 endforeach()
             endforeach()

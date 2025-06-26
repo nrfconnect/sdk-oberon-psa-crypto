@@ -68,6 +68,7 @@ static psa_status_t oberon_get_multiplier(oberon_srp_operation_t *op, psa_hash_o
 
     // k = H(p | pad(g))
     memset(k, 0, SRP_FIELD_SIZE);
+    memset(hash_op, 0, sizeof *hash_op);
     status = psa_driver_wrapper_hash_setup(hash_op, op->hash_alg);
     if (status) return status;
     status = psa_driver_wrapper_hash_update(hash_op, oberon_P3072, sizeof oberon_P3072);
@@ -82,12 +83,13 @@ static psa_status_t oberon_get_multiplier(oberon_srp_operation_t *op, psa_hash_o
 static psa_status_t oberon_get_proof(oberon_srp_operation_t *op)
 {
     psa_status_t status;
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     uint8_t s[SRP_FIELD_SIZE];
     size_t hash_len;
     int res = 1;
 
     // u = H(pad(A) | pad(B));
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, op->hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, op->A, SRP_FIELD_SIZE);
@@ -110,6 +112,7 @@ static psa_status_t oberon_get_proof(oberon_srp_operation_t *op)
     if (res) return PSA_ERROR_INVALID_ARGUMENT;
 
     // session key k = H(s)
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, op->hash_alg);
     if (status) goto exit;
     status = oberon_srp_hash_add_stripped(&hash_op, s, SRP_FIELD_SIZE);
@@ -118,6 +121,7 @@ static psa_status_t oberon_get_proof(oberon_srp_operation_t *op)
     if (status) goto exit;
 
     // H(p)
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, op->hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, oberon_P3072, sizeof oberon_P3072);
@@ -126,6 +130,7 @@ static psa_status_t oberon_get_proof(oberon_srp_operation_t *op)
     if (status) goto exit;
 
     // H(g)
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, op->hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, oberon_G3072, sizeof oberon_G3072);
@@ -137,6 +142,7 @@ static psa_status_t oberon_get_proof(oberon_srp_operation_t *op)
     oberon_xor(op->m2, op->m2, op->m1, hash_len);
 
     // m1 = H(H(p) ^ H(g) | H(user) | salt | A | B | k)
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, op->hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, op->m2, hash_len); // H(p) ^ H(g)
@@ -155,6 +161,7 @@ static psa_status_t oberon_get_proof(oberon_srp_operation_t *op)
     if (status) goto exit;
 
     // m2 = H(A | m1 | k)
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, op->hash_alg);
     if (status) goto exit;
     status = oberon_srp_hash_add_stripped(&hash_op, op->A, SRP_FIELD_SIZE);

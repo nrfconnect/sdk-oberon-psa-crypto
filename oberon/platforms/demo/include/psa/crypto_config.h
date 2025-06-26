@@ -49,6 +49,8 @@
 #define PSA_WANT_ALG_HSS                        1
 #define PSA_WANT_ALG_JPAKE                      1
 #define PSA_WANT_ALG_LMS                        1
+#define PSA_WANT_ALG_ML_DSA                     1
+#define PSA_WANT_ALG_ML_KEM                     1
 #define PSA_WANT_ALG_PBKDF2_HMAC                1
 #define PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128    1
 #define PSA_WANT_ALG_PURE_EDDSA                 1
@@ -119,6 +121,8 @@
 #define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY    1
 #define PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_WPA3_SAE_PT           1
+#define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
+#define PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY     1
 
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC    1
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1
@@ -140,6 +144,18 @@
 #define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_EXPORT   1
 #define PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_DERIVE   1
 
+#define PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC    1
+#define PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_GENERATE 1
+#define PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_DERIVE   1
+
+#define PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC    1
+#define PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_GENERATE 1
+#define PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_DERIVE   1
+
 // Additional AES key size option
 #define PSA_WANT_AES_KEY_SIZE_128               1
 #define PSA_WANT_AES_KEY_SIZE_192               1
@@ -153,6 +169,16 @@
 #define PSA_WANT_RSA_KEY_SIZE_4096              1
 #define PSA_WANT_RSA_KEY_SIZE_6144              1
 #define PSA_WANT_RSA_KEY_SIZE_8192              1
+
+// Additional ML-DSA key size option
+#define PSA_WANT_ML_DSA_KEY_SIZE_44             1
+#define PSA_WANT_ML_DSA_KEY_SIZE_65             1
+#define PSA_WANT_ML_DSA_KEY_SIZE_87             1
+
+// Additional ML-KEM key size option
+#define PSA_WANT_ML_KEM_KEY_SIZE_512            1
+#define PSA_WANT_ML_KEM_KEY_SIZE_768            1
+#define PSA_WANT_ML_KEM_KEY_SIZE_1024           1
 
 // Additional configuration option
 #define PSA_WANT_GENERATE_RANDOM                1
@@ -203,8 +229,8 @@
 
 /* Hardware driver demonstration */
 #define PSA_USE_DEMO_ENTROPY_DRIVER             1
-#define PSA_USE_DEMO_HARDWARE_DRIVER            1
-#define PSA_USE_DEMO_OPAQUE_DRIVER              1
+// #define PSA_USE_DEMO_HARDWARE_DRIVER            1
+// #define PSA_USE_DEMO_OPAQUE_DRIVER              1
 
 
 #endif /* PSA_CRYPTO_CONFIG_H */

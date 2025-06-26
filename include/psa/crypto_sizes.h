@@ -315,6 +315,34 @@
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 0u
 #endif
 
+/* The maximum size of an ML-DSA public key on this implementation, in bytes.
+ * This is a vendor-specific macro.*/
+#if defined(PSA_WANT_ML_DSA_KEY_SIZE_87)
+#define PSA_VENDOR_ML_DSA_MAX_PUBLIC_KEY_BYTES 2592u
+#define PSA_VENDOR_ML_DSA_MAX_SIGNATURE_BYTES 4627u
+#elif defined(PSA_WANT_ML_DSA_KEY_SIZE_65)
+#define PSA_VENDOR_ML_DSA_MAX_PUBLIC_KEY_BYTES 1952u
+#define PSA_VENDOR_ML_DSA_MAX_SIGNATURE_BYTES 3309u
+#elif defined(PSA_WANT_ML_DSA_KEY_SIZE_44)
+#define PSA_VENDOR_ML_DSA_MAX_PUBLIC_KEY_BYTES 1312u
+#define PSA_VENDOR_ML_DSA_MAX_SIGNATURE_BYTES 2420u
+#else
+#define PSA_VENDOR_ML_DSA_MAX_PUBLIC_KEY_BYTES 1u
+#define PSA_VENDOR_ML_DSA_MAX_SIGNATURE_BYTES 1u
+#endif
+
+/* The maximum size of an ML-KEM public key on this implementation, in bytes.
+ * This is a vendor-specific macro.*/
+#if defined(PSA_WANT_ML_KEM_KEY_SIZE_1024)
+#define PSA_VENDOR_ML_KEM_MAX_PUBLIC_KEY_BYTES 1568u
+#elif defined(PSA_WANT_ML_KEM_KEY_SIZE_768)
+#define PSA_VENDOR_ML_KEM_MAX_PUBLIC_KEY_BYTES 1184u
+#elif defined(PSA_WANT_ML_KEM_KEY_SIZE_512)
+#define PSA_VENDOR_ML_KEM_MAX_PUBLIC_KEY_BYTES 800u
+#else
+#define PSA_VENDOR_ML_KEM_MAX_PUBLIC_KEY_BYTES 1u
+#endif
+
 /* The maximum size of an LMS key on this implementation, in bits.
  * This is a vendor-specific macro. */
 #define PSA_VENDOR_LMS_MAX_CURVE_BITS 256u
@@ -670,6 +698,17 @@
      11u /*PKCS#1v1.5*/)
 
 /**
+ * \brief ML-DSA signature size for a given key size
+ *
+ * \param curve_bits    key size.
+ * \return              Signature size in bytes.
+ *
+ * \note This macro returns a compile-time constant if its argument is one.
+ */
+#define PSA_ML_DSA_SIGNATURE_SIZE(key_size)    \
+     ((key_size) == 128u ? 2420u : (key_size) == 192u ? 3309u : 4627u)
+
+/**
  * \brief ECDSA signature size for a given curve bit size
  *
  * \param curve_bits    Curve size in bits.
@@ -708,6 +747,7 @@
 #define PSA_SIGN_OUTPUT_SIZE(key_type, key_bits, alg)        \
     (PSA_KEY_TYPE_IS_RSA(key_type) ? ((void) alg, PSA_BITS_TO_BYTES(key_bits)) : \
      PSA_KEY_TYPE_IS_ECC(key_type) ? PSA_ECDSA_SIGNATURE_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR ? PSA_ML_DSA_SIGNATURE_SIZE(key_bits) : \
      ((void) alg, 0u))
 
 #define PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE     \
@@ -731,6 +771,11 @@
     (PSA_BITS_TO_BYTES(PSA_VENDOR_RSA_MAX_KEY_BITS) > PSA_SIGNATURE_MAX_SIZE)
 #undef PSA_SIGNATURE_MAX_SIZE
 #define PSA_SIGNATURE_MAX_SIZE      PSA_BITS_TO_BYTES(PSA_VENDOR_RSA_MAX_KEY_BITS)
+#endif
+#if (defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC)) && \
+    PSA_SIGNATURE_MAX_SIZE < PSA_VENDOR_ML_DSA_MAX_SIGNATURE_BYTES
+#undef PSA_SIGNATURE_MAX_SIZE
+#define PSA_SIGNATURE_MAX_SIZE      PSA_VENDOR_ML_DSA_MAX_SIGNATURE_BYTES
 #endif
 
 /** Sufficient output buffer size for psa_asymmetric_encrypt().
@@ -962,6 +1007,22 @@
 #define PSA_KEY_EXPORT_SRP_KEY_PAIR_MAX_SIZE(key_bits)   \
     (PSA_HASH_MAX_SIZE)
 
+/* Maximum size of the export encoding of an ML-KEM public key.
+ *
+ * An ML-KEM public key consists of k * 384 + 32 bytes, where k is the
+ * matrix dimension. k = key-size / 256.
+ */
+#define PSA_KEY_EXPORT_ML_KEM_PUBLIC_KEY_MAX_SIZE(key_bits)   \
+    (((key_bits) >> 8) * 384u + 32u)
+
+/* Maximum size of the export encoding of an ML-DSA public key.
+ *
+ * An ML-DSA public key consists of k * 320 + 32 bytes, where k is the
+ * first matrix dimension. k = key-size / 32.
+ */
+#define PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(key_bits)   \
+    (((key_bits) >> 5) * 320u + 32u)
+
 /* Maximum size of the export encoding of an LMS public key.
  *
  * An LMS public key consists of 24 + n bytes, where n is the number of
@@ -1048,6 +1109,10 @@
      PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) == PSA_ECC_FAMILY_MONTGOMERY ? PSA_BITS_TO_BYTES(key_bits) : \
      PSA_KEY_TYPE_IS_ECC_KEY_PAIR(key_type) ? PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(key_bits) :      \
      PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) :  \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_KEY_PAIR ? 32u : \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_KEM_KEY_PAIR ? 64u : \
+     (key_type) == PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_KEM_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      (key_type) == PSA_KEY_TYPE_LMS_PUBLIC_KEY ? PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      (key_type) == PSA_KEY_TYPE_HSS_PUBLIC_KEY ? PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      (key_type) == PSA_KEY_TYPE_XMSS_PUBLIC_KEY ? PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
@@ -1107,6 +1172,8 @@
      PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) == PSA_ECC_FAMILY_TWISTED_EDWARDS ? PSA_BITS_TO_BYTES(key_bits + 1) : \
      PSA_KEY_TYPE_ECC_GET_FAMILY(key_type) == PSA_ECC_FAMILY_MONTGOMERY ? PSA_BITS_TO_BYTES(key_bits) : \
      PSA_KEY_TYPE_IS_ECC(key_type) ? PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_DSA_PUBLIC_KEY_MAX_SIZE(key_bits) : \
+     (key_type) == PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY ? PSA_KEY_EXPORT_ML_KEM_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      (key_type) == PSA_KEY_TYPE_LMS_PUBLIC_KEY ? PSA_KEY_EXPORT_LMS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      (key_type) == PSA_KEY_TYPE_HSS_PUBLIC_KEY ? PSA_KEY_EXPORT_HSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
      (key_type) == PSA_KEY_TYPE_XMSS_PUBLIC_KEY ? PSA_KEY_EXPORT_XMSS_PUBLIC_KEY_MAX_SIZE(key_bits) : \
@@ -1136,6 +1203,16 @@
 #undef PSA_EXPORT_KEY_PAIR_MAX_SIZE
 #define PSA_EXPORT_KEY_PAIR_MAX_SIZE    \
     PSA_KEY_EXPORT_RSA_KEY_PAIR_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC) && \
+    PSA_EXPORT_KEY_PAIR_MAX_SIZE < 32
+#undef PSA_EXPORT_KEY_PAIR_MAX_SIZE
+#define PSA_EXPORT_KEY_PAIR_MAX_SIZE 32
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC) && \
+    PSA_EXPORT_KEY_PAIR_MAX_SIZE < 64
+#undef PSA_EXPORT_KEY_PAIR_MAX_SIZE
+#define PSA_EXPORT_KEY_PAIR_MAX_SIZE 64
 #endif
 #if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC) && \
     (PSA_KEY_EXPORT_FFDH_KEY_PAIR_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS) > \
@@ -1183,6 +1260,16 @@
 #undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
 #define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE    \
     PSA_KEY_EXPORT_RSA_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_RSA_MAX_KEY_BITS)
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE < PSA_VENDOR_ML_DSA_MAX_PUBLIC_KEY_BYTES
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE PSA_VENDOR_ML_DSA_MAX_PUBLIC_KEY_BYTES
+#endif
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY) && \
+     PSA_EXPORT_PUBLIC_KEY_MAX_SIZE < PSA_VENDOR_ML_KEM_MAX_PUBLIC_KEY_BYTES
+#undef PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+#define PSA_EXPORT_PUBLIC_KEY_MAX_SIZE PSA_VENDOR_ML_KEM_MAX_PUBLIC_KEY_BYTES
 #endif
 #if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY) && \
     (PSA_KEY_EXPORT_FFDH_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_FFDH_MAX_KEY_BITS) > \
@@ -1237,6 +1324,17 @@
 #define PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE \
     ((PSA_EXPORT_KEY_PAIR_MAX_SIZE > PSA_EXPORT_PUBLIC_KEY_MAX_SIZE) ? \
      PSA_EXPORT_KEY_PAIR_MAX_SIZE : PSA_EXPORT_PUBLIC_KEY_MAX_SIZE)
+
+#define PSA_EXPORT_ASYMMETRIC_KEY_MAX_SIZE PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE
+
+#define PSA_KEY_ENCAPSULATE_OUTPUT_SIZE(key_type, key_bits) \
+    ((key_type) == PSA_KEY_TYPE_ML_KEM_KEY_PAIR || \
+     (key_type) == PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY ? 32u : 0u)
+
+#define PSA_KEY_ENCAPSULATE_CIPHERTEXT_SIZE(key_type, key_bits) \
+    ((key_type) == PSA_KEY_TYPE_ML_KEM_KEY_PAIR || \
+     (key_type) == PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY ? \
+     ((key_bits) == 512u ? 768u : (key_bits) == 768u ? 1088u : 1568u) : 0u)
 
 /** Sufficient output buffer size for psa_raw_key_agreement().
  *

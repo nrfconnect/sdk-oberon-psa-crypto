@@ -58,8 +58,22 @@ create one for it.
 ## Provide Platform Crypto Configuration
 
 Once the set of available _hardware drivers_ for a _target platform_ is known,
-the _platform crypto configuration_ file must be adapted accordingly. It is
-located at:
+the _platform crypto configuration_ must be adapted accordingly. A demo
+configuration is provided at:
+
+- `oberon/platforms/demo/`
+
+It includes mock drivers located in subdirectory `drivers/`, example
+configurations located in subdirectory `example_config/` (see 
+[Appendix C: System Crypto Configuration Examples](Appendix_C_System_Crypto_Configuration_Examples.md)),
+default driver configuration and context type definition headers located in
+`include/psa/`, and a default _driver wrappers_ implementation located in 
+`library/`.
+
+## Provide Crypto Driver Configuration
+
+The _crypto driver configuration_ file provided in `oberon/platforms/demo/` must
+be adapted and placed in:
 
 - `include/psa/crypto_driver_config.h`
 
@@ -69,17 +83,17 @@ not be modified.
 
 ## Adapt the Driver Wrappers
 
-To make the set of available _hardware drivers_ known to _Oberon PSA Crypto_ and
-its configuration mechanism, the _driver wrappers_ C file must be adapted
-accordingly. It is located in
+To make the set of available _hardware drivers_ known to _Oberon PSA Crypto_ 
+and its configuration mechanism, the _driver wrappers_ C file provided in 
+`oberon/platforms/demo/` must be adapted and placed in:
 
 - `library/psa_crypto_driver_wrappers.c`
 
 See the _PSA_ documentation regarding the naming rules that must be obeyed in
 this file.
 
-These header files may need to be extended to include the context data types
-(operation types):
+The following header files provided in `oberon/platforms/demo/` may need to be 
+extended to include the context data types (operation types):
 
 - `psa/crypto_driver_contexts_primitives.h`
 - `psa/crypto_driver_contexts_composites.h`
@@ -93,7 +107,7 @@ _Oberon PSA Crypto_, make sure that the situation is correctly handled where
 
 - The `psa_driver_wrapper_*_abort` functions must return `PSA_SUCCESS`.
 - All other functions (except `psa_driver_wrapper_*_setup`) must return
-`PSA_ERROR_BAD_STATE`.
+  `PSA_ERROR_BAD_STATE`.
 
 To learn about _driver development_, continue with chapter
 [Crypto Driver Development](Crypto_Driver_Development.md).

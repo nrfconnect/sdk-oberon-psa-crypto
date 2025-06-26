@@ -52,16 +52,35 @@ build_Test/
 /cscope*.out
 /tags
 
-# CLion
+# CLion/VSC
 .idea/*
-cmake-build-debug
+cmake-build-*/
 
 # MacOS
 .DS_Store
 
 # Generated documentation
 .pdf
+Doxyfile.bak
 
 # Visual Studio Code
-.vscode/*
+.vscode
 export/*
+
+# Keil uvision
+*.d
+*.o
+*.rej
+*.uvguix.*
+docs/html
+install*/
+EventRecorderStub.scvd
+JLinkLog.txt
+_build*/
+*.map
+tests/*/Test/RTE/*
+*/*/Output/Debug/*
+RTE_Components.h
+
+# TF-PSA-Crypto transformation
+tfpsa/

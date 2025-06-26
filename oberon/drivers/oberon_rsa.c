@@ -305,6 +305,7 @@ static psa_status_t oberon_apply_mgf(
     size_t hash_len = PSA_HASH_LENGTH(hash_alg);
 
     while (data_len > 0) {
+        memset(hash_op, 0, sizeof *hash_op);
         status = psa_driver_wrapper_hash_setup(hash_op, hash_alg);
         if (status) return status;
         status = psa_driver_wrapper_hash_update(hash_op, in, in_len);
@@ -337,7 +338,7 @@ static psa_status_t emsa_pss_encode(
     size_t db_len = em_len - hash_len - 1;
     uint8_t *h = &em[db_len]; // em = db : hash : 0xbc
     uint8_t *salt;
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     size_t salt_len, length;
 
     // salt length = max length <= hash length
@@ -350,6 +351,7 @@ static psa_status_t emsa_pss_encode(
     status = psa_generate_random(salt, salt_len);
     if (status) return status;
 
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, zero, 8); // 8 zero bytes
@@ -384,7 +386,7 @@ static psa_status_t emsa_pss_verify(
     size_t db_len = em_len - hash_len - 1;
     uint8_t *h = &em[db_len]; // em = db : H : 0xbc
     uint8_t h1[PSA_HASH_MAX_SIZE];
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     size_t z, length;
     int diff;
 
@@ -411,6 +413,7 @@ static psa_status_t emsa_pss_verify(
     }
     diff |= (int)(em[z] ^ 1); // check em[db_len - s_len - 1] == 1
 
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, zero, 8); // 8 zero bytes
@@ -442,7 +445,7 @@ static psa_status_t eme_oaep_encode(
     uint8_t *em, size_t em_len)
 {
     size_t hash_len = PSA_HASH_LENGTH(hash_alg);
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     psa_status_t status;
     size_t length;
 
@@ -457,6 +460,7 @@ static psa_status_t eme_oaep_encode(
 
     // db = lhash : {0} : 1 : m
     memset(em, 0, em_len);
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, label, label_len);
@@ -485,7 +489,7 @@ static psa_status_t eme_oaep_decode(
     uint8_t *m, size_t m_size, size_t *m_len)
 {
     size_t hash_len = PSA_HASH_LENGTH(hash_alg);
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     psa_status_t status;
     size_t i, inc, length;
     int diff;
@@ -502,6 +506,7 @@ static psa_status_t eme_oaep_decode(
     status = oberon_apply_mgf(&hash_op, hash_alg, seed, hash_len, db, db_len); // db ^= mgf(seed)
     if (status) goto exit;
 
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, label, label_len);
@@ -808,6 +813,10 @@ static psa_status_t rsa_key_setup(
 #ifdef PSA_NEED_OBERON_RSA_KEY_SIZE_8192
     case 8192:
 #endif
+#if defined(PSA_NEED_OBERON_RSA_KEY_SIZE_1024) || defined(PSA_NEED_OBERON_RSA_KEY_SIZE_1536) || \
+    defined(PSA_NEED_OBERON_RSA_KEY_SIZE_2048) || defined(PSA_NEED_OBERON_RSA_KEY_SIZE_3072) || \
+    defined(PSA_NEED_OBERON_RSA_KEY_SIZE_4096) || defined(PSA_NEED_OBERON_RSA_KEY_SIZE_6144) || \
+    defined(PSA_NEED_OBERON_RSA_KEY_SIZE_8192)
         if (crt_key) {
             res = ocrypto_rsa_init_crt_key(
                 crt_key, key_mem,
@@ -824,7 +833,11 @@ static psa_status_t rsa_key_setup(
                 key_info.e);
         }
         break;
+#endif
     default:
+        (void)crt_key;
+        (void)pub_key;
+        (void)key_mem;
         return PSA_ERROR_NOT_SUPPORTED;
     }
     if (res) return PSA_ERROR_INVALID_ARGUMENT;

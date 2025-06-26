@@ -92,7 +92,6 @@ static psa_status_t oberon_aead_setup(
     operation->decrypt = decrypt;
     operation->alg = short_alg;
     operation->tag_length = (uint8_t)tag_length;
-    operation->length_set = 0;
     return PSA_SUCCESS;
 }
 

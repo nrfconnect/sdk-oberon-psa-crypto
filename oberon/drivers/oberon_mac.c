@@ -39,6 +39,7 @@ static psa_status_t oberon_hmac_setup(
         if (status) return status;
         status = psa_driver_wrapper_hash_finish(&operation->hash_op, operation->k, hash_len, &length);
         if (status) return status;
+        memset(&operation->hash_op, 0, sizeof operation->hash_op);
         key = operation->k;
         key_length = hash_len;
     }
@@ -78,6 +79,7 @@ static psa_status_t oberon_hmac_finish(
     // k = key ^ opad = (key ^ ipad) ^ (ipad ^ opad) = k ^ (ipad ^ opad)
     for (i = 0; i < operation->block_size; i++) operation->k[i] = (uint8_t)(operation->k[i] ^ (0x36 ^ 0x5c));
 
+    memset(&operation->hash_op, 0, sizeof operation->hash_op);
     status = psa_driver_wrapper_hash_setup(&operation->hash_op, operation->hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&operation->hash_op, operation->k, operation->block_size);

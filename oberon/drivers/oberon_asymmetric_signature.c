@@ -13,6 +13,7 @@
 
 #include "oberon_ecdsa.h"
 #include "oberon_lms.h"
+#include "oberon_ml_dsa.h"
 #include "oberon_xmss.h"
 #include "oberon_rsa.h"
 
@@ -46,6 +47,16 @@ psa_status_t oberon_sign_hash(
     } else
 #endif /* PSA_NEED_OBERON_RSA_ANY_SIGN */
 
+#ifdef PSA_NEED_OBERON_ML_DSA_SIGN
+    if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+        return oberon_ml_dsa_sign_hash(
+            attributes, key, key_length,
+            alg,
+            hash, hash_length,
+            signature, signature_size, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
+
     {
         (void)key;
         (void)key_length;
@@ -78,6 +89,16 @@ psa_status_t oberon_sign_message(
             signature, signature_size, signature_length);
     } else
 #endif /* PSA_NEED_OBERON_ECDSA_SIGN */
+
+#ifdef PSA_NEED_OBERON_ML_DSA_SIGN
+    if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+        return oberon_ml_dsa_sign_message(
+            attributes, key, key_length,
+            alg,
+            input, input_length,
+            signature, signature_size, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
 
     {
         (void)key;
@@ -122,6 +143,16 @@ psa_status_t oberon_verify_hash(
     } else
 #endif /* PSA_NEED_OBERON_RSA_ANY_VERIFY */
 
+#ifdef PSA_NEED_OBERON_ML_DSA_VERIFY
+    if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+        return oberon_ml_dsa_verify_hash(
+            attributes, key, key_length,
+            alg,
+            hash, hash_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
+
     {
         (void)key;
         (void)key_length;
@@ -153,6 +184,16 @@ psa_status_t oberon_verify_message(
             signature, signature_length);
     } else
 #endif /* PSA_NEED_OBERON_ECDSA_VERIFY */
+
+#ifdef PSA_NEED_OBERON_ML_DSA_VERIFY
+    if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+        return oberon_ml_dsa_verify_message(
+            attributes, key, key_length,
+            alg,
+            input, input_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
 
 #ifdef PSA_NEED_OBERON_LMS_VERIFY
     if (type == PSA_KEY_TYPE_LMS_PUBLIC_KEY) {

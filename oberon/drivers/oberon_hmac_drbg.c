@@ -42,6 +42,7 @@ static psa_status_t hmac_drbg_hmac(
     psa_set_key_bits(&attr, PSA_BYTES_TO_BITS(KEY_LEN));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
 
+    memset(&context->hmac_op, 0, sizeof context->hmac_op);
     status = psa_driver_wrapper_mac_sign_setup(
         &context->hmac_op,
         &attr, context->k, BLOCK_LEN,

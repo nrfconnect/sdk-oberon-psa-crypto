@@ -11,10 +11,12 @@ endif()
 
 set(PLATFORM demo CACHE STRING "Default generic 'demo' platform.")
 
-option(CONFIG_PSA_API_TESTS     "Build PSA Certified APIs Architecture Test Suite"  ON)
-option(CONFIG_MBEDTLS_PSA_TESTS "Build Mbed TLS tests"                             OFF)
-option(CONFIG_MBEDTLS_THREADING "Build for multi-threading"                         ON)
-option(CONFIG_TESTS_FROM_EXPORT "Build PSA API Tests from exported library"        OFF)
+option(CONFIG_PSA_API_TESTS          "Build PSA Certified APIs Architecture Test Suite"  ON)
+option(CONFIG_MBEDTLS_PSA_TESTS      "Build Mbed TLS tests"                             OFF)
+option(CONFIG_MBEDTLS_PSA_TESTS_LONG "Build Mbed TLS long running tests"                OFF)
+option(CONFIG_MBEDTLS_THREADING      "Build for multi-threading"                         ON)
+option(CONFIG_TESTS_FROM_EXPORT      "Build PSA API Tests from exported library"        OFF)
+option(CONFIG_TF_PSA_CRYPTO_DIRS     "Use Directory Structure from TF-PSA-Crypto"       OFF)
 
 if(MSVC)
     set(CONFIG_PSA_API_TESTS OFF)
@@ -35,28 +37,44 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/oberon/platforms/${PLATFORM}/CMakeLists.txt)
         set(CONFIG_MBEDTLS_PSA_TESTS OFF)
         if(EXISTS ${CMAKE_SOURCE_DIR}/export)
             set(CONFIG_PSA_API_TESTS ON)
-            message(STATUS " - CONFIG_TESTS_FROM_EXPORT:     ${CONFIG_TESTS_FROM_EXPORT}")
+            message(STATUS " - CONFIG_TESTS_FROM_EXPORT:      ${CONFIG_TESTS_FROM_EXPORT}")
             message(STATUS "   build PSA-API tests with previously installed library in export folder,")
             message(STATUS "   other test options are ignored")
         else()
             set(CONFIG_TESTS_FROM_EXPORT OFF)
             set(CONFIG_PSA_API_TESTS OFF)
-            message(STATUS " - CONFIG_TESTS_FROM_EXPORT:     SKIPPED, build and install library first!")
-            message(STATUS " - CONFIG_PSA_API_TESTS:         SKIPPED")
-            message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:     SKIPPED")
+            message(STATUS " - CONFIG_TESTS_FROM_EXPORT:      SKIPPED, build and install library first!")
+            message(STATUS " - CONFIG_PSA_API_TESTS:          SKIPPED")
+            message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:      SKIPPED")
+            message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS_LONG: SKIPPED")
             message(STATUS " - CONFIG_MBEDTLS_THREADING:     ${CONFIG_MBEDTLS_THREADING}")
         endif()
     else()
-        message(STATUS " - CONFIG_PSA_API_TESTS:         ${CONFIG_PSA_API_TESTS}")
-        message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:     ${CONFIG_MBEDTLS_PSA_TESTS}")
-        message(STATUS " - CONFIG_MBEDTLS_THREADING:     ${CONFIG_MBEDTLS_THREADING}")
+        message(STATUS " - CONFIG_PSA_API_TESTS:          ${CONFIG_PSA_API_TESTS}")
+        message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:      ${CONFIG_MBEDTLS_PSA_TESTS}")
+        message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS_LONG: ${CONFIG_MBEDTLS_PSA_TESTS_LONG}")
+        message(STATUS " - CONFIG_MBEDTLS_THREADING:      ${CONFIG_MBEDTLS_THREADING}")
     endif()
 else()
     set(CONFIG_PSA_API_TESTS OFF)
     set(CONFIG_TESTS_FROM_EXPORT OFF)
-    message(STATUS " - CONFIG_PSA_API_TESTS:         SKIPPED, not available for ${PLATFORM}")
+    message(STATUS " - CONFIG_PSA_API_TESTS:          SKIPPED, not available for ${PLATFORM}")
     set(CONFIG_MBEDTLS_PSA_TESTS OFF)
-    message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:     SKIPPED, not available for ${PLATFORM}")
+    message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:      SKIPPED, not available for ${PLATFORM}")
+    set(CONFIG_MBEDTLS_PSA_TESTS_LONG OFF)
+    message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS_LONG: SKIPPED, not available for ${PLATFORM}")
+endif()
+
+if(CONFIG_TF_PSA_CRYPTO_DIRS)
+    set(PATH_LEGACY_MBEDTLS_INC drivers/builtin/include)
+    set(PATH_LEGACY_MBEDTLS_SRC drivers/builtin/src)
+    set(PATH_CORE core)
+    set(PATH_TESTS framework/tests)
+else()
+    set(PATH_LEGACY_MBEDTLS_INC include)
+    set(PATH_LEGACY_MBEDTLS_SRC library)
+    set(PATH_CORE library)
+    set(PATH_TESTS tests)
 endif()
 
 # skip library build if CONFIG_TESTS_FROM_EXPORT
@@ -84,26 +102,26 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
 
     # define sources originating from Mbed TLS, modified and unmodified
     set(MBED_SOURCES
-            ${CMAKE_SOURCE_DIR}/library/check_crypto_config.h        # modified
-            ${CMAKE_SOURCE_DIR}/library/common.h
-            ${CMAKE_SOURCE_DIR}/library/constant_time.c
-            ${CMAKE_SOURCE_DIR}/library/platform.c
-            ${CMAKE_SOURCE_DIR}/library/platform_util.c              # modified
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto.c                 # modified
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_client.c          # modified
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_core.h
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_driver_wrappers.h
-    #       ${CMAKE_SOURCE_DIR}/library/psa_crypto_driver_wrappers.c # platform-specific
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_invasive.h
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_its.h
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_random_impl.h     # modified
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_se.h
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_slot_management.h
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_slot_management.c
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_storage.h
-            ${CMAKE_SOURCE_DIR}/library/psa_crypto_storage.c
-            ${CMAKE_SOURCE_DIR}/library/psa_its_file.c
-            ${CMAKE_SOURCE_DIR}/library/threading.c
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/check_crypto_config.h        # modified
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/common.h
+            ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/constant_time.c
+            ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/platform.c
+            ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/platform_util.c              # modified
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto.c                 # modified
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_client.c          # modified
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_core.h
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_driver_wrappers.h
+    #       ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_driver_wrappers.c # platform-specific
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_invasive.h
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_its.h
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_random_impl.h     # modified
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_se.h
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_slot_management.h
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_slot_management.c
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_storage.h
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_crypto_storage.c
+            ${CMAKE_SOURCE_DIR}/${PATH_CORE}/psa_its_file.c
+            ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/threading.c
     )
 
     # common sources and includes
@@ -111,7 +129,9 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
 
     # default MBed TLS includes
     target_include_directories(${PROJECT_NAME} PRIVATE include)
-    target_include_directories(${PROJECT_NAME} PRIVATE library)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PATH_LEGACY_MBEDTLS_SRC})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PATH_LEGACY_MBEDTLS_INC})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PATH_CORE})
 
     # add Oberon drivers
     add_subdirectory(oberon/drivers)
@@ -119,14 +139,15 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
     # add demo driver sources and includes
     add_subdirectory(oberon/platforms/demo/drivers)
     target_include_directories(${PROJECT_NAME} PRIVATE ${OCRYPTO_ROOT}/include)
-    # target_include_directories(${PROJECT_NAME} PRIVATE oberon/platforms/demo/drivers)
+    target_include_directories(${PROJECT_NAME} PRIVATE oberon/platforms/demo/include)
+    target_include_directories(${PROJECT_NAME} PRIVATE oberon/platforms/demo/drivers)
 
     # Testing resources
-    if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_PSA_API_TESTS)
+    if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG OR CONFIG_PSA_API_TESTS)
         include(CTest)
 
         # MBed TLS tests for PSA Certified Crypto API
-        if (CONFIG_MBEDTLS_PSA_TESTS)
+        if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
 
             # test suites relevant for PSA Crypto
             set(MBEDTEST_SUITES
@@ -144,16 +165,20 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
                     # test_suite_psa_crypto_op_fail.generated # n.a. - does not work with drivers /* !!OM */
                     test_suite_psa_crypto_op_fail.misc
                     test_suite_psa_crypto_pake
-                    test_suite_psa_crypto_pbkdf2
                     test_suite_psa_crypto_persistent_key
                     # test_suite_psa_crypto_se_driver_hal       # n.a. - SE drivers are not supported /* !!OM */
                     # test_suite_psa_crypto_se_driver_hal_mocks # n.a.
                     test_suite_psa_crypto_slot_management
-                    test_suite_psa_crypto_storage_format.current
-                    test_suite_psa_crypto_storage_format.misc
-                    test_suite_psa_crypto_storage_format.v0
                     # test_suite_psa_crypto_util                # n.a. - tests Mbed TLS specific funtions
-                    test_suite_psa_its
+            )
+
+            # test suites relevant for PSA Crypto that run very long
+            set(MBEDTEST_SUITES_LONG
+                test_suite_psa_crypto_pbkdf2
+                test_suite_psa_crypto_storage_format.current
+                test_suite_psa_crypto_storage_format.misc
+                test_suite_psa_crypto_storage_format.v0
+                test_suite_psa_its
             )
 
             # test suites added by Oberon
@@ -166,12 +191,12 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
 
             # define Mbed TLS helper sources originating from Mbed TLS test, modified and unmodified
             set(MBEDTEST_SOURCES
-                    ${CMAKE_SOURCE_DIR}/tests/src/asn1_helpers.c
-                    ${CMAKE_SOURCE_DIR}/tests/src/asn1parse_min.c       # forked from asn1parse.c
-                    ${CMAKE_SOURCE_DIR}/tests/src/asn1write_min.c       # forked from asn1write.c
-                    ${CMAKE_SOURCE_DIR}/tests/src/psa_crypto_helpers.c
-                    ${CMAKE_SOURCE_DIR}/tests/src/psa_exercise_key.c
-                    ${CMAKE_SOURCE_DIR}/tests/src/helpers.c
+                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/asn1_helpers.c
+                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/asn1parse_min.c       # forked from asn1parse.c
+                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/asn1write_min.c       # forked from asn1write.c
+                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/psa_crypto_helpers.c
+                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/psa_exercise_key.c
+                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/helpers.c
             )
         endif()
 
@@ -186,23 +211,31 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
     # create demo library for host platform
     add_library(${PROJECT_NAME} STATIC $<TARGET_OBJECTS:ocrypto> $<TARGET_OBJECTS:oberon-psa-crypto-core>)
 
+    # default driver wrapper supporting Oberon and demo drivers
+    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/library/psa_crypto_driver_wrappers.c)
+
     # includes psa/crypto_config.h with demo entropy driver and opaque drivers
     target_include_directories(${PROJECT_NAME} PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
             $<INSTALL_INTERFACE:include>)
+    target_include_directories(${PROJECT_NAME} PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${PATH_LEGACY_MBEDTLS_INC}>
+            $<INSTALL_INTERFACE:${PATH_LEGACY_MBEDTLS_INC}>)
+    target_include_directories(${PROJECT_NAME} PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/oberon/platforms/demo/include>
+            $<INSTALL_INTERFACE:include>)
 
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PATH_LEGACY_MBEDTLS_SRC})
     target_include_directories(${PROJECT_NAME} PRIVATE oberon/drivers)
     target_include_directories(${PROJECT_NAME} PRIVATE oberon/platforms/demo/drivers)
     target_include_directories(${PROJECT_NAME} PRIVATE ${OCRYPTO_ROOT}/include)
-
-    # default driver wrapper supporting Oberon and demo drivers
-    target_sources(${PROJECT_NAME} PRIVATE library/psa_crypto_driver_wrappers.c)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_CORE})
 
     # add threading
     if(CONFIG_MBEDTLS_THREADING)
         target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_C)
         target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_PTHREAD)
-        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/library/threading.c")
+        target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/threading.c")
     endif()
 
     # export
@@ -213,6 +246,18 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
 
     install(
         DIRECTORY "include/"
+        DESTINATION "include"
+        FILES_MATCHING PATTERN "*.h"
+    )
+
+    install(
+        DIRECTORY "${PATH_LEGACY_MBEDTLS_INC}/"
+        DESTINATION "include"
+        FILES_MATCHING PATTERN "*.h"
+    )
+
+    install(
+        DIRECTORY "oberon/platforms/demo/include/"
         DESTINATION "include"
         FILES_MATCHING PATTERN "*.h"
     )
@@ -262,7 +307,9 @@ if (CONFIG_PSA_API_TESTS AND ("${PLATFORM}" STREQUAL "demo"))
         set(OBERON_PSA_CRYPTO_LIB "${CMAKE_SOURCE_DIR}/export/lib/liboberon-psa-crypto-demo.a")
     else()
         set(PSA_INCLUDE_PATHS_RELATIVE
-            include # use default crypto_config that uses Oberon software drivers only
+            include 
+            oberon/platforms/demo/include # use default crypto_config that uses Oberon software drivers only
+            ${PATH_LEGACY_MBEDTLS_INC}
             oberon/drivers
             oberon/platforms/demo/drivers # required for entropy and opaque drivers
         )  

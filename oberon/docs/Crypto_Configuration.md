@@ -6,7 +6,7 @@ performance for a given application on a given _target platform_. This mechanism
 is an extension of the standard _PSA Crypto_ configuration mechanism and gives
 finer-grained control over which crypto algorithms, for what key types and key
 sizes, will be included in the firmware image of an application. In particular,
-the following dead code optimizations are done:
+the following eliminations of unneeded code are done:
 
 - _Crypto drivers_ that are not needed by an application are not built into the
 firmware image.
@@ -43,13 +43,14 @@ and
 
 ### System Crypto Configuration
 
-The _system crypto configuration_ specifies the algorithms, key types, and key
+A _system crypto configuration_ specifies the algorithms, key types, and key
 sizes that are used by the application, and the _hardware drivers_ that implement
-these features for the _target platform_. It is provided in a single C header file:
+these features for the _target platform_. It is provided in a single C header
+file. An example of such a _system crypto configuration_ file can be found here:
 
-- `include/psa/crypto_config.h`
+- `oberon/platforms/demo/include/psa/crypto_config.h`
 
-This file contains a list of C define directives. Typically, the _platform
+Such a file contains a list of C define directives. Typically, the _platform
 integrator_ - e.g., a chip vendor - will provide a template of this file for its
 _target platform_, so that a _system crypto configurator_ can reuse that template
 as a starting point.
@@ -106,13 +107,11 @@ availability of _hardware drivers_.
 
 Assuming that a _hardware driver_ is available for a given crypto feature and a
 given _target platform_, this is declared by a _platform integrator_ in the same
-configuration file that has been introduced further above:
+_system crypto configuration_ file that has been introduced further above.
 
-- `include/psa/crypto_config.h`
-
-Configuration is also done with C define directives, in this case having names of
-the form `PSA_USE_XXX`. See the following excerpt from a hypothetical
-configuration file for Arm's CryptoCell 310 hardware crypto accelerator:
+Configuration is done with C define directives, in this case having names of the
+form `PSA_USE_XXX`. See the following excerpt from a hypothetical configuration
+file for Arm's CryptoCell 310 hardware crypto accelerator:
 
     // Platform crypto configuration:
     #define PSA_USE_CC310_HASH_DRIVER               1
@@ -155,8 +154,8 @@ focused on suitability for resource-constrained hardware and deterministic
 behavior. For this reason, it is by default configured to work in a "heapless"
 way, i.e., storing keys in a statically configured data structure. The maximum
 number of keys that can be used simultaneously is defined in
-`MBEDTLS_PSA_KEY_SLOT_COUNT` (e.g., 16 slots) in file
-`include/psa/crypto_config.h`.
+`MBEDTLS_PSA_KEY_SLOT_COUNT` (e.g., 16 slots) in the
+_system crypto configuration_ file `crypto_config.h`.
 
 If you want to change the behavior to _dynamic_ allocation of memory, modify the
 relevant defines in `include/mbedtls/mbedtls_config.h`:

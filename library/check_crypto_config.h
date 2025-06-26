@@ -89,7 +89,7 @@
       defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)) && \
     !(defined(PSA_WANT_ECC_TWISTED_EDWARDS_255) || \
       defined(PSA_WANT_ECC_TWISTED_EDWARDS_448))
-#error "PSA_WANT_ALG_ECDSA defined, but not all prerequisites"
+#error "PSA_WANT_ALG_PURE_EDDSA defined, but not all prerequisites"
 #endif
 
 #if defined(PSA_WANT_ALG_ECDH) && \
@@ -211,5 +211,46 @@
     !defined(PSA_WANT_ALG_SHA_256)
 #error "PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS defined, but not all prerequisites"
 #endif
+
+#if defined(PSA_WANT_ALG_ML_DSA) && \
+    !(defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC) || \
+    defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY))
+#error "PSA_WANT_ALG_ML_DSA defined, but not all prerequisites"
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC) && \
+    !(defined(PSA_WANT_ML_DSA_KEY_SIZE_44) || \
+      defined(PSA_WANT_ML_DSA_KEY_SIZE_65) || \
+      defined(PSA_WANT_ML_DSA_KEY_SIZE_87))
+#error "PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC defined, but no ML-DSA key size"
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY) && \
+    !(defined(PSA_WANT_ML_DSA_KEY_SIZE_44) || \
+      defined(PSA_WANT_ML_DSA_KEY_SIZE_65) || \
+      defined(PSA_WANT_ML_DSA_KEY_SIZE_87))
+#error "PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY defined, but no ML-DSA key size"
+#endif
+
+#if defined(PSA_WANT_ALG_ML_KEM) && \
+    !(defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC) || \
+    defined(PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY))
+#error "PSA_WANT_ALG_ML_KEM defined, but not all prerequisites"
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC) && \
+    !(defined(PSA_WANT_ML_KEM_KEY_SIZE_512) || \
+      defined(PSA_WANT_ML_KEM_KEY_SIZE_768) || \
+      defined(PSA_WANT_ML_KEM_KEY_SIZE_1024))
+#error "PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC defined, but no ML-KEM key size"
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY) && \
+    !(defined(PSA_WANT_ML_KEM_KEY_SIZE_512) || \
+      defined(PSA_WANT_ML_KEM_KEY_SIZE_768) || \
+      defined(PSA_WANT_ML_KEM_KEY_SIZE_1024))
+#error "PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY defined, but no ML-KEM key size"
+#endif
+
 
 #endif /* MBEDTLS_CHECK_CRYPTO_CONFIG_H */

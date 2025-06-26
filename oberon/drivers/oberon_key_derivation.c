@@ -123,21 +123,18 @@ psa_status_t oberon_key_derivation_setup(
 
 #ifdef PSA_NEED_OBERON_HKDF
         if (PSA_ALG_IS_HKDF(alg)) {
-            operation->info_length = 0;
             operation->alg = OBERON_HKDF_ALG;
         } else
 #endif /* PSA_NEED_OBERON_HKDF */
 
 #ifdef PSA_NEED_OBERON_HKDF_EXTRACT
         if (PSA_ALG_IS_HKDF_EXTRACT(alg)) {
-            operation->info_length = 0;
             operation->alg = OBERON_HKDF_EXTRACT_ALG;
         } else
 #endif /* PSA_NEED_OBERON_HKDF_EXTRACT */
 
 #ifdef PSA_NEED_OBERON_WPA3_SAE_H2E
         if (PSA_ALG_IS_WPA3_SAE_H2E(alg)) {
-            operation->info_length = 0;
             operation->alg = OBERON_WPA3_SAE_H2E_ALG;
         } else
 #endif /* PSA_NEED_OBERON_WPA3_SAE_H2E */
@@ -147,7 +144,6 @@ psa_status_t oberon_key_derivation_setup(
             psa_algorithm_t hash = PSA_ALG_HKDF_GET_HASH(alg);
             unsigned hash_length = PSA_HASH_LENGTH(hash);
             if (hash_length == 0) return PSA_ERROR_NOT_SUPPORTED;
-            operation->info_length = 0;
             operation->alg = OBERON_HKDF_EXPAND_ALG;
         } else
 #endif /* PSA_NEED_OBERON_HKDF_EXPAND */
@@ -161,7 +157,6 @@ psa_status_t oberon_key_derivation_setup(
 #ifdef PSA_NEED_OBERON_TLS12_PSK_TO_MS
         if (PSA_ALG_IS_TLS12_PSK_TO_MS(alg)) {
             operation->alg = OBERON_TLS12_PSK_TO_MS_ALG;
-            operation->count = 0;
         } else
 #endif /* PSA_NEED_OBERON_TLS12_PSK_TO_MS */
 
@@ -192,8 +187,6 @@ psa_status_t oberon_key_derivation_setup(
         }
     }
 
-    operation->salt_length = 0;
-    operation->data_length = 0;
     operation->index = 1;
     return PSA_SUCCESS;
 }
@@ -238,6 +231,7 @@ psa_status_t oberon_key_derivation_input_bytes(
             } else if (operation->alg == OBERON_SRP_PASSWORD_HASH_ALG) {
                 status = psa_driver_wrapper_hash_finish(&operation->hash_op, operation->data, sizeof operation->data, &length);
                 if (status) goto exit;
+                memset(&operation->hash_op, 0, sizeof operation->hash_op);
                 status = psa_driver_wrapper_hash_setup(&operation->hash_op, PSA_ALG_GET_HASH(operation->mac_alg));
                 if (status) goto exit;
                 status = psa_driver_wrapper_hash_update(&operation->hash_op, data, data_length); // salt
@@ -345,6 +339,7 @@ psa_status_t oberon_key_derivation_input_bytes(
         switch (operation->alg) {
 #ifdef PSA_NEED_OBERON_SRP_PASSWORD_HASH
         case OBERON_SRP_PASSWORD_HASH_ALG:
+            memset(&operation->hash_op, 0, sizeof operation->hash_op);
             status = psa_driver_wrapper_hash_setup(&operation->hash_op, PSA_ALG_GET_HASH(operation->mac_alg));
             if (status) goto exit;
             status = psa_driver_wrapper_hash_update(&operation->hash_op, data, data_length); // user id

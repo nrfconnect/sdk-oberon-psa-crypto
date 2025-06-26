@@ -2,6 +2,18 @@
 
 option(CONFIG_MBEDTLS_SSL_TESTS "Build Mbed TLS TLS tests" ON)
 
+if(CONFIG_TF_PSA_CRYPTO_DIRS)
+    set(PATH_LEGACY_MBEDTLS_INC drivers/builtin/include)
+    set(PATH_LEGACY_MBEDTLS_SRC drivers/builtin/src)
+    set(PATH_CORE core)
+    set(PATH_TESTS framework/tests)
+else()
+    set(PATH_LEGACY_MBEDTLS_INC include)
+    set(PATH_LEGACY_MBEDTLS_SRC library)
+    set(PATH_CORE library)
+    set(PATH_TESTS tests)
+endif()
+
 set(src_x509
         ${MBEDTLS_ROOT}/library/x509.c
         ${MBEDTLS_ROOT}/library/x509_create.c
@@ -135,7 +147,7 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
 
     # Oberon PSA Crypto drivers
     target_sources(${PROJECT_NAME} PRIVATE
-        ${CMAKE_SOURCE_DIR}/library/psa_crypto_driver_wrappers.c
+        ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/library/psa_crypto_driver_wrappers.c
         ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers/demo_entropy.c
         ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers/demo_hardware.c
         ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers/demo_opaque.c
@@ -149,16 +161,21 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
     # add TLS specific includes to use different configuration
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
 
+    # add demo platform includes
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/include)
+
     # add common includes
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/library)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_CORE})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC})
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
 
     # add platform specific sources and includes before mbed includes
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers)
 
     # add mbed includes
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/include)
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_INC})
 
     # add mbedtls includes
     target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/programs)
@@ -192,16 +209,21 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
         # add TLS specific includes to use different configuration
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
 
+        # add demo platform includes
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/include)
+
         # add common includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/library)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_CORE})
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC})
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
 
         # add platform specific sources and includes before mbed includes
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers)
 
         # add mbed includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/include)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_INC})
 
         # add mbedtls includes
         target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/programs)
@@ -221,7 +243,7 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
             add_executable(${PROJECT_NAME})
             set_target_properties(${PROJECT_NAME} PROPERTIES
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/test-suites")
-            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/generated/${SUITE}.c")
+            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/generated/${SUITE}.c")
 
             if(UNIX)
                 set(DATAX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/test-suites")
@@ -232,9 +254,9 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
             add_custom_command(
                 TARGET ${PROJECT_NAME} PRE_LINK
                 COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_SOURCE_DIR}/tests/generated/${SUITE}.datax
+                ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/generated/${SUITE}.datax
                 ${DATAX_DIR}/
-                DEPENDS ${PROJECT_BINARY_DIR}/${SUITE}.datax)
+                )
 
             # add libs
             target_link_libraries(${PROJECT_NAME} PRIVATE oberon-psa-crypto-ssl-${TEST_CONFIG})
@@ -250,9 +272,9 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
 
             # test helpers
             target_sources(${PROJECT_NAME} PRIVATE
-                ${CMAKE_SOURCE_DIR}/tests/src/asn1_helpers.c
-                ${CMAKE_SOURCE_DIR}/tests/src/psa_exercise_key.c
-                ${CMAKE_SOURCE_DIR}/tests/src/test_helpers/ssl_helpers.c
+                ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/asn1_helpers.c
+                ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/psa_exercise_key.c
+                ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/test_helpers/ssl_helpers.c
             )
 
             # add TLS specific include for build_info.h
@@ -261,16 +283,21 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
             # add TLS specific includes to use different configuration
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
 
+            # add demo platform includes
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/include)
+
             # add common includes
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/library)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_CORE})
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC})
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
 
             # add platform specific sources and includes before mbed includes
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers)
 
             # add mbed includes
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/include)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_INC})
 
             # add mbedtls includes
             target_include_directories(${PROJECT_NAME} PRIVATE ${MBEDTLS_ROOT}/framework/tests/programs)

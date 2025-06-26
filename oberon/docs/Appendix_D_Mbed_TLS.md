@@ -29,14 +29,24 @@ _Mbed TLS_ implementations for `MBEDTLS_PSA_CRYPTO_STORAGE_C` and
 `MBEDTLS_PSA_ITS_FILE_C` by default, but can use other provided implementations
 of these _PSA Storage APIs_.
 
-4. Copy your existing `psa/crypto_config.h` file to `include/psa/crypto_config.h`
+4. Copy your existing `psa/crypto_config.h` file to `include/psa/`
 in _Oberon PSA Crypto_.
 
 5. Make sure that the `include/psa/crypto_config.h` file defines the "wanted"
 crypto features as described above.
 
-6. In the `include/psa/crypto_config.h` file, define the "used" _hardware
-drivers_ as described above.
+6. In the `include/psa/crypto_config.h` file, add the use directives for a DRGB 
+driver and an entropy driver. Oberon PSA Crypto provides the DRBG directives
+`PSA_USE_CTR_DRBG_DRIVER` and `PSA_USE_HMAC_DRBG_DRIVER` for production, and
+the entropy driver directive `PSA_USE_DEMO_ENTROPY_DRIVER` for testing.
+
+7. Copy the header files `include/psa/crypto_driver_contexts_composites.h`,
+`include/psa/crypto_driver_contexts_key_derivation.h`, 
+`include/psa/crypto_driver_contexts_primitives.h`, 
+`include/psa/crypto_driver_config.h` and the driver wrapper implementation 
+`library/psa_crypto_driver_wrappers.c` from the folder
+`oberon/platforms`. Demo files for the configuration of Oberon PSA Crypto 
+drivers are located in subfolders `demo/include/psa` and `demo/library`. 
 
 ## Use the Mbed TLS Protocol Stack Without its Crypto Implementation
 
@@ -74,6 +84,5 @@ Should never be defined:
 
 - `MBEDTLS_PSA_CRYPTO_SE_C`
 - `MBEDTLS_PSA_INJECT_ENTROPY`
-- `MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG`
 - `MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS`
 - `MBEDTLS_PSA_CRYPTO_SPM`

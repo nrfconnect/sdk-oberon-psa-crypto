@@ -62,7 +62,9 @@ static psa_status_t oberon_get_zkp_hash(
     uint8_t *hash, size_t hash_size, size_t *hash_length)
 {
     psa_status_t status;
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
+
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status != PSA_SUCCESS) goto exit;
     status = oberon_update_hash_with_prefix(&hash_op, G ? G : base, P256_POINT_SIZE, 0x04);
@@ -223,9 +225,6 @@ psa_status_t oberon_jpake_setup(
     }
     operation->hash_alg = PSA_ALG_GET_HASH(psa_pake_cs_get_algorithm(cipher_suite));
     if (operation->hash_alg != PSA_ALG_SHA_256) return PSA_ERROR_NOT_SUPPORTED;
-
-    operation->rd_idx = 0;
-    operation->wr_idx = 0;
 
     // store reduced password
     ocrypto_ecjpake_read_shared_secret(operation->secret, password, password_length);

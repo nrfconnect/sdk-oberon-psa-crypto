@@ -12,6 +12,8 @@
 #include "oberon_key_management.h"
 #include "oberon_ec_keys.h"
 #include "oberon_lms.h"
+#include "oberon_ml_dsa.h"
+#include "oberon_ml_kem.h"
 #include "oberon_rsa.h"
 #include "oberon_spake2p.h"
 #include "oberon_srp.h"
@@ -41,6 +43,22 @@ psa_status_t oberon_export_public_key(
             data, data_size, data_length);
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_RSA_KEY_PAIR_EXPORT */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT
+        if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+            return oberon_export_ml_dsa_public_key(
+                attributes, key, key_length,
+                data, data_size, data_length);
+        } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ML_DSA_KEY_PAIR_EXPORT */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT
+        if (PSA_KEY_TYPE_IS_ML_KEM(type)) {
+            return oberon_export_ml_kem_public_key(
+                attributes, key, key_length,
+                data, data_size, data_length);
+        } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ML_KEM_KEY_PAIR_EXPORT */
 
 #ifdef PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_EXPORT
     if (PSA_KEY_TYPE_IS_SPAKE2P(type)) {
@@ -108,6 +126,22 @@ psa_status_t oberon_import_key(
             key, key_size, key_length, key_bits);
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SRP_6_KEY_PAIR_IMPORT */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT
+    if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+        return oberon_import_ml_dsa_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ML_DSA_KEY_PAIR_IMPORT */
+
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT
+    if (PSA_KEY_TYPE_IS_ML_KEM(type)) {
+        return oberon_import_ml_kem_key(
+            attributes, data, data_length,
+            key, key_size, key_length, key_bits);
+    } else
+#endif /* PSA_NEED_OBERON_KEY_TYPE_ML_KEM_KEY_PAIR_IMPORT */
 
 #ifdef PSA_NEED_OBERON_KEY_TYPE_LMS_PUBLIC_KEY
     if (type == PSA_KEY_TYPE_LMS_PUBLIC_KEY) {

@@ -3173,6 +3173,102 @@ psa_status_t psa_asymmetric_decrypt(mbedtls_svc_key_id_t key,
 
 /**@}*/
 
+/** \defgroup key encapsulation
+* @{
+*/
+
+/**
+ * \brief Use a public key to generate a new shared secret key and associated ciphertext.
+ *
+ * \param key                    Identifier of the key to use for the
+ *                               encapsulation. It must be a public key or
+ *                               an asymmetric key pair. It must permit the
+ *                               usage #PSA_KEY_USAGE_ENCRYPT.
+ * \param alg                    A key-encapsulation algorithm that is
+ *                               compatible with the type of \p key.
+ * \param[in] attributes         The attributes for the output key.
+ * \param[out] output_key        On success, an identifier for the newly
+ *                               created shared secret key.
+ *                               #PSA_KEY_ID_NULL on failure.
+ * \param[out] ciphertext        Buffer where the ciphertext output is to
+ *                               be written.
+ * \param ciphertext_size        Size of the \p ciphertext buffer in bytes.
+ * \param[out] ciphertext_length On success, the number of bytes
+ *                               that make up the ciphertext value.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_INVALID_HANDLE \emptydescription
+ * \retval #PSA_ERROR_NOT_PERMITTED \emptydescription
+ * \retval #PSA_ERROR_BUFFER_TOO_SMALL
+ *         The size of the \p ciphertext buffer is too small.
+ * \retval #PSA_ERROR_ALREADY_EXISTS \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+psa_status_t psa_key_encapsulate(mbedtls_svc_key_id_t key,
+                                 psa_algorithm_t alg,
+                                 const psa_key_attributes_t *attributes,
+                                 mbedtls_svc_key_id_t *output_key,
+                                 uint8_t *ciphertext,
+                                 size_t ciphertext_size,
+                                 size_t *ciphertext_length);
+
+/**
+ * \brief Decrypt a short message with a private key.
+ *
+ * \param key                    Identifier of the key to use for the
+ *                               decapsulation. It must be an asymmetric
+ *                               key pair. It must allow the usage
+ *                               #PSA_KEY_USAGE_DECRYPT.
+ * \param alg                    A key-encapsulation algorithm that is
+ *                               compatible with the type of \p key.
+ * \param[out] ciphertext        The ciphertext received from the other
+ *                               participant.
+ * \param[out] ciphertext_length Size of the ciphertext in bytes.
+ * \param[in] attributes         The attributes for the output key.
+ * \param[out] output_key        On success, an identifier for the newly
+ *                               created shared secret key.
+ *                               #PSA_KEY_ID_NULL on failure.
+ *
+ * \retval #PSA_SUCCESS \emptydescription
+ * \retval #PSA_ERROR_INVALID_SIGNATURE
+           Authentication of the ciphertext fails.
+ * \retval #PSA_ERROR_INVALID_HANDLE \emptydescription
+ * \retval #PSA_ERROR_NOT_PERMITTED \emptydescription
+ * \retval #PSA_ERROR_ALREADY_EXISTS \emptydescription
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
+ * \retval #PSA_ERROR_INVALID_PADDING \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
+psa_status_t psa_key_decapsulate(mbedtls_svc_key_id_t key,
+                                 psa_algorithm_t alg,
+                                 const uint8_t *ciphertext,
+                                 size_t ciphertext_length,
+                                 const psa_key_attributes_t *attributes,
+                                 mbedtls_svc_key_id_t *output_key);
+
+/**@}*/
+
 /** \defgroup key_derivation Key derivation and pseudorandom generation
  * @{
  */

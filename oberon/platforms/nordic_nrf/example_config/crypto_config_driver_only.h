@@ -17,7 +17,6 @@
  * (\c PSA_WANT_ALG_xxx). Mechanisms with additional parameters may involve
  * additional symbols.
  */
-
 /*
  *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
@@ -30,20 +29,20 @@
 #ifndef PSA_CRYPTO_CONFIG_H
 #define PSA_CRYPTO_CONFIG_H
 
-//#define PSA_WANT_ALG_CBC_NO_PADDING             1
-//#define PSA_WANT_ALG_CBC_PKCS7                  1
+#define PSA_WANT_ALG_CBC_NO_PADDING             1
+#define PSA_WANT_ALG_CBC_PKCS7                  1
 #define PSA_WANT_ALG_CCM                        1
-#define PSA_WANT_ALG_CCM_STAR_NO_TAG            1
+//#define PSA_WANT_ALG_CCM_STAR_NO_TAG            1
 //#define PSA_WANT_ALG_CHACHA20_POLY1305          1
 //#define PSA_WANT_ALG_XCHACHA20_POLY1305         1
-//#define PSA_WANT_ALG_CMAC                       1
-//#define PSA_WANT_ALG_CTR                        1
+#define PSA_WANT_ALG_CMAC                       1
+#define PSA_WANT_ALG_CTR                        1
 #define PSA_WANT_ALG_DETERMINISTIC_ECDSA        1
 #define PSA_WANT_ALG_ECB_NO_PADDING             1
 #define PSA_WANT_ALG_ECDH                       1
 #define PSA_WANT_ALG_ECDSA                      1
-//#define PSA_WANT_ALG_GCM                        1
-//#define PSA_WANT_ALG_HKDF                       1
+#define PSA_WANT_ALG_GCM                        1
+#define PSA_WANT_ALG_HKDF                       1
 //#define PSA_WANT_ALG_HKDF_EXTRACT               1
 //#define PSA_WANT_ALG_HKDF_EXPAND                1
 #define PSA_WANT_ALG_HMAC                       1
@@ -57,10 +56,10 @@
 //#define PSA_WANT_ALG_PURE_EDDSA                 1
 //#define PSA_WANT_ALG_ED25519PH                  1
 //#define PSA_WANT_ALG_ED448PH                    1
-//#define PSA_WANT_ALG_RSA_OAEP                   1
-//#define PSA_WANT_ALG_RSA_PKCS1V15_CRYPT         1
-//#define PSA_WANT_ALG_RSA_PKCS1V15_SIGN          1
-//#define PSA_WANT_ALG_RSA_PSS                    1
+#define PSA_WANT_ALG_RSA_OAEP                   1
+#define PSA_WANT_ALG_RSA_PKCS1V15_CRYPT         1
+#define PSA_WANT_ALG_RSA_PKCS1V15_SIGN          1
+#define PSA_WANT_ALG_RSA_PSS                    1
 //#define PSA_WANT_ALG_SHA_1                      1
 //#define PSA_WANT_ALG_SHA_224                    1
 #define PSA_WANT_ALG_SHA_256                    1
@@ -93,11 +92,11 @@
 //#define PSA_WANT_ALG_XMSS                       1
 //#define PSA_WANT_ALG_XMSS_MT                    1
 
-//#define PSA_WANT_ECC_MONTGOMERY_255             1
+#define PSA_WANT_ECC_MONTGOMERY_255             1
 //#define PSA_WANT_ECC_MONTGOMERY_448             1
 //#define PSA_WANT_ECC_TWISTED_EDWARDS_255        1
 //#define PSA_WANT_ECC_TWISTED_EDWARDS_448        1
-//#define PSA_WANT_ECC_SECP_R1_224                1
+#define PSA_WANT_ECC_SECP_R1_224                1
 #define PSA_WANT_ECC_SECP_R1_256                1
 //#define PSA_WANT_ECC_SECP_R1_384                1
 //#define PSA_WANT_ECC_SECP_R1_521                1
@@ -118,7 +117,7 @@
 //#define PSA_WANT_KEY_TYPE_XMSS_MT_PUBLIC_KEY    1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
 //#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
-//#define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
+#define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
 //#define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY    1
 //#define PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY        1
 //#define PSA_WANT_KEY_TYPE_WPA3_SAE_PT           1
@@ -131,9 +130,9 @@
 #define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
 //#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE   1
 
-//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC    1
-//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT   1
-//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC    1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT   1
 
 //#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC  1
 //#define PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_IMPORT 1
@@ -159,14 +158,14 @@
 
 // Additional AES key size option
 #define PSA_WANT_AES_KEY_SIZE_128               1
-//#define PSA_WANT_AES_KEY_SIZE_192               1
-//#define PSA_WANT_AES_KEY_SIZE_256               1
+#define PSA_WANT_AES_KEY_SIZE_192               1
+#define PSA_WANT_AES_KEY_SIZE_256               1
 
 // Additional RSA key size option
-//#define PSA_WANT_RSA_KEY_SIZE_1024              1
-//#define PSA_WANT_RSA_KEY_SIZE_1536              1
-//#define PSA_WANT_RSA_KEY_SIZE_2048              1
-//#define PSA_WANT_RSA_KEY_SIZE_3072              1
+#define PSA_WANT_RSA_KEY_SIZE_1024              1
+#define PSA_WANT_RSA_KEY_SIZE_1536              1
+#define PSA_WANT_RSA_KEY_SIZE_2048              1
+#define PSA_WANT_RSA_KEY_SIZE_3072              1
 //#define PSA_WANT_RSA_KEY_SIZE_4096              1
 //#define PSA_WANT_RSA_KEY_SIZE_6144              1
 //#define PSA_WANT_RSA_KEY_SIZE_8192              1
@@ -203,7 +202,7 @@
  * Currently, the library traverses of the whole table on each access to a
  * persistent key. Therefore large values may cause poor performance.
  */
-#define MBEDTLS_PSA_KEY_SLOT_COUNT              2
+#define MBEDTLS_PSA_KEY_SLOT_COUNT              16
 
 /**
  * \def MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
@@ -220,23 +219,25 @@
  * in order to store larger objects (ex: raw keys), but please note that this
  * will increase RAM usage.
  */
-//#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE 256
+//#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE 3000
 
 
 /* Driver usage configuration */
+
+#define PSA_HW_DRIVERS_ONLY                     1
 
 #define PSA_USE_CTR_DRBG_DRIVER                 1
 //#define PSA_USE_HMAC_DRBG_DRIVER                1
 
 /* CryptoCell CC3XX driver demonstration */
-//#define PSA_USE_CC3XX_HASH_DRIVER                   1
-//#define PSA_USE_CC3XX_AEAD_DRIVER                   1
-//#define PSA_USE_CC3XX_CIPHER_DRIVER                 1
-//#define PSA_USE_CC3XX_MAC_DRIVER                    1
-//#define PSA_USE_CC3XX_KEY_AGREEMENT_DRIVER          1
-//#define PSA_USE_CC3XX_ASYMMETRIC_SIGNATURE_DRIVER   1
-//#define PSA_USE_CC3XX_ASYMMETRIC_ENCRYPTION_DRIVER  1
-//#define PSA_USE_CC3XX_KEY_MANAGEMENT_DRIVER         1
+#define PSA_USE_CC3XX_HASH_DRIVER                   1
+#define PSA_USE_CC3XX_AEAD_DRIVER                   1
+#define PSA_USE_CC3XX_CIPHER_DRIVER                 1
+#define PSA_USE_CC3XX_MAC_DRIVER                    1
+#define PSA_USE_CC3XX_KEY_AGREEMENT_DRIVER          1
+#define PSA_USE_CC3XX_ASYMMETRIC_SIGNATURE_DRIVER   1
+#define PSA_USE_CC3XX_ASYMMETRIC_ENCRYPTION_DRIVER  1
+#define PSA_USE_CC3XX_KEY_MANAGEMENT_DRIVER         1
 #define PSA_USE_CC3XX_ENTROPY_DRIVER                1
 
 /* Hardware driver demonstration */

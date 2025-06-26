@@ -86,7 +86,7 @@ psa_status_t oberon_wrap_key(
     uint8_t *data, size_t data_size, size_t *data_length)
 {
 #if defined(PSA_NEED_OBERON_AES_KW) || defined(PSA_NEED_OBERON_AES_KWP)
-    psa_cipher_operation_t cipher_op = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t cipher_op;
     psa_key_type_t type = psa_get_key_type(wrapping_key_attributes);
     uint8_t a[16];
     size_t n;
@@ -110,6 +110,7 @@ psa_status_t oberon_wrap_key(
 
         if (key_size + 8 > data_size) return PSA_ERROR_BUFFER_TOO_SMALL;
 
+        memset(&cipher_op, 0, sizeof cipher_op);
         status = psa_driver_wrapper_cipher_encrypt_setup(
             &cipher_op,
             wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
@@ -139,6 +140,7 @@ psa_status_t oberon_wrap_key(
         n = (key_size + 7) >> 3;
         if (n * 8 + 8 > data_size) return PSA_ERROR_BUFFER_TOO_SMALL;
 
+        memset(&cipher_op, 0, sizeof cipher_op);
         status = psa_driver_wrapper_cipher_encrypt_setup(
             &cipher_op,
             wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
@@ -196,7 +198,7 @@ psa_status_t oberon_unwrap_key(
     uint8_t *key, size_t key_size, size_t *key_length)
 {
 #if defined(PSA_NEED_OBERON_AES_KW) || defined(PSA_NEED_OBERON_AES_KWP)
-    psa_cipher_operation_t cipher_op = PSA_CIPHER_OPERATION_INIT;
+    psa_cipher_operation_t cipher_op;
     psa_key_type_t type = psa_get_key_type(wrapping_key_attributes);
     uint8_t a[16];
     size_t n = (data_length - 8) >> 3;
@@ -220,6 +222,7 @@ psa_status_t oberon_unwrap_key(
 
         if (data_length - 8 > key_size) return PSA_ERROR_BUFFER_TOO_SMALL;
 
+        memset(&cipher_op, 0, sizeof cipher_op);
         status = psa_driver_wrapper_cipher_decrypt_setup(
             &cipher_op,
             wrapping_key_attributes, wrapping_key_data, wrapping_key_size,
@@ -250,6 +253,7 @@ psa_status_t oberon_unwrap_key(
 
         if (data_length - 8 > key_size) return PSA_ERROR_BUFFER_TOO_SMALL;
 
+        memset(&cipher_op, 0, sizeof cipher_op);
         status = psa_driver_wrapper_cipher_decrypt_setup(
             &cipher_op,
             wrapping_key_attributes, wrapping_key_data, wrapping_key_size,

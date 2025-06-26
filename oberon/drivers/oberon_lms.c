@@ -99,7 +99,7 @@ static psa_status_t oberon_lms_verify(
     const uint8_t *msg, size_t msg_len,
     const uint8_t *key, size_t key_len)
 {
-    psa_hash_operation_t hash_op = PSA_HASH_OPERATION_INIT;
+    psa_hash_operation_t hash_op;
     uint32_t lms_type, ots_type;
     uint32_t q, node_num, node_new;
     uint32_t idx, bits, max, sum, data, j;
@@ -140,6 +140,7 @@ static psa_status_t oberon_lms_verify(
     store_bigendian(temp + 16, q); // q
     temp[20] = temp[21] = D_MESG;
     hash_alg = ots_type >= 9 ? PSA_ALG_SHAKE256_256 : PSA_ALG_SHA_256;
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, temp, 22);
@@ -154,6 +155,7 @@ static psa_status_t oberon_lms_verify(
 
     // get candidate one-time public key
     temp[20] = temp[21] = D_PBLC;
+    memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;
     status = psa_driver_wrapper_hash_update(&hash_op, temp, 22);
@@ -202,6 +204,7 @@ static psa_status_t oberon_lms_verify(
     while (node_num > 1) {
         node_new = node_num >> 1;
         store_bigendian(temp + 16, node_new);
+        memset(&hash_op, 0, sizeof hash_op);
         status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
         if (status) goto exit;
         status = psa_driver_wrapper_hash_update(&hash_op, temp, 22);

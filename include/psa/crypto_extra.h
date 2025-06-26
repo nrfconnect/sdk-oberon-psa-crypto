@@ -353,7 +353,7 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
  * string. The length of the byte string is the length of the base prime `p`
  * in bytes.
  */
-#define PSA_KEY_TYPE_DSA_PUBLIC_KEY                 ((psa_key_type_t) 0x4002)
+#define PSA_KEY_TYPE_DSA_PUBLIC_KEY                 ((psa_key_type_t) 0x400E) /* !!OM */
 
 /** DSA key pair (private and public key).
  *
@@ -371,7 +371,7 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
  * Add 1 to the resulting integer and use this as the private key *x*.
  *
  */
-#define PSA_KEY_TYPE_DSA_KEY_PAIR                    ((psa_key_type_t) 0x7002)
+#define PSA_KEY_TYPE_DSA_KEY_PAIR                    ((psa_key_type_t) 0x700E) /* !!OM */
 
 /** Whether a key type is a DSA key (pair or public-only). */
 #define PSA_KEY_TYPE_IS_DSA(type)                                       \
@@ -2462,6 +2462,158 @@ psa_status_t oberon_psa_unwrap_key(
  * xmssmt_public_key structure, defined in [RFC8391] Appendix C.3.
  */
 #define PSA_KEY_TYPE_XMSS_MT_PUBLIC_KEY ((psa_key_type_t)0x400D)
+
+
+/** Module lattice-based digital signature algorithm.
+ *
+ * This algorithm can only be used with the psa_sign_message() and
+ * psa_verify_message() functions.
+ * This is the pure ML-DSA digital signature algorithm, defined by FIPS
+ * Publication 204: Module-Lattice-Based Digital Signature Standard [FIPS204],
+ * using hedging. ML-DSA requires an ML-DSA key, which determines the ML-DSA
+ * parameter set for the operation.
+ * This algorithm is randomized: each invocation returns a different, equally
+ * valid signature.
+ */
+#define PSA_ALG_ML_DSA                  ((psa_algorithm_t)0x06004400)
+
+/** Deterministic module lattice-based digital signature algorithm.
+ *
+ * This algorithm can only be used with the psa_sign_message() and
+ * psa_verify_message() functions.
+ * This is the pure ML-DSA digital signature algorithm, defined by FIPS
+ * Publication 204: Module-Lattice-Based Digital Signature Standard [FIPS204],
+ * without hedging. ML-DSA requires an ML-DSA key, which determines the ML-DSA
+ * parameter set for the operation.
+ * This algorithm is deterministic: each invocation with the same inputs
+ * returns an identical signature.
+ */
+#define PSA_ALG_DETERMINISTIC_ML_DSA    ((psa_algorithm_t)0x06004500)
+
+#define PSA_ALG_HASH_ML_DSA_BASE        ((psa_algorithm_t)0x06004600)
+
+/** Module lattice-based digital signature algorithm with pre-hashing.
+ *
+ * This is the pre-hashed ML-DSA digital signature algorithm, defined by FIPS
+ * Publication 204: Module-Lattice-Based Digital Signature Standard [FIPS204],
+ * using hedging. ML-DSA requires an ML-DSA key, which determines the ML-DSA
+ * parameter set for the operation.
+ * This algorithm is randomized: each invocation returns a different, equally
+ * valid signature.
+ * 
+ * \param hash_alg A hash algorithm (\c PSA_ALG_XXX value such that
+ *                 #PSA_ALG_IS_HASH(\p hash_alg) is true).
+ *
+ * \return         The corresponding Hash-ML-DSA signature algorithm.
+ * \return         Unspecified if \p hash_alg is not a supported
+ *                 hash algorithm.
+ */
+#define PSA_ALG_HASH_ML_DSA(hash_alg)   (PSA_ALG_HASH_ML_DSA_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+#define PSA_ALG_DETERMINISTIC_HASH_ML_DSA_BASE ((psa_algorithm_t)0x06004700)
+
+/** Deterministic module lattice-based digital signature algorithm with pre-hashing.
+ *
+ * This is the pre-hashed ML-DSA digital signature algorithm, defined by FIPS
+ * Publication 204: Module-Lattice-Based Digital Signature Standard [FIPS204],
+ * without hedging. ML-DSA requires an ML-DSA key, which determines the ML-DSA
+ * parameter set for the operation.
+ * This algorithm is deterministic: each invocation with the same inputs
+ * returns an identical signature.
+ * 
+ * \param hash_alg A hash algorithm (\c PSA_ALG_XXX value such that
+ *                 #PSA_ALG_IS_HASH(\p hash_alg) is true).
+ *
+ * \return         The corresponding deterministic Hash-ML-DSA
+ *                 signature algorithm.
+ * \return         Unspecified if \p hash_alg is not a supported
+ *                 hash algorithm.
+ */
+#define PSA_ALG_DETERMINISTIC_HASH_ML_DSA(hash_alg) \
+    (PSA_ALG_DETERMINISTIC_HASH_ML_DSA_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+/** Whether the specified algorithm is a ML-DSA algorithm. */
+#define PSA_ALG_IS_ML_DSA(alg) \
+    (((alg) & ~0x000003ff) == PSA_ALG_ML_DSA)
+
+/** Whether the specified algorithm is a hash ML-DSA algorithm. */
+#define PSA_ALG_IS_HASH_ML_DSA(alg) \
+    (((alg) & ~0x000001ff) == PSA_ALG_HASH_ML_DSA_BASE)
+
+/** Whether the specified algorithm is a hedged hash ML-DSA algorithm. */
+#define PSA_ALG_IS_HEDGED_HASH_ML_DSA(alg) \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_HASH_ML_DSA_BASE)
+
+/** Whether the specified algorithm is a deterministic hash ML-DSA algorithm. */
+#define PSA_ALG_IS_DETERMINISTIC_HASH_ML_DSA(alg) \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_DETERMINISTIC_HASH_ML_DSA_BASE)
+
+/** Whether the specified algorithm is a deterministic ML-DSA algorithm. */
+#define PSA_ALG_IS_DETERMINISTIC_ML_DSA(alg) \
+    (((alg) & ~0x000002ff) == PSA_ALG_DETERMINISTIC_ML_DSA)
+
+/** ML-DSA key pair: both the private and public key.
+ *
+ * The key attribute size of an ML-DSA key is a measure of the security
+ * strength of the ML-DSA parameter set in [FIPS204]:
+ * ML-DSA-44: key_bits = 128
+ * ML-DSA-65: key_bits = 192
+ * ML-DSA-87: key_bits = 256
+ * The data format for import and export of the key pair is the 32-byte seed.
+ */
+#define PSA_KEY_TYPE_ML_DSA_KEY_PAIR ((psa_key_type_t)0x7002)
+
+/** ML-DSA public key.
+ *
+ * The key attribute size of an ML-DSA public key is the same as the
+ * corresponding private key. See PSA_KEY_TYPE_ML_DSA_KEY_PAIR.
+ * An ML-DSA public key is the pk output of ML-DSA.KeyGen(), defined
+ * in [FIPS204] §5.1.
+ */
+#define PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY ((psa_key_type_t)0x4002)
+
+/** Whether a key type is a ML_DSA key (pair or public-only). */
+#define PSA_KEY_TYPE_IS_ML_DSA(type) \
+    (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) == PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY)
+
+
+/** Module Lattice-based key-encapsulation mechanism.
+ *
+ * This is the ML-KEM key-encapsulation algorithm, defined by [FIPS203].
+ * ML-KEM requires an ML-KEM key, which d etermines the ML-KEM parameter
+ * set for the operation.
+ */
+#define PSA_ALG_ML_KEM ((psa_algorithm_t)0x0c000200)
+
+/** ML-KEM key pair: both the decapsulation and encapsulation key.
+ *
+ * The Crypto API treats decapsulation keys as private keys and encapsulation
+ * keys as public keys.
+ * The key attribute size of an ML-KEM key is specified by the numeric part of
+ * the parameter-set identifier defined in [FIPS203]. The parameter-set
+ * identifier refers to the key strength, and not to the actual size of
+ * the key. The following values for the key_bits key attribute are used
+ * to select a specific ML-KEM parameter set:
+ * ML-KEM-512 : key_bits = 512
+ * ML-KEM-768 : key_bits = 768
+ * ML-KEM-1024: key_bits = 1024
+ * The data format for import and export of the key pair is the concatenation
+ * of the two seed values: d || z.
+ */
+#define PSA_KEY_TYPE_ML_KEM_KEY_PAIR ((psa_key_type_t)0x7004)
+
+/** ML-KEM public (encapsulation) key.
+ *
+ * The key attribute size of an ML-KEM public key is the same as the
+ * corresponding private key. See PSA_KEY_TYPE_ML_KEM_KEY_PAIR.
+ * An ML-KEM public key is the ek output of ML-KEM.KeyGen(), defined
+ * in [FIPS203] §7.1.
+ */
+#define PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY ((psa_key_type_t)0x4004)
+
+/** Whether a key type is a ML_DSA key (pair or public-only). */
+#define PSA_KEY_TYPE_IS_ML_KEM(type) \
+    (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) == PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY)
 
 
 #ifdef __cplusplus
