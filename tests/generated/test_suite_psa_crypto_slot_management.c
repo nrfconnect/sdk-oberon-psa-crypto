@@ -546,8 +546,9 @@ static void test_create_existent(int lifetime_arg, int owner_id_arg, int id_arg,
     mbedtls_svc_key_id_t returned_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_type_t type1 = PSA_KEY_TYPE_RAW_DATA;
-    const uint8_t material1[5] = "a key";
-    const uint8_t material2[5] = "b key";
+    /* We need to tell the compiler that we meant to leave out the null character. */
+    const uint8_t material1[5] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "a key";
+    const uint8_t material2[5] MBEDTLS_ATTRIBUTE_UNTERMINATED_STRING = "b key";
     size_t bits1 = PSA_BYTES_TO_BITS(sizeof(material1));
     uint8_t reexported[sizeof(material1)];
     size_t reexported_length;
@@ -616,7 +617,7 @@ static void test_create_existent_wrapper( void ** params )
     test_create_existent( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint );
 }
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
-#line 446 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 447 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_open_fail(int id_arg,
                int expected_status_arg)
 {
@@ -638,7 +639,7 @@ static void test_open_fail_wrapper( void ** params )
 
     test_open_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 464 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 465 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_create_fail(int lifetime_arg, int id_arg,
                  int expected_status_arg)
 {
@@ -681,7 +682,7 @@ static void test_create_fail_wrapper( void ** params )
 
     test_create_fail( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
-#line 503 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 504 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_copy_across_lifetimes(int source_lifetime_arg, int source_owner_id_arg,
                            int source_id_arg, int source_usage_arg,
                            int source_alg_arg, int source_alg2_arg,
@@ -814,7 +815,7 @@ static void test_copy_across_lifetimes_wrapper( void ** params )
 
     test_copy_across_lifetimes( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint, ((mbedtls_test_argument_t *) params[6])->sint, &data7, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, ((mbedtls_test_argument_t *) params[12])->sint, ((mbedtls_test_argument_t *) params[13])->sint, ((mbedtls_test_argument_t *) params[14])->sint, ((mbedtls_test_argument_t *) params[15])->sint, ((mbedtls_test_argument_t *) params[16])->sint, ((mbedtls_test_argument_t *) params[17])->sint );
 }
-#line 631 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 632 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_copy_to_occupied(int source_lifetime_arg, int source_id_arg,
                       int source_usage_arg, int source_alg_arg,
                       int source_type_arg, data_t *source_material,
@@ -931,7 +932,7 @@ static void test_copy_to_occupied_wrapper( void ** params )
 
     test_copy_to_occupied( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, ((mbedtls_test_argument_t *) params[10])->sint, ((mbedtls_test_argument_t *) params[11])->sint, &data12 );
 }
-#line 742 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 743 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_invalid_handle(int handle_construction,
                     int close_status_arg)
 {
@@ -940,7 +941,7 @@ static void test_invalid_handle(int handle_construction,
     psa_key_id_t key_id;
     psa_status_t close_status = close_status_arg;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    uint8_t material[1] = "a";
+    uint8_t material[1] = { 'a' };
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -1016,7 +1017,7 @@ static void test_invalid_handle_wrapper( void ** params )
 
     test_invalid_handle( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint );
 }
-#line 823 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 824 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_many_transient_keys(int max_keys_arg)
 {
     mbedtls_svc_key_id_t *keys = NULL;
@@ -1068,7 +1069,7 @@ static void test_many_transient_keys_wrapper( void ** params )
     test_many_transient_keys( ((mbedtls_test_argument_t *) params[0])->sint );
 }
 #if defined(MAX_VOLATILE_KEYS)
-#line 870 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 871 "tests/suites/test_suite_psa_crypto_slot_management.function"
 
 
 
@@ -1187,7 +1188,7 @@ static void test_fill_key_store_wrapper( void ** params )
 }
 #endif /* MAX_VOLATILE_KEYS */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-#line 983 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 984 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_key_slot_eviction_to_import_new_key(int lifetime_arg)
 {
     psa_key_lifetime_t lifetime = (psa_key_lifetime_t) lifetime_arg;
@@ -1270,7 +1271,7 @@ static void test_key_slot_eviction_to_import_new_key_wrapper( void ** params )
 #endif /* MBEDTLS_PSA_CRYPTO_STORAGE_C */
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
 #if !defined(MBEDTLS_PSA_KEY_STORE_DYNAMIC)
-#line 1059 "tests/suites/test_suite_psa_crypto_slot_management.function"
+#line 1060 "tests/suites/test_suite_psa_crypto_slot_management.function"
 static void test_non_reusable_key_slots_integrity_in_case_of_key_slot_starvation(void)
 {
     psa_status_t status;

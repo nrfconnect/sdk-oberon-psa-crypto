@@ -59,7 +59,7 @@ set(src_tls
 set(src_tls_helpers
         ${MBEDTLS_ROOT}/tests/src/certs.c
         ${MBEDTLS_ROOT}/framework/tests/src/helpers.c
-        ${MBEDTLS_ROOT}/framework/tests/src/psa_crypto_helpers.c
+        ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/psa_crypto_helpers.c
         ${MBEDTLS_ROOT}/programs/ssl/ssl_test_lib.c
         ${MBEDTLS_ROOT}/framework/tests/programs/query_config.h
         ${MBEDTLS_ROOT}/programs/test/query_config.c
@@ -103,7 +103,7 @@ set(src_mbedtls_legacy
 
 if (CONFIG_MBEDTLS_SSL_TESTS)
 
-    if(NOT EXISTS "${MBEDTLS_ROOT}/framework/tests/src/helpers.c")
+    if(NOT EXISTS "${MBEDTLS_ROOT}/library/cipher_invasive.h")
         message(FATAL_ERROR
                 "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.3.")
     endif()

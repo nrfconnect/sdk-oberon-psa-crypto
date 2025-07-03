@@ -15,7 +15,7 @@
 #include "psa_crypto_driver_wrappers.h"
 
 
-/* HMAC-DRBG implementation based on NIST.SP.800-90Ar1 */
+/* HMAC_DRBG implementation based on NIST.SP.800-90Ar1 */
 
 
 #define ENTROPY_FACTOR       4  // fraction of entropy in entropy data

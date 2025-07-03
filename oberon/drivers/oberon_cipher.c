@@ -233,6 +233,7 @@ psa_status_t oberon_cipher_finish(
 {
     int res;
     *output_length = 0;
+    psa_status_t status = PSA_SUCCESS;
 
     switch (operation->alg) {
 #ifdef PSA_NEED_OBERON_CBC_PKCS7_AES
@@ -243,7 +244,7 @@ psa_status_t oberon_cipher_finish(
                 return PSA_ERROR_INVALID_ARGUMENT;
             }
             res = ocrypto_aes_cbc_pkcs_final_dec((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, output, output_length);
-            if (res) return PSA_ERROR_INVALID_PADDING;
+            status = res & PSA_ERROR_INVALID_PADDING; // constant-time
         } else {
             ocrypto_aes_cbc_pkcs_final_enc((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, output);
             *output_length = 16;
@@ -258,7 +259,7 @@ psa_status_t oberon_cipher_finish(
     case PSA_ALG_ECB_NO_PADDING:
 #endif /* PSA_NEED_OBERON_ECB_NO_PADDING_AES */
         if (ocrypto_aes_cbc_pkcs_output_size((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, 15) > 0) {
-            return PSA_ERROR_INVALID_ARGUMENT;
+            status = PSA_ERROR_INVALID_ARGUMENT;
         }
         break;
 #endif /* PSA_NEED_OBERON_CBC_NO_PADDING_AES || PSA_NEED_OBERON_ECB_NO_PADDING_AES */
@@ -270,7 +271,7 @@ psa_status_t oberon_cipher_finish(
     }
 
     memset(operation, 0, sizeof *operation);
-    return PSA_SUCCESS;
+    return status;
 }
 
 psa_status_t oberon_cipher_abort(

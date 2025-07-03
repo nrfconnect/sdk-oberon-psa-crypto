@@ -42,18 +42,18 @@ the _Mbed TLS_ README located in its `programs` directory:
 
 _Mbed TLS_ contains the SSL program examples and is required to run these samples
 on top of _Oberon PSA Crypto_. Download and unzip _Mbed TLS_ from the archive at
-<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.3.1> or clone_Mbed TLS_ and
-check out version 3.6.3.1 as follows:
+<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.4> or clone_Mbed TLS_ and
+check out version 3.6.4 as follows:
 
     cd path/to/new/folder
     git clone https://github.com/Mbed-TLS/mbedtls.git
-    git checkout v3.6.3.1
+    git checkout v3.6.4
 
 ### Build with CMake
 
-Provide the path to _ocrypto 3.9.1_ or later via _-DOCRYPTO_ROOT=path/to/ocrypto_.
+Provide the path to _ocrypto 3.9.2_ or later via _-DOCRYPTO_ROOT=path/to/ocrypto_.
 
-Provide the path to _Mbed TLS_ 3.6.3.1 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
+Provide the path to _Mbed TLS_ 3.6.4 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
 
 Build the source in a separate directory `build` from the command line:
 
@@ -101,7 +101,7 @@ Run _PSA_ and SSL tests from same `build` directory:
 
 In existing projects that use the TLS protocol implementation from _Mbed TLS_,
 the crypto implementation can be replaced with the one from _Oberon PSA Crypto_.
-The migration requires projects building on _Mbed TLS_ 3.6.3.1.
+The migration requires projects building on _Mbed TLS_ 3.6.4.
 
 Configuration options are still limited and there are still build dependencies
 to some of the _Mbed TLS_ crypto code files even though the code is not used;
@@ -138,10 +138,11 @@ steps:
 8. Add _ocrypto_ platform sources, e.g., for the `Generic` platform:
     * `ocrypto/src/platforms/Generic/ocrypto_*`
 9. Adapt _system crypto configuration_ (reuse of _Oberon PSA Crypto_
-   configuration recommended; make sure to define `PSA_USE_XXX` directives for
-   e.g. DRBG and entropy driver and key size specific `PSA_WANT_XXX` directives
-   for required crypto features)
+   configuration from `oberon/platforms/` directory recommended; make sure to 
+   define `PSA_USE_XXX` directives for e.g. DRBG and entropy driver and key 
+   size specific `PSA_WANT_XXX` directives for required crypto features)
     * `mbedtls/mbedtls_config.h`
     * `psa/crypto_config.h`
+    * `library/psa_crypto_driver_wrappers.c`
 
 Build and you now have a TLS project with _Oberon PSA Crypto_ inside!

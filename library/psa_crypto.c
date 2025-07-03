@@ -2874,7 +2874,8 @@ psa_status_t psa_cipher_finish(psa_cipher_operation_t *operation,
                                size_t output_size,
                                size_t *output_length)
 {
-    psa_status_t status = PSA_ERROR_GENERIC_ERROR;
+    psa_status_t abort_status, status = PSA_ERROR_GENERIC_ERROR;
+    int32_t mask;
 
     if (operation->id == 0) {
         status = PSA_ERROR_BAD_STATE;
@@ -2892,14 +2893,10 @@ psa_status_t psa_cipher_finish(psa_cipher_operation_t *operation,
                                               output_length);
 
 exit:
-    if (status == PSA_SUCCESS) {
-        return psa_cipher_abort(operation);
-    } else {
-        *output_length = 0;
-        (void) psa_cipher_abort(operation);
-
-        return status;
-    }
+    // constant-time error handling to avoid padding oracle attacks
+    mask = status >> 31; // SUCCESS: 0, error: -1
+    abort_status = psa_cipher_abort(operation);
+    return (status & mask) | (abort_status & ~mask);
 }
 
 psa_status_t psa_cipher_abort(psa_cipher_operation_t *operation)

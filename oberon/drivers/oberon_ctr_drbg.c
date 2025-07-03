@@ -15,7 +15,7 @@
 #include "psa_crypto_driver_wrappers.h"
 
 
-/* CTR-DRBG implementation based on NIST.SP.800-90Ar1 */
+/* CTR_DRBG implementation based on NIST.SP.800-90Ar1 */
 
 
 #define ENTROPY_FACTOR       1  // fraction of entropy in entropy data

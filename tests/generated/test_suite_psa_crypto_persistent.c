@@ -5,7 +5,7 @@
  * This file has been machine generated using the script:
  * generate_test_code.py
  *
- * Test file      : ./test_suite_psa_crypto.c
+ * Test file      : ./test_suite_psa_crypto.persistent.c
  *
  * The following files were used to create this file.
  *
@@ -13,7 +13,7 @@
  *      Platform code file  : tests/suites/host_test.function
  *      Helper file         : tests/suites/helpers.function
  *      Test suite file     : tests/suites/test_suite_psa_crypto.function
- *      Test suite data     : tests/suites/test_suite_psa_crypto.data
+ *      Test suite data     : tests/suites/test_suite_psa_crypto.persistent.data
  *
  */
 
@@ -329,9 +329,6 @@ static int exercise_mac_setup(psa_key_type_t key_type,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_SIGN_HASH);
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, key_type);
-#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
-    TEST_ASSUME(key_length <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
-#endif
     PSA_ASSERT(psa_import_key(&attributes, key_bytes, key_length, &key));
 
     *status = psa_mac_sign_setup(operation, key, alg);
@@ -787,9 +784,6 @@ static int mac_multipart_internal_func(int key_type_arg, data_t *key_data,
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, key_type);
 
-#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
-    TEST_ASSUME(key_data->len <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
-#endif
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
@@ -1459,7 +1453,7 @@ exit:
 }
 #endif /* PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE */
 
-//static int setup_key_production_parameters(  /* !!OM */
+//static int setup_key_production_parameters(
 //    psa_key_production_parameters_t **params, size_t *params_data_length,
 //    int flags_arg, const data_t *params_data)
 //{
@@ -1777,10 +1771,6 @@ static void test_import_with_data(data_t *data, int type_arg,
     psa_set_key_type(&attributes, type);
     psa_set_key_bits(&attributes, attr_bits);
 
-    if (PSA_KEY_TYPE_IS_RSA(type) && attr_bits != 1024 && attr_bits != 2048) {
-        /* !!OM-PCI-15 support of non-standard key sizes cannot be tested reliably */
-    } else {
-
     status = psa_import_key(&attributes, data->x, data->len, &key);
     /* When expecting INVALID_ARGUMENT, also accept NOT_SUPPORTED.
      *
@@ -1810,7 +1800,6 @@ static void test_import_with_data(data_t *data, int type_arg,
 
     PSA_ASSERT(psa_destroy_key(key));
     test_operations_on_invalid_key(key);
-    }
 
 exit:
     /*
@@ -1847,9 +1836,6 @@ static void test_import_large_key(int type_arg, int byte_size_arg,
 
     /* Skip the test case if the target running the test cannot
      * accommodate large keys due to heap size constraints */
-#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
-    TEST_ASSUME(buffer_size <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
-#endif
     TEST_CALLOC_OR_SKIP(buffer, buffer_size);
     memset(buffer, 'K', byte_size);
 
@@ -1924,10 +1910,6 @@ static void test_import_rsa_made_up(int bits_arg, int keypair, int expected_stat
                                               bits, keypair)) >= 0);
     length = ret;
 
-    if (PSA_KEY_TYPE_IS_RSA(type) && bits != 1024 && bits != 2048) {
-        /* !!OM-PCI-15 support of non-standard key sizes cannot be tested reliably */
-    } else {
-
     /* Try importing the key */
     psa_set_key_type(&attributes, type);
     status = psa_import_key(&attributes, p, length, &key);
@@ -1935,7 +1917,6 @@ static void test_import_rsa_made_up(int bits_arg, int keypair, int expected_stat
 
     if (status == PSA_SUCCESS) {
         PSA_ASSERT(psa_destroy_key(key));
-    }
     }
 
 exit:
@@ -2722,9 +2703,6 @@ static void test_asymmetric_encryption_key_policy(int policy_usage_arg,
                                                        exercise_alg);
     TEST_CALLOC(buffer, buffer_length);
 
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    if (key_bits >= 1024) {
-#endif
     status = psa_asymmetric_encrypt(key, exercise_alg,
                                     NULL, 0,
                                     NULL, 0,
@@ -2751,9 +2729,6 @@ static void test_asymmetric_encryption_key_policy(int policy_usage_arg,
     } else {
         TEST_EQUAL(status, PSA_ERROR_NOT_PERMITTED);
     }
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    }
-#endif
 
 exit:
     /*
@@ -2813,9 +2788,6 @@ static void test_asymmetric_signature_key_policy(int policy_usage_arg,
 
     TEST_EQUAL(psa_get_key_usage_flags(&attributes), expected_usage);
 
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    if (!PSA_KEY_TYPE_IS_RSA(key_type) || psa_get_key_bits(&attributes) >= 1024) {
-#endif
     status = psa_sign_hash(key, exercise_alg,
                            payload, payload_length,
                            signature, sizeof(signature),
@@ -2858,9 +2830,6 @@ static void test_asymmetric_signature_key_policy(int policy_usage_arg,
             TEST_EQUAL(status, PSA_ERROR_NOT_PERMITTED);
         }
     }
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    }
-#endif
 
 exit:
     psa_destroy_key(key);
@@ -4203,9 +4172,6 @@ static void test_mac_verify(int key_type_arg,
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, key_type);
 
-#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
-    TEST_ASSUME(key_data->len <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
-#endif
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
@@ -5827,8 +5793,7 @@ static void test_aead_multipart_encrypt(int key_type_arg, data_t *key_data,
         mbedtls_test_set_step(ad_part_len);
 
         if (do_set_lengths) {
-            if (ad_part_len & 0x01
-                && PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg_arg, 0) != PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0)) { /* !!OM-PCI-6 */ // spec say set_length must be before set_nonce
+            if (ad_part_len & 0x01) {
                 set_lengths_method = SET_LENGTHS_AFTER_NONCE;
             } else {
                 set_lengths_method = SET_LENGTHS_BEFORE_NONCE;
@@ -5867,8 +5832,7 @@ static void test_aead_multipart_encrypt(int key_type_arg, data_t *key_data,
         mbedtls_test_set_step(2000 + data_part_len);
 
         if (do_set_lengths) {
-            if (data_part_len & 0x01
-                && PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg_arg, 0) != PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0)) { /* !!OM-PCI-6 */ // spec say set_length must be before set_nonce
+            if (data_part_len & 0x01) {
                 set_lengths_method = SET_LENGTHS_AFTER_NONCE;
             } else {
                 set_lengths_method = SET_LENGTHS_BEFORE_NONCE;
@@ -5934,8 +5898,7 @@ static void test_aead_multipart_decrypt(int key_type_arg, data_t *key_data,
         mbedtls_test_set_step(ad_part_len);
 
         if (do_set_lengths) {
-            if (ad_part_len & 0x01
-                && PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg_arg, 0) != PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0)) { /* !!OM-PCI-6 */ // spec say set_length must be before set_nonce
+            if (ad_part_len & 0x01) {
                 set_lengths_method = SET_LENGTHS_AFTER_NONCE;
             } else {
                 set_lengths_method = SET_LENGTHS_BEFORE_NONCE;
@@ -5973,8 +5936,7 @@ static void test_aead_multipart_decrypt(int key_type_arg, data_t *key_data,
         mbedtls_test_set_step(2000 + data_part_len);
 
         if (do_set_lengths) {
-            if (data_part_len & 0x01
-                && PSA_ALG_AEAD_WITH_SHORTENED_TAG(alg_arg, 0) != PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 0)) { /* !!OM-PCI-6 */ // spec say set_length must be before set_nonce
+            if (data_part_len & 0x01) {
                 set_lengths_method = SET_LENGTHS_AFTER_NONCE;
             } else {
                 set_lengths_method = SET_LENGTHS_BEFORE_NONCE;
@@ -6085,9 +6047,6 @@ static void test_aead_multipart_generate_nonce(int key_type_arg, data_t *key_dat
 
     PSA_ASSERT(status);
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be called before set_nonce
-                                    input_data->len));
-
     status = psa_aead_generate_nonce(&operation, nonce_buffer,
                                      nonce_length,
                                      &actual_nonce_length);
@@ -6105,8 +6064,8 @@ static void test_aead_multipart_generate_nonce(int key_type_arg, data_t *key_dat
 
     if (expected_status == PSA_SUCCESS) {
         /* Ensure we can still complete operation. */
-        // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */
-        //                                 input_data->len));
+        PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                        input_data->len));
 
         PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
                                       additional_data->len));
@@ -6415,13 +6374,10 @@ static void test_aead_multipart_finish_buffer_test(int key_type_arg, data_t *key
 
     PSA_ASSERT(status);
 
-PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set lengths must be called before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
                                   additional_data->len));
@@ -6520,14 +6476,11 @@ static void test_aead_multipart_verify(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(status);
 
-PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // status = psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */
-    //                               input_data->len);
-    // PSA_ASSERT(status);
+    status = psa_aead_set_lengths(&operation, additional_data->len,
+                                  input_data->len);
+    PSA_ASSERT(status);
 
     PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
                                   additional_data->len));
@@ -6909,19 +6862,15 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    if (operation.alg == PSA_ALG_CCM) {
-        // PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-        //                                    PSA_AEAD_NONCE_MAX_SIZE,
-        //                                    &nonce_length));
+    PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
+                                       PSA_AEAD_NONCE_MAX_SIZE,
+                                       &nonce_length));
 
+    if (operation.alg == PSA_ALG_CCM) {
         TEST_EQUAL(psa_aead_set_lengths(&operation, UINT32_MAX,
                                         input_data->len),
                    PSA_ERROR_INVALID_ARGUMENT);
     } else {
-        PSA_ASSERT(psa_aead_generate_nonce(&operation, nonce_buffer,
-                                           PSA_AEAD_NONCE_MAX_SIZE,
-                                           &nonce_length));
-
         PSA_ASSERT(psa_aead_set_lengths(&operation, UINT32_MAX,
                                         input_data->len));
     }
@@ -6981,15 +6930,13 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    if (operation.alg == PSA_ALG_CCM) {
-        // PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len)); /* !!OM-PCI-6 */ // set_length must be before set_nonce
+    PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
+    if (operation.alg == PSA_ALG_CCM) {
         TEST_EQUAL(psa_aead_set_lengths(&operation, UINT32_MAX,
                                         input_data->len),
                    PSA_ERROR_INVALID_ARGUMENT);
     } else {
-        PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
-
         PSA_ASSERT(psa_aead_set_lengths(&operation, UINT32_MAX,
                                         input_data->len));
     }
@@ -7061,7 +7008,7 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    // PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len)); /* !!OM-PCI-6 */ // set_length must be before set_nonce
+    PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
     PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
                                     input_data->len));
@@ -7218,13 +7165,10 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     TEST_EQUAL(psa_aead_finish(&operation, final_data,
                                finish_output_size,
@@ -7240,13 +7184,10 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_decrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     TEST_EQUAL(psa_aead_verify(&operation, final_data,
                                finish_output_size,
@@ -7262,13 +7203,10 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     TEST_EQUAL(psa_aead_update(&operation, input_data->x,
                                input_data->len, output_data,
@@ -7281,13 +7219,10 @@ static void test_aead_multipart_state_test(int key_type_arg, data_t *key_data,
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
                                   additional_data->len));
@@ -7305,11 +7240,9 @@ PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, 0, 0)); /* !!OM-PCI-6 */ // set_length must be before set_nonce
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, 0, 0));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, 0, 0));
 
 
     TEST_EQUAL(psa_aead_update_ad(&operation, additional_data->x,
@@ -7322,13 +7255,10 @@ PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
                                   additional_data->len));
@@ -7343,11 +7273,9 @@ PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, 0, 0)); /* !!OM-PCI-6 */ // set_length must be before set_nonce
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, 0, 0));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, 0, 0));
 
     TEST_EQUAL(psa_aead_update(&operation, input_data->x,
                                input_data->len, output_data,
@@ -7360,13 +7288,10 @@ PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 
 
     PSA_ASSERT(psa_aead_encrypt_setup(&operation, key, alg));
 
-    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len, /* !!OM-PCI-6 */ // set_length must be before set_nonce
-                                    input_data->len));
-
     PSA_ASSERT(psa_aead_set_nonce(&operation, nonce->x, nonce->len));
 
-    // PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
-    //                                 input_data->len));
+    PSA_ASSERT(psa_aead_set_lengths(&operation, additional_data->len,
+                                    input_data->len));
 
     PSA_ASSERT(psa_aead_update_ad(&operation, additional_data->x,
                                   additional_data->len));
@@ -8152,15 +8077,9 @@ static void test_verify_hash(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    if (!PSA_KEY_TYPE_IS_RSA(key_type) || psa_get_key_bits(&attributes) >= 1024) {
-#endif
     PSA_ASSERT(psa_verify_hash(key, alg,
                                hash_data->x, hash_data->len,
                                signature_data->x, signature_data->len));
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    }
-#endif
 
 exit:
     psa_reset_key_attributes(&attributes);
@@ -8339,16 +8258,10 @@ static void test_verify_hash_fail(int key_type_arg, data_t *key_data,
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    if (!PSA_KEY_TYPE_IS_RSA(key_type) || psa_get_key_bits(&attributes) >= 1024) {
-#endif
     actual_status = psa_verify_hash(key, alg,
                                     hash_data->x, hash_data->len,
                                     signature_data->x, signature_data->len);
     TEST_EQUAL(actual_status, expected_status);
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    }
-#endif
 
 exit:
     psa_reset_key_attributes(&attributes);
@@ -9400,9 +9313,6 @@ static void test_asymmetric_encrypt_decrypt(int key_type_arg,
     TEST_LE_U(output2_size, PSA_ASYMMETRIC_DECRYPT_OUTPUT_MAX_SIZE);
     TEST_CALLOC(output2, output2_size);
 
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    if (key_bits >= 1024) {
-#endif
     /* We test encryption by checking that encrypt-then-decrypt gives back
      * the original plaintext because of the non-optional random
      * part of encryption process which prevents using fixed vectors. */
@@ -9422,9 +9332,6 @@ static void test_asymmetric_encrypt_decrypt(int key_type_arg,
                                       &output2_length));
     TEST_MEMORY_COMPARE(input_data->x, input_data->len,
                         output2, output2_length);
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    }
-#endif
 
 exit:
     /*
@@ -9481,9 +9388,6 @@ static void test_asymmetric_decrypt(int key_type_arg,
     TEST_LE_U(output_size, PSA_ASYMMETRIC_DECRYPT_OUTPUT_MAX_SIZE);
     TEST_CALLOC(output, output_size);
 
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    if (key_bits >= 1024) {
-#endif
     PSA_ASSERT(psa_asymmetric_decrypt(key, alg,
                                       input_data->x, input_data->len,
                                       label->x, label->len,
@@ -9509,9 +9413,6 @@ static void test_asymmetric_decrypt(int key_type_arg,
         TEST_MEMORY_COMPARE(expected_data->x, expected_data->len,
                             output, output_length);
     }
-#ifdef MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY  /* !!OM-PCI-10 */
-    }
-#endif
 
 exit:
     psa_reset_key_attributes(&attributes);
@@ -10539,7 +10440,7 @@ static void test_derive_key_type_wrapper( void ** params )
     test_derive_key_type( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, &data9 );
 }
 #line 9597 "tests/suites/test_suite_psa_crypto.function"
-//static void test_derive_key_custom(int alg_arg,  /* !!OM */
+//static void test_derive_key_custom(int alg_arg,
 //                       data_t *key_data,
 //                       data_t *input1,
 //                       data_t *input2,
@@ -10556,7 +10457,7 @@ static void test_derive_key_type_wrapper( void ** params )
 //    const size_t bits = bits_arg;
 //    psa_custom_key_parameters_t custom = PSA_CUSTOM_KEY_PARAMETERS_INIT;
 //    custom.flags = flags_arg;
-//    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+//    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
 //    const size_t export_buffer_size =
 //        PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, bits);
 //    uint8_t *export_buffer = NULL;
@@ -10620,7 +10521,7 @@ static void test_derive_key_custom_wrapper( void ** params )
     //test_derive_key_custom( ((mbedtls_test_argument_t *) params[0])->sint, &data1, &data3, &data5, ((mbedtls_test_argument_t *) params[7])->sint, ((mbedtls_test_argument_t *) params[8])->sint, ((mbedtls_test_argument_t *) params[9])->sint, &data10, ((mbedtls_test_argument_t *) params[12])->sint, &data13 );
 }
 #line 9668 "tests/suites/test_suite_psa_crypto.function"
-//static void test_derive_key_ext(int alg_arg,  /* !!OM */
+//static void test_derive_key_ext(int alg_arg,
 //                    data_t *key_data,
 //                    data_t *input1,
 //                    data_t *input2,
@@ -10637,7 +10538,7 @@ static void test_derive_key_custom_wrapper( void ** params )
 //    const size_t bits = bits_arg;
 //    psa_key_production_parameters_t *params = NULL;
 //    size_t params_data_length = 0;
-//    psa_key_derivation_operation_t operation = PSA_KEY_DERIVATION_OPERATION_INIT;
+//    psa_key_derivation_operation_t operation = psa_key_derivation_operation_init_short();
 //    const size_t export_buffer_size =
 //        PSA_EXPORT_KEY_OUTPUT_SIZE(key_type, bits);
 //    uint8_t *export_buffer = NULL;
@@ -10748,9 +10649,7 @@ static void test_derive_key(int alg_arg,
     if (is_large_output > 0) {
         TEST_ASSUME(status != PSA_ERROR_INSUFFICIENT_MEMORY);
     }
-if (expected_status != PSA_ERROR_INVALID_ARGUMENT || status != PSA_ERROR_NOT_SUPPORTED) { /* !!OM-PCI-13 */
     TEST_EQUAL(status, expected_status);
-}
 
 exit:
     psa_key_derivation_abort(&operation);
@@ -10832,9 +10731,6 @@ static void test_raw_key_agreement(int alg_arg,
     unsigned char *output = NULL;
     size_t output_length = ~0;
     size_t key_bits;
-    mbedtls_svc_key_id_t shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_key_attributes_t shared_secret_attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_key_attributes_t output_attributes;
 
     PSA_ASSERT(psa_crypto_init());
 
@@ -10862,33 +10758,9 @@ static void test_raw_key_agreement(int alg_arg,
                                      &output_length));
     TEST_MEMORY_COMPARE(output, output_length,
                         expected_output->x, expected_output->len);
-    memset(output, 0, expected_output->len);
-    output_length = 0;
-
-    psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
-    psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
-
-    PSA_ASSERT(psa_key_agreement(our_key, peer_key_data->x, peer_key_data->len,
-        alg, &shared_secret_attributes, &shared_secret_id));
-
-    PSA_ASSERT(psa_export_key(shared_secret_id, output, expected_output->len, &output_length));
-
-    TEST_MEMORY_COMPARE(output, output_length,
-                        expected_output->x, expected_output->len);
-
-    PSA_ASSERT(psa_get_key_attributes(shared_secret_id, &output_attributes));
-
-    TEST_EQUAL(PSA_BITS_TO_BYTES(psa_get_key_bits(&output_attributes)),
-        expected_output->len);
-    TEST_EQUAL(psa_get_key_type(&output_attributes), PSA_KEY_TYPE_DERIVE);
-    TEST_EQUAL(psa_get_key_usage_flags(&output_attributes),
-        PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
-
     mbedtls_free(output);
     output = NULL;
     output_length = ~0;
-    psa_destroy_key(shared_secret_id);
-    shared_secret_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     /* Larger buffer */
     TEST_CALLOC(output, expected_output->len + 1);
@@ -10994,7 +10866,7 @@ static void test_key_agreement_capacity_wrapper( void ** params )
 }
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #line 9976 "tests/suites/test_suite_psa_crypto.function"
-//static void test_ecc_conversion_functions(int grp_id_arg, int psa_family_arg, int bits_arg)  /* !!OM */
+//static void test_ecc_conversion_functions(int grp_id_arg, int psa_family_arg, int bits_arg)
 //{
 //    mbedtls_ecp_group_id grp_id = grp_id_arg;
 //    psa_ecc_family_t ecc_family = psa_family_arg;
@@ -11010,13 +10882,14 @@ static void test_key_agreement_capacity_wrapper( void ** params )
 
 static void test_ecc_conversion_functions_wrapper( void ** params )
 {
-    (void)params;  /* !!OM */
+    (void)params;
+
     //test_ecc_conversion_functions( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint );
 }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #line 9990 "tests/suites/test_suite_psa_crypto.function"
-//static void test_ecc_conversion_functions_fail(void)  /* !!OM */
+//static void test_ecc_conversion_functions_fail(void)
 //{
 //    size_t bits;
 //
@@ -11044,7 +10917,7 @@ static void test_ecc_conversion_functions_fail_wrapper( void ** params )
 {
     (void)params;
 
-    //test_ecc_conversion_functions_fail(  );  /* !!OM */
+    //test_ecc_conversion_functions_fail(  );
 }
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 #line 10015 "tests/suites/test_suite_psa_crypto.function"
@@ -11281,7 +11154,7 @@ static void test_generate_key_wrapper( void ** params )
     test_generate_key( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, ((mbedtls_test_argument_t *) params[5])->sint );
 }
 #line 10229 "tests/suites/test_suite_psa_crypto.function"
-//static void test_generate_key_custom(int type_arg,  /* !!OM */
+//static void test_generate_key_custom(int type_arg,
 //                         int bits_arg,
 //                         int usage_arg,
 //                         int alg_arg,
@@ -11352,7 +11225,7 @@ static void test_generate_key_custom_wrapper( void ** params )
     //test_generate_key_custom( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint );
 }
 #line 10294 "tests/suites/test_suite_psa_crypto.function"
-//static void test_generate_key_ext(int type_arg,  /* !!OM */
+//static void test_generate_key_ext(int type_arg,
 //                      int bits_arg,
 //                      int usage_arg,
 //                      int alg_arg,
@@ -11428,7 +11301,7 @@ static void test_generate_key_ext_wrapper( void ** params )
     //test_generate_key_ext( ((mbedtls_test_argument_t *) params[0])->sint, ((mbedtls_test_argument_t *) params[1])->sint, ((mbedtls_test_argument_t *) params[2])->sint, ((mbedtls_test_argument_t *) params[3])->sint, ((mbedtls_test_argument_t *) params[4])->sint, &data5, ((mbedtls_test_argument_t *) params[7])->sint );
 }
 #line 10364 "tests/suites/test_suite_psa_crypto.function"
-//static void test_key_production_parameters_init(void)  /* !!OM */
+//static void test_key_production_parameters_init(void)
 //{
 //    psa_key_production_parameters_t init = PSA_KEY_PRODUCTION_PARAMETERS_INIT;
 //    psa_key_production_parameters_t zero;
@@ -11444,7 +11317,7 @@ static void test_key_production_parameters_init_wrapper( void ** params )
 {
     (void)params;
 
-    //test_key_production_parameters_init(  );  /* !!OM */
+    //test_key_production_parameters_init(  );
 }
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
 #line 10376 "tests/suites/test_suite_psa_crypto.function"
@@ -11669,7 +11542,7 @@ static void test_ecjpake_setup(int alg_arg, int key_type_pw_arg, int key_usage_p
 
         if (inj_err_type == INJECT_ERR_DUPLICATE_SETUP) {
             TEST_EQUAL(psa_pake_setup(&operation, key, &cipher_suite),
-                       expected_error);
+                expected_error);
             goto exit;
         }
 
@@ -11881,7 +11754,7 @@ static psa_status_t psa_pake_get_implicit_key(  // !!OM
     psa_set_key_type(&attributes, PSA_KEY_TYPE_DERIVE);
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, output->alg);
-    
+
     status = psa_pake_get_shared_key(operation, &attributes, &key);
     if (status == PSA_SUCCESS) {
         status = psa_key_derivation_input_key(output, PSA_KEY_DERIVATION_INPUT_SECRET, key);
@@ -12089,17 +11962,17 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 2:
             {
-                *out_value = PSA_SUCCESS;
+                *out_value = IMPORT_KEY;
             }
             break;
         case 3:
             {
-                *out_value = PSA_ERROR_BUFFER_TOO_SMALL;
+                *out_value = PSA_KEY_TYPE_AES;
             }
             break;
         case 4:
             {
-                *out_value = PSA_KEY_TYPE_AES;
+                *out_value = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_EXPORT;
             }
             break;
         case 5:
@@ -12109,1647 +11982,67 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 6:
             {
-                *out_value = PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( PSA_KEY_PERSISTENCE_VOLATILE, TEST_DRIVER_LOCATION );
+                *out_value = PSA_KEY_USAGE_ENCRYPT;
             }
             break;
         case 7:
             {
-                *out_value = PSA_ERROR_INVALID_ARGUMENT;
+                *out_value = GENERATE_KEY;
             }
             break;
         case 8:
             {
-                *out_value = PSA_KEY_TYPE_RSA_PUBLIC_KEY;
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
             }
             break;
         case 9:
             {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN_RAW;
+                *out_value = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
             }
             break;
         case 10:
             {
-                *out_value = PSA_KEY_TYPE_RSA_KEY_PAIR;
+                *out_value = PSA_KEY_TYPE_DES;
             }
             break;
         case 11:
             {
-                *out_value = PSA_ERROR_NOT_SUPPORTED;
+                *out_value = PSA_ALG_CBC_NO_PADDING;
             }
             break;
         case 12:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+                *out_value = PSA_KEY_TYPE_RSA_KEY_PAIR;
             }
             break;
         case 13:
             {
-                *out_value = PSA_ALG_ECDSA_ANY;
+                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS;
             }
             break;
         case 14:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
+                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH;
             }
             break;
         case 15:
             {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_MONTGOMERY);
+                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_256);
             }
             break;
         case 16:
             {
-                *out_value = PSA_ALG_ECDH;
+                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
             }
             break;
         case 17:
             {
-                *out_value = PSA_ALG_CBC_NO_PADDING;
+                *out_value = PSA_ALG_ECDSA_ANY;
             }
             break;
         case 18:
             {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1);
-            }
-            break;
-        case 19:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_BRAINPOOL_P_R1);
-            }
-            break;
-        case 20:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_MONTGOMERY);
-            }
-            break;
-        case 21:
-            {
-                *out_value = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
-            }
-            break;
-        case 22:
-            {
-                *out_value = PSA_ERROR_NOT_PERMITTED;
-            }
-            break;
-        case 23:
-            {
-                *out_value = PSA_KEY_TYPE_HMAC;
-            }
-            break;
-        case 24:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH;
-            }
-            break;
-        case 25:
-            {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_256);
-            }
-            break;
-        case 26:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_CRYPT;
-            }
-            break;
-        case 27:
-            {
-                *out_value = PSA_KEY_TYPE_DH_KEY_PAIR(PSA_DH_FAMILY_RFC7919);
-            }
-            break;
-        case 28:
-            {
-                *out_value = PSA_ALG_FFDH;
-            }
-            break;
-        case 29:
-            {
-                *out_value = PSA_KEY_TYPE_DH_PUBLIC_KEY(PSA_DH_FAMILY_RFC7919);
-            }
-            break;
-        case 30:
-            {
-                *out_value = PSA_VENDOR_RSA_MAX_KEY_BITS+8;
-            }
-            break;
-        case 31:
-            {
-                *out_value = PSA_KEY_USAGE_ENCRYPT;
-            }
-            break;
-        case 32:
-            {
-                *out_value = PSA_ALG_ECB_NO_PADDING;
-            }
-            break;
-        case 33:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR( PSA_ECC_FAMILY_SECP_R1 );
-            }
-            break;
-        case 34:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH;
-            }
-            break;
-        case 35:
-            {
-                *out_value = PSA_KEY_USAGE_VERIFY_HASH;
-            }
-            break;
-        case 36:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 37:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_MESSAGE;
-            }
-            break;
-        case 38:
-            {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
-            }
-            break;
-        case 39:
-            {
-                *out_value = PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 40:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 41:
-            {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_224);
-            }
-            break;
-        case 42:
-            {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 43:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 20);
-            }
-            break;
-        case 44:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 30);
-            }
-            break;
-        case 45:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 20);
-            }
-            break;
-        case 46:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 10);
-            }
-            break;
-        case 47:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_CMAC, 10);
-            }
-            break;
-        case 48:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 16);
-            }
-            break;
-        case 49:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 10);
-            }
-            break;
-        case 50:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 8);
-            }
-            break;
-        case 51:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 31);
-            }
-            break;
-        case 52:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 32);
-            }
-            break;
-        case 53:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 33);
-            }
-            break;
-        case 54:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 20);
-            }
-            break;
-        case 55:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 20);
-            }
-            break;
-        case 56:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 10);
-            }
-            break;
-        case 57:
-            {
-                *out_value = PSA_ALG_CMAC;
-            }
-            break;
-        case 58:
-            {
-                *out_value = PSA_KEY_USAGE_DECRYPT;
-            }
-            break;
-        case 59:
-            {
-                *out_value = PSA_ALG_CCM;
-            }
-            break;
-        case 60:
-            {
-                *out_value = PSA_ALG_GCM;
-            }
-            break;
-        case 61:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 4);
-            }
-            break;
-        case 62:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 8);
-            }
-            break;
-        case 63:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 4);
-            }
-            break;
-        case 64:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 8);
-            }
-            break;
-        case 65:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_GCM, 4);
-            }
-            break;
-        case 66:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 8);
-            }
-            break;
-        case 67:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, 4);
-            }
-            break;
-        case 68:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_GCM, 8);
-            }
-            break;
-        case 69:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 16);
-            }
-            break;
-        case 70:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(PSA_ALG_CCM, 17);
-            }
-            break;
-        case 71:
-            {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_256);
-            }
-            break;
-        case 72:
-            {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_224);
-            }
-            break;
-        case 73:
-            {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 74:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_256);
-            }
-            break;
-        case 75:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE;
-            }
-            break;
-        case 76:
-            {
-                *out_value = PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 77:
-            {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_256);
-            }
-            break;
-        case 78:
-            {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_256);
-            }
-            break;
-        case 79:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 80:
-            {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 81:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_384);
-            }
-            break;
-        case 82:
-            {
-                *out_value = PSA_KEY_USAGE_DERIVE;
-            }
-            break;
-        case 83:
-            {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_256);
-            }
-            break;
-        case 84:
-            {
-                *out_value = PSA_KEY_TYPE_DERIVE;
-            }
-            break;
-        case 85:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256);
-            }
-            break;
-        case 86:
-            {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_224);
-            }
-            break;
-        case 87:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
-            }
-            break;
-        case 88:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_224));
-            }
-            break;
-        case 89:
-            {
-                *out_value = PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH;
-            }
-            break;
-        case 90:
-            {
-                *out_value = PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 91:
-            {
-                *out_value = PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 92:
-            {
-                *out_value = PSA_KEY_USAGE_COPY;
-            }
-            break;
-        case 93:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 94:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_ENCRYPT;
-            }
-            break;
-        case 95:
-            {
-                *out_value = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 96:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
-            }
-            break;
-        case 97:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 98:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 99:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 100:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 101:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE;
-            }
-            break;
-        case 102:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 103:
-            {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 104:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE;
-            }
-            break;
-        case 105:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 106:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_DERIVE;
-            }
-            break;
-        case 107:
-            {
-                *out_value = PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 108:
-            {
-                *out_value = PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_DERIVE;
-            }
-            break;
-        case 109:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_DERIVE;
-            }
-            break;
-        case 110:
-            {
-                *out_value = PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 111:
-            {
-                *out_value = PSA_KEY_LIFETIME_VOLATILE;
-            }
-            break;
-        case 112:
-            {
-                *out_value = PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 113:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 114:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 115:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 116:
-            {
-                *out_value = PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_HASH | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 117:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 24);
-            }
-            break;
-        case 118:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 16);
-            }
-            break;
-        case 119:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 24);
-            }
-            break;
-        case 120:
-            {
-                *out_value = PSA_ALG_AT_LEAST_THIS_LENGTH_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_256), 16);
-            }
-            break;
-        case 121:
-            {
-                *out_value = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 122:
-            {
-                *out_value = PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_EXPORT;
-            }
-            break;
-        case 123:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, 12);
-            }
-            break;
-        case 124:
-            {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_ANY_HASH);
-            }
-            break;
-        case 125:
-            {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_224);
-            }
-            break;
-        case 126:
-            {
-                *out_value = PSA_KEY_LIFETIME_PERSISTENT;
-            }
-            break;
-        case 127:
-            {
-                *out_value = PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( PSA_KEY_PERSISTENCE_READ_ONLY, 0 );
-            }
-            break;
-        case 128:
-            {
-                *out_value = PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_PERSISTENCE_VOLATILE, TEST_DRIVER_LOCATION);
-            }
-            break;
-        case 129:
-            {
-                *out_value = PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_PERSISTENCE_VOLATILE, 0);
-            }
-            break;
-        case 130:
-            {
-                *out_value = PSA_ALG_SHA_1;
-            }
-            break;
-        case 131:
-            {
-                *out_value = PSA_ALG_SHA_224;
-            }
-            break;
-        case 132:
-            {
-                *out_value = PSA_ALG_SHA_256;
-            }
-            break;
-        case 133:
-            {
-                *out_value = PSA_ALG_SHA_384;
-            }
-            break;
-        case 134:
-            {
-                *out_value = PSA_ALG_SHA_512;
-            }
-            break;
-        case 135:
-            {
-                *out_value = PSA_ALG_MD5;
-            }
-            break;
-        case 136:
-            {
-                *out_value = PSA_ALG_RIPEMD160;
-            }
-            break;
-        case 137:
-            {
-                *out_value = PSA_ALG_CATEGORY_HASH;
-            }
-            break;
-        case 138:
-            {
-                *out_value = PSA_ALG_ANY_HASH;
-            }
-            break;
-        case 139:
-            {
-                *out_value = PSA_ERROR_INVALID_SIGNATURE;
-            }
-            break;
-        case 140:
-            {
-                *out_value = PSA_ALG_HMAC(0);
-            }
-            break;
-        case 141:
-            {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_MD5);
-            }
-            break;
-        case 142:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC( PSA_ALG_HMAC( PSA_ALG_SHA_256 ), 1 );
-            }
-            break;
-        case 143:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC( PSA_ALG_HMAC( PSA_ALG_SHA_256 ), 33 );
-            }
-            break;
-        case 144:
-            {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_384);
-            }
-            break;
-        case 145:
-            {
-                *out_value = PSA_ALG_HMAC(PSA_ALG_SHA_512);
-            }
-            break;
-        case 146:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 28);
-            }
-            break;
-        case 147:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_512), 64);
-            }
-            break;
-        case 148:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 27);
-            }
-            break;
-        case 149:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_512), 63);
-            }
-            break;
-        case 150:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_224), 4);
-            }
-            break;
-        case 151:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_HMAC(PSA_ALG_SHA_512), 4);
-            }
-            break;
-        case 152:
-            {
-                *out_value = PSA_KEY_TYPE_DES;
-            }
-            break;
-        case 153:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 15);
-            }
-            break;
-        case 154:
-            {
-                *out_value = PSA_ALG_TRUNCATED_MAC(PSA_ALG_CMAC, 4);
-            }
-            break;
-        case 155:
-            {
-                *out_value = PSA_ALG_CATEGORY_CIPHER;
-            }
-            break;
-        case 156:
-            {
-                *out_value = PSA_KEY_TYPE_CHACHA20;
-            }
-            break;
-        case 157:
-            {
-                *out_value = PSA_ERROR_BAD_STATE;
-            }
-            break;
-        case 158:
-            {
-                *out_value = PSA_ALG_CBC_PKCS7;
-            }
-            break;
-        case 159:
-            {
-                *out_value = PSA_ALG_CCM_STAR_NO_TAG;
-            }
-            break;
-        case 160:
-            {
-                *out_value = PSA_ALG_STREAM_CIPHER;
-            }
-            break;
-        case 161:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 4 );
-            }
-            break;
-        case 162:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 6 );
-            }
-            break;
-        case 163:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 8 );
-            }
-            break;
-        case 164:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 10 );
-            }
-            break;
-        case 165:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 12 );
-            }
-            break;
-        case 166:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 14 );
-            }
-            break;
-        case 167:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 16 );
-            }
-            break;
-        case 168:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 0 );
-            }
-            break;
-        case 169:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 2 );
-            }
-            break;
-        case 170:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 15 );
-            }
-            break;
-        case 171:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, 18 );
-            }
-            break;
-        case 172:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 4 );
-            }
-            break;
-        case 173:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 15 );
-            }
-            break;
-        case 174:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 16 );
-            }
-            break;
-        case 175:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 8 );
-            }
-            break;
-        case 176:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 14 );
-            }
-            break;
-        case 177:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 13 );
-            }
-            break;
-        case 178:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 12 );
-            }
-            break;
-        case 179:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 0 );
-            }
-            break;
-        case 180:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 2 );
-            }
-            break;
-        case 181:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, 18 );
-            }
-            break;
-        case 182:
-            {
-                *out_value = PSA_ALG_CHACHA20_POLY1305;
-            }
-            break;
-        case 183:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,4);
-            }
-            break;
-        case 184:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,6);
-            }
-            break;
-        case 185:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,8);
-            }
-            break;
-        case 186:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,10);
-            }
-            break;
-        case 187:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,12);
-            }
-            break;
-        case 188:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,14);
-            }
-            break;
-        case 189:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,16);
-            }
-            break;
-        case 190:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,4);
-            }
-            break;
-        case 191:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,15);
-            }
-            break;
-        case 192:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,0);
-            }
-            break;
-        case 193:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,2);
-            }
-            break;
-        case 194:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,3);
-            }
-            break;
-        case 195:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,15);
-            }
-            break;
-        case 196:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,17);
-            }
-            break;
-        case 197:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,0);
-            }
-            break;
-        case 198:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,2);
-            }
-            break;
-        case 199:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,3);
-            }
-            break;
-        case 200:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,11);
-            }
-            break;
-        case 201:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,17);
-            }
-            break;
-        case 202:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305,0);
-            }
-            break;
-        case 203:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305,15);
-            }
-            break;
-        case 204:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305,17);
-            }
-            break;
-        case 205:
-            {
-                *out_value = SET_LENGTHS_AFTER_NONCE;
-            }
-            break;
-        case 206:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,12);
-            }
-            break;
-        case 207:
-            {
-                *out_value = SET_LENGTHS_BEFORE_NONCE;
-            }
-            break;
-        case 208:
-            {
-                *out_value = DO_NOT_SET_LENGTHS;
-            }
-            break;
-        case 209:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305,12);
-            }
-            break;
-        case 210:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,5);
-            }
-            break;
-        case 211:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,7);
-            }
-            break;
-        case 212:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,9);
-            }
-            break;
-        case 213:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,11);
-            }
-            break;
-        case 214:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM,13);
-            }
-            break;
-        case 215:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,5);
-            }
-            break;
-        case 216:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,7);
-            }
-            break;
-        case 217:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,9);
-            }
-            break;
-        case 218:
-            {
-                *out_value = PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM,10);
-            }
-            break;
-        case 219:
-            {
-                *out_value = PSA_ALG_RSA_PSS( PSA_ALG_SHA_256 );
-            }
-            break;
-        case 220:
-            {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT( PSA_ALG_SHA_256 );
-            }
-            break;
-        case 221:
-            {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA( PSA_ALG_SHA_256 );
-            }
-            break;
-        case 222:
-            {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA( PSA_ALG_SHA_384 );
-            }
-            break;
-        case 223:
-            {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_256);
-            }
-            break;
-        case 224:
-            {
-                *out_value = PSA_INTERRUPTIBLE_MAX_OPS_UNLIMITED;
-            }
-            break;
-        case 225:
-            {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_384);
-            }
-            break;
-        case 226:
-            {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA( 0 );
-            }
-            break;
-        case 227:
-            {
-                *out_value = PSA_ALG_DETERMINISTIC_ECDSA( PSA_ALG_ANY_HASH );
-            }
-            break;
-        case 228:
-            {
-                *out_value = PSA_ALG_ECDSA( PSA_ALG_SHA_256 );
-            }
-            break;
-        case 229:
-            {
-                *out_value = PSA_ALG_ECDSA( PSA_ALG_SHA_384 );
-            }
-            break;
-        case 230:
-            {
-                *out_value = PSA_ALG_ECDSA(PSA_ALG_SHA_384);
-            }
-            break;
-        case 231:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(PSA_ALG_SHA_1);
-            }
-            break;
-        case 232:
-            {
-                *out_value = PSA_ALG_RSA_PSS(PSA_ALG_SHA_512);
-            }
-            break;
-        case 233:
-            {
-                *out_value = PSA_ALG_RSA_PSS_ANY_SALT(PSA_ALG_SHA_512);
-            }
-            break;
-        case 234:
-            {
-                *out_value = PSA_ALG_RSA_PKCS1V15_SIGN(0);
-            }
-            break;
-        case 235:
-            {
-                *out_value = PSA_ALG_ECDSA(0);
-            }
-            break;
-        case 236:
-            {
-                *out_value = PSA_ALG_RSA_OAEP(PSA_ALG_SHA_384);
-            }
-            break;
-        case 237:
-            {
-                *out_value = PSA_ERROR_INVALID_PADDING;
-            }
-            break;
-        case 238:
-            {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_512);
-            }
-            break;
-        case 239:
-            {
-                *out_value = PSA_ALG_TLS12_ECJPAKE_TO_PMS;
-            }
-            break;
-        case 240:
-            {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_CATEGORY_HASH);
-            }
-            break;
-        case 241:
-            {
-                *out_value = PSA_ALG_CATEGORY_KEY_DERIVATION;
-            }
-            break;
-        case 242:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_SALT;
-            }
-            break;
-        case 243:
-            {
-                *out_value = PSA_KEY_TYPE_NONE;
-            }
-            break;
-        case 244:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_SECRET;
-            }
-            break;
-        case 245:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_INFO;
-            }
-            break;
-        case 246:
-            {
-                *out_value = UNUSED;
-            }
-            break;
-        case 247:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_LABEL;
-            }
-            break;
-        case 248:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_SEED;
-            }
-            break;
-        case 249:
-            {
-                *out_value = INPUT_INTEGER;
-            }
-            break;
-        case 250:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_COST;
-            }
-            break;
-        case 251:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PRF(PSA_ALG_SHA_256));
-            }
-            break;
-        case 252:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256);
-            }
-            break;
-        case 253:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256);
-            }
-            break;
-        case 254:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_PASSWORD;
-            }
-            break;
-        case 255:
-            {
-                *out_value = PSA_KEY_TYPE_PASSWORD;
-            }
-            break;
-        case 256:
-            {
-                *out_value = PSA_VENDOR_PBKDF2_MAX_ITERATIONS+1ULL;
-            }
-            break;
-        case 257:
-            {
-                *out_value = PSA_ALG_PBKDF2_AES_CMAC_PRF_128;
-            }
-            break;
-        case 258:
-            {
-                *out_value = PSA_ALG_NONE;
-            }
-            break;
-        case 259:
-            {
-                *out_value = PSA_ALG_HKDF(PSA_ALG_SHA_1);
-            }
-            break;
-        case 260:
-            {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_256);
-            }
-            break;
-        case 261:
-            {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_1);
-            }
-            break;
-        case 262:
-            {
-                *out_value = PSA_KEY_DERIVATION_INPUT_OTHER_SECRET;
-            }
-            break;
-        case 263:
-            {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_256);
-            }
-            break;
-        case 264:
-            {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_1);
-            }
-            break;
-        case 265:
-            {
-                *out_value = PSA_ALG_TLS12_PRF(PSA_ALG_SHA_384);
-            }
-            break;
-        case 266:
-            {
-                *out_value = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_384);
-            }
-            break;
-        case 267:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256)) ;
-            }
-            break;
-        case 268:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
-            }
-            break;
-        case 269:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_256);
-            }
-            break;
-        case 270:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_1);
-            }
-            break;
-        case 271:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_256) + 1;
-            }
-            break;
-        case 272:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_1) + 1;
-            }
-            break;
-        case 273:
-            {
-                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_256) + 1;
-            }
-            break;
-        case 274:
-            {
-                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_1) + 1;
-            }
-            break;
-        case 275:
-            {
-                *out_value = 48U + 1U;
-            }
-            break;
-        case 276:
-            {
-                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_256) + 1;
-            }
-            break;
-        case 277:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_512);
-            }
-            break;
-        case 278:
-            {
-                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_512) + 1;
-            }
-            break;
-        case 279:
-            {
-                *out_value = 4294967295ULL * 16 + 1;
-            }
-            break;
-        case 280:
-            {
-                *out_value = SIZE_MAX;
-            }
-            break;
-        case 281:
-            {
-                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_256);
-            }
-            break;
-        case 282:
-            {
-                *out_value = 4294967295ULL * PSA_HASH_LENGTH(PSA_ALG_SHA_512);
-            }
-            break;
-        case 283:
-            {
-                *out_value = 4294967295ULL * 16;
-            }
-            break;
-        case 284:
-            {
-                *out_value = PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_1);
-            }
-            break;
-        case 285:
-            {
-                *out_value = PSA_ERROR_INSUFFICIENT_DATA;
-            }
-            break;
-        case 286:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_256) - 1;
-            }
-            break;
-        case 287:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_512) - 1;
-            }
-            break;
-        case 288:
-            {
-                *out_value = 255 * PSA_HASH_LENGTH(PSA_ALG_SHA_512);
-            }
-            break;
-        case 289:
-            {
-                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_256) - 1;
-            }
-            break;
-        case 290:
-            {
-                *out_value = PSA_ALG_HKDF_EXTRACT(PSA_ALG_SHA_512);
-            }
-            break;
-        case 291:
-            {
-                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_512) - 1;
-            }
-            break;
-        case 292:
-            {
-                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_256);
-            }
-            break;
-        case 293:
-            {
-                *out_value = PSA_HASH_LENGTH(PSA_ALG_SHA_512);
-            }
-            break;
-        case 294:
-            {
-                *out_value = PSA_ALG_HKDF_EXPAND(PSA_ALG_SHA_512);
-            }
-            break;
-        case 295:
-            {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH;
-            }
-            break;
-        case 296:
-            {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_DERIVE;
-            }
-            break;
-        case 297:
-            {
-                *out_value = PSA_KEY_TYPE_CATEGORY_MASK;
-            }
-            break;
-        case 298:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_K1);
-            }
-            break;
-        case 299:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R2);
-            }
-            break;
-        case 300:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_K1);
-            }
-            break;
-        case 301:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R1);
-            }
-            break;
-        case 302:
-            {
-                *out_value = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECT_R2);
-            }
-            break;
-        case 303:
-            {
-                *out_value = PSA_MAX_KEY_BITS;
-            }
-            break;
-        case 304:
-            {
-                *out_value = PSA_MAX_KEY_BITS + 1;
-            }
-            break;
-        case 305:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(PSA_ALG_SHA_512));
-            }
-            break;
-        case 306:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(0));
-            }
-            break;
-        case 307:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(0, PSA_ALG_HKDF(PSA_ALG_SHA_256));
-            }
-            break;
-        case 308:
-            {
-                *out_value = PSA_ALG_KEY_AGREEMENT(PSA_ALG_FFDH, PSA_ALG_HKDF(PSA_ALG_SHA_256));
-            }
-            break;
-        case 309:
-            {
-                *out_value = MBEDTLS_CTR_DRBG_MAX_REQUEST;
-            }
-            break;
-        case 310:
-            {
-                *out_value = MBEDTLS_CTR_DRBG_MAX_REQUEST + 1;
-            }
-            break;
-        case 311:
-            {
-                *out_value = 2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1;
-            }
-            break;
-        case 312:
-            {
-                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS;
-            }
-            break;
-        case 313:
-            {
-                *out_value = (MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8;
-            }
-            break;
-        case 314:
-            {
-                *out_value = (2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8;
-            }
-            break;
-        case 315:
-            {
-                *out_value = PSA_KEY_USAGE_EXPORT | PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT;
-            }
-            break;
-        case 316:
-            {
-                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS + 62;
-            }
-            break;
-        case 317:
-            {
-                *out_value = PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS + 63;
-            }
-            break;
-        case 318:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP192R1;
-            }
-            break;
-        case 319:
-            {
-                *out_value = PSA_ECC_FAMILY_SECP_R1;
-            }
-            break;
-        case 320:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP224R1;
-            }
-            break;
-        case 321:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP256R1;
-            }
-            break;
-        case 322:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP384R1;
-            }
-            break;
-        case 323:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP521R1;
-            }
-            break;
-        case 324:
-            {
-                *out_value = MBEDTLS_ECP_DP_BP256R1;
-            }
-            break;
-        case 325:
-            {
-                *out_value = PSA_ECC_FAMILY_BRAINPOOL_P_R1;
-            }
-            break;
-        case 326:
-            {
-                *out_value = MBEDTLS_ECP_DP_BP384R1;
-            }
-            break;
-        case 327:
-            {
-                *out_value = MBEDTLS_ECP_DP_BP512R1;
-            }
-            break;
-        case 328:
-            {
-                *out_value = MBEDTLS_ECP_DP_CURVE25519;
-            }
-            break;
-        case 329:
-            {
-                *out_value = PSA_ECC_FAMILY_MONTGOMERY;
-            }
-            break;
-        case 330:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP192K1;
-            }
-            break;
-        case 331:
-            {
-                *out_value = PSA_ECC_FAMILY_SECP_K1;
-            }
-            break;
-        case 332:
-            {
-                *out_value = MBEDTLS_ECP_DP_SECP256K1;
-            }
-            break;
-        case 333:
-            {
-                *out_value = MBEDTLS_ECP_DP_CURVE448;
-            }
-            break;
-        case 334:
-            {
-                *out_value = MBEDTLS_ECP_DP_NONE;
+                *out_value = DERIVE_KEY;
             }
             break;
 #endif
@@ -13788,7 +12081,7 @@ static int dep_check(int dep_id)
 
         case 0:
             {
-#if defined(PSA_WANT_ALG_CTR)
+#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13797,7 +12090,7 @@ static int dep_check(int dep_id)
             break;
         case 1:
             {
-#if defined(PSA_WANT_KEY_TYPE_AES)
+#if defined(PSA_WANT_ALG_CTR)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13806,7 +12099,7 @@ static int dep_check(int dep_id)
             break;
         case 2:
             {
-#if !defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
+#if defined(PSA_WANT_KEY_TYPE_AES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13815,7 +12108,7 @@ static int dep_check(int dep_id)
             break;
         case 3:
             {
-#if defined(PSA_CRYPTO_DRIVER_TEST) || defined(PSA_USE_DEMO_OPAQUE_DRIVER) /* !!OM */
+#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13824,7 +12117,7 @@ static int dep_check(int dep_id)
             break;
         case 4:
             {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+#if defined(PSA_WANT_KEY_TYPE_DES)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13833,7 +12126,7 @@ static int dep_check(int dep_id)
             break;
         case 5:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY)
+#if defined(PSA_WANT_ALG_RSA_PSS)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13842,7 +12135,7 @@ static int dep_check(int dep_id)
             break;
         case 6:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_ALG_SHA_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13851,7 +12144,7 @@ static int dep_check(int dep_id)
             break;
         case 7:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT)
+#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13860,7 +12153,7 @@ static int dep_check(int dep_id)
             break;
         case 8:
             {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT)
+#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>=512)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13878,7 +12171,7 @@ static int dep_check(int dep_id)
             break;
         case 10:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -13887,799 +12180,7 @@ static int dep_check(int dep_id)
             break;
         case 11:
             {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 12:
-            {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 13:
-            {
-#if defined(PSA_WANT_ECC_SECP_R1_224)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 14:
-            {
 #if defined(PSA_WANT_ECC_SECP_R1_256)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 15:
-            {
-#if defined(PSA_WANT_ECC_SECP_R1_384)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 16:
-            {
-#if defined(PSA_WANT_ECC_SECP_R1_521)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 17:
-            {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 18:
-            {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 19:
-            {
-#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 20:
-            {
-#if defined(PSA_WANT_ALG_ECDH)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 21:
-            {
-#if defined(PSA_WANT_ECC_MONTGOMERY_255)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 22:
-            {
-#if defined(PSA_WANT_ECC_MONTGOMERY_448)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 23:
-            {
-#if defined(PSA_WANT_ALG_CBC_NO_PADDING)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 24:
-            {
-#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 25:
-            {
-#if defined(PSA_WANT_ALG_HMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 26:
-            {
-#if defined(PSA_WANT_ALG_SHA_256)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 27:
-            {
-#if defined(PSA_WANT_KEY_TYPE_HMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 28:
-            {
-#if defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 29:
-            {
-#if defined(PSA_WANT_ALG_FFDH)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 30:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 31:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 32:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 33:
-            {
-#if defined(PSA_WANT_DH_RFC7919_2048)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 34:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 35:
-            {
-#if defined(PSA_WANT_DH_RFC7919_3072)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 36:
-            {
-#if defined(PSA_WANT_DH_RFC7919_4096)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 37:
-            {
-#if defined(PSA_WANT_DH_RFC7919_6144)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 38:
-            {
-#if defined(PSA_WANT_DH_RFC7919_8192)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 39:
-            {
-#if defined(PSA_WANT_ALG_ECB_NO_PADDING)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 40:
-            {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 41:
-            {
-#if defined(PSA_WANT_ALG_SHA_224)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 42:
-            {
-#if defined(PSA_WANT_ALG_CMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 43:
-            {
-#if defined(PSA_WANT_ALG_CCM)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 44:
-            {
-#if defined(PSA_WANT_ALG_GCM)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 45:
-            {
-#if defined(PSA_WANT_ALG_RSA_OAEP)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 46:
-            {
-#if defined(PSA_WANT_ALG_RSA_PSS)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 47:
-            {
-#if defined(PSA_WANT_ALG_SHA_384)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 48:
-            {
-#if defined(PSA_WANT_ALG_HKDF)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 49:
-            {
-#if defined(PSA_WANT_ALG_TLS12_PRF)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 50:
-            {
-#if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 51:
-            {
-#if defined(PSA_WANT_ALG_SHA_1)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 52:
-            {
-#if defined(PSA_WANT_ALG_SHA_512)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 53:
-            {
-#if defined(PSA_WANT_ALG_MD5)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 54:
-            {
-#if defined(PSA_WANT_ALG_RIPEMD160)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 55:
-            {
-#if !defined(PSA_WANT_ALG_MD5)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 56:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DES)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 57:
-            {
-#if defined(PSA_WANT_KEY_TYPE_CHACHA20)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 58:
-            {
-#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 59:
-            {
-#if defined(PSA_WANT_ALG_CBC_PKCS7)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 60:
-            {
-#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 61:
-            {
-#if defined(PSA_WANT_ALG_STREAM_CIPHER)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 62:
-            {
-#if defined(PSA_WANT_ALG_CHACHA20_POLY1305)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 63:
-            {
-#if defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 64:
-            {
-#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 65:
-            {
-#if !defined(PSA_WANT_ALG_ECDSA)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 66:
-            {
-#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 67:
-            {
-#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 68:
-            {
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 69:
-            {
-#if defined(PSA_WANT_ALG_PBKDF2_HMAC)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 70:
-            {
-#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 71:
-            {
-#if defined(PSA_WANT_ALG_HKDF_EXTRACT)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 72:
-            {
-#if defined(PSA_WANT_ALG_HKDF_EXPAND)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 73:
-            {
-#if (SIZE_MAX>=0xffffffffffffffff)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 74:
-            {
-#if !defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 75:
-            {
-#if (MBEDTLS_PSA_KEY_BUFFER_MAX_SIZE>=PSA_BITS_TO_BYTES(PSA_MAX_KEY_BITS))
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 76:
-            {
-#if (MBEDTLS_PSA_KEY_BUFFER_MAX_SIZE>=(MBEDTLS_CTR_DRBG_MAX_REQUEST + 1))
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 77:
-            {
-#if (MBEDTLS_PSA_KEY_BUFFER_MAX_SIZE>=(2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1))
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 78:
-            {
-#if (MBEDTLS_PSA_KEY_BUFFER_MAX_SIZE>=PSA_BITS_TO_BYTES(65528))
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 79:
-            {
-#if defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 80:
-            {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>128)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 81:
-            {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1032)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 82:
-            {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=1024)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 83:
-            {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS>=256)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 84:
-            {
-#if (PSA_VENDOR_RSA_GENERATE_MIN_KEY_BITS<=2048)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 85:
-            {
-#if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 86:
-            {
-#if !defined(MBEDTLS_TEST_STATIC_KEY_SLOTS_SUPPORT_RSA_4096)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 87:
-            {
-#if (PSA_VENDOR_RSA_MAX_KEY_BITS>=4096)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 88:
-            {
-#if defined(MBEDTLS_TEST_STATIC_KEY_SLOTS_SUPPORT_RSA_2048)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 89:
-            {
-#if (PSA_VENDOR_RSA_MAX_KEY_BITS>=2048)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 90:
-            {
-#if defined(PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 91:
-            {
-#if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 92:
-            {
-#if (INT_MAX>=0x7fffffff)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 93:
-            {
-#if !defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 94:
-            {
-#if (INT_MAX<=0x7fffffff)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 95:
-            {
-#if (INT_MAX<=0xffffffffffffffff)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 96:
-            {
-#if !defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_RSA_KEY_PAIR_GENERATE)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 97:
-            {
-#if defined(PSA_WANT_ECC_SECP_R1_192)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 98:
-            {
-#if defined(PSA_WANT_ECC_SECP_K1_192)
-                ret = DEPENDENCY_SUPPORTED;
-#else
-                ret = DEPENDENCY_NOT_SUPPORTED;
-#endif
-            }
-            break;
-        case 99:
-            {
-#if defined(PSA_WANT_ECC_SECP_K1_256)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -16142,7 +13643,7 @@ static void try_chdir_if_supported(const char *argv0)
 static int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
-    const char *default_filename = "./test_suite_psa_crypto.datax";
+    const char *default_filename = "./test_suite_psa_crypto_persistent.datax";
     const char *test_filename = NULL;
     const char **test_files = NULL;
     size_t testfile_count = 0;

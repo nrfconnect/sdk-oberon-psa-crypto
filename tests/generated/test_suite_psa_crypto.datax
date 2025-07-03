@@ -4279,50 +4279,6 @@ PSA import/exercise: TLS 1.2 PRF SHA-256
 depends_on:26:49
 9:hex:"c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0":exp:84:int:192:exp:85
 
-PSA concurrently import/exercise same key: RSA keypair, PKCS#1 v1.5 raw
-depends_on:4:6:7
-8:hex:"3082025e02010002818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc3020301000102818100874bf0ffc2f2a71d14671ddd0171c954d7fdbf50281e4f6d99ea0e1ebcf82faa58e7b595ffb293d1abe17f110b37c48cc0f36c37e84d876621d327f64bbe08457d3ec4098ba2fa0a319fba411c2841ed7be83196a8cdf9daa5d00694bc335fc4c32217fe0488bce9cb7202e59468b1ead119000477db2ca797fac19eda3f58c1024100e2ab760841bb9d30a81d222de1eb7381d82214407f1b975cbbfe4e1a9467fd98adbd78f607836ca5be1928b9d160d97fd45c12d6b52e2c9871a174c66b488113024100c5ab27602159ae7d6f20c3c2ee851e46dc112e689e28d5fcbbf990a99ef8a90b8bb44fd36467e7fc1789ceb663abda338652c3c73f111774902e840565927091024100b6cdbd354f7df579a63b48b3643e353b84898777b48b15f94e0bfc0567a6ae5911d57ad6409cf7647bf96264e9bd87eb95e263b7110b9a1f9f94acced0fafa4d024071195eec37e8d257decfc672b07ae639f10cbb9b0c739d0c809968d644a94e3fd6ed9287077a14583f379058f76a8aecd43c62dc8c0f41766650d725275ac4a1024100bb32d133edc2e048d463388b7be9cb4be29f4b6250be603e70e3647501c97ddde20a4e71be95fd5e71784e25aca4baf25be5738aae59bbfe1c997781447a2b24":exp:10:int:1024:exp:9:int:100
-
-PSA concurrently import/exercise same key: RSA keypair, PSS-SHA-256
-depends_on:46:26:6:7
-8:hex:"3082025e02010002818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc3020301000102818100874bf0ffc2f2a71d14671ddd0171c954d7fdbf50281e4f6d99ea0e1ebcf82faa58e7b595ffb293d1abe17f110b37c48cc0f36c37e84d876621d327f64bbe08457d3ec4098ba2fa0a319fba411c2841ed7be83196a8cdf9daa5d00694bc335fc4c32217fe0488bce9cb7202e59468b1ead119000477db2ca797fac19eda3f58c1024100e2ab760841bb9d30a81d222de1eb7381d82214407f1b975cbbfe4e1a9467fd98adbd78f607836ca5be1928b9d160d97fd45c12d6b52e2c9871a174c66b488113024100c5ab27602159ae7d6f20c3c2ee851e46dc112e689e28d5fcbbf990a99ef8a90b8bb44fd36467e7fc1789ceb663abda338652c3c73f111774902e840565927091024100b6cdbd354f7df579a63b48b3643e353b84898777b48b15f94e0bfc0567a6ae5911d57ad6409cf7647bf96264e9bd87eb95e263b7110b9a1f9f94acced0fafa4d024071195eec37e8d257decfc672b07ae639f10cbb9b0c739d0c809968d644a94e3fd6ed9287077a14583f379058f76a8aecd43c62dc8c0f41766650d725275ac4a1024100bb32d133edc2e048d463388b7be9cb4be29f4b6250be603e70e3647501c97ddde20a4e71be95fd5e71784e25aca4baf25be5738aae59bbfe1c997781447a2b24":exp:10:int:1024:exp:77:int:100
-
-PSA concurrently import/exercise same key: RSA keypair, PSS-any-salt-SHA-256
-depends_on:46:26:6:7
-8:hex:"3082025e02010002818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc3020301000102818100874bf0ffc2f2a71d14671ddd0171c954d7fdbf50281e4f6d99ea0e1ebcf82faa58e7b595ffb293d1abe17f110b37c48cc0f36c37e84d876621d327f64bbe08457d3ec4098ba2fa0a319fba411c2841ed7be83196a8cdf9daa5d00694bc335fc4c32217fe0488bce9cb7202e59468b1ead119000477db2ca797fac19eda3f58c1024100e2ab760841bb9d30a81d222de1eb7381d82214407f1b975cbbfe4e1a9467fd98adbd78f607836ca5be1928b9d160d97fd45c12d6b52e2c9871a174c66b488113024100c5ab27602159ae7d6f20c3c2ee851e46dc112e689e28d5fcbbf990a99ef8a90b8bb44fd36467e7fc1789ceb663abda338652c3c73f111774902e840565927091024100b6cdbd354f7df579a63b48b3643e353b84898777b48b15f94e0bfc0567a6ae5911d57ad6409cf7647bf96264e9bd87eb95e263b7110b9a1f9f94acced0fafa4d024071195eec37e8d257decfc672b07ae639f10cbb9b0c739d0c809968d644a94e3fd6ed9287077a14583f379058f76a8aecd43c62dc8c0f41766650d725275ac4a1024100bb32d133edc2e048d463388b7be9cb4be29f4b6250be603e70e3647501c97ddde20a4e71be95fd5e71784e25aca4baf25be5738aae59bbfe1c997781447a2b24":exp:10:int:1024:exp:77:int:100
-
-PSA concurrently import/exercise same key: RSA public key, PKCS#1 v1.5 raw
-depends_on:4:5
-8:hex:"30818902818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc30203010001":exp:8:int:1024:exp:9:int:100
-
-PSA concurrently import/exercise same key: RSA public key, PSS-SHA-256
-depends_on:46:26:5
-8:hex:"30818902818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc30203010001":exp:8:int:1024:exp:77:int:100
-
-PSA concurrently import/exercise same key: RSA public key, PSS-any-salt-SHA-256
-depends_on:46:26:5
-8:hex:"30818902818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc30203010001":exp:8:int:1024:exp:78:int:100
-
-PSA concurrently import/exercise same key: ECP SECP256R1 keypair, ECDSA
-depends_on:9:10:11:12:14
-8:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:12:int:256:exp:13:int:100
-
-PSA concurrently import/exercise same key: ECP SECP256R1 keypair, deterministic ECDSA
-depends_on:63:26:10:11:12:14
-8:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:12:int:256:exp:221:int:100
-
-PSA concurrently import/exercise same key: ECP SECP256R1 keypair, ECDH
-depends_on:20:10:11:12:14
-8:hex:"49c9a8c18c4b885638c431cf1df1c994131609b580d4fd43a0cab17db2f13eee":exp:12:int:256:exp:16:int:100
-
-PSA concurrently import/exercise same key: HKDF SHA-256
-depends_on:48:26
-8:hex:"c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0":exp:84:int:192:exp:83:int:100
-
-PSA concurrently import/exercise same key: TLS 1.2 PRF SHA-256
-depends_on:26:49
-8:hex:"c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0":exp:84:int:192:exp:85:int:100
-
 PSA sign hash: RSA PKCS#1 v1.5, raw
 depends_on:4:6:7
 67:exp:10:hex:"3082025e02010002818100af057d396ee84fb75fdbb5c2b13c7fe5a654aa8aa2470b541ee1feb0b12d25c79711531249e1129628042dbbb6c120d1443524ef4c0e6e1d8956eeb2077af12349ddeee54483bc06c2c61948cd02b202e796aebd94d3a7cbf859c2c1819c324cb82b9cd34ede263a2abffe4733f077869e8660f7d6834da53d690ef7985f6bc3020301000102818100874bf0ffc2f2a71d14671ddd0171c954d7fdbf50281e4f6d99ea0e1ebcf82faa58e7b595ffb293d1abe17f110b37c48cc0f36c37e84d876621d327f64bbe08457d3ec4098ba2fa0a319fba411c2841ed7be83196a8cdf9daa5d00694bc335fc4c32217fe0488bce9cb7202e59468b1ead119000477db2ca797fac19eda3f58c1024100e2ab760841bb9d30a81d222de1eb7381d82214407f1b975cbbfe4e1a9467fd98adbd78f607836ca5be1928b9d160d97fd45c12d6b52e2c9871a174c66b488113024100c5ab27602159ae7d6f20c3c2ee851e46dc112e689e28d5fcbbf990a99ef8a90b8bb44fd36467e7fc1789ceb663abda338652c3c73f111774902e840565927091024100b6cdbd354f7df579a63b48b3643e353b84898777b48b15f94e0bfc0567a6ae5911d57ad6409cf7647bf96264e9bd87eb95e263b7110b9a1f9f94acced0fafa4d024071195eec37e8d257decfc672b07ae639f10cbb9b0c739d0c809968d644a94e3fd6ed9287077a14583f379058f76a8aecd43c62dc8c0f41766650d725275ac4a1024100bb32d133edc2e048d463388b7be9cb4be29f4b6250be603e70e3647501c97ddde20a4e71be95fd5e71784e25aca4baf25be5738aae59bbfe1c997781447a2b24":exp:9:hex:"616263":hex:"2c7744983f023ac7bb1c55529d83ed11a76a7898a1bb5ce191375a4aa7495a633d27879ff58eba5a57371c34feb1180e8b850d552476ebb5634df620261992f12ebee9097041dbbea85a42d45b344be5073ceb772ffc604954b9158ba81ec3dc4d9d65e3ab7aa318165f38c36f841f1c69cb1cfa494aa5cbb4d6c0efbafb043a"
@@ -7562,238 +7518,59 @@ PSA generate key ext: ECC, params.data non-empty
 depends_on:40:14:20
 116:exp:12:int:256:exp:82:exp:16:int:0:hex:"2a":exp:7
 
-PSA concurrent key generation: bad type (RSA public key)
-depends_on:5:97
-113:exp:8:exp:312:exp:1:int:0:exp:7:int:0:int:8:int:5
-
-PSA concurrent key generation: raw data, 0 bits: invalid argument
-depends_on:97
-113:exp:0:int:0:exp:1:int:0:exp:7:int:0:int:8:int:5
-
-PSA concurrent key generation: raw data, 7 bits: invalid argument
-depends_on:97
-113:exp:0:int:7:exp:1:int:0:exp:7:int:0:int:8:int:5
-
-PSA concurrent key generation: raw data, 8 bits
-depends_on:97
-113:exp:0:int:8:exp:1:int:0:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation- raw data, 9 bits: invalid argument
-depends_on:97
-113:exp:0:int:9:exp:1:int:0:exp:7:int:0:int:8:int:5
-
-PSA concurrent key generation: raw data, (MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8 bits
-depends_on:97:76
-113:exp:0:exp:313:exp:1:int:0:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: raw data, (2 * MBEDTLS_CTR_DRBG_MAX_REQUEST + 1) * 8 bits
-depends_on:97:77
-113:exp:0:exp:314:exp:1:int:0:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: raw data, 65528 bits (large key, ok if it fits)
-depends_on:97:98
-113:exp:0:int:65528:exp:1:int:0:exp:2:int:1:int:8:int:5
-
-PSA concurrent key generation: raw data, 65536 bits (not supported)
-depends_on:97
-113:exp:0:int:65536:exp:1:int:0:exp:11:int:0:int:8:int:5
-
-PSA concurrent key generation: AES, 128 bits, CTR
-depends_on:0:1:97
-113:exp:4:int:128:exp:315:exp:5:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: AES, 128 bits, GCM
-depends_on:44:1:97
-113:exp:4:int:128:exp:315:exp:60:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: DES, 64 bits, CBC-nopad
-depends_on:23:56:97
-113:exp:152:int:64:exp:315:exp:17:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: DES, 128 bits, CBC-nopad
-depends_on:23:56:97
-113:exp:152:int:128:exp:315:exp:17:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: DES, 192 bits, CBC-nopad
-depends_on:23:56:97
-113:exp:152:int:192:exp:315:exp:17:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: invalid key size: AES, 64 bits
-depends_on:0:1:97
-113:exp:4:int:64:exp:315:exp:5:exp:7:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, minimum allowed key size, good, sign (PKCS#1 v1.5)
-depends_on:4:79:80:97
-113:exp:10:exp:312:exp:295:exp:9:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, 1032 bits, good, sign (PKCS#1 v1.5)
-depends_on:4:79:81:97
-113:exp:10:int:1032:exp:295:exp:9:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, 1024 bits, good, sign (PSS SHA-256)
-depends_on:46:26:79:82:97
-113:exp:10:int:1024:exp:295:exp:77:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, 1024 bits, good, sign (PSS-any-salt SHA-256)
-depends_on:46:26:79:82:97
-113:exp:10:int:1024:exp:295:exp:78:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, minimum allowed key size, good, encrypt (PKCS#1 v1.5)
-depends_on:28:79:83:84:97
-113:exp:10:exp:312:exp:315:exp:26:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, 1024 bits, good, encrypt (OAEP SHA-256)
-depends_on:45:26:79:82:97
-113:exp:10:int:1024:exp:315:exp:71:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, 0 bits: invalid
-depends_on:28:79:97
-113:exp:10:int:0:exp:315:exp:26:exp:7:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, size not multiple of 8: not supported
-depends_on:28:79:97
-113:exp:10:exp:316:exp:315:exp:26:exp:11:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, size not multiple of 2: not supported
-depends_on:28:79:97
-113:exp:10:exp:317:exp:315:exp:26:exp:11:int:0:int:8:int:5
-
-PSA concurrent key generation: RSA, maximum size exceeded
-depends_on:28:79:97
-113:exp:10:exp:30:exp:315:exp:26:exp:11:int:0:int:8:int:5
-
-PSA concurrent key generation: ECC, SECP256R1, good
-depends_on:9:40:14:97
-113:exp:12:int:256:exp:295:exp:13:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: ECC, SECP256R1, incorrect bit size
-depends_on:9:10:11:12:14:97
-113:exp:12:int:128:exp:295:exp:13:exp:11:int:0:int:8:int:5
-
-PSA concurrent key generation: ECC, Curve25519, good
-depends_on:20:40:21:97
-113:exp:15:int:255:exp:296:exp:16:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: ECC, Curve448, good
-depends_on:20:40:22:97
-113:exp:15:int:448:exp:296:exp:16:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: FFDH, 2048 bits, good
-depends_on:29:90:33:97
-113:exp:27:int:2048:exp:1:exp:28:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: FFDH, 3072 bits, good
-depends_on:29:90:35:97
-113:exp:27:int:3072:exp:1:exp:28:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: FFDH, 4096 bits, good
-depends_on:29:90:36:97
-113:exp:27:int:4096:exp:1:exp:28:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: FFDH, 6144 bits, good
-depends_on:29:90:37:97
-113:exp:27:int:6144:exp:1:exp:28:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: FFDH, 8192 bits, good
-depends_on:29:90:38:97
-113:exp:27:int:8192:exp:1:exp:28:exp:2:int:0:int:8:int:5
-
-PSA concurrent key generation: FFDH, 1024 bits, invalid bits
-depends_on:29:90:97
-113:exp:27:int:1024:exp:1:exp:28:exp:11:int:0:int:8:int:5
-
 Key production parameters initializers
 117
 
-PSA import persistent key: raw data, 8 bits
-depends_on:50
-118:hex:"2a":exp:0:int:8:exp:1:int:0:exp:318
-
-PSA import persistent key: AES, 128 bits, exportable
-depends_on:0:1:50
-118:hex:"2b7e151628aed2a6abf7158809cf4f3c":exp:4:int:128:exp:95:exp:5:exp:318
-
-PSA import persistent key: AES, 128 bits, non-exportable
-depends_on:0:1:50
-118:hex:"2b7e151628aed2a6abf7158809cf4f3c":exp:4:int:128:exp:31:exp:5:exp:318
-
-PSA generate persistent key: raw data, 8 bits, exportable
-depends_on:50
-118:hex:"":exp:0:int:8:exp:1:int:0:exp:319
-
-PSA generate persistent key: AES, 128 bits, exportable
-depends_on:0:1:50
-118:hex:"":exp:4:int:128:exp:315:exp:5:exp:319
-
-PSA generate persistent key: AES, 128 bits, non-exportable
-depends_on:0:1:50
-118:hex:"":exp:4:int:128:exp:21:exp:5:exp:319
-
-PSA generate persistent key: DES, 64 bits, exportable
-depends_on:23:56:50
-118:hex:"":exp:152:int:64:exp:315:exp:17:exp:319
-
-PSA generate persistent key: RSA, minimum size key, exportable
-depends_on:46:26:79:50:99
-118:hex:"":exp:10:exp:312:exp:295:exp:77:exp:319
-
-PSA generate persistent key: ECC, SECP256R1, exportable
-depends_on:9:40:14:50
-118:hex:"":exp:12:int:256:exp:295:exp:13:exp:319
-
-PSA derive persistent key: HKDF SHA-256, exportable
-118:hex:"0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b":exp:0:int:1024:exp:1:int:0:exp:320
-
 ECP group ID <-> PSA family - SECP192R1
-depends_on:100
-109:exp:321:exp:322:int:192
+depends_on:97
+109:exp:318:exp:319:int:192
 
 ECP group ID <-> PSA family - SECP224R1
 depends_on:13
-109:exp:323:exp:322:int:224
+109:exp:320:exp:319:int:224
 
 ECP group ID <-> PSA family - SECP256R1
 depends_on:14
-109:exp:324:exp:322:int:256
+109:exp:321:exp:319:int:256
 
 ECP group ID <-> PSA family - SECP384R1
 depends_on:15
-109:exp:325:exp:322:int:384
+109:exp:322:exp:319:int:384
 
 ECP group ID <-> PSA family - SECP521R1
 depends_on:16
-109:exp:326:exp:322:int:521
+109:exp:323:exp:319:int:521
 
 ECP group ID <-> PSA family - BP256R1
 depends_on:17
-109:exp:327:exp:328:int:256
+109:exp:324:exp:325:int:256
 
 ECP group ID <-> PSA family - BP384R1
 depends_on:18
-109:exp:329:exp:328:int:384
+109:exp:326:exp:325:int:384
 
 ECP group ID <-> PSA family - BP512R1
 depends_on:19
-109:exp:330:exp:328:int:512
+109:exp:327:exp:325:int:512
 
 ECP group ID <-> PSA family - CURVE25519
 depends_on:21
-109:exp:331:exp:332:int:255
+109:exp:328:exp:329:int:255
 
 ECP group ID <-> PSA family - SECP192K1
-depends_on:101
-109:exp:333:exp:334:int:192
+depends_on:98
+109:exp:330:exp:331:int:192
 
 ECP group ID <-> PSA family - SECP256K1
-depends_on:102
-109:exp:335:exp:334:int:256
+depends_on:99
+109:exp:332:exp:331:int:256
 
 ECP group ID <-> PSA family - CURVE448
 depends_on:22
-109:exp:336:exp:332:int:448
+109:exp:333:exp:329:int:448
 
 ECP group ID <-> PSA family - Null values
-109:exp:337:int:0:int:0
+109:exp:334:int:0:int:0
 
 ECP group ID <-> PSA family - Wrong values
 110

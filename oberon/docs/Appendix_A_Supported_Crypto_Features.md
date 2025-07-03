@@ -45,8 +45,8 @@ directive is given, and - where applicable - the supported key types:
 | EC-JPAKE                              | PSA_WANT_ALG_JPAKE                                                               | TLS12_ECJPAKE_TO_PMS        | no            |
 | SPAKE2+                               | PSA_WANT_ALG_SPAKE2P_HMAC/CMAC/MATTER                                            | 7)                          | no            |
 | SRP-6                                 | PSA_WANT_ALG_SRP_6                                                               | 8)                          | no            |
-| CTR-DRBG                              | PSA_WANT_GENERATE_RANDOM + PSA_USE_CTR_DRBG_DRIVER                               | -                           | n/a           |
-| HMAC-DRBG                             | PSA_WANT_GENERATE_RANDOM + PSA_USE_HMAC_DRBG_DRIVER                              | -                           | n/a           |
+| CTR_DRBG                              | PSA_WANT_GENERATE_RANDOM + PSA_USE_CTR_DRBG_DRIVER                               | -                           | n/a           |
+| HMAC_DRBG                             | PSA_WANT_GENERATE_RANDOM + PSA_USE_HMAC_DRBG_DRIVER                              | -                           | n/a           |
 
 1) AES key wrapping with/without padding is an experimental feature based on
 [PSA issue 50](https://github.com/ARM-software/psa-api/issues/50#issuecomment-1772551575).
@@ -107,8 +107,8 @@ directives are given:
 | EC-JPAKE                             | 256                                      | -                                                        |
 | SPAKE2+                              | 256                                      | -                                                        |
 | SRP-6                                | 3072                                     | -                                                        |
-| CTR-DRBG                             | 256                                      | -                                                        |
-| HMAC-DRBG                            | na                                       | -                                                        |
+| CTR_DRBG                             | 256                                      | -                                                        |
+| HMAC_DRBG                            | na                                       | -                                                        |
 
 HMAC, HKDF, and PBKDF2 are hash-based and can use any available hash algorithm.
 Key sizes are independent of hash sizes.

@@ -1,6 +1,10 @@
-//
-// This software is the intellectual property of Oberon microsystems AG, Switzerland.
-//
+/*
+ * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
+ * Copyright (c) since 2020 Oberon microsystems AG
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
 
 
 #include "test_cycles.h"

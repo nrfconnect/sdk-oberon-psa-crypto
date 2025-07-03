@@ -153,11 +153,13 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
             set(MBEDTEST_SUITES
                     test_suite_psa_crypto
                     test_suite_psa_crypto_attributes
+                    test_suite_psa_crypto_concurrent
                     test_suite_psa_crypto_driver_wrappers
                     # test_suite_psa_crypto_entropy  # n.a. - tests Mbed TLS entropy /* !!OM */
                     test_suite_psa_crypto_generate_key.generated
                     test_suite_psa_crypto_hash
                     # test_suite_psa_crypto_init # n.a. - tests Mbed TLS entropy initialization only /* !!OM */
+                    test_suite_psa_crypto_low_hash.generated
                     test_suite_psa_crypto_memory
                     test_suite_psa_crypto_metadata
                     test_suite_psa_crypto_not_supported.generated
@@ -165,6 +167,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
                     # test_suite_psa_crypto_op_fail.generated # n.a. - does not work with drivers /* !!OM */
                     test_suite_psa_crypto_op_fail.misc
                     test_suite_psa_crypto_pake
+                    test_suite_psa_crypto_persistent
                     test_suite_psa_crypto_persistent_key
                     # test_suite_psa_crypto_se_driver_hal       # n.a. - SE drivers are not supported /* !!OM */
                     # test_suite_psa_crypto_se_driver_hal_mocks # n.a.
