@@ -281,6 +281,7 @@
  * PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
  * work correctly when ED448 is the largest curve.
  * These terms are frequently used at various places in PSA and mbedTLS. */
+#ifndef PSA_VENDOR_ECC_MAX_CURVE_BITS
 #if defined(PSA_WANT_ECC_SECP_R1_521)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 521u
 #elif defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
@@ -313,6 +314,7 @@
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 192u
 #else
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 0u
+#endif
 #endif
 
 /* The maximum size of an ML-DSA public key on this implementation, in bytes.
