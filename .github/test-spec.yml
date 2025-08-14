@@ -1,6 +1,5 @@
 "CI-crypto-test":
   - "**/*"
-  
+
 "CI-tfm-test":
   - "**/*"
-
