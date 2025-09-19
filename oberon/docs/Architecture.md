@@ -114,3 +114,6 @@ some _Oberon drivers_ into the _driver wrappers_ will be discussed later.
 
 Read more about how to configure _Oberon PSA Crypto_ for an application and
 _target platform_, in [Crypto Configuration](Crypto_Configuration.md).
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

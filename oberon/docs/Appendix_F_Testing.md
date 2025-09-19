@@ -34,3 +34,6 @@ _Driver developers_ and _platform integrators_ should run the same tests with
 suitable test configurations of _Oberon PSA Crypto_. See the
 [README](../../README.md)
 document for more information on how to build and run the tests.
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

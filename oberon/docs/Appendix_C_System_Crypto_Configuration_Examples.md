@@ -42,3 +42,6 @@ For demonstration purposes, this configuration contains the C define for a mock
 *Note: All examples need an entropy driver. In real systems, this is always a
 hardware-dependent driver. For the above examples, a mock driver is provided and
 used through the `PSA_USE_DEMO_ENTROPY_DRIVER` C define.*
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

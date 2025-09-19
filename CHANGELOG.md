@@ -1,5 +1,45 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.5.2
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.2>
+2025-09-19 (8219b7f)
+
+Oberon crypto software drivers require _ocrypto_ version 3.9.2 or later.
+
+### Compatibility
+- PSA Certified Crypto API specifications
+  - Core specification: 1.3.1 including former PAKE extensions for EC-JPAKE and SPAKE2+
+    [IHI0086-PSA_Certified_Crypto_API-1.3.1.pdf](https://arm-software.github.io/psa-api/crypto/1.3/IHI0086-PSA_Certified_Crypto_API-1.3.1.pdf).
+  - SRP PAKE extension according to
+    [Add support for the SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
+  - WPA3 PAKE extension according to
+    [Dragonfly PAKE for WPA3 use cases](https://github.com/ARM-software/psa-api/issues/203).
+  - LMS/HSS/XMSS/XMSS^MT/ML-KEM/ML-DSA PQC extensions according to
+    PSA Crypto API 1.3 PQC Extension beta 1
+    [AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.1.pdf](https://arm-software.github.io/psa-api/crypto/1.3/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.1.pdf).
+- PSA Certified APIs Architecture Test Suite v1.8.
+- Mbed TLS 3.6.4 or later.
+
+### New Features
+- Add `PSA_KEY_LOCATION_VENDOR_FLAG` build option that allows volatile-to-vendor key copying.
+
+### Improvements
+- Improve filtering in ECDSA driver.
+- Avoid warning in LMS.
+- Update Mbed TLS version string in SSL tests.
+- Avoid key leaks in LMS tests.
+- Fix unused function warning for `ecdsa_sign_hash`.
+
+### Bug Fixes
+- Bug 17: Violation of PSA spec in AES-CBC buffer handling.
+- Bug 18: Fix cleanup for SRP password hashing.
+
+### Security Fixes
+- CVE-2025-7383: Timing side-channel vulnerability in AES-CBC decryption with PKCS#7 padding.
+- CVE-2025-9071: Insecure RSA-OAEP implementation with all-zero seed for padding in Oberon PSA Crypto.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.5.1
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.1>
 3-Jul-2025 (70a22df)

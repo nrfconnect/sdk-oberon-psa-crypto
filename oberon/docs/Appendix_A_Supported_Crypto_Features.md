@@ -129,3 +129,6 @@ buffer.
 buffer pointers for input and output of the first call are equal and incremented
 individually by the input and output size for each further call (meaning the
 plaintext and ciphertext are stored contiguously in the common buffer).
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

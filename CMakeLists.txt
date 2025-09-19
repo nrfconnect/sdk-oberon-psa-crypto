@@ -16,6 +16,7 @@ option(CONFIG_MBEDTLS_PSA_TESTS      "Build Mbed TLS tests"                     
 option(CONFIG_MBEDTLS_PSA_TESTS_LONG "Build Mbed TLS long running tests"                OFF)
 option(CONFIG_MBEDTLS_THREADING      "Build for multi-threading"                         ON)
 option(CONFIG_TESTS_FROM_EXPORT      "Build PSA API Tests from exported library"        OFF)
+option(CONFIG_TEST_EXAMPLE_CONFIGS   "Test set of example configurations in platforms"  OFF)
 option(CONFIG_TF_PSA_CRYPTO_DIRS     "Use Directory Structure from TF-PSA-Crypto"       OFF)
 
 if(MSVC)
@@ -86,7 +87,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
     else()
         set(OCRYPTO_ROOT oberon/drivers/ocrypto)
     endif()
-    if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_types_p256.h")
+    if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_sha256.h")
         message(FATAL_ERROR
                 "Path ${OCRYPTO_ROOT} does not contain valid ocrypto sources. \
                 Please provide -DOCRYPTO_ROOT=path/to/ocrypto/sources or copy \
@@ -186,10 +187,11 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
 
             # test suites added by Oberon
             set(OBERON_TEST_SUITES
-                    pake_test
-                    kdf_test
-                    key_wrap_test
-                    lms_test
+                pake_test
+                kdf_test
+                key_wrap_test
+                lms_test
+                ml_kem_dsa_test
             )
 
             # define Mbed TLS helper sources originating from Mbed TLS test, modified and unmodified

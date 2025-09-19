@@ -15,6 +15,11 @@
  *  limitations under the License.
  */
 
+/*
+ * Additional tests for key derivation, XCHACHA20, CBC-PKCS7.
+ */
+
+
 #include "psa/crypto.h"
 #include <test/helpers.h>
 #include <test/macros.h>
@@ -623,6 +628,91 @@ exit:
 #endif // PSA_WANT_ALG_XCHACHA20_POLY1305
 #endif // PSA_WANT_KEY_TYPE_XCHACHA20
 
+#ifdef PSA_WANT_ALG_CBC_PKCS7
+static int test_pkcs_padding()
+{
+    psa_cipher_operation_t op = PSA_CIPHER_OPERATION_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0, key1 = 0;
+    uint8_t pad, data[32], pdata[48], ct[64], pt[32];
+    size_t plen, ctlen, ptlen, mlen, len;
+    int res = 0;
+
+    memset(data, 0xAA, sizeof data);
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_CBC_PKCS7);
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_AES);
+    TEST_ASSERT(psa_import_key(&key_attr, data, 16, &key) == PSA_SUCCESS);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_CBC_NO_PADDING);
+    TEST_ASSERT(psa_import_key(&key_attr, data, 16, &key1) == PSA_SUCCESS);
+
+    for (len = 0; len <= 32; len++) {
+        TEST_ASSERT(psa_cipher_encrypt(key, PSA_ALG_CBC_PKCS7, data, len, ct, 64, &ctlen) == PSA_SUCCESS);
+        TEST_ASSERT(ctlen == ((len + 32) & ~15));
+
+        // large output buffer
+        memset(pt, 0, 32);
+        TEST_ASSERT(psa_cipher_decrypt(key, PSA_ALG_CBC_PKCS7, ct, ctlen, pt, 32, &ptlen) == PSA_SUCCESS);
+        ASSERT_COMPARE(pt, ptlen, data, len);
+        memset(pt, 0, 32);
+        TEST_ASSERT(psa_cipher_decrypt_setup(&op, key, PSA_ALG_CBC_PKCS7) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_set_iv(&op, ct, 16) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_update(&op, ct + 16, ctlen - 16, pt, 32, &mlen) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_finish(&op, pt + mlen, 32 - mlen, &ptlen) == PSA_SUCCESS);
+        ptlen += mlen;
+        ASSERT_COMPARE(pt, ptlen, data, len);
+
+        // minimal output buffer
+        memset(pt, 0, 32);
+        TEST_ASSERT(psa_cipher_decrypt(key, PSA_ALG_CBC_PKCS7, ct, ctlen, pt, len, &ptlen) == PSA_SUCCESS);
+        ASSERT_COMPARE(pt, ptlen, data, len);
+        memset(pt, 0, 32);
+        TEST_ASSERT(psa_cipher_decrypt_setup(&op, key, PSA_ALG_CBC_PKCS7) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_set_iv(&op, ct, 16) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_update(&op, ct + 16, ctlen - 16, pt, len, &mlen) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_finish(&op, pt + mlen, len - mlen, &ptlen) == PSA_SUCCESS);
+        ptlen += mlen;
+        ASSERT_COMPARE(pt, ptlen, data, len);
+
+        if (len > 0) {
+            // output buffer too small
+            TEST_ASSERT(psa_cipher_decrypt(key, PSA_ALG_CBC_PKCS7, ct, ctlen, pt, len - 1, &ptlen) == PSA_ERROR_BUFFER_TOO_SMALL);
+            if ((len & 15) != 0) {
+                TEST_ASSERT(psa_cipher_decrypt_setup(&op, key, PSA_ALG_CBC_PKCS7) == PSA_SUCCESS);
+                TEST_ASSERT(psa_cipher_set_iv(&op, ct, 16) == PSA_SUCCESS);
+                TEST_ASSERT(psa_cipher_update(&op, ct + 16, ctlen - 16, pt, len - 1, &mlen) == PSA_SUCCESS);
+                TEST_ASSERT(psa_cipher_finish(&op, pt + mlen, len - mlen - 1, &ptlen) == PSA_ERROR_BUFFER_TOO_SMALL);
+                TEST_ASSERT(psa_cipher_abort(&op) == PSA_SUCCESS);
+            }
+        }
+
+        // synthesize wrong padding using CBC_NO_PADDING
+        plen = (len + 16) & ~15;
+        pad = (uint8_t)(plen - len);
+        if (len == 32) pad = 17; // wrong pad
+        if (len == 31) pad = 0; // wrong pad
+        memcpy(pdata, data, len);
+        memset(pdata + len, pad, plen - len);
+        if (len < 31) pdata[plen - 1] = pad + 1; // too large or inconsistent
+        TEST_ASSERT(psa_cipher_encrypt(key1, PSA_ALG_CBC_NO_PADDING, pdata, plen, ct, 64, &ctlen) == PSA_SUCCESS);
+        TEST_ASSERT(ctlen == plen + 16);
+
+        TEST_ASSERT(psa_cipher_decrypt(key, PSA_ALG_CBC_PKCS7, ct, ctlen, pt, len, &ptlen) == PSA_ERROR_INVALID_PADDING);
+        TEST_ASSERT(psa_cipher_decrypt_setup(&op, key, PSA_ALG_CBC_PKCS7) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_set_iv(&op, ct, 16) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_update(&op, ct + 16, ctlen - 16, pt, len, &mlen) == PSA_SUCCESS);
+        TEST_ASSERT(psa_cipher_finish(&op, pt + mlen, len - mlen, &ptlen) == PSA_ERROR_INVALID_PADDING);
+        TEST_ASSERT(psa_cipher_abort(&op) == PSA_SUCCESS);
+    }
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(key1) == PSA_SUCCESS);
+    return res;
+}
+#endif // PSA_WANT_ALG_CBC_PKCS7
+
 
 int main(void)
 {
@@ -727,6 +817,10 @@ int main(void)
     TEST_ASSERT(test_xchacha20_poly1305());
 #endif // PSA_WANT_ALG_XCHACHA20_POLY1305
 #endif // PSA_WANT_KEY_TYPE_XCHACHA20
+
+#ifdef PSA_WANT_ALG_CBC_PKCS7
+    TEST_ASSERT(test_pkcs_padding());
+#endif // PSA_WANT_ALG_CBC_PKCS7
 
     return 0;
 exit:

@@ -14,8 +14,9 @@
 #include "oberon_rsa.h"
 #include "oberon_helpers.h"
 #include "psa_crypto_driver_wrappers.h"
-
+#if PSA_MAX_RSA_KEY_BITS > 0
 #include "ocrypto_rsa_primitives.h"
+#endif
 
 
 #define SEQ_TAG  0x30
@@ -455,11 +456,11 @@ static psa_status_t eme_oaep_encode(
 
     if (m_len > em_len - 2 * hash_len - 2) return PSA_ERROR_INVALID_ARGUMENT;
 
+    memset(em, 0, em_len);
     status = psa_generate_random(seed, hash_len);
     if (status) return status;
 
     // db = lhash : {0} : 1 : m
-    memset(em, 0, em_len);
     memset(&hash_op, 0, sizeof hash_op);
     status = psa_driver_wrapper_hash_setup(&hash_op, hash_alg);
     if (status) goto exit;

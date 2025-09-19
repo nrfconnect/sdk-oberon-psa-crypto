@@ -91,3 +91,6 @@ Developer resources:
 
 To read the documentation sequentially, continue with the architecture chapter
 [Architecture](Architecture.md).
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

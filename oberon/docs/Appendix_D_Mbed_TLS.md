@@ -86,3 +86,6 @@ Should never be defined:
 - `MBEDTLS_PSA_INJECT_ENTROPY`
 - `MBEDTLS_PSA_ASSUME_EXCLUSIVE_BUFFERS`
 - `MBEDTLS_PSA_CRYPTO_SPM`
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

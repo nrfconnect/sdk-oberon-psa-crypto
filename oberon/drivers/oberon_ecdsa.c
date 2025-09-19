@@ -43,7 +43,7 @@
 #endif /* PSA_NEED_OBERON_ED448PH */
 
 
-#ifdef PSA_NEED_OBERON_ECDSA_SIGN
+#if defined(PSA_NEED_OBERON_ECDSA_RANDOMIZED) || defined(PSA_NEED_OBERON_ECDSA_DETERMINISTIC)
 static int ecdsa_sign_hash(
     const uint8_t *key, size_t key_length,
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_K1_256
@@ -91,7 +91,7 @@ static int ecdsa_sign_hash(
 
     return res;
 }
-#endif /* PSA_NEED_OBERON_ECDSA_SIGN */
+#endif /* PSA_NEED_OBERON_ECDSA_RANDOMIZED || PSA_NEED_OBERON_ECDSA_DETERMINISTIC */
 
 #ifdef PSA_NEED_OBERON_ECDSA_DETERMINISTIC
 /* hmac = HMAC_key(v || tag || sk || ext_hash) */

@@ -165,3 +165,6 @@ what _hardware drivers_ are available for the _target platform_.
 _Target platform_: Hardware chip(s) or device(s), with or without a real-time
 operating system, on which an application can run using _Oberon PSA Crypto_. The
 hardware may or may not have hardware accelerators for cryptographic operations.
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

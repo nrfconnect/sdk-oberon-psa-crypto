@@ -14,7 +14,7 @@
 #include "oberon_wpa3_sae.h"
 #include "oberon_helpers.h"
 #include "psa_crypto_driver_wrappers.h"
-
+#ifdef PSA_NEED_OBERON_WPA3_SAE
 #include "ocrypto_wpa3_sae_p256.h"
 
 #define P256_KEY_SIZE    32
@@ -528,5 +528,4 @@ psa_status_t oberon_import_wpa3_sae_pt_key(
     *key_bits = 256;
     return PSA_SUCCESS;
 }
-
-
+#endif /* PSA_NEED_OBERON_WPA3_SAE */

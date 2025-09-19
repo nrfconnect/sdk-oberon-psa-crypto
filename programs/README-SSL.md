@@ -146,3 +146,6 @@ steps:
     * `library/psa_crypto_driver_wrappers.c`
 
 Build and you now have a TLS project with _Oberon PSA Crypto_ inside!
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

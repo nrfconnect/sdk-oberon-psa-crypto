@@ -478,7 +478,7 @@ psa_status_t oberon_key_derivation_input_bytes(
     defined(PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128) || defined(PSA_NEED_OBERON_SRP_PASSWORD_HASH)
 exit:
 #ifdef PSA_NEED_OBERON_SRP_PASSWORD_HASH
-    if (operation->alg == OBERON_PBKDF2_HMAC_ALG) {
+    if (operation->alg == OBERON_SRP_PASSWORD_HASH_ALG) {
         psa_driver_wrapper_hash_abort(&operation->hash_op);
     } else
 #endif

@@ -111,3 +111,6 @@ _Oberon PSA Crypto_, make sure that the situation is correctly handled where
 
 To learn about _driver development_, continue with chapter
 [Crypto Driver Development](Crypto_Driver_Development.md).
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

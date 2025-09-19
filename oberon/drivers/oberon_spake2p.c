@@ -17,9 +17,9 @@
 #include "oberon_helpers.h"
 #include "psa_crypto_driver_wrappers.h"
 
+#ifdef PSA_NEED_OBERON_SPAKE2P
 #include "ocrypto_ecdh_p256.h"
 #include "ocrypto_spake2p_p256.h"
-
 
 #define P256_KEY_SIZE    32
 #define P256_POINT_SIZE  65
@@ -586,3 +586,4 @@ psa_status_t oberon_export_spake2p_public_key(
 
     return PSA_SUCCESS;
 }
+#endif /* PSA_NEED_OBERON_SPAKE2P */

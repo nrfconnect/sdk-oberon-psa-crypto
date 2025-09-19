@@ -33,22 +33,25 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
     endif()
 
     foreach(THREADING ${THREADING_CONFIG})
-        if(CONFIG_MBEDTLS_THREADING AND (${THREADING} STREQUAL "multi"))
-            file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config_oberon*.h")
+        if(CONFIG_TEST_EXAMPLE_CONFIGS)
+            if(CONFIG_MBEDTLS_THREADING AND (${THREADING} STREQUAL "multi"))
+                file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config_oberon*.h")
+            else()
+                file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config*.h")
+            endif()
         else()
-            file(GLOB config_files LIST_DIRECTORIES false "example_config/crypto_config*.h")
+            set(config_files "include/psa/crypto_config.h")
         endif()
 
         # one pass with pake inject, one pass without
-        set(VARIANTS std pake_inject)
+        set(VARIANTS std random_inject)
         foreach(VARIANT ${VARIANTS})
             # create projects for each crypto_config
             foreach(CRYPTO_CONFIG_H ${config_files})
                 get_filename_component(TEST_CONFIG "${CRYPTO_CONFIG_H}" NAME_WE)
-                message(STATUS "Config: ${TEST_CONFIG}")
                 project("${TEST_CONFIG}-${VARIANT}-${THREADING}-lib" LANGUAGES C)
-                configure_file("${CRYPTO_CONFIG_H}"
-                    "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include/psa/crypto_config.h"
+                configure_file(${CRYPTO_CONFIG_H}
+                    ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}/include/psa/crypto_config.h
                     COPYONLY)
 
                 # test configuration library
@@ -70,8 +73,8 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
                 # use demo psa_crypto_driver_wrappers.c
                 target_sources(${PROJECT_NAME} PRIVATE library/psa_crypto_driver_wrappers.c)
 
-                if(${VARIANT} STREQUAL "pake_inject")
-                    target_compile_definitions(${PROJECT_NAME} PRIVATE OBERON_PAKE_INJECT_RANDOM)
+                if(${VARIANT} STREQUAL "random_inject")
+                    target_compile_definitions(${PROJECT_NAME} PRIVATE OBERON_RANDOM_INJECT)
                     target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/oberon_test_drbg.c")
                 endif()
                 if(${THREADING} STREQUAL "multi")
@@ -103,9 +106,9 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
                             (${TEST_CONFIG} STREQUAL "crypto_config_oberon" AND 
                                 ((${THREADING_CONFIG} STREQUAL "single") OR (${THREADING} STREQUAL "multi"))))
 
-                        if((${VARIANT} STREQUAL "pake_inject" AND ${SUITE} STREQUAL "pake_test") OR 
-                            (NOT(${VARIANT} STREQUAL "pake_inject") AND NOT(${SUITE} STREQUAL "pake_test")))
-     
+                            if((${VARIANT} STREQUAL "random_inject" AND (${SUITE} STREQUAL "pake_test" OR ${SUITE} STREQUAL "ml_kem_dsa_test")) OR
+                                (NOT(${VARIANT} STREQUAL "random_inject") AND NOT(${SUITE} STREQUAL "pake_test" OR ${SUITE} STREQUAL "ml_kem_dsa_test")))
+
                             project("${TEST_CONFIG}-${SUITE}-${VARIANT}-${THREADING}")
                             message(STATUS "Add test suite ${SUITE}")
                             add_executable(${PROJECT_NAME})

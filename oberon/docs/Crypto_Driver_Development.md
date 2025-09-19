@@ -82,12 +82,14 @@ _Oberon drivers_ support _driver chaining_ – wherever this is appropriate. In
 particular, the following driver chains are supported in _Oberon PSA Crypto_:
 
 - PAKE → Key Derivation
+- Key Derivation → MAC
 - Signature → Hash
 - Deterministic signature → MAC
-- RSA → Hash
-- DRBG → AES, MAC, Entropy
-- Key Derivation → MAC
-- MAC → Hash, AES
+- DRBG → Cipher, MAC, Entropy
+- Key wrap → Cipher
+- MAC → Hash, Cipher
+- Signature → Hash
+- Key encapsulation → Hash
 
 _Driver chaining_ allows to highly optimize the mix of software and hardware
 implementations of cryptographic code.
@@ -95,3 +97,6 @@ implementations of cryptographic code.
 *Note: _Hardware drivers_ do not need to implement _driver chaining_. Hardware
 crypto accelerators implement a set of cryptographic operations completely,
 i.e., without upcalls into software.*
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

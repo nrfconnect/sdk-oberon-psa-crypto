@@ -187,3 +187,6 @@ for more information.
 
 To learn about _platform integration_, continue with chapter
 [Platform Integration](Platform_Integration.md).
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

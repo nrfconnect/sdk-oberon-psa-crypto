@@ -1499,6 +1499,16 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
     if (status != PSA_SUCCESS) {
         goto exit;
     }
+#ifdef PSA_VENDOR_ENABLE_COPY_KEY_TO_VENDOR_LOCATION
+    if ((PSA_KEY_LIFETIME_GET_LOCATION(target_slot->attr.lifetime) !=
+         PSA_KEY_LIFETIME_GET_LOCATION(source_slot->attr.lifetime)) &&
+        !(PSA_KEY_LIFETIME_IS_VOLATILE(source_slot->attr.lifetime) &&
+          PSA_KEY_LOCATION_IS_VENDOR(target_slot->attr.lifetime))) {        
+        /*
+         * Support copying keys either from the same location or
+         * by promoting a copyable volatile key to a vendor key
+         * */
+#else /* PSA_VENDOR_ENABLE_COPY_KEY_TO_VENDOR_LOCATION */
     if (PSA_KEY_LIFETIME_GET_LOCATION(target_slot->attr.lifetime) !=
         PSA_KEY_LIFETIME_GET_LOCATION(source_slot->attr.lifetime)) {
         /*
@@ -1508,6 +1518,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
          * been fully mapped. For now, this can be achieved through
          * appropriate API invocations from the application, if needed.
          * */
+#endif /* PSA_VENDOR_ENABLE_COPY_KEY_TO_VENDOR_LOCATION */
         status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }

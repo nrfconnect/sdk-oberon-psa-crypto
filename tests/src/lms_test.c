@@ -105,6 +105,7 @@ static int test_verify(
     psa_set_key_algorithm(&attributes, wrong_alg);
     TEST_ASSERT(psa_import_key(&attributes, key, key_len, &kid) == PSA_SUCCESS);
     TEST_ASSERT(psa_verify_message(kid, wrong_alg, msg, msg_len, sig, sig_len) == PSA_ERROR_INVALID_ARGUMENT);
+    psa_destroy_key(kid);
 
     return 1;
 exit:
@@ -219,6 +220,7 @@ static int test_hss_verify(
     psa_set_key_algorithm(&attributes, PSA_ALG_LMS);
     TEST_ASSERT(psa_import_key(&attributes, key, key_len, &kid) == PSA_SUCCESS);
     TEST_ASSERT(psa_verify_message(kid, PSA_ALG_LMS, msg, msg_len, sig, sig_len) == PSA_ERROR_INVALID_ARGUMENT);
+    psa_destroy_key(kid);
 
     return 1;
 exit:

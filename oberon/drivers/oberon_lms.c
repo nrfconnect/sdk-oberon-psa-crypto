@@ -102,8 +102,8 @@ static psa_status_t oberon_lms_verify(
     psa_hash_operation_t hash_op;
     uint32_t lms_type, ots_type;
     uint32_t q, node_num, node_new;
-    uint32_t idx, bits, max, sum, data, j;
-    size_t n, p, w, iw, v, ls, h, i, len, length;
+    uint32_t w, idx, bits, max, sum, data, j;
+    size_t n, p, iw, v, ls, h, i, len, length;
     const uint8_t *path;
     uint8_t block[32], temp[56];
     psa_algorithm_t hash_alg;

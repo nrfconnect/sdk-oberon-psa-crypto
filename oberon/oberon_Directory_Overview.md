@@ -15,3 +15,6 @@ cryptographic operations, most of them using the _ocrypto_ library.
 This directory contains platform-specific configuration examples and example
 (mock) _hardware drivers_. The pseudo-platform _demo_ shows several
 configurations that use _Oberon drivers_ and example _hardware drivers_.
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

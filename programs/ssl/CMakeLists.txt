@@ -105,7 +105,7 @@ if (CONFIG_MBEDTLS_SSL_TESTS)
 
     if(NOT EXISTS "${MBEDTLS_ROOT}/library/cipher_invasive.h")
         message(FATAL_ERROR
-                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.3.")
+                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.4.")
     endif()
 
     message(STATUS "CONFIG_MBEDTLS_SSL_TESTS: ${CONFIG_MBEDTLS_SSL_TESTS}")

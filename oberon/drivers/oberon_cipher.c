@@ -227,6 +227,34 @@ psa_status_t oberon_cipher_update(
     return PSA_SUCCESS;
 }
 
+#ifdef PSA_NEED_OBERON_CBC_PKCS7_AES
+// handle AES-CBC-PKCS7 unpadding including size check in constant time
+static psa_status_t oberon_aes_cbc_pkcs_unpad(
+    ocrypto_aes_cbc_pkcs_ctx *ctx,
+    uint8_t *output, size_t output_size, size_t *output_length)
+{
+    uint8_t data[16];
+    size_t len;
+    int32_t res, ovfl;
+
+    if (output_size < 16) {
+        memcpy(data, output, output_size);
+        res = ocrypto_aes_cbc_pkcs_final_dec(ctx, data, &len);
+        memcpy(output, data, output_size);
+        /* 0 <= len <= 15 */
+        *output_length = len;
+        ovfl = ((int32_t)output_size - (int32_t)len) >> 31;
+        /* output_size < len <=> ovfl = all 1 */
+        /* res != 0 => len == 0 => ovfl == 0 */
+        return (res & PSA_ERROR_INVALID_PADDING) |
+               (ovfl & PSA_ERROR_BUFFER_TOO_SMALL);
+    } else {
+        res = ocrypto_aes_cbc_pkcs_final_dec(ctx, output, output_length);
+        return res & PSA_ERROR_INVALID_PADDING;
+    }
+}
+#endif /* PSA_NEED_OBERON_CBC_PKCS7_AES */
+
 psa_status_t oberon_cipher_finish(
     oberon_cipher_operation_t *operation,
     uint8_t *output, size_t output_size, size_t *output_length)
@@ -238,14 +266,13 @@ psa_status_t oberon_cipher_finish(
     switch (operation->alg) {
 #ifdef PSA_NEED_OBERON_CBC_PKCS7_AES
     case PSA_ALG_CBC_PKCS7:
-        if (output_size < 16) return PSA_ERROR_BUFFER_TOO_SMALL;
         if (operation->decrypt) {
             if (ocrypto_aes_cbc_pkcs_output_size((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, 1) == 0) {
                 return PSA_ERROR_INVALID_ARGUMENT;
             }
-            res = ocrypto_aes_cbc_pkcs_final_dec((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, output, output_length);
-            status = res & PSA_ERROR_INVALID_PADDING; // constant-time
+            status = oberon_aes_cbc_pkcs_unpad((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, output, output_size, output_length);
         } else {
+            if (output_size < 16) return PSA_ERROR_BUFFER_TOO_SMALL;
             ocrypto_aes_cbc_pkcs_final_enc((ocrypto_aes_cbc_pkcs_ctx *)operation->ctx, output);
             *output_length = 16;
         }
@@ -408,6 +435,8 @@ psa_status_t oberon_cipher_decrypt(
     uint8_t *output, size_t output_size, size_t *output_length)
 {
     ocrypto_context ctx;
+    psa_status_t status;
+    size_t len;
     int res;
 
 #ifdef PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20
@@ -459,13 +488,13 @@ psa_status_t oberon_cipher_decrypt(
 #ifdef PSA_NEED_OBERON_CBC_PKCS7_AES
     case PSA_ALG_CBC_PKCS7:
         if (input_length < 32 || (input_length & 15) != 0) return PSA_ERROR_INVALID_ARGUMENT;
-        if (output_size < input_length - 16) return PSA_ERROR_BUFFER_TOO_SMALL;
+        len = input_length - 32; // full blocks output length 
+        if (output_size < len) return PSA_ERROR_BUFFER_TOO_SMALL;
         ocrypto_aes_cbc_pkcs_init(&ctx.cbc, key, key_length, input, 1);
         ocrypto_aes_cbc_pkcs_update(&ctx.cbc, output, input + 16, input_length - 16);
-        res = ocrypto_aes_cbc_pkcs_final_dec(&ctx.cbc, output + input_length - 32, output_length);
-        if (res) return PSA_ERROR_INVALID_PADDING;
-        *output_length += input_length - 32;
-        break;
+        status = oberon_aes_cbc_pkcs_unpad(&ctx.cbc, output + len, output_size - len, output_length);
+        *output_length += len;
+        return status;
 #endif /* PSA_NEED_OBERON_CBC_PKCS7_AES */
 #ifdef PSA_NEED_OBERON_CBC_NO_PADDING_AES
     case PSA_ALG_CBC_NO_PADDING:
@@ -492,6 +521,8 @@ psa_status_t oberon_cipher_decrypt(
         (void)output;
         (void)output_size;
         (void)output_length;
+        (void)status;
+        (void)len;
         (void)ctx;
         (void)res;
         return PSA_ERROR_NOT_SUPPORTED;

@@ -2576,6 +2576,24 @@
 
 #define PSA_KEY_LOCATION_VENDOR_FLAG            ((psa_key_location_t) 0x800000)
 
+/** Whether a key lifetime indicates that the key is defined by a vendor.
+ *
+ * A key with vendor location tag may be stored in a secure element or be
+ * part of the hardware of the device. It may be used transparently or
+ * be fully opaque.
+ *
+ * Some platforms may offer ways of doing key management in vendor scope
+ * or support promoting keys from volatile lifetime to persistent storage
+ * as part of a key establishment.
+ *
+ * \param lifetime      The lifetime value to query (value of type
+ *                      ::psa_key_lifetime_t).
+ *
+ * \return \c 1 if the key is a vendor key, otherwise \c 0.
+ */
+#define PSA_KEY_LOCATION_IS_VENDOR(lifetime)  \
+    ((PSA_KEY_LIFETIME_GET_LOCATION(lifetime) & PSA_KEY_LOCATION_VENDOR_FLAG) != 0)
+
 /* Note that key identifier values are embedded in the
  * persistent key store, as part of key metadata. As a consequence, they
  * must not be changed (unless the storage format version changes).

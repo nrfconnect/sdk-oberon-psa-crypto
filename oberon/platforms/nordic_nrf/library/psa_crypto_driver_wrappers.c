@@ -102,7 +102,7 @@
 #include "tfm_builtin_key_loader.h"
 #endif /* PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER */
 
-#ifdef OBERON_PAKE_INJECT_RANDOM
+#ifdef OBERON_RANDOM_INJECT
 #include "oberon_test_drbg.h"
 #endif
 
@@ -2646,10 +2646,10 @@ psa_status_t psa_driver_wrapper_get_random(
     psa_driver_random_context_t *context,
     uint8_t *output, size_t output_size)
 {
-#ifdef OBERON_PAKE_INJECT_RANDOM
+#ifdef OBERON_RANDOM_INJECT
     psa_status_t status = oberon_test_drbg_get_random(NULL, output, output_size);
     if (status != PSA_ERROR_INSUFFICIENT_ENTROPY) return status;
-#endif /* OBERON_PAKE_INJECT_RANDOM */
+#endif /* OBERON_RANDOM_INJECT */
 #ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
     return oberon_ctr_drbg_get_random(&context->oberon_ctr_drbg_ctx, output, output_size);
 #endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */

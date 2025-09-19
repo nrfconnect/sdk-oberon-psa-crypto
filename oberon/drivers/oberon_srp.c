@@ -16,7 +16,7 @@
 #include "oberon_srp.h"
 #include "oberon_helpers.h"
 #include "psa_crypto_driver_wrappers.h"
-
+#ifdef PSA_NEED_OBERON_SRP_6
 #include "ocrypto_srp.h"
 
 #define SRP_FIELD_BITS  3072
@@ -457,3 +457,4 @@ psa_status_t oberon_export_srp_public_key(
 
     return PSA_SUCCESS;
 }
+#endif /* PSA_NEED_OBERON_SRP_6 */

@@ -730,3 +730,6 @@ Parameter _function_: Accelerated RNG-related function.
 
 - PSA_ACCEL_`GENERATE_RANDOM`
 - PSA_ACCEL_`GET_ENTROPY`
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).
