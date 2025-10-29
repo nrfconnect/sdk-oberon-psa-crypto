@@ -1724,7 +1724,12 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
      * - For opaque keys this translates to an invocation of the drivers'
      *   copy_key entry point through the dispatch layer.
      * */
-    if (psa_key_lifetime_is_external(actual_attributes.lifetime)) {
+    if (psa_key_lifetime_is_external(actual_attributes.lifetime)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) && defined(HALTIUM_XXAA)
+    /* NCSDK-36345: See if this change can be standardized for all platforms */
+    || psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(target_slot->attr.id))
+#endif
+    ) {
         status = psa_driver_wrapper_get_key_buffer_size(&actual_attributes,
                                                         &storage_size);
         if (status != PSA_SUCCESS) {
