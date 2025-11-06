@@ -116,10 +116,10 @@ tests and services are available for implementations of these APIs. For _Oberon
 PSA Crypto_, only the _PSA Certified Crypto API_ and _PSA Certified Secure
 Storage API_ are relevant.
 
-_PSA Certified APIs Architecture Test Suite_: Suite of tests for the
-functionality of an implementation of _PSA Certified APIs_ against the
-specification of these APIs. For _Oberon PSA Crypto_, only the
-cryptography-related part of the test suite is relevant.
+_PSA APIs Test Suite_: Suite of tests for the functionality of an implementation
+of _PSA Certified APIs_ against the specification of these APIs. For
+_Oberon PSA Crypto_, only the cryptography-related part of the test suite is
+relevant.
 
 _PSA Certified Crypto API_: Specification of a crypto API standard that is one of
 the _PSA_ APIs. It defines a high-level crypto interface for use by _application

@@ -493,6 +493,32 @@ static inline struct psa_pake_operation_s psa_pake_operation_init(void)
     return v;
 }
 
+struct psa_xof_operation_s {  /*!!OM*/
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+    mbedtls_psa_client_handle_t handle;
+#else
+    unsigned int MBEDTLS_PRIVATE(id);
+
+    psa_algorithm_t MBEDTLS_PRIVATE(alg);
+    unsigned int MBEDTLS_PRIVATE(output) : 1;
+
+    psa_driver_xof_context_t MBEDTLS_PRIVATE(ctx);
+#endif
+};
+
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
+#define PSA_XOF_OPERATION_INIT { 0 }
+#else
+/* This only zeroes out the first byte in the union, the rest is unspecified. */
+#define PSA_XOF_OPERATION_INIT { 0, 0, 0, { 0 } }
+#endif
+static inline struct psa_xof_operation_s psa_xof_operation_init(void)
+{
+    const struct psa_xof_operation_s v = PSA_XOF_OPERATION_INIT;
+    return v;
+}
+
+
 /**
  * \brief The context for PSA interruptible hash signing.
  */

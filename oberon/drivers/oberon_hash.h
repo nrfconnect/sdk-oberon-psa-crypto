@@ -24,8 +24,12 @@ typedef struct {
     uint64_t ctx[52];
 #elif defined(PSA_NEED_OBERON_SHA_1)
     uint64_t ctx[44];
-#else
+#elif defined(PSA_NEED_OBERON_SHA3) || defined(PSA_NEED_OBERON_SHAKE) || \
+      defined(PSA_NEED_OBERON_SHA_224) || defined(PSA_NEED_OBERON_SHA_256) || \
+      defined(PSA_NEED_OBERON_SHA_256_192)
     uint64_t ctx[27];
+#else /* defined(PSA_NEED_OBERON_ASCON_HASH256) */
+    uint64_t ctx[6];
 #endif
     psa_algorithm_t alg;
 } oberon_hash_operation_t;

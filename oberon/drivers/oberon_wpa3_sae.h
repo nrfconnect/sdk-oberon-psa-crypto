@@ -31,8 +31,8 @@ typedef struct {
     uint8_t kck[32];
     uint8_t pmk[32];
     uint8_t pmkid[16];
-    uint8_t commit[98];
-    uint8_t peer_commit[98];
+    uint8_t commit[96];
+    uint8_t peer_commit[96];
     uint8_t hash_length;
     uint8_t pmk_length;
     uint8_t use_h2e:1;

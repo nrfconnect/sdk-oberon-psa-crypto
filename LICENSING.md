@@ -1,75 +1,63 @@
 # LICENSING
 
-This document declares what licenses have been used in the construction of
-_Oberon PSA Crypto_ (incoming licenses) and what licenses are provided to you
-(outgoing licenses). For incoming licenses, it is distinguished whether
-specifications are licensed (i.e., APIs and their documentation) or actual
-software (i.e., API implementations).
+This document declares what licenses have been used in the construction of this
+software (incoming licenses) and what licenses are provided to you for using it
+(outgoing licenses). In addition, dependencies and contributors are listed.
 
-Copies of incoming licenses are located in directory `licenses-incoming`.
+Contributors and dependencies are listed at the end of this document.
 
-Dependencies and contributors are also listed in this document.
+## Incoming Licenses
 
-See the `Compatibility` section in `CHANGELOG.md` for additional details.
+### PSA Specifications
 
-## Incoming Specification Licenses
+This software is based on the following programming interfaces:
 
-_Oberon PSA Crypto_ is based on both the high-level _PSA Certified Crypto API_
-standard and the low-level _PSA Crypto Driver API_ standard proposal from
-_Mbed TLS_.
+- _PSA Certified Crypto API_ (high-level interface to applications)
+- _PSA Certified Crypto Driver Interface_ (low-level interface to drivers)
+- _PSA Certified Secure Storage API_ (low-level interface to secure storage)
 
-### PSA Certified Crypto API
-
-The _PSA Certfied Crypto API_ is one of the _PSA Certified API_ standards:
+These programming interfaces are members of the _PSA Certified API_ set of
+specifications:
 [PSA Certified API Standards](https://arm-software.github.io/psa-api/).
 
-This specification is licensed under _CC SA-BY 4.0_, see here for more details:
-[PSA Crypto API License](https://arm-software.github.io/psa-api/crypto/1.3/about.html#license).
+They are licensed under _CC BY-SA 4.0_ (text, illustrations) and _Apache 2.0_
+(code examples) licenses:
+[PSA Certified Crypto API License](https://arm-software.github.io/psa-api/crypto/1.3/about.html#license).
 
-### PSA Crypto Driver API
-
-_PSA Crypto Driver API_ is a proposal by an Arm open source development team:
-[Proposed PSA Crypto Driver API](https://github.com/Mbed-TLS/TF-PSA-Crypto/tree/development/docs/proposed).
-The license is Apache 2.0 plus GPL-2 or later:
-[PSA Crypto Driver API Proposal License](https://github.com/Mbed-TLS/TF-PSA-Crypto/blob/development/LICENSE).
-
-_Oberon PSA Crypto_ includes _crypto driver_ *implementations* that are based on
-the _PSA Crypto Driver API_ proposal and copyrighted by _Oberon microsystems_.
-
-*Note: As of this writing, this API is an incomplete specification and not yet
-formally part of the `PSA Certified API` suite of standards. A standardization
-effort led by Arm and in cooperation with _Oberon microsystems_ is currently in
-progress.*
-
-## Incoming Software Licenses
+*Note: The _PSA Certified Crypto Driver Interface_ is currently still in alpha
+state.*
 
 ### Mbed TLS
 
-The high-level part of _Oberon PSA Crypto_ (i.e., _crypto core_) is a fork of
-Arm's _Mbed TLS_:
-<https://github.com/Mbed-TLS/mbedtls>
+The high-level part of this software (i.e., the _crypto core_) is a fork of the
+crypto component of Arm's _Mbed TLS_ open source project:
+[Mbed TLS](https://github.com/Mbed-TLS/mbedtls).
 
-_Mbed TLS_ has been published under both an Apache and a GPL license since
-release 3.5.1:
-<https://github.com/Mbed-TLS/mbedtls/blob/development/LICENSE>
+_Mbed TLS_ is licensed under both an `Apache-2.0` and a `GPL-2.0-or-later`
+license:
+[Mbed TLS Licenses](https://github.com/Mbed-TLS/mbedtls/blob/development/LICENSE).
 
 Some files that originate from _Mbed TLS_ have been modified by Oberon
 microsystems AG. They contain the following notice:
 
 `NOTICE: This file has been modified by Oberon microsystems AG.`
 
-### PSA Certified APIs Architecture Test Suite
+*Note: In October 2025, the crypto component of _Mbed TLS_ has been factored out
+into the separate _TF-PSA-Crypto_ repo that provides better _PSA Crypto_
+support:*
+[TF-PSA-Crypto](https://github.com/Mbed-TLS/TF-PSA-Crypto).
 
-For certification testing against the _PSA Certified APIs_, _Oberon PSA Crypto_
-includes the _PSA Certified APIs Architecture Test Suite_:
-<https://github.com/ARM-software/psa-arch-tests>
+### PSA APIs Test Suite
 
-The test suite has been published under the Apache License Version 2.0:
-<https://github.com/ARM-software/psa-arch-tests/blob/main/LICENSE.md>
+For certification testing against the _PSA Certified APIs_, the
+_PSA APIs Test Suite_ is included:
+[PSA APIs Test Suite](https://github.com/ARM-software/psa-arch-tests).
 
-## Dependencies
+The test suite is licensed under the _Apache 2.0_ license:
+[PSA APIs Test Suite License](https://github.com/ARM-software/psa-arch-tests/blob/main/LICENSE.md).
 
-_Oberon PSA Crypto_ has one dependency: _ocrypto_.
+The test suite depends on the _Arm_ test library `val_common`, which is licensed
+under a BSD license (SPDX identifier `BSD-3-Clause`).
 
 ### ocrypto
 
@@ -89,7 +77,9 @@ _Oberon microsystems_.*
 ## Outgoing Licenses
 
 All source code files that contain a header indicating that the file is licensed
-as `Apache-2.0 OR GPL-2.0-or-later` are licensed to you under these licenses.
+as `Apache-2.0 OR GPL-2.0-or-later` are licensed to you under these two licenses.
+This means that you can choose the one that suits you better and ignore the other
+one.
 
 All documentation files that contain a footer indicating that the file is
 licensed as `Creative Commons Attribution-ShareAlike 4.0 License` are licensed to
@@ -101,8 +91,15 @@ in [LICENSE](LICENSE).
 
 ## Contributors
 
-The following organizations have contributed to _Oberon PSA Crypto_ software:
+The following organizations have contributed to this software:
 
 - Oberon microsystems AG
 - Nordic Semiconductor ASA (contributor that kindly assigned its copyright to
-_Oberon microsystems_)
+  _Oberon microsystems_)
+
+## Dependencies
+
+This software has two dependencies:
+
+- _ocrypto_
+- The _target platform_'s _clib_ (implicit dependency)

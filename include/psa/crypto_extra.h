@@ -597,15 +597,31 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
  * This means that PSA core was built with the corresponding PSA_WANT_ALG_xxx
  * set and that psa_crypto_init has already been called.
  *
- * \note When using Mbed TLS version of PSA core (i.e. MBEDTLS_PSA_CRYPTO_C is
- *       set) for now this function only checks the state of the driver
- *       subsystem, not the algorithm. This might be improved in the future.
+ * \note When using the built-in version of the PSA core (i.e.
+ *       #MBEDTLS_PSA_CRYPTO_C is set), for now, this function only checks
+ *       the state of the driver subsystem, not the algorithm.
+ *       This might be improved in the future.
  *
  * \param hash_alg  The hash algorithm.
  *
  * \return 1 if the PSA can handle \p hash_alg, 0 otherwise.
  */
 int psa_can_do_hash(psa_algorithm_t hash_alg);
+
+/**
+ * Tell if PSA is ready for this cipher.
+ *
+ * \note When using the built-in version of the PSA core (i.e.
+ *       #MBEDTLS_PSA_CRYPTO_C is set), for now, this function only checks
+ *       the state of the driver subsystem, not the key type and algorithm.
+ *       This might be improved in the future.
+ *
+ * \param key_type    The key type.
+ * \param cipher_alg  The cipher algorithm.
+ *
+ * \return 1 if the PSA can handle \p cipher_alg, 0 otherwise.
+ */
+int psa_can_do_cipher(psa_key_type_t key_type, psa_algorithm_t cipher_alg);
 
 /**@}*/
 
@@ -715,11 +731,11 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
                          ((type) & PSA_KEY_TYPE_SRP_GROUP_MASK) : \
                          0))
 
-#define PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE      ((psa_key_type_t) 0x3280)
-#define PSA_KEY_TYPE_WPA3_SAE_DH_PT_BASE       ((psa_key_type_t) 0x3300)
+#define PSA_KEY_TYPE_WPA3_SAE_ECC_BASE         ((psa_key_type_t) 0x3280)
+#define PSA_KEY_TYPE_WPA3_SAE_DH_BASE          ((psa_key_type_t) 0x3300)
 #define PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK       ((psa_key_type_t) 0x007f)
 
-/** WPA3-SAE-PT ECC key.
+/** WPA3-SAE ECC key.
  *
  * The key is used to store the out of band calculated group element
  * used in the Hash-To-Element variant of WPA3-SAE. It can be used as
@@ -728,10 +744,10 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * \param group A value of type ::psa_ec_family_t that identifies the
  *              group to be used.
  */
-#define PSA_KEY_TYPE_WPA3_SAE_ECC_PT(group) \
-    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE | (group)))
+#define PSA_KEY_TYPE_WPA3_SAE_ECC(group) \
+    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_ECC_BASE | (group)))
 
-/** WPA3-SAE-PT DH key.
+/** WPA3-SAE DH key.
  *
  * The key is used to store the out of band calculated group element
  * used in the Hash-To-Element variant of WPA3-SAE. It can be used as
@@ -740,25 +756,30 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * \param group A value of type ::psa_dh_family_t that identifies the
  *              group to be used.
  */
-#define PSA_KEY_TYPE_WPA3_SAE_DH_PT(group) \
-    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_DH_PT_BASE | (group)))
+#define PSA_KEY_TYPE_WPA3_SAE_DH(group) \
+    ((psa_key_type_t) (PSA_KEY_TYPE_WPA3_SAE_DH_BASE | (group)))
 
- /** Whether a key type is a WPA3-SAE-PT. */
-#define PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)                    \
+ /** Whether a key type is a WPA3-SAE. */
+#define PSA_KEY_TYPE_IS_WPA3_SAE(type)                    \
     ((((type) - (1 << 7)) & ~0x00ff) ==                      \
-     (PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE - (1 << 7)))
- /** Whether a key type is a WPA3-SAE-ECC-PT. */
-#define PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type)                \
+     (PSA_KEY_TYPE_WPA3_SAE_ECC_BASE - (1 << 7)))
+ /** Whether a key type is a WPA3-SAE-ECC. */
+#define PSA_KEY_TYPE_IS_WPA3_SAE_ECC(type)                   \
     (((type) & ~PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) ==         \
-     PSA_KEY_TYPE_WPA3_SAE_ECC_PT_BASE)
- /** Whether a key type is a WPA3-SAE-DH-PT. */
-#define PSA_KEY_TYPE_IS_WPA3_SAE_DH_PT(type)                 \
+     PSA_KEY_TYPE_WPA3_SAE_ECC_BASE)
+ /** Whether a key type is a WPA3-SAE-DH. */
+#define PSA_KEY_TYPE_IS_WPA3_SAE_DH(type)                    \
     (((type) & ~PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) ==         \
-     PSA_KEY_TYPE_WPA3_SAE_DH_PT_BASE)
- /** Extract the group from a WPA3-SAE key type. */
-#define PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(type)            \
-    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type) ? \
+     PSA_KEY_TYPE_WPA3_SAE_DH_BASE)
+ /** Extract the group from a WPA3-SAE-DH key type. */
+#define PSA_KEY_TYPE_WPA3_SAE_DH_GET_FAMILY(type)            \
+    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_WPA3_SAE_DH(type) ? \
       ((type) & PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) :          \
+      0))
+ /** Extract the group from a WPA3-SAE-ECC key type. */
+#define PSA_KEY_TYPE_WPA3_SAE_ECC_GET_FAMILY(type)            \
+    ((psa_ecc_family_t) (PSA_KEY_TYPE_IS_WPA3_SAE_ECC(type) ? \
+      ((type) & PSA_KEY_TYPE_WPA3_SAE_GROUP_MASK) :           \
       0))
 
 #define PSA_ALG_WPA3_SAE_H2E_BASE         ((psa_algorithm_t) 0x08800400)
@@ -770,7 +791,7 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * - #PSA_KEY_DERIVATION_INPUT_SALT for the uuid.
  * - #PSA_KEY_DERIVATION_INPUT_PASSWORD for the password.
  * - optionally; #PSA_KEY_DERIVATION_INPUT_INFO for the password id.
- * The output has to be read as a key of type PSA_KEY_TYPE_WPA3_SAE_PT.
+ * The output has to be read as a key of type PSA_KEY_TYPE_WPA3_SAE.
  *
  * \param hash_alg      A hash algorithm (\c PSA_ALG_XXX value such that
  *                      #PSA_ALG_IS_HASH(\p hash_alg) is true).
@@ -920,6 +941,12 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * To make the authentication explicit there are various methods, see Section 5
  * of RFC 8236 for two examples.
  *
+ * \note The JPAKE implementation has the following limitations:
+ *       - The only supported primitive is ECC on the curve secp256r1, i.e.
+ *         `PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+ *          PSA_ECC_FAMILY_SECP_R1, 256)`.
+ *       - The only supported hash algorithm is SHA-256, i.e.
+ *         `PSA_ALG_SHA_256`.
  */
 #define PSA_ALG_JPAKE_BASE                      ((psa_algorithm_t) 0x0a000100)
 #define PSA_ALG_JPAKE(hash_alg) (PSA_ALG_JPAKE_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
@@ -1157,7 +1184,7 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * \endcode
  * 
  * For basic SAE the password must be of type #PSA_KEY_TYPE_PASSWORD,
- * for SAE-H2E the password must be of type #PSA_KEY_TYPE_WPA3_SAE_PT.
+ * for SAE-H2E the password must be of type #PSA_KEY_TYPE_WPA3_SAE.
  *
  * \c psa_pake_set_role() must not be called because WPA3-SAE is a symmetric PAKE.
  * 
@@ -1180,19 +1207,19 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * Then call the following functions in any order:
  * \code
  * // set send-confirm counter
- * psa_pake_input(operation, #PSA_PAKE_STEP_SEND_CONFIRM, ...);
+ * psa_pake_input(operation, #PSA_PAKE_STEP_CONFIRM_COUNT, ...);
  * // send confirm message
  * psa_pake_output(operation, #PSA_PAKE_STEP_CONFIRM, ...);
  * // receive confirm message
  * psa_pake_input(operation, #PSA_PAKE_STEP_CONFIRM, ...);
  * // get key id (optional)
- * psa_pake_output(operation, #PSA_PAKE_STEP_KEYID, ...);
+ * psa_pake_output(operation, #PSA_PAKE_STEP_KEY_ID, ...);
  * \endcode
  * 
  * Remarks:
- * \c psa_pake_input(#PSA_PAKE_STEP_SEND_CONFIRM) must be called before
+ * \c psa_pake_input(#PSA_PAKE_STEP_CONFIRM_COUNT) must be called before
  * \c psa_pake_output(#PSA_PAKE_STEP_CONFIRM) to set the send-confirm counter.
- * The #PSA_PAKE_STEP_SEND_CONFIRM and #PSA_PAKE_STEP_CONFIRM steps may be used
+ * The #PSA_PAKE_STEP_CONFIRM_COUNT and #PSA_PAKE_STEP_CONFIRM steps may be used
  * multiple times to handle repeated confirm messages with varying counts.
  *
  * Finally get the shared secret: 
@@ -1206,14 +1233,22 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * It can be used directly as an encryption key or as input to a key derivation
  * operation.
  */
-#define PSA_ALG_WPA3_SAE_FIXED_BASE             ((psa_algorithm_t) 0x0a000800)
-#define PSA_ALG_WPA3_SAE_FIXED(hash_alg) (PSA_ALG_WPA3_SAE_FIXED_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
-#define PSA_ALG_WPA3_SAE_GDH_BASE               ((psa_algorithm_t) 0x0a000900)
-#define PSA_ALG_WPA3_SAE_GDH(hash_alg) (PSA_ALG_WPA3_SAE_GDH_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
-#define PSA_ALG_IS_WPA3_SAE(alg) (((alg) & ~0x000001ff) == PSA_ALG_WPA3_SAE_FIXED_BASE)
-#define PSA_ALG_IS_WPA3_SAE_FIXED(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_FIXED_BASE)
-#define PSA_ALG_IS_WPA3_SAE_GDH(alg) (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_GDH_BASE)
+#define PSA_ALG_WPA3_SAE_FIXED_BASE       ((psa_algorithm_t)0x0a000800)
+#define PSA_ALG_WPA3_SAE_FIXED(hash_alg)  (PSA_ALG_WPA3_SAE_FIXED_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_WPA3_SAE_GDH_BASE         ((psa_algorithm_t)0x0a000900)
+#define PSA_ALG_WPA3_SAE_GDH(hash_alg)    (PSA_ALG_WPA3_SAE_GDH_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_IS_WPA3_SAE(alg)          (((alg) & ~0x000001ff) == PSA_ALG_WPA3_SAE_FIXED_BASE)
+#define PSA_ALG_IS_WPA3_SAE_FIXED(alg)    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_FIXED_BASE)
+#define PSA_ALG_IS_WPA3_SAE_GDH(alg)      (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_WPA3_SAE_GDH_BASE)
 
+/** A wildcard algorithm for WPA3-SAE password keys and password token keys.
+ *
+ * If a password key (key type #PSA_KEY_TYPE_PASSWORD) specifies
+ * #PSA_ALG_WPA3_SAE_ANY as its permitted algorithm, then the key can be used
+ * for any WPA3-SAE cipher suite with the #PSA_ALG_WPA3_SAE_H2E key-derivation
+ * algorithm, and with the #PSA_ALG_WPA3_SAE_FIXED PAKE algorithm.
+ */
+#define PSA_ALG_WPA3_SAE_ANY              ((psa_algorithm_t)0x0a0088ff)
 /** @} */
 
 /** \defgroup pake Password-authenticated key exchange (PAKE)
@@ -1435,9 +1470,8 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
 
 /** The WPA3-SAE commit step.
  *
- * The format for both input and output at this step is a 2 byte number
- * specifying the group used followed by a scalar and an element of the
- * specified group.
+ * The format for both input and output at this step is the scalar followed
+ * by the element of the used group.
  */
 #define PSA_PAKE_STEP_COMMIT                    ((psa_pake_step_t)0x06)
 
@@ -1447,13 +1481,13 @@ int psa_can_do_hash(psa_algorithm_t hash_alg);
  * specifying the send-confirm counter to be used in the following confirm
  * output step.
  */
-#define PSA_PAKE_STEP_SEND_CONFIRM              ((psa_pake_step_t)0x07)
+#define PSA_PAKE_STEP_CONFIRM_COUNT             ((psa_pake_step_t)0x07)
 
 /** The WPA3-SAE key id output step.
  *
  * The format of the output at this step is a 16 byte key id (PMKID).
  */
-#define PSA_PAKE_STEP_KEYID                     ((psa_pake_step_t)0x08)
+#define PSA_PAKE_STEP_KEY_ID                    ((psa_pake_step_t)0x08)
 
 /** Retrieve the PAKE algorithm from a PAKE cipher suite.
  *
@@ -1468,6 +1502,8 @@ static psa_algorithm_t psa_pake_cs_get_algorithm(
  *
  * This function overwrites any PAKE algorithm
  * previously set in \p cipher_suite.
+ *
+ * \note For #PSA_ALG_JPAKE, the only supported hash algorithm is SHA-256.
  *
  * \param[out] cipher_suite    The cipher suite structure to write to.
  * \param algorithm            The PAKE algorithm to write.
@@ -1491,6 +1527,10 @@ static psa_pake_primitive_t psa_pake_cs_get_primitive(
 /** Declare the primitive for a PAKE cipher suite.
  *
  * This function overwrites any primitive previously set in \p cipher_suite.
+ *
+ * \note For #PSA_ALG_JPAKE, the only supported primitive is ECC on the curve
+ *       secp256r1, i.e. `PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC,
+ *       PSA_ECC_FAMILY_SECP_R1, 256)`.
  *
  * \param[out] cipher_suite    The cipher suite structure to write to.
  * \param primitive            The primitive to write. If this is 0, the
@@ -1622,43 +1662,43 @@ psa_status_t psa_pake_setup(psa_pake_operation_t *operation,
                             const psa_pake_cipher_suite_t *cipher_suite);
 
 /** Set the application role for a password-authenticated key exchange.
-*
-* Not all PAKE algorithms need to differentiate the communicating entities.
-* It is optional to call this function for PAKEs that don't require a role
-* to be specified. For such PAKEs the application role parameter is ignored,
-* or #PSA_PAKE_ROLE_NONE can be passed as \c role.
-*
-* Refer to the documentation of individual PAKE algorithm types (`PSA_ALG_XXX`
-* values of type ::psa_algorithm_t such that #PSA_ALG_IS_PAKE(\c alg) is true)
-* for more information.
-*
-* \param[in,out] operation     The operation object to specify the
-*                              application's role for. It must have been set up
-*                              by psa_pake_setup() and not yet in use (neither
-*                              psa_pake_output() nor psa_pake_input() has been
-*                              called yet). It must be an operation for which
-*                              the application's role hasn't been specified
-*                              (psa_pake_set_role() hasn't been called yet).
-* \param role                  A value of type ::psa_pake_role_t indicating the
-*                              application's role in the PAKE algorithm
-*                              that is being set up. For more information see
-*                              the documentation of \c PSA_PAKE_ROLE_XXX
-*                              constants.
-*
-* \retval #PSA_SUCCESS
-*         Success.
-* \retval #PSA_ERROR_INVALID_ARGUMENT
-*         The \p role is not a valid PAKE role in the \p operation’s algorithm.
-* \retval #PSA_ERROR_NOT_SUPPORTED
-*         The \p role for this algorithm is not supported or is not valid.
-* \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
-* \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
-* \retval #PSA_ERROR_BAD_STATE
-*         The operation state is not valid, or
-*         the library has not been previously initialized by psa_crypto_init().
-*         It is implementation-dependent whether a failure to initialize
-*         results in this error code.
-*/
+ *
+ * Not all PAKE algorithms need to differentiate the communicating entities.
+ * It is optional to call this function for PAKEs that don't require a role
+ * to be specified. For such PAKEs the application role parameter is ignored,
+ * or #PSA_PAKE_ROLE_NONE can be passed as \c role.
+ *
+ * Refer to the documentation of individual PAKE algorithm types (`PSA_ALG_XXX`
+ * values of type ::psa_algorithm_t such that #PSA_ALG_IS_PAKE(\c alg) is true)
+ * for more information.
+ *
+ * \param[in,out] operation     The operation object to specify the
+ *                              application's role for. It must have been set up
+ *                              by psa_pake_setup() and not yet in use (neither
+ *                              psa_pake_output() nor psa_pake_input() has been
+ *                              called yet). It must be an operation for which
+ *                              the application's role hasn't been specified
+ *                              (psa_pake_set_role() hasn't been called yet).
+ * \param role                  A value of type ::psa_pake_role_t indicating the
+ *                              application's role in the PAKE algorithm
+ *                              that is being set up. For more information see
+ *                              the documentation of \c PSA_PAKE_ROLE_XXX
+ *                              constants.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The \p role is not a valid PAKE role in the \p operation’s algorithm.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The \p role for this algorithm is not supported or is not valid.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid, or
+ *         the library has not been previously initialized by psa_crypto_init().
+ *         It is implementation-dependent whether a failure to initialize
+ *         results in this error code.
+ */
 psa_status_t psa_pake_set_role(psa_pake_operation_t *operation,
     psa_pake_role_t role);
 
@@ -2051,12 +2091,12 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
      output_step == PSA_PAKE_STEP_ZK_PROOF ? \
         PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) : \
      output_step == PSA_PAKE_STEP_COMMIT ? \
-        PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) * 3 + 2 : \
+        PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) * 3 : \
      output_step == PSA_PAKE_STEP_CONFIRM ? \
         PSA_ALG_IS_SPAKE2P_CMAC(alg) ? \
             PSA_MAC_LENGTH(PSA_KEY_TYPE_AES, 128, PSA_ALG_CMAC) : \
             PSA_HASH_LENGTH(alg) + (PSA_ALG_IS_WPA3_SAE(alg) ? 2 : 0) : \
-     output_step == PSA_PAKE_STEP_KEYID ? \
+     output_step == PSA_PAKE_STEP_KEY_ID ? \
         16u : \
      0u)
 
@@ -2089,14 +2129,14 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
      input_step == PSA_PAKE_STEP_ZK_PROOF ? \
         PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) : \
      input_step == PSA_PAKE_STEP_COMMIT ? \
-        PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) * 3 + 2 : \
+        PSA_BITS_TO_BYTES(PSA_PAKE_PRIMITIVE_GET_BITS(primitive)) * 3 : \
      input_step == PSA_PAKE_STEP_CONFIRM ? \
         PSA_ALG_IS_SPAKE2P_CMAC(alg) ? \
             PSA_MAC_LENGTH(PSA_KEY_TYPE_AES, 128, PSA_ALG_CMAC) : \
             PSA_HASH_LENGTH(alg) + (PSA_ALG_IS_WPA3_SAE(alg) ? 2 : 0) : \
      input_step == PSA_PAKE_STEP_SALT ? \
         64u : \
-     input_step == PSA_PAKE_STEP_SEND_CONFIRM ? \
+     input_step == PSA_PAKE_STEP_CONFIRM_COUNT ? \
         2u : \
      0u)
 
@@ -2113,7 +2153,7 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 #ifdef PSA_WANT_ALG_SRP_6
 #define PSA_PAKE_OUTPUT_MAX_SIZE PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #else
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
 #define PSA_PAKE_OUTPUT_MAX_SIZE (PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS) * 3 + 2)
 #else
 #define PSA_PAKE_OUTPUT_MAX_SIZE PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
@@ -2133,7 +2173,7 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation);
 #ifdef PSA_WANT_ALG_SRP_6
 #define PSA_PAKE_INPUT_MAX_SIZE PSA_BITS_TO_BYTES(PSA_VENDOR_FFDH_MAX_KEY_BITS)
 #else
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
 #define PSA_PAKE_INPUT_MAX_SIZE (PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS) * 3 + 2)
 #else
 #define PSA_PAKE_INPUT_MAX_SIZE PSA_KEY_EXPORT_ECC_PUBLIC_KEY_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)
@@ -2188,7 +2228,7 @@ static inline void psa_pake_cs_set_key_confirmation(
 
 #define PSA_ALG_CATEGORY_KEY_WRAP  ((psa_algorithm_t) 0x0B000000)
 
- /** Whether the specified algorithm is a key wrap algorithm.
+/** Whether the specified algorithm is a key wrap algorithm.
  *
  * \param alg An algorithm identifier (value of type #psa_algorithm_t).
  *
@@ -2202,14 +2242,14 @@ static inline void psa_pake_cs_set_key_confirmation(
  * This is AES-KW as defined by NIST-SP-800-38F and RFC3394.
  * For AES-KW, the size of the input key must be >= 16 and a multiple of 8.
  */
-#define PSA_ALG_AES_KW             ((psa_algorithm_t) 0x0B400100)
+#define PSA_ALG_KW                    ((psa_algorithm_t) 0x0B400100)
 
 /** The AES Key Wrap with padding algorithm.
  *
  * This is AES-KWP as defined by NIST-SP-800-38F and RFC5649.
  * The S bit is set to indicate acceptance of non-aligned key sizes.
  */
-#define PSA_ALG_AES_KWP            ((psa_algorithm_t) 0x0BC00200)
+#define PSA_ALG_KWP                   ((psa_algorithm_t) 0x0BC00200)
 
 /** Whether the key may be used to wrap another key.
  *
@@ -2225,10 +2265,10 @@ static inline void psa_pake_cs_set_key_confirmation(
  */
 #define PSA_KEY_USAGE_UNWRAP          ((psa_key_usage_t) 0x00020000)
 
- /** A sufficient output buffer size for oberon_psa_wrap_key().
+ /** A sufficient output buffer size for psa_wrap_key().
  *
  * If the size of the output buffer is at least this large, it is guaranteed
- * that oberon_psa_wrap_key() will not fail due to an insufficient output buffer
+ * that psa_wrap_key() will not fail due to an insufficient output buffer
  * size. The actual size of the output might be smaller in any given call.
  *
  * See also #OBERON_PSA_WRAP_KEY_PAIR_MAX_SIZE
@@ -2246,13 +2286,13 @@ static inline void psa_pake_cs_set_key_confirmation(
  *                      incompatible, return 0.
  */
 #define OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(wrap_key_type, alg, key_type, key_bits) \
-    ((alg) == PSA_ALG_AES_KW ? PSA_BITS_TO_BYTES(key_bits) + 8u : \
-     (alg) == PSA_ALG_AES_KWP ? ((PSA_BITS_TO_BYTES(key_bits) + 7u) & ~7u) + 8u : 0u)
+    ((alg) == PSA_ALG_KW ? PSA_BITS_TO_BYTES(key_bits) + 8u : \
+     (alg) == PSA_ALG_KWP ? ((PSA_BITS_TO_BYTES(key_bits) + 7u) & ~7u) + 8u : 0u)
 
- /** Sufficient output buffer size for wrapping any asymmetric key pair.
+/** Sufficient output buffer size for wrapping any asymmetric key pair.
  *
  * This macro expands to a compile-time constant integer. This value is
- * a sufficient buffer size when calling oberon_psa_wrap_key() to wrap any
+ * a sufficient buffer size when calling psa_wrap_key() to wrap any
  * asymmetric key pair, regardless of the exact key type and key size.
  *
  * See also #OBERON_PSA_WRAP_KEY_OUTPUT_SIZE(\p key_type, \p key_bits).
@@ -2261,7 +2301,7 @@ static inline void psa_pake_cs_set_key_confirmation(
 
 /** Export a key in a wrapped format.
  *
- * The output of this function can be passed to oberon_psa_unwrap_key() to
+ * The output of this function can be passed to psa_unwrap_key() to
  * create an equivalent object.
  *
  * The key to be wrapped is encrypted using the given key wrapping algorithm.
@@ -2296,7 +2336,7 @@ static inline void psa_pake_cs_set_key_confirmation(
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
-psa_status_t oberon_psa_wrap_key(
+psa_status_t psa_wrap_key(
     mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
     mbedtls_svc_key_id_t key,
@@ -2306,7 +2346,7 @@ psa_status_t oberon_psa_wrap_key(
 
 /** Import a key in a wrapped format.
  *
- * This function supports wrapped keys as output from oberon_psa_wrap_key().
+ * This function supports wrapped keys as output from psa_wrap_key().
  *
  * \param attributes        The attributes for the new key.
  * \param wrapping_key      Identifier of the key to unwrap the input key. It
@@ -2336,7 +2376,7 @@ psa_status_t oberon_psa_wrap_key(
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  * \retval #PSA_ERROR_BAD_STATE \emptydescription
  */
-psa_status_t oberon_psa_unwrap_key(
+psa_status_t psa_unwrap_key(
     const psa_key_attributes_t *attributes,
     mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
@@ -2366,15 +2406,196 @@ psa_status_t oberon_psa_unwrap_key(
  */
 #define PSA_ALG_SHAKE256_192 ((psa_algorithm_t)0x02000017)
 
- /** The SHAKE256/256 message digest algorithm.
-  *
-  * SHAKE256/256 is the first 256 bits (32 bytes) of the SHAKE256 output.
-  * SHAKE256 is defined in [FIPS202].
-  */
+/** The SHAKE256/256 message digest algorithm.
+ *
+ * SHAKE256/256 is the first 256 bits (32 bytes) of the SHAKE256 output.
+ * SHAKE256 is defined in [FIPS202].
+ */
 #define PSA_ALG_SHAKE256_256 ((psa_algorithm_t)0x02000018)
 
 
- /** LMS signature algorithm
+/** The type of the state object for multi-part XOF operations.
+ *
+ * Before calling any function on an XOF operation object, the application
+ * must initialize it by any of the following means:
+ * - Set the structure to all-bits-zero, for example:
+ *   \code
+ *   psa_xof_operation_t operation;
+ *   memset(&operation, 0, sizeof(operation));
+ *   \endcode
+ * - Initialize the structure to logical zero values, for example:
+ *   \code
+ *   psa_xof_operation_t operation = {0};
+ *   \endcode
+ * - Initialize the structure to the initializer #PSA_XOF_OPERATION_INIT,
+ *   for example:
+ *   \code
+ *   psa_xof_operation_t operation = PSA_XOF_OPERATION_INIT;
+ *   \endcode
+ * - Assign the result of the function psa_xof_operation_init()
+ *   to the structure, for example:
+ *   \code
+ *   psa_xof_operation_t operation;
+ *   operation = psa_xof_operation_init();
+ *   \endcode
+ *
+ * This is an implementation-defined \c struct. Applications should not
+ * make any assumptions about the content of this structure.
+ * Implementation details can change in future versions without notice. */
+typedef struct psa_xof_operation_s psa_xof_operation_t;
+
+/** Return an initial value for an XOF operation object.
+ */
+static psa_xof_operation_t psa_xof_operation_init(void);
+
+/** Set up an XOF operation.
+ *
+ * The sequence of operations to generate XOF output is as follows:
+ * -# Allocate an XOF operation object which will be passed to all the
+ *    functions listed here.
+ * -# Initialize the operation object with one of the methods described in
+ *    the documentation for #psa_xof_operation_t, e.g.
+ *    #PSA_XOF_OPERATION_INIT.
+ * -# Call psa_xof_setup() to specify the required XOF algorithm.
+ * -# Call psa_xof_update() zero, one, or more times, passing a fragment of
+ *    the input each time.
+ * -# To extract XOF output data, call psa_xof_output() one or more times.
+ * -# Finally, call psa_xof_abort() to end the operation.
+ * 
+ * After a successful call to psa_xof_setup(), the operation is active, and
+ * the application must eventually terminate the operation with a call to
+ * psa_xof_abort().
+ *
+ * If psa_xof_setup() returns an error, the operation object is unchanged.
+ * If a subsequent function call with an active operation returns an error,
+ * the operation enters an error state.
+ *
+ * \param[in,out] operation     The operation object to set up. It must have
+ *                              been initialized and not yet in use.
+ * \param[in] alg               The XOF algorithm to compute: a value of type
+ *                              psa_algorithm_t such that PSA_ALG_IS_XOF(alg)
+ *                              is true.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         \p alg is not supported or is not an XOF algorithm.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         \p alg is not an XOF algorithm.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid: it must be inactive, or
+ *         the library requires initializing by a call to psa_crypto_init().
+ */
+psa_status_t psa_xof_setup(psa_xof_operation_t *operation,
+                           psa_algorithm_t alg);
+
+/** Add input to a multi-part XOF operation.
+ * 
+ * The application must call psa_xof_setup() before calling this function.
+ * 
+ * If this function returns an error status, the operation enters an error
+ * state and must be aborted by calling psa_xof_abort().
+ *
+ * \param[in,out] operation Active XOF operation.
+ * \param[in] input         Buffer containing the input fragment.
+ * \param[in] input_length  Size of the \p input buffer in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The total input for the operation is too large for the XOF algorithm.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The total input for the operation is too large for the implementation.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid: it must be active, or
+ *         the library requires initializing by a call to psa_crypto_init().
+ */
+psa_status_t psa_xof_update(psa_xof_operation_t *operation,
+                           const uint8_t *input,
+                           size_t input_length);
+
+/** Extract data from an XOF operation.
+ * 
+ * The application must call psa_xof_setup() and supply all input data, using
+ * calls to psa_xof_update(), before calling this function.
+ * 
+ * This function calculates output bytes from the XOF algorithm and returns
+ * those bytes.
+ * 
+ * If this function returns an error status, the operation enters an error
+ * state and must be aborted by calling psa_xof_abort().
+ *
+ * \param[in,out] operation  Active XOF operation.
+ * \param[in] output         Buffer where the output will be written.
+ * \param[in] output_length  Number of bytes to output.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid: it must be active, or
+ *         the library requires initializing by a call to psa_crypto_init().
+ */
+psa_status_t psa_xof_output(psa_xof_operation_t *operation,
+                            uint8_t *output,
+                            size_t output_length);
+
+/** Abort an XOF operation.
+ * 
+ * Aborting an operation frees all associated resources except for the
+ * \p operation object itself. Once aborted, the operation object can be
+ * reused for another operation by calling psa_xof_setup() again.
+ * 
+ * This function can be called any time after the operation object has been
+ * initialized by one of the methods described in #psa_xof_operation_t.
+ * In particular, calling psa_xof_abort() after the operation has been
+ * terminated by a call to psa_xof_abort() is safe and has no effect.
+ * 
+ * \param[in,out] operation  Initialized XOF operation.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success. The operation object can now be discarded or reused.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The library requires initializing by a call to psa_crypto_init().
+ */
+psa_status_t psa_xof_abort(psa_xof_operation_t *operation);
+
+/** The SHAKE128 XOF algorithm.
+ *
+ * SHAKE128 is one of the KECCAK family of algorithms.
+ * SHAKE128 is defined in [FIPS202].
+ */
+#define PSA_ALG_SHAKE128 ((psa_algorithm_t)0x0D000100)
+
+/** The SHAKE256 XOF algorithm.
+ *
+ * SHAKE256 is one of the KECCAK family of algorithms.
+ * SHAKE256 is defined in [FIPS202].
+ */
+#define PSA_ALG_SHAKE256 ((psa_algorithm_t)0x0D000200)
+
+/** Whether the specified algorithm is an XOF algorithm.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is an XOF algorithm, 0 otherwise.
+ */
+#define PSA_ALG_IS_XOF(alg) \
+        (((alg) & 0x7f000000) == 0x0D000000)
+
+
+/** LMS signature algorithm
  *
  * This is the LMS stateful hash-based signature algorithm, defined by
  * Leighton-Micali Hash-Based Signatures [RFC8554]. LMS requires an
@@ -2419,7 +2640,7 @@ psa_status_t oberon_psa_unwrap_key(
 #define PSA_KEY_TYPE_HSS_PUBLIC_KEY ((psa_key_type_t)0x4008)
 
 
- /** XMSS signature algorithm
+/** XMSS signature algorithm
  *
  * This is the XMSS stateful hash-based signature algorithm, defined by
  * XMSS: eXtended Merkle Signature Scheme [RFC8391]. XMSS requires an
@@ -2614,6 +2835,25 @@ psa_status_t oberon_psa_unwrap_key(
 /** Whether a key type is a ML_DSA key (pair or public-only). */
 #define PSA_KEY_TYPE_IS_ML_KEM(type) \
     (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) == PSA_KEY_TYPE_ML_KEM_PUBLIC_KEY)
+
+
+/** Ascon (NIST SP 800-232) definitions.
+ * @{
+ */
+        
+/** Ascon-AEAD128 key type. */
+#define PSA_KEY_TYPE_ASCON    ((psa_key_type_t)0x2008)
+
+/** Ascon-AEAD128 AEAD algorithm. */
+#define PSA_ALG_ASCON_AEAD128 ((psa_algorithm_t)0x05100700)
+
+/** Ascon-Hash256 hash algorithm. */
+#define PSA_ALG_ASCON_HASH256 ((psa_algorithm_t)0x02000020)
+
+/** Ascon-XOF256 extended output function algorithm. */
+#define PSA_ALG_ASCON_XOF128  ((psa_algorithm_t)0x0D000300)
+
+/** @} */
 
 
 #ifdef __cplusplus

@@ -154,7 +154,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
             set(MBEDTEST_SUITES
                     test_suite_psa_crypto
                     test_suite_psa_crypto_attributes
-                    test_suite_psa_crypto_concurrent
+                    test_suite_psa_crypto.concurrent
                     test_suite_psa_crypto_driver_wrappers
                     # test_suite_psa_crypto_entropy  # n.a. - tests Mbed TLS entropy /* !!OM */
                     test_suite_psa_crypto_generate_key.generated
@@ -168,7 +168,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
                     # test_suite_psa_crypto_op_fail.generated # n.a. - does not work with drivers /* !!OM */
                     test_suite_psa_crypto_op_fail.misc
                     test_suite_psa_crypto_pake
-                    test_suite_psa_crypto_persistent
+                    test_suite_psa_crypto.persistent
                     test_suite_psa_crypto_persistent_key
                     # test_suite_psa_crypto_se_driver_hal       # n.a. - SE drivers are not supported /* !!OM */
                     # test_suite_psa_crypto_se_driver_hal_mocks # n.a.
@@ -178,7 +178,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
 
             # test suites relevant for PSA Crypto that run very long
             set(MBEDTEST_SUITES_LONG
-                test_suite_psa_crypto_pbkdf2
+                test_suite_psa_crypto.pbkdf2
                 test_suite_psa_crypto_storage_format.current
                 test_suite_psa_crypto_storage_format.misc
                 test_suite_psa_crypto_storage_format.v0
@@ -286,6 +286,7 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
         "oberon/drivers/oberon_helpers.h"
         "oberon/drivers/oberon_wpa3_sae.h"
         "oberon/drivers/oberon_xmss.h"
+        "oberon/drivers/oberon_xof.h"
         DESTINATION "include/oberon"
     )
     install(FILES

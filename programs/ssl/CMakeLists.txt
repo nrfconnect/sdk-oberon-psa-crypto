@@ -33,8 +33,7 @@ set(src_tls
         ${MBEDTLS_ROOT}/library/net_sockets.c
         ${MBEDTLS_ROOT}/library/oid.c
         ${MBEDTLS_ROOT}/library/pem.c
-        # copied to oberon_psa_crypto to avoid double definition of PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE
-        ${CMAKE_SOURCE_DIR}/programs/ssl/library/pk.c
+        ${MBEDTLS_ROOT}/library/pk.c
         ${MBEDTLS_ROOT}/library/pk_ecc.c
         ${MBEDTLS_ROOT}/library/pk_wrap.c
         ${MBEDTLS_ROOT}/library/pkparse.c
@@ -85,14 +84,12 @@ set(src_mbedtls_legacy
         ${MBEDTLS_ROOT}/library/gcm.c
         ${MBEDTLS_ROOT}/library/hkdf.c
         ${MBEDTLS_ROOT}/library/hmac_drbg.c
-        # copied to oberon_psa_crypto to avoid wrong psa_crypto_core.h import
-        ${CMAKE_SOURCE_DIR}/programs/ssl/library/md.c
+        ${MBEDTLS_ROOT}/library/md.c
         ${MBEDTLS_ROOT}/library/nist_kw.c
         ${MBEDTLS_ROOT}/library/pkcs12.c
         ${MBEDTLS_ROOT}/library/pkcs5.c
         ${MBEDTLS_ROOT}/library/poly1305.c
-        # copied to oberon_psa_crypto to avoid wrong psa_crypto_core.h import
-        ${CMAKE_SOURCE_DIR}/programs/ssl/library/psa_util.c
+        ${MBEDTLS_ROOT}/library/psa_util.c
         ${MBEDTLS_ROOT}/library/rsa.c
         ${MBEDTLS_ROOT}/library/rsa_alt_helpers.c
         ${MBEDTLS_ROOT}/library/sha1.c
@@ -103,9 +100,9 @@ set(src_mbedtls_legacy
 
 if (CONFIG_MBEDTLS_SSL_TESTS)
 
-    if(NOT EXISTS "${MBEDTLS_ROOT}/library/cipher_invasive.h")
+    if(NOT EXISTS "${MBEDTLS_ROOT}/library/threading_internal.h")
         message(FATAL_ERROR
-                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.4.")
+                "CONFIG_MBEDTLS_SSL_TESTS require Mbed TLS 3.6.5.")
     endif()
 
     message(STATUS "CONFIG_MBEDTLS_SSL_TESTS: ${CONFIG_MBEDTLS_SSL_TESTS}")

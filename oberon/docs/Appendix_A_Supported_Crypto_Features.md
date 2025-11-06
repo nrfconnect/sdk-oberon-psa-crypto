@@ -15,6 +15,7 @@ directive is given, and - where applicable - the supported key types:
 | SHA2                                  | PSA_WANT_ALG_SHA_224/256/384/512                                                 | -                           | yes 10)       |
 | SHA3                                  | PSA_WANT_ALG_SHA3_224/256/384/512                                                | -                           | yes 10)       |
 | SHAKE                                 | PSA_WANT_ALG_SHAKE256-512                                                        | -                           | yes 10)       |
+| Ascon-Hash256                         | PSA_WANT_ALG_ASCON_HASH256                                                       | -                           | yes 10)       |
 | HMAC                                  | PSA_WANT_ALG_HMAC                                                                | PSA_WANT_KEY_TYPE_HMAC      | yes 10)       |
 | AES-CMAC                              | PSA_WANT_ALG_CMAC                                                                | PSA_WANT_KEY_TYPE_AES       | yes 11)       |
 | ChaCha20                              | PSA_WANT_ALG_STREAM_CIPHER                                                       | PSA_WANT_KEY_TYPE_CHACHA20  | yes           |
@@ -24,6 +25,7 @@ directive is given, and - where applicable - the supported key types:
 | AES (AEAD)                            | PSA_WANT_ALG_CCM/GCM                                                             | PSA_WANT_KEY_TYPE_AES       | yes 11)       |
 | ChaCha20-Poly1305                     | PSA_WANT_ALG_CHACHA20_POLY1305                                                   | PSA_WANT_KEY_TYPE_CHACHA20  | yes           |
 | XChaCha20-Poly1305                    | PSA_WANT_ALG_XCHACHA20_POLY1305                                                  | PSA_WANT_KEY_TYPE_XCHACHA20 | yes           |
+| Ascon-AEAD128                         | PSA_WANT_ALG_ASCON_AEAD128                                                       | PSA_WANT_KEY_TYPE_ASCON     | yes           |
 | HKDF                                  | PSA_WANT_ALG_HKDF/HKDF_EXTRACT/HKDF_EXPAND                                       | PSA_WANT_KEY_TYPE_DERIVE    | yes 10)       |
 | TLS-1.2 PRF                           | PSA_WANT_ALG_TLS12_PRF                                                           | PSA_WANT_KEY_TYPE_DERIVE    | yes 10)       |
 | TLS-1.2 PSK-to-Mastersecret           | PSA_WANT_ALG_TLS12_PSK_TO_MS                                                     | PSA_WANT_KEY_TYPE_DERIVE    | yes 10)       |

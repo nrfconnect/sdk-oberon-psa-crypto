@@ -98,7 +98,7 @@ save usage without implication: VERIFY_MESSAGE|COPY
 depends_on:0
 0:int:0x0001:exp:1:int:8:exp:24:int:0x0000:int:0x0000:hex:"4b":hex:"505341004b455900000000000100000001100800020800000000000000000000010000004b"
 
-save usage without implication: all known
+save usage without implication: all valid
 depends_on:0
 0:int:0x0001:exp:1:int:8:exp:25:int:0x0000:int:0x0000:hex:"4b":hex:"505341004b45590000000000010000000110080003ff00000000000000000000010000004b"
 

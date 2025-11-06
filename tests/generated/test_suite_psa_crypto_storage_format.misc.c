@@ -566,17 +566,17 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
             break;
         case 5:
             {
-                *out_value = PSA_KEY_TYPE_RAW_DATA;
+                *out_value = PSA_KEY_TYPE_PASSWORD;
             }
             break;
         case 6:
             {
-                *out_value = PSA_BYTES_TO_BITS(MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE + 1);
+                *out_value = PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT;
             }
             break;
         case 7:
             {
-                *out_value = PSA_KEY_USAGE_EXPORT;
+                *out_value = PSA_ALG_JPAKE(0);
             }
             break;
         case 8:
@@ -585,6 +585,21 @@ static int get_expression(int32_t exp_id, intmax_t *out_value)
             }
             break;
         case 9:
+            {
+                *out_value = PSA_KEY_TYPE_RAW_DATA;
+            }
+            break;
+        case 10:
+            {
+                *out_value = PSA_BYTES_TO_BITS(MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE + 1);
+            }
+            break;
+        case 11:
+            {
+                *out_value = PSA_KEY_USAGE_EXPORT;
+            }
+            break;
+        case 12:
             {
                 *out_value = TEST_FLAG_OVERSIZED_KEY;
             }
@@ -652,7 +667,7 @@ static int dep_check(int dep_id)
             break;
         case 3:
             {
-#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
+#if defined(PSA_WANT_ALG_JPAKE)
                 ret = DEPENDENCY_SUPPORTED;
 #else
                 ret = DEPENDENCY_NOT_SUPPORTED;
@@ -660,6 +675,42 @@ static int dep_check(int dep_id)
             }
             break;
         case 4:
+            {
+#if defined(PSA_WANT_ALG_SHA_256)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 5:
+            {
+#if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 6:
+            {
+#if defined(PSA_WANT_ECC_SECP_R1_256)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 7:
+            {
+#if defined(PSA_WANT_KEY_TYPE_RAW_DATA)
+                ret = DEPENDENCY_SUPPORTED;
+#else
+                ret = DEPENDENCY_NOT_SUPPORTED;
+#endif
+            }
+            break;
+        case 8:
             {
 #if defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
                 ret = DEPENDENCY_SUPPORTED;

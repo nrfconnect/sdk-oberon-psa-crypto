@@ -1572,7 +1572,7 @@ exit:
 /*
  * WPA3-SAE Tests
  */
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
 
 static const uint8_t local_mac1[6] = {0x4d, 0x3f, 0x2f, 0xff, 0xe3, 0x87};
 static const uint8_t peer_mac1[6]  = {0xa5, 0xd8, 0xaa, 0x95, 0x8e, 0x3c};
@@ -1581,8 +1581,7 @@ static const uint8_t local_rand1[64] = {
     0x2e, 0x12, 0xdd, 0x12, 0xf1, 0x98, 0xfa, 0xf4, 0xfb, 0xed, 0x89, 0xd7, 0xff, 0x1a, 0xce, 0x94,
     0x95, 0x07, 0xa9, 0x0f, 0x77, 0x7a, 0x04, 0x4d, 0x6a, 0x08, 0x30, 0xb9, 0x1e, 0xa3, 0xd5, 0xdd,
     0x70, 0xbe, 0xce, 0x44, 0xe1, 0xac, 0xff, 0xb8, 0x69, 0x83, 0xb5, 0xe1, 0xbf, 0x9f, 0xb3, 0x22};
-static const uint8_t local_commit1[98] = {
-    0x13, 0x00,
+static const uint8_t local_commit1[96] = {
     0x2e, 0x2c, 0x0f, 0x0d, 0xb5, 0x24, 0x40, 0xad, 0x14, 0x6d, 0x96, 0x71, 0x14, 0xce, 0x00, 0x5c,  
     0xe1, 0xea, 0xb0, 0xaa, 0x2c, 0x2e, 0x5c, 0x28, 0x71, 0xb7, 0x74, 0xf6, 0xc2, 0x57, 0x5c, 0x65,
     0xd5, 0xad, 0x9e, 0x00, 0x82, 0x97, 0x07, 0xaa, 0x36, 0xba, 0x8b, 0x85, 0x97, 0x38, 0xfc, 0x96,
@@ -1594,8 +1593,7 @@ static const uint8_t peer_rand1[64] = {
     0xba, 0xe6, 0xd5, 0x95, 0x79, 0xe6, 0xb6, 0xe6, 0xe0, 0xa3, 0x92, 0xe8, 0x54, 0x72, 0x59, 0xf5,
     0x9a, 0x3b, 0xbd, 0x0d, 0x5f, 0x4c, 0x14, 0xdd, 0x98, 0x8f, 0x88, 0x04, 0xfb, 0x97, 0xdb, 0x73,
     0x69, 0x20, 0xfd, 0x9b, 0x65, 0x1f, 0x7b, 0x9a, 0x5d, 0x13, 0xa5, 0xd2, 0x88, 0x7c, 0x1d, 0x7f};
-static const uint8_t peer_commit1[98] = {
-    0x13, 0x00,
+static const uint8_t peer_commit1[96] = {
     0x59, 0x1b, 0x96, 0xf3, 0x39, 0x7f, 0xb9, 0x45, 0x10, 0x08, 0x48, 0xe7, 0xb5, 0x50, 0x54, 0x3b,
     0x67, 0x20, 0xd8, 0x83, 0x37, 0xee, 0x93, 0xfc, 0x49, 0xfd, 0x6d, 0xf7, 0xe0, 0x8b, 0x52, 0x23,
     0xe7, 0x1b, 0x9b, 0xb0, 0x48, 0xd3, 0x87, 0x3f, 0x20, 0x55, 0x69, 0x53, 0xa9, 0x6c, 0x91, 0x53,
@@ -1616,35 +1614,23 @@ static const uint8_t pt2[64] = {
     0x39, 0x93, 0x12, 0x79, 0x18, 0x7c, 0xa6, 0xcc, 0xed, 0x5f, 0x37, 0xef, 0x46, 0xdd, 0xfa, 0x97,
     0x56, 0x87, 0xe9, 0x72, 0xe5, 0x0f, 0x73, 0xe3, 0x89, 0x88, 0x61, 0xe7, 0xed, 0xad, 0x21, 0xbe,
     0xa7, 0xd5, 0xf6, 0x22, 0xdf, 0x88, 0x24, 0x3b, 0xb8, 0x04, 0x92, 0x0a, 0xe8, 0xe6, 0x47, 0xfa};
-//static const uint8_t pwe2[64] = {
-//    0xc9, 0x30, 0x49, 0xb9, 0xe6, 0x40, 0x00, 0xf8, 0x48, 0x20, 0x16, 0x49, 0xe9, 0x99, 0xf2, 0xb5,
-//    0xc2, 0x2d, 0xea, 0x69, 0xb5, 0x63, 0x2c, 0x9d, 0xf4, 0xd6, 0x33, 0xb8, 0xaa, 0x1f, 0x6c, 0x1e,
-//    0x73, 0x63, 0x4e, 0x94, 0xb5, 0x3d, 0x82, 0xe7, 0x38, 0x3a, 0x8d, 0x25, 0x81, 0x99, 0xd9, 0xdc,
-//    0x1a, 0x5e, 0xe8, 0x26, 0x9d, 0x06, 0x03, 0x82, 0xcc, 0xbf, 0x33, 0xe6, 0x14, 0xff, 0x59, 0xa0};
 
 // Test vectors from "IEEE Std 802.11 2012", Annex M10, uses wrong kdf function !!!
 static const uint8_t local_mac3[6] = {0x7b, 0x88, 0x56, 0x20, 0x2d, 0x8d};
 static const uint8_t peer_mac3[6]  = {0xe2, 0x47, 0x1c, 0x0a, 0x5a, 0xcb};
-//static const uint8_t pwe3[64] = {
-//    0x10, 0x3a, 0x5b, 0x96, 0x88, 0x73, 0xba, 0xb0, 0xfa, 0xfc, 0x6d, 0xd8, 0xff, 0x34, 0x76, 0xff,
-//    0x56, 0x48, 0x7e, 0x7f, 0x07, 0x2b, 0x38, 0xe4, 0xc9, 0x70, 0x54, 0x97, 0x1c, 0xe7, 0x2b, 0x7b,
-//    0x31, 0x74, 0x2d, 0x39, 0xf3, 0x80, 0xf2, 0x47, 0x62, 0x42, 0x18, 0xe9, 0x45, 0x54, 0x30, 0x04,
-//    0xd3, 0x99, 0x73, 0xa5, 0x68, 0xc5, 0xb9, 0x04, 0xb0, 0xcf, 0x5d, 0x36, 0x2d, 0x44, 0xf3, 0xbf};
 static const uint8_t local_rand3[64] = {
     0xc5, 0xd7, 0x01, 0x9e, 0x76, 0x12, 0xd5, 0xf4, 0x3c, 0xf9, 0x1f, 0xe5, 0x62, 0xb4, 0x0b, 0xb8,
     0xb2, 0x64, 0x0c, 0x65, 0xc5, 0x77, 0xb9, 0xb1, 0x99, 0x94, 0xbf, 0x50, 0x6b, 0xaf, 0x28, 0x59,
     0x19, 0xd0, 0x30, 0xfe, 0x5b, 0xb1, 0x1e, 0xe4, 0xc2, 0x7c, 0x9d, 0xfc, 0x3c, 0x06, 0x52, 0x0f,
     0x8f, 0xbe, 0x92, 0x90, 0x05, 0x9b, 0x0c, 0xc5, 0x50, 0xdb, 0x0d, 0x2b, 0x9d, 0x3a, 0xc4, 0x52};
-static const uint8_t local_commit3[98] = {
-    0x13, 0x00,
+static const uint8_t local_commit3[96] = {
     0xdf, 0xa7, 0x32, 0x9c, 0xd1, 0xc3, 0xf4, 0xd8, 0xff, 0x75, 0xbd, 0xe1, 0x9e, 0xba, 0x5d, 0xc8,
     0x42, 0x22, 0x9e, 0xf5, 0xcb, 0x12, 0xc6, 0x76, 0xea, 0x6f, 0xcc, 0x7c, 0x08, 0xe9, 0xec, 0xab,
     0x30, 0x08, 0xb4, 0x0e, 0x01, 0x91, 0x2b, 0xc5, 0x3b, 0x86, 0x2c, 0xd9, 0x43, 0x30, 0x5e, 0x86,
     0x46, 0xee, 0x3b, 0x3e, 0x6f, 0x74, 0x5c, 0x5b, 0xb3, 0xae, 0x8d, 0xfc, 0x2e, 0xbf, 0x65, 0x4e,
     0xd0, 0xa4, 0xe2, 0xa2, 0x8b, 0xb9, 0x8b, 0x62, 0x9a, 0x4b, 0x00, 0x84, 0x9d, 0xf9, 0x3d, 0x22,
     0x29, 0x99, 0xd0, 0x86, 0x5c, 0x9c, 0xce, 0xed, 0xa8, 0xe9, 0x0f, 0xcb, 0x53, 0xaf, 0x5a, 0xe6};
-static const uint8_t peer_commit3[98] = {
-    0x13, 0x00,
+static const uint8_t peer_commit3[96] = {
     0x10, 0xc1, 0xe1, 0xf1, 0xd0, 0x08, 0x71, 0x3b, 0x41, 0x98, 0x6c, 0xdd, 0x44, 0x1e, 0xb9, 0x91,
     0xbc, 0x82, 0x3b, 0x60, 0x11, 0x8a, 0x5f, 0xc9, 0xf5, 0x1b, 0x16, 0xaa, 0x00, 0x34, 0x21, 0x47,
     0x19, 0x47, 0x5f, 0x6f, 0x50, 0xdb, 0xc8, 0x7f, 0x15, 0x05, 0xc1, 0x09, 0xe4, 0x21, 0xa7, 0xe3,
@@ -1701,7 +1687,6 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
     size_t commit_size, confirm_size;
     const uint8_t *rand = NULL, *peer_rand = NULL;
     const uint8_t *commit = NULL, *peer_commit = NULL;
-  //  const uint8_t *confirm = NULL, *peer_confirm = NULL;
     const uint8_t *pmk = NULL, *pmkid = NULL;
 
     send_count[0] = (uint8_t)count;
@@ -1719,7 +1704,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
 
     if (ssid != NULL) { // use H2E
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-        psa_set_key_algorithm(&attributes, PSA_ALG_WPA3_SAE_H2E(PSA_ALG_SHA_256));
+        psa_set_key_algorithm(&attributes, PSA_ALG_WPA3_SAE_ANY);
         psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
         TEST_ASSERT(psa_import_key(&attributes, (const uint8_t*)pw, strlen(pw), &key) == PSA_SUCCESS);
 
@@ -1731,9 +1716,9 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         }
         TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
-        psa_set_key_algorithm(&attributes, alg);
+        psa_set_key_algorithm(&attributes, PSA_ALG_WPA3_SAE_ANY);
         psa_set_key_bits(&attributes, 256);
-        psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1));
+        psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC(PSA_ECC_FAMILY_SECP_R1));
         TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &ekey) == PSA_SUCCESS);
         TEST_ASSERT(psa_export_key(ekey, data, sizeof data, &length1) == PSA_SUCCESS);
         if (n == 4) {
@@ -1745,7 +1730,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         }
     } else { // use basic SAE
         psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
-        psa_set_key_algorithm(&attributes, alg);
+        psa_set_key_algorithm(&attributes, PSA_ALG_WPA3_SAE_ANY);
         psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
         TEST_ASSERT(psa_import_key(&attributes, (const uint8_t*)pw, strlen(pw), &ekey) == PSA_SUCCESS);
     }
@@ -1761,10 +1746,10 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         PSA_PAKE_STEP_CONFIRM);
     TEST_ASSERT(PSA_PAKE_OUTPUT_SIZE(alg,
         PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
-        PSA_PAKE_STEP_KEYID) == 16);
+        PSA_PAKE_STEP_KEY_ID) == 16);
     TEST_ASSERT(PSA_PAKE_INPUT_SIZE(alg,
         PSA_PAKE_PRIMITIVE(PSA_PAKE_PRIMITIVE_TYPE_ECC, PSA_ECC_FAMILY_SECP_R1, 256),
-        PSA_PAKE_STEP_SEND_CONFIRM) == 2);
+        PSA_PAKE_STEP_CONFIRM_COUNT) == 2);
 
     if (n < 4) {
         rand = local_rand1;
@@ -1782,7 +1767,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         ASSERT_COMPARE(data, length1, local_commit3, sizeof local_commit3);
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_COMMIT, peer_commit3, sizeof peer_commit3) == PSA_SUCCESS);
 
-        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS); // set send-confirm counter
+        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS); // set send-confirm counter
         TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_CONFIRM, data, sizeof data, &length1) == PSA_SUCCESS);
         ASSERT_COMPARE(data, length1, local_confirm3, sizeof local_confirm3);
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM, peer_confirm3, sizeof peer_confirm3) == PSA_SUCCESS);
@@ -1807,8 +1792,8 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         }
 
         // set send-confirm counter
-        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS);
-        TEST_ASSERT(psa_pake_input(&peer, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&peer, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
         if (n & 2) {
             TEST_ASSERT(send_message(&local, &peer, PSA_PAKE_STEP_CONFIRM, NULL, confirm_size));
             TEST_ASSERT(send_message(&peer, &local, PSA_PAKE_STEP_CONFIRM, NULL, confirm_size));
@@ -1825,7 +1810,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
 
     // get local secret
     if (pmkid) {
-        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEYID, keyid, sizeof keyid, &length1) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEY_ID, keyid, sizeof keyid, &length1) == PSA_SUCCESS);
         ASSERT_COMPARE(keyid, length1, pmkid, 16);
     }
     TEST_ASSERT(psa_pake_get_shared_key(&local, &attributes, &key) == PSA_SUCCESS);
@@ -1916,7 +1901,7 @@ static int setup_sae_endpoint_err(psa_pake_operation_t *op,
             psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
             expected = PSA_ERROR_INVALID_ARGUMENT;
         } else {
-            psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1));
+            psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC(PSA_ECC_FAMILY_SECP_R1));
         }
 
         psa_set_key_bits(&attributes, 256);
@@ -2011,13 +1996,13 @@ static int test_sae_err(const char *ssid, int n)
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SALT, rejected, sizeof rejected) == PSA_ERROR_BAD_STATE);
         goto abort;
     case 30: // early send-confirm
-        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_ERROR_BAD_STATE);
         goto abort;
     case 31: // early confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_CONFIRM, 1));
         goto abort;
     case 32: // early key id
-        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEYID, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
+        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEY_ID, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
         goto abort;
     case 33: // wrong commit size
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 2));
@@ -2033,7 +2018,7 @@ static int test_sae_err(const char *ssid, int n)
     case 36: // send-confirm output
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
-        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_SEND_CONFIRM, data, sizeof data, &length) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_CONFIRM_COUNT, data, sizeof data, &length) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     case 37: // no send-confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
@@ -2048,20 +2033,20 @@ static int test_sae_err(const char *ssid, int n)
     case 39: // wrong confirm size
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
-        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_CONFIRM, 3));
         goto abort;
     case 40: // wrong confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
-        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_CONFIRM, 4));
         goto abort;
     default:
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
-        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS);
-        TEST_ASSERT(psa_pake_input(&peer, PSA_PAKE_STEP_SEND_CONFIRM, send_count, 2) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
+        TEST_ASSERT(psa_pake_input(&peer, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_CONFIRM, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_CONFIRM, 0));
         break;
@@ -2084,7 +2069,7 @@ static int test_sae_err(const char *ssid, int n)
         TEST_ASSERT(key == 0);
         break;
     case 43: // small key id buffer
-        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEYID, data, 12, &length) == PSA_ERROR_BUFFER_TOO_SMALL);
+        TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEY_ID, data, 12, &length) == PSA_ERROR_BUFFER_TOO_SMALL);
         break;
     }
 
@@ -2102,7 +2087,7 @@ exit:
     return 0;
 }
 
-#endif // PSA_WANT_ALG_WPA3_SAE
+#endif // PSA_WANT_ALG_WPA3_SAE_FIXED || PSA_WANT_ALG_WPA3_SAE_GDH
 
 
 #ifdef PSA_WANT_ECC_SECP_K1_256
@@ -2360,7 +2345,7 @@ int main(void)
     }
 #endif
 
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     for (i = 0; i <= 3; i++) {
         TEST_ASSERT(test_sae(local_mac1, peer_mac1, NULL, "mekmitasdigoat", NULL, NULL, 0, 1, i));
     }

@@ -30,6 +30,9 @@
 #ifndef PSA_CRYPTO_CONFIG_H
 #define PSA_CRYPTO_CONFIG_H
 
+#define PSA_WANT_ALG_ASCON_AEAD128              1
+#define PSA_WANT_ALG_ASCON_HASH256              1
+#define PSA_WANT_ALG_ASCON_XOF128               1
 #define PSA_WANT_ALG_CBC_NO_PADDING             1
 #define PSA_WANT_ALG_CBC_PKCS7                  1
 #define PSA_WANT_ALG_CCM                        1
@@ -75,6 +78,8 @@
 #define PSA_WANT_ALG_SHAKE256_192               1
 #define PSA_WANT_ALG_SHAKE256_256               1
 #define PSA_WANT_ALG_SHAKE256_512               1
+#define PSA_WANT_ALG_SHAKE128                   1
+#define PSA_WANT_ALG_SHAKE256                   1
 #define PSA_WANT_ALG_SPAKE2P_HMAC               1
 #define PSA_WANT_ALG_SPAKE2P_CMAC               1
 #define PSA_WANT_ALG_SPAKE2P_MATTER             1
@@ -86,9 +91,10 @@
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
 #define PSA_WANT_ALG_SP800_108_COUNTER_HMAC     1
 #define PSA_WANT_ALG_SP800_108_COUNTER_CMAC     1
-#define PSA_WANT_ALG_AES_KW                     1
-#define PSA_WANT_ALG_AES_KWP                    1
-#define PSA_WANT_ALG_WPA3_SAE                   1
+#define PSA_WANT_ALG_KW                         1
+#define PSA_WANT_ALG_KWP                        1
+#define PSA_WANT_ALG_WPA3_SAE_FIXED             1
+#define PSA_WANT_ALG_WPA3_SAE_GDH               1
 #define PSA_WANT_ALG_WPA3_SAE_H2E               1
 #define PSA_WANT_ALG_XMSS                       1
 #define PSA_WANT_ALG_XMSS_MT                    1
@@ -108,6 +114,7 @@
 #define PSA_WANT_KEY_TYPE_PASSWORD_HASH         1
 #define PSA_WANT_KEY_TYPE_HMAC                  1
 #define PSA_WANT_KEY_TYPE_AES                   1
+#define PSA_WANT_KEY_TYPE_ASCON                 1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_XCHACHA20             1
 //#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
@@ -121,7 +128,7 @@
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
 #define PSA_WANT_KEY_TYPE_SPAKE2P_PUBLIC_KEY    1
 #define PSA_WANT_KEY_TYPE_SRP_PUBLIC_KEY        1
-#define PSA_WANT_KEY_TYPE_WPA3_SAE_PT           1
+#define PSA_WANT_KEY_TYPE_WPA3_SAE              1
 #define PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY     1
 #define PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY     1
 

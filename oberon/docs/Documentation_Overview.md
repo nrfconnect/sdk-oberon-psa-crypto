@@ -84,7 +84,7 @@ Developer resources:
 - _PSA Certified_ organization: <https://www.psacertified.org/what-is-psa-certified/about/>
 - _PSA Certified_ APIs: <https://arm-software.github.io/psa-api/>
 - _PSA Crypto Driver API_ as proposed: <https://github.com/Mbed-TLS/mbedtls/tree/development/docs/proposed>.
-- _PSA Certified APIs Architecture Test Suite_: <https://github.com/ARM-software/psa-arch-tests/tree/main/api-tests/dev_apis>
+- _PSA APIs Test Suite_: <https://github.com/ARM-software/psa-arch-tests/tree/main/api-tests/dev_apis>
 - _Mbed TLS_ repo: <https://github.com/Mbed-TLS/mbedtls#psa-implementation-in-mbed-tls>
 - _Mbed TLS_ test suite: <https://github.com/Mbed-TLS/mbedtls/tree/development/tests/suites>
 - Random number generator test suite: <https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-22r1a.pdf>

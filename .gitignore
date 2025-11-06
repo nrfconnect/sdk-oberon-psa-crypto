@@ -32,6 +32,9 @@ massif-*
 # Python build artifacts:
 *.pyc
 
+# Sublibrary build artifacts:
+*.a
+
 # Microsoft CMake extension for Visual Studio Code generates a build directory by default
 build/
 build_Test/

@@ -21,12 +21,15 @@ extern "C" {
 
 typedef struct {
     struct {
+        uint64_t l[5]; // 64 bit alignment for Ascon
 #if defined(PSA_NEED_OBERON_GCM_AES)
-        uint32_t a[77];
+        uint32_t a[67];
 #elif defined(PSA_NEED_OBERON_CCM_AES)
-        uint32_t a[73];
-#else /* PSA_NEED_OBERON_CHACHA20_POLY1305 */
-        uint32_t a[51];
+        uint32_t a[63];
+#elif defined(PSA_NEED_OBERON_CHACHA20_POLY1305) || defined(PSA_NEED_OBERON_XCHACHA20_POLY1305)
+        uint32_t a[41];
+#else /* PSA_NEED_OBERON_ASCON_AEAD128 */
+        uint32_t a[7];
 #endif
         size_t s[2];
     } ctx;

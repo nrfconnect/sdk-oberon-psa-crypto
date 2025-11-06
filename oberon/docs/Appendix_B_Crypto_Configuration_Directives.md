@@ -53,6 +53,9 @@ Syntax: PSA_WANT_ALG__alg
 
 Parameter _alg_: Wanted algorithm.
 
+- PSA_WANT_ALG_`ASCON_AEAD128`
+- PSA_WANT_ALG_`ASCON_HASH256`
+- PSA_WANT_ALG_`ASCON_XOF128`
 - PSA_WANT_ALG_`CBC_NO_PADDING`
 - PSA_WANT_ALG_`CBC_PKCS7`
 - PSA_WANT_ALG_`CCM`
@@ -111,7 +114,8 @@ Parameter _hash-size_: Wanted hash size.
 - PSA_WANT_ALG_`SHA3_256`
 - PSA_WANT_ALG_`SHA3_384`
 - PSA_WANT_ALG_`SHA3_512`
-- PSA_WANT_ALG_`SHAKE256-512`
+- PSA_WANT_ALG_`SHAKE256_512`
+- PSA_WANT_ALG_`ASCON_HASH256`
 
 ### Elliptic curve families wanted by the application
 
@@ -144,6 +148,7 @@ Parameter _key-type_: Wanted key type.
 - PSA_WANT_KEY_TYPE_`AES`
 - PSA_WANT_KEY_TYPE_`CHACHA20`
 - PSA_WANT_KEY_TYPE_`XCHACHA20`
+- PSA_WANT_KEY_TYPE_`ASCON`
 
 - PSA_WANT_KEY_TYPE_`ECC_PUBLIC_KEY`
 - PSA_WANT_KEY_TYPE_`ECC_KEY_PAIR_BASIC`
@@ -274,7 +279,8 @@ Parameter _alg_: Needed crypto algorithm.
 - PSA_NEED_OBERON_`SHA3_256`
 - PSA_NEED_OBERON_`SHA3_384`
 - PSA_NEED_OBERON_`SHA3_512`
-- PSA_NEED_OBERON_`SHAKE256-512`
+- PSA_NEED_OBERON_`SHAKE256_512`
+- PSA_NEED_OBERON_`ASCON_HASH256`
 
 - PSA_NEED_OBERON_`HMAC`
 - PSA_NEED_OBERON_`CMAC`
@@ -304,6 +310,7 @@ Parameter _key-type_: Needed key type.
 - PSA_NEED_OBERON_`CCM_STAR_NO_TAG_AES`
 
 - PSA_NEED_OBERON_`CHACHA20_POLY1305`
+- PSA_NEED_OBERON_`ASCON_AEAD128`
 - PSA_NEED_OBERON_`STREAM_CIPHER_CHACHA20`
 
 ### Needed algorithms for the application on the target platform (3)
@@ -483,6 +490,7 @@ Parameter _key-size_: Accelerated key size for this key type.
 - PSA_ACCEL_`CCM_STAR_NO_TAG_AES_192`
 - PSA_ACCEL_`CCM_STAR_NO_TAG_AES_256`
 - PSA_ACCEL_`CHACHA20_POLY1305`
+- PSA_ACCEL_`ASCON_AEAD128`
 - PSA_ACCEL_`STREAM_CIPHER_CHACHA20`
 
 ### Accelerated crypto functionality (2)
@@ -541,7 +549,8 @@ Parameter _hash-size_: Accelerated hash size for this crypto algorithm.
 - PSA_ACCEL_`SHA3_256`
 - PSA_ACCEL_`SHA3_384`
 - PSA_ACCEL_`SHA3_512`
-- PSA_ACCEL_`SHAKE256-512`
+- PSA_ACCEL_`SHAKE256_512`
+- PSA_ACCEL_`ASCON_HASH256`
 
 ### Accelerated ECC key management functionality
 

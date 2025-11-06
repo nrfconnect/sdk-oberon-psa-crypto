@@ -20,9 +20,8 @@ supported API versions, see the _Compatibility_ section in the
 The supported crypto feature set is documented in
 [Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
 
-The library passes the _PSA Certified APIs Architecture Test Suite_ for
-cryptographic functions and thereby demonstrates compliance with the standard.
-See its official
+The library passes the _PSA APIs Test Suite_ for cryptographic functions and
+thereby demonstrates compliance with the standard. See its official
 [PSA Certified Crypto API compliance certificate](https://www.psacertified.org/products/oberon-psa-crypto/).
 
 The _Oberon PSA Crypto_ repo is a clone of Arm's _MBed TLS_ repo, with most
@@ -58,17 +57,9 @@ production code and no guarantees are given that they can be built and run as is
 - `oberon/platforms`
 
 The following directory contains a copy of the
-[PSA Certified Functional APIs Architecture Test Suite](https://github.com/ARM-software/psa-arch-tests/tree/main/api-tests):
+[PSA APIs Test Suite](https://github.com/ARM-software/psa-arch-tests/tree/main/api-tests):
 
 - `api-tests`
-
-The following directory contains incoming licenses of third-party software or
-third-party specifications:
-
-- `licenses-incoming`
-
-You can find more information on licensing and copyrights in documents
-[LICENSING](LICENSING.md) and [LICENSE](LICENSE).
 
 The following directory contains a `README-SSL` and a CMake file for building the
 `ssl_server2` and `ssl_client2` examples and SSL tests from _Mbed TLS_, using
@@ -79,6 +70,13 @@ _Oberon PSA Crypto_ instead of the cryptographic functions from _Mbed TLS_:
 The following file contains the change history of _Oberon PSA Crypto_:
 
 - `CHANGELOG.md`
+
+For every release, compatibility information is given; in particular regarding
+the _PSA Certified Crypto API_ version that is supported.
+
+The following file contains licensing information:
+
+- `LICENSING.md`
 
 The following file contains the current software version:
 
@@ -94,8 +92,8 @@ The following file contains the current software version:
 
 _Oberon PSA Crypto_ can be built and tested on a host with CMake (_MacOS/clang_
 or _Windows/MSVC_). _Mbed TLS_ Tests have been generated from _Mbed TLS_
-and copied to `tests/generated`. Some tests contain bug fixes. The _PSA Certified
-APIs Architecture Test Suite_ was copied from the main branch of
+and copied to `tests/generated`. Some tests contain bug fixes. The
+_PSA APIs Test Suite_ was copied from the main branch of
 <https://github.com/ARM-software/psa-arch-tests>.
 
 ### Prerequisites
@@ -130,14 +128,14 @@ Multi-threading support can be enabled with define `MBEDTLS_THREADING_C` in
 ### Build with Tests
 
 By default, _Oberon PSA Crypto_ is built for a set of configurations, with
-PSA-related _Mbed TLS_ tests, a _PSA Certified APIs Architecture Test Suite_,
-and in variants with and without multi-threading support based on the POSIX
-mutex reference implemenentation.
+PSA-related _Mbed TLS_ tests, a _PSA APIs Test Suite_, and in variants with and
+without multi-threading support based on the POSIX mutex reference
+implementation.
 
 To select for which tests _Oberon PSA Crypto_ is built, the following CMAKE
 options are provided:
 
-- _PSA Certified APIs Architecture Test Suite_: `DCONFIG_PSA_API_TESTS=ON/OFF`
+- _PSA APIs Test Suite_:        `-DCONFIG_PSA_API_TESTS=ON/OFF`
 - PSA-related _Mbed TLS_ tests: `-DCONFIG_MBEDTLS_PSA_TESTS=ON/OFF`
                                 `-DCONFIG_MBEDTLS_PSA_TESTS_LONG=ON/OFF`
 - Tests example configurations: `-DCONFIG_TEST_EXAMPLE_CONFIGS=ON/OFF`

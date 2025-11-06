@@ -78,6 +78,14 @@
     #define PSA_NEED_OBERON_XCHACHA20_POLY1305 1
 #endif
 
+#if defined(PSA_WANT_ALG_ASCON_AEAD128) && !defined(PSA_ACCEL_ASCON_AEAD128)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ASCON_AEAD128"
+    #endif
+    #define PSA_NEED_OBERON_AEAD_DRIVER 1
+    #define PSA_NEED_OBERON_ASCON_AEAD128 1
+#endif
+
 /* Oberon Cipher Driver */
 
 #if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_CTR)
@@ -1186,6 +1194,40 @@
     #define PSA_NEED_OBERON_SHAKE256_512 1
 #endif
 
+#if defined(PSA_WANT_ALG_ASCON_HASH256) && !defined(PSA_ACCEL_ASCON_HASH256)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ASCON_HASH256"
+    #endif
+    #define PSA_NEED_OBERON_HASH_DRIVER 1
+    #define PSA_NEED_OBERON_ASCON_HASH256 1
+#endif
+
+/* Oberon XOF Driver */
+
+#if defined(PSA_WANT_ALG_SHAKE128) && !defined(PSA_ACCEL_SHAKE128)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHAKE128"
+    #endif
+    #define PSA_NEED_OBERON_XOF_DRIVER 1
+    #define PSA_NEED_OBERON_SHAKE128 1
+#endif
+
+#if defined(PSA_WANT_ALG_SHAKE256) && !defined(PSA_ACCEL_SHAKE256)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for SHAKE256"
+    #endif
+    #define PSA_NEED_OBERON_XOF_DRIVER 1
+    #define PSA_NEED_OBERON_SHAKE256 1
+#endif
+
+#if defined(PSA_WANT_ALG_ASCON_XOF128) && !defined(PSA_ACCEL_ASCON_XOF128)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ASCON_XOF128"
+    #endif
+    #define PSA_NEED_OBERON_XOF_DRIVER 1
+    #define PSA_NEED_OBERON_ASCON_XOF128 1
+#endif
+
 /* Oberon Key Management Driver */
 
 #if defined(PSA_WANT_ECC_SECP_R1_224)
@@ -2039,7 +2081,7 @@
     #endif
 #endif
 
-#if defined(PSA_WANT_ALG_WPA3_SAE)
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     #if (defined(PSA_WANT_ALG_SHA_256) && !defined(PSA_ACCEL_WPA3_SAE_SECP_R1_256_SHA_256)) || \
         (defined(PSA_WANT_ALG_SHA_384) && !defined(PSA_ACCEL_WPA3_SAE_SECP_R1_256_SHA_384)) || \
         (defined(PSA_WANT_ALG_SHA_512) && !defined(PSA_ACCEL_WPA3_SAE_SECP_R1_256_SHA_512))
@@ -2092,15 +2134,15 @@
         #define PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE_SECP 1
         #define PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE_SECP_R1_256 1
     #endif
-    #if defined(PSA_WANT_KEY_TYPE_WPA3_SAE_PT) &&                                                          \
-        !defined(PSA_ACCEL_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256)
+    #if defined(PSA_WANT_KEY_TYPE_WPA3_SAE) &&                                                          \
+        !defined(PSA_ACCEL_KEY_TYPE_WPA3_SAE_SECP_R1_256)
         #ifdef PSA_HW_DRIVERS_ONLY
-            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_WPA3_SAE_PT_SECP_R1_256"
+            #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for KEY_TYPE_WPA3_SAE_SECP_R1_256"
         #endif
         #define PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER 1
-        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT 1
-        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP 1
-        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256 1
+        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE 1
+        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_SECP 1
+        #define PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_SECP_R1_256 1
     #endif
 #endif // defined(PSA_WANT_ECC_SECP_R1_256)
 
@@ -2131,11 +2173,11 @@
 
 /* Oberon Key Wrap Driver */
 
-#if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_AES_KW) && !defined(PSA_ACCEL_ALG_AES_KW)
+#if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_KW) && !defined(PSA_ACCEL_ALG_AES_KW)
 #define PSA_NEED_OBERON_KEY_WRAP_DRIVER 1
 #define PSA_NEED_OBERON_AES_KW 1
 #endif
-#if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_AES_KWP) && !defined(PSA_ACCEL_ALG_AES_KWP)
+#if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_KWP) && !defined(PSA_ACCEL_ALG_AES_KWP)
 #define PSA_NEED_OBERON_KEY_WRAP_DRIVER 1
 #define PSA_NEED_OBERON_AES_KWP 1
 #endif

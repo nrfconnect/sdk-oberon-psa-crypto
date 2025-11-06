@@ -16,7 +16,7 @@
  */
 
 /*
- * Additional tests for key derivation, XCHACHA20, CBC-PKCS7.
+ * Additional tests for key derivation, XCHACHA20, CBC-PKCS7, Ascon, and XOF.
  */
 
 
@@ -628,6 +628,70 @@ exit:
 #endif // PSA_WANT_ALG_XCHACHA20_POLY1305
 #endif // PSA_WANT_KEY_TYPE_XCHACHA20
 
+#ifdef PSA_WANT_ALG_SHAKE128
+static const uint8_t shake128_in[] = "The quick brown fox jumps over the lazy dog";
+static const uint8_t shake128_out[] = {
+    0xf4, 0x20, 0x2e, 0x3c, 0x58, 0x52, 0xf9, 0x18, 0x2a, 0x04, 0x30, 0xfd, 0x81, 0x44, 0xf0, 0xa7,
+    0x4b, 0x95, 0xe7, 0x41, 0x7e, 0xca, 0xe1, 0x7d, 0xb0, 0xf8, 0xcf, 0xee, 0xd0, 0xe3, 0xe6, 0x6e};
+#endif // PSA_WANT_ALG_SHAKE128
+
+#ifdef PSA_WANT_ALG_SHAKE256
+static const uint8_t shake256_in[] = "The quick brown fox jumps over the lazy dog";
+static const uint8_t shake256_out[] = {
+    0x2f, 0x67, 0x13, 0x43, 0xd9, 0xb2, 0xe1, 0x60, 0x4d, 0xc9, 0xdc, 0xf0, 0x75, 0x3e, 0x5f, 0xe1,
+    0x5c, 0x7c, 0x64, 0xa0, 0xd2, 0x83, 0xcb, 0xbf, 0x72, 0x2d, 0x41, 0x1a, 0x0e, 0x36, 0xf6, 0xca};
+#endif // PSA_WANT_ALG_SHAKE256
+
+#if defined(PSA_WANT_ALG_SHAKE128) || defined(PSA_WANT_ALG_SHAKE256)
+static int test_shake(psa_algorithm_t alg, const uint8_t *in, size_t inlen, const uint8_t ref[32]) {
+    psa_xof_operation_t op = PSA_XOF_OPERATION_INIT;
+    uint8_t out[32];
+
+    TEST_ASSERT(psa_xof_setup(&op, alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, in, inlen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, out, 32) == PSA_SUCCESS);
+    ASSERT_COMPARE(out, 32, ref, 32);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    // incremental input & output
+    TEST_ASSERT(psa_xof_setup(&op, alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, in, 7) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, in + 7, inlen - 7) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, out, 13) == PSA_SUCCESS);
+    ASSERT_COMPARE(out, 13, ref, 13);
+    TEST_ASSERT(psa_xof_output(&op, out, 19) == PSA_SUCCESS);
+    ASSERT_COMPARE(out, 19, ref + 13, 19);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    // negative tests
+    TEST_ASSERT(psa_xof_setup(&op, alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_setup(&op, alg) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_SHA_256) == PSA_ERROR_INVALID_ARGUMENT);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, 0x0D000000) == PSA_ERROR_NOT_SUPPORTED);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_update(&op, in, inlen) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, in, inlen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, out, 32) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, in, inlen) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_output(&op, out, 32) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    return 1;
+exit:
+    return 0;
+}
+#endif // PSA_WANT_ALG_SHAKE128 || PSA_WANT_ALG_SHAKE256
+
 #ifdef PSA_WANT_ALG_CBC_PKCS7
 static int test_pkcs_padding()
 {
@@ -712,6 +776,155 @@ exit:
     return res;
 }
 #endif // PSA_WANT_ALG_CBC_PKCS7
+
+
+#ifdef PSA_WANT_ALG_ASCON_HASH256
+static const uint8_t ascon_hash_in1[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16};
+static const uint8_t ascon_hash_res1[] = {
+    0xB4, 0xF8, 0x8D, 0x12, 0x1E, 0xDD, 0xF6, 0xD1, 0xFE, 0xA9, 0xAE, 0xF1, 0x5F, 0x68, 0xA0, 0xF3,
+    0xA1, 0x6D, 0x3D, 0x2C, 0xDD, 0x98, 0x17, 0x22, 0x58, 0x09, 0xC2, 0x04, 0x52, 0xB0, 0x4C, 0x61};
+static const uint8_t ascon_hash_in2[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
+static const uint8_t ascon_hash_res2[] = {
+    0x64, 0x21, 0x33, 0x0D, 0xF9, 0x9C, 0x05, 0xEB, 0x71, 0x54, 0x15, 0xEE, 0x17, 0xB4, 0x55, 0xF2,
+    0x67, 0x4F, 0x86, 0x2A, 0xE3, 0xCC, 0x5B, 0xAD, 0xFF, 0xE4, 0x3A, 0x4A, 0x3E, 0xD2, 0x73, 0xE1};
+
+static int test_ascon_hash()
+{
+    psa_hash_operation_t op = PSA_HASH_OPERATION_INIT;
+    uint8_t h[32];
+    size_t length;
+    int res = 0;
+
+    TEST_ASSERT(psa_hash_compute(PSA_ALG_ASCON_HASH256, ascon_hash_in1, sizeof ascon_hash_in1, h, sizeof h, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, length, ascon_hash_res1, sizeof ascon_hash_res1);
+
+    TEST_ASSERT(psa_hash_setup(&op, PSA_ALG_ASCON_HASH256) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&op, ascon_hash_in1, sizeof ascon_hash_in1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_finish(&op, h, sizeof h, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, length, ascon_hash_res1, sizeof ascon_hash_res1);
+
+    TEST_ASSERT(psa_hash_compute(PSA_ALG_ASCON_HASH256, ascon_hash_in2, sizeof ascon_hash_in2, h, sizeof h, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, length, ascon_hash_res2, sizeof ascon_hash_res2);
+
+    TEST_ASSERT(psa_hash_setup(&op, PSA_ALG_ASCON_HASH256) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&op, ascon_hash_in2, 7) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_update(&op, ascon_hash_in2 + 7, sizeof ascon_hash_in2 - 7) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_finish(&op, h, sizeof h, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, length, ascon_hash_res2, sizeof ascon_hash_res2);
+
+    res = 1;
+exit:
+    return res;
+}
+#endif // PSA_WANT_ALG_ASCON_HASH256
+
+#ifdef PSA_WANT_ALG_ASCON_XOF128
+static const uint8_t ascon_xof_in1[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16};
+static const uint8_t ascon_xof_res1[] = {
+    0x5A, 0xE2, 0x1E, 0x68, 0xEF, 0x4F, 0xDC, 0x6F, 0xEF, 0xBF, 0x60, 0x4B, 0x0B, 0xD8, 0x67, 0x24,
+    0x06, 0xF6, 0xF2, 0x3F, 0x0B, 0xDF, 0x2F, 0x28, 0xE5, 0x46, 0x0B, 0x08, 0x1D, 0x90, 0x68, 0xB8};
+static const uint8_t ascon_xof_in2[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
+static const uint8_t ascon_xof_res2[] = {
+    0x75, 0x17, 0xD9, 0xB0, 0x38, 0x3D, 0xC7, 0x74, 0x2E, 0x9E, 0x13, 0x35, 0xD9, 0x7D, 0x3F, 0x1C,
+    0x5A, 0x97, 0x14, 0x16, 0xCA, 0x4E, 0x72, 0xBF, 0x50, 0x4E, 0x96, 0x2F, 0x80, 0x28, 0x68, 0x62};
+
+static int test_ascon_xof()
+{
+    psa_xof_operation_t op = PSA_XOF_OPERATION_INIT;
+    uint8_t h[32];
+    int res = 0;
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_XOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_xof_in1, sizeof ascon_xof_in1) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, sizeof h) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, sizeof h, ascon_xof_res1, sizeof ascon_xof_res1);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_XOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_xof_in2, 11) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_xof_in2 + 11, sizeof ascon_xof_in2 - 11) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 7) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 7, ascon_xof_res2, 7);
+    TEST_ASSERT(psa_xof_output(&op, h, 12) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 12, ascon_xof_res2 + 7, 12);
+    TEST_ASSERT(psa_xof_output(&op, h, 13) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 13, ascon_xof_res2 + 19, 13);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    res = 1;
+exit:
+    return res;
+}
+#endif // PSA_WANT_ALG_ASCON_XOF128
+
+#ifdef PSA_WANT_ALG_ASCON_AEAD128
+static const uint8_t ascon_aead_key[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+static const uint8_t ascon_aead_nonce[] = {
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F};
+static const uint8_t ascon_aead_pt1[] = {
+    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+    0x30, 0x31, 0x32};
+static const uint8_t ascon_aead_ct1[] = {
+    0xE8, 0xC3, 0xDE, 0xEE, 0x24, 0x6C, 0xC5, 0xEA, 0xE3, 0xE8, 0x72, 0x31, 0x38, 0x97, 0xA2, 0xBB,
+    0x60, 0x89, 0xAA};
+static const uint8_t ascon_aead_tag1[] = {
+    0x26, 0xE4, 0x09, 0x9A, 0x8F, 0x7C, 0x06, 0xAA, 0x8C, 0xBF, 0x6A, 0x20, 0xA0, 0x31, 0x6D, 0x61};
+static const uint8_t ascon_aead_pt2[] = {
+    0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F,
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A};
+static const uint8_t ascon_aead_aad2[] = {
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F,
+    0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A};
+static const uint8_t ascon_aead_ct2[] = {
+    0xE4, 0xC1, 0xBB, 0x6B, 0x1B, 0x26, 0x4F, 0x12, 0xEE, 0xC2, 0xAB, 0xB5, 0x42, 0x76, 0x1A, 0xBB,
+    0xC0, 0xD8, 0x28, 0x6F, 0xB9, 0x90, 0xCB, 0x04, 0x0D, 0xC1, 0x07};
+static const uint8_t ascon_aead_tag2[] = {
+    0xAD, 0xD3, 0x4C, 0xB2, 0xB4, 0xCE, 0xFB, 0x49, 0xB2, 0xEA, 0xAE, 0x62, 0x57, 0x01, 0xA6, 0xDF};
+
+static int test_ascon_aead()
+{
+    psa_aead_operation_t op = PSA_AEAD_OPERATION_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t ct[32], tag[16];
+    size_t l, length;
+    psa_key_id_t key = 0;
+    int res = 0;
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_algorithm(&attr, PSA_ALG_ASCON_AEAD128);
+    psa_set_key_type(&attr, PSA_KEY_TYPE_ASCON);
+    TEST_ASSERT(psa_import_key(&attr, ascon_aead_key, sizeof ascon_aead_key, &key) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_aead_encrypt_setup(&op, key, PSA_ALG_ASCON_AEAD128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_set_nonce(&op, ascon_aead_nonce, sizeof ascon_aead_nonce) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_update(&op, ascon_aead_pt1, sizeof ascon_aead_pt1, ct, sizeof ct, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(ct, length, ascon_aead_ct1, sizeof ascon_aead_ct1);
+    TEST_ASSERT(psa_aead_finish(&op, NULL, 0, &l, tag, sizeof tag, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(tag, length, ascon_aead_tag1, sizeof ascon_aead_tag1);
+
+    TEST_ASSERT(psa_aead_encrypt_setup(&op, key, PSA_ALG_ASCON_AEAD128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_set_nonce(&op, ascon_aead_nonce, sizeof ascon_aead_nonce) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_update_ad(&op, ascon_aead_aad2, sizeof ascon_aead_aad2) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_update(&op, ascon_aead_pt2, sizeof ascon_aead_pt2, ct, sizeof ct, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(ct, length, ascon_aead_ct2, sizeof ascon_aead_ct2);
+    TEST_ASSERT(psa_aead_finish(&op, NULL, 0, &l, tag, sizeof tag, &length) == PSA_SUCCESS);
+    ASSERT_COMPARE(tag, length, ascon_aead_tag2, sizeof ascon_aead_tag2);
+
+    TEST_ASSERT(psa_aead_abort(&op) == PSA_SUCCESS);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    return res;
+}
+#endif // PSA_WANT_ALG_ASCON_AEAD128
 
 
 int main(void)
@@ -818,9 +1031,26 @@ int main(void)
 #endif // PSA_WANT_ALG_XCHACHA20_POLY1305
 #endif // PSA_WANT_KEY_TYPE_XCHACHA20
 
+#ifdef PSA_WANT_ALG_SHAKE128
+    TEST_ASSERT(test_shake(PSA_ALG_SHAKE128, shake128_in, sizeof shake128_in - 1, shake128_out));
+#endif // PSA_WANT_ALG_SHAKE128
+#ifdef PSA_WANT_ALG_SHAKE256
+    TEST_ASSERT(test_shake(PSA_ALG_SHAKE256, shake256_in, sizeof shake256_in - 1, shake256_out));
+#endif // PSA_WANT_ALG_SHAKE256
+
 #ifdef PSA_WANT_ALG_CBC_PKCS7
     TEST_ASSERT(test_pkcs_padding());
 #endif // PSA_WANT_ALG_CBC_PKCS7
+
+#ifdef PSA_WANT_ALG_ASCON_HASH256
+    TEST_ASSERT(test_ascon_hash());
+#endif // PSA_WANT_ALG_ASCON_HASH256
+#ifdef PSA_WANT_ALG_ASCON_XOF128
+    TEST_ASSERT(test_ascon_xof());
+#endif // PSA_WANT_ALG_ASCON_XOF128
+#ifdef PSA_WANT_ALG_ASCON_AEAD128
+    TEST_ASSERT(test_ascon_aead());
+#endif // PSA_WANT_ALG_ASCON_AEAD128
 
     return 0;
 exit:

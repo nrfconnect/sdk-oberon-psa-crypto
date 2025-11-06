@@ -34,6 +34,9 @@
 #ifdef PSA_NEED_OBERON_SHAKE
 #include "ocrypto_shake.h"
 #endif
+#ifdef PSA_NEED_OBERON_ASCON_HASH256
+#include "ocrypto_ascon_hash.h"
+#endif
 
 
 psa_status_t oberon_hash_setup(
@@ -93,6 +96,12 @@ psa_status_t oberon_hash_setup(
     case PSA_ALG_SHAKE256_256:
     case PSA_ALG_SHAKE256_512:
         ocrypto_shake_init((ocrypto_shake_ctx*)operation->ctx);
+        break;
+#endif
+#ifdef PSA_NEED_OBERON_ASCON_HASH256
+    _Static_assert(sizeof operation->ctx >= sizeof(ocrypto_ascon_hash_ctx), "oberon_hash_operation_t.ctx too small");
+    case PSA_ALG_ASCON_HASH256:
+        ocrypto_ascon_hash256_init((ocrypto_ascon_hash_ctx*)operation->ctx);
         break;
 #endif
     default:
@@ -184,6 +193,11 @@ psa_status_t oberon_hash_update(
 #ifdef PSA_NEED_OBERON_SHAKE256_512
     case PSA_ALG_SHAKE256_512:
         ocrypto_shake256_update((ocrypto_shake_ctx*)operation->ctx, input, input_length);
+        break;
+#endif
+#ifdef PSA_NEED_OBERON_ASCON_HASH256
+    case PSA_ALG_ASCON_HASH256:
+        ocrypto_ascon_hash256_update((ocrypto_ascon_hash_ctx*)operation->ctx, input, input_length);
         break;
 #endif
     default:
@@ -301,6 +315,13 @@ psa_status_t oberon_hash_finish(
         if (hash_size < PSA_BITS_TO_BYTES(512)) return PSA_ERROR_BUFFER_TOO_SMALL;
         ocrypto_shake256_final((ocrypto_shake_ctx*)operation->ctx, hash, PSA_BITS_TO_BYTES(512));
         *hash_length = PSA_BITS_TO_BYTES(512);
+        break;
+#endif
+#ifdef PSA_NEED_OBERON_ASCON_HASH256
+    case PSA_ALG_ASCON_HASH256:
+        if (hash_size < ocrypto_ascon_hash256_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
+        ocrypto_ascon_hash256_final((ocrypto_ascon_hash_ctx*)operation->ctx, hash);
+        *hash_length = ocrypto_ascon_hash256_BYTES;
         break;
 #endif
     default:
@@ -429,6 +450,13 @@ psa_status_t oberon_hash_compute(
         if (hash_size < PSA_BITS_TO_BYTES(512)) return PSA_ERROR_BUFFER_TOO_SMALL;
         ocrypto_shake256(hash, PSA_BITS_TO_BYTES(512), input, input_length);
         *hash_length = PSA_BITS_TO_BYTES(512);
+        break;
+#endif
+#ifdef PSA_NEED_OBERON_ASCON_HASH256
+    case PSA_ALG_ASCON_HASH256:
+        if (hash_size < ocrypto_ascon_hash256_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
+        ocrypto_ascon_hash256(hash, input, input_length);
+        *hash_length = ocrypto_ascon_hash256_BYTES;
         break;
 #endif
     default:

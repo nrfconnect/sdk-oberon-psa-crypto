@@ -34,6 +34,9 @@
 #ifdef PSA_NEED_OBERON_HASH_DRIVER
 #include "oberon_hash.h"
 #endif
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+#include "oberon_xof.h"
+#endif
 #ifdef PSA_NEED_OBERON_CIPHER_DRIVER
 #include "oberon_cipher.h"
 #endif
@@ -63,6 +66,13 @@ typedef union {
     oberon_hash_operation_t oberon_hash_ctx;
 #endif
 } psa_driver_hash_context_t;
+
+typedef union {
+    unsigned dummy; /* Make sure this union is always non-empty */
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+    oberon_xof_operation_t oberon_xof_ctx;
+#endif
+} psa_driver_xof_context_t;
 
 typedef union {
     unsigned dummy; /* Make sure this union is always non-empty */

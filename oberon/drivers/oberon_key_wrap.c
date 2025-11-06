@@ -98,8 +98,8 @@ psa_status_t oberon_wrap_key(
 
     switch (alg) {
 #ifdef PSA_NEED_OBERON_AES_KW
-    case PSA_ALG_AES_KW:
-        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
+    case PSA_ALG_KW:
+        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
         if (key_size < 16 ||
 #if SIZE_MAX > 0x1FFFFFFFFFFFFF8
             key_size > 0x1FFFFFFFFFFFFF8 ||
@@ -127,8 +127,8 @@ psa_status_t oberon_wrap_key(
         return psa_driver_wrapper_cipher_abort(&cipher_op);
 #endif /* PSA_NEED_OBERON_AES_KW */
 #ifdef PSA_NEED_OBERON_AES_KWP
-    case PSA_ALG_AES_KWP:
-        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
+    case PSA_ALG_KWP:
+        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
         if (key_size == 0 ||
 #if SIZE_MAX > 0xFFFFFFFF
             key_size > 0xFFFFFFFF ||
@@ -210,8 +210,8 @@ psa_status_t oberon_unwrap_key(
 
     switch (alg) {
 #ifdef PSA_NEED_OBERON_AES_KW
-    case PSA_ALG_AES_KW:
-        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
+    case PSA_ALG_KW:
+        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
         if (data_length < 24 ||
 #if SIZE_MAX > 0x200000000000000
             data_length > 0x200000000000000 ||
@@ -241,8 +241,8 @@ psa_status_t oberon_unwrap_key(
         return psa_driver_wrapper_cipher_abort(&cipher_op);
 #endif /* PSA_NEED_OBERON_AES_KW */
 #ifdef PSA_NEED_OBERON_AES_KWP
-    case PSA_ALG_AES_KWP:
-        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_INVALID_ARGUMENT;
+    case PSA_ALG_KWP:
+        if (type != PSA_KEY_TYPE_AES) return PSA_ERROR_NOT_SUPPORTED;
         if (data_length < 16 ||
 #if SIZE_MAX > 0x100000008
             data_length > 0x100000008 ||

@@ -48,6 +48,9 @@ set(OCRYPTO_SOURCES
         "${OCRYPTO_ROOT}/src/ocrypto_aes_ctr.c"
         "${OCRYPTO_ROOT}/src/ocrypto_aes_ecb.c"
         "${OCRYPTO_ROOT}/src/ocrypto_aes_gcm.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_ascon_aead.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_ascon_hash.c"
+        "${OCRYPTO_ROOT}/src/ocrypto_ascon_loop.h"
         "${OCRYPTO_ROOT}/src/ocrypto_bigint128.h"
         "${OCRYPTO_ROOT}/src/ocrypto_bigint192.h"
         "${OCRYPTO_ROOT}/src/ocrypto_bigint224.h"
@@ -160,6 +163,7 @@ set(OCRYPTO_PLATFORM_SOURCES
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_cpu_dep.h"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_aes.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_aes_dec.c"
+        "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_ascon_loop.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_bigint128.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_bigint192.c"
         "${OCRYPTO_ROOT}/src/platforms/Generic/ocrypto_bigint224.c"
@@ -283,6 +287,8 @@ set(OBERON_SOURCES
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_xmss.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_xmss.h
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xof.c
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xof.h
 )
 
 # Demo drivers

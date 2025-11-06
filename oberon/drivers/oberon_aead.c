@@ -22,6 +22,9 @@
 #if defined(PSA_NEED_OBERON_CHACHA20_POLY1305) || defined(PSA_NEED_OBERON_XCHACHA20_POLY1305)
 #include "ocrypto_chacha20_poly1305.h"
 #endif /* PSA_NEED_OBERON_CHACHA20_POLY1305 || PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+#include "ocrypto_ascon_aead.h"
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
 
 
 static psa_status_t oberon_aead_setup(
@@ -83,6 +86,17 @@ static psa_status_t oberon_aead_setup(
         }
         break;
 #endif /* PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    _Static_assert(sizeof operation->ctx >= sizeof(ocrypto_ascon_aead_ctx), "oberon_aead_operation_t.ctx too small");
+    case PSA_KEY_TYPE_ASCON:
+        if (alg == PSA_ALG_ASCON_AEAD128) {
+            if (key_length != 16) return PSA_ERROR_INVALID_ARGUMENT;
+            ocrypto_ascon_aead128_init((ocrypto_ascon_aead_ctx*)&operation->ctx, key, NULL);
+        } else {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)key;
         (void)key_length;
@@ -163,6 +177,12 @@ psa_status_t oberon_aead_set_nonce(
         ocrypto_chacha20_poly1305_init(cp_ctx, nonce, nonce_length, cp_ctx->enc_ctx.cipher);
         break;
 #endif /* PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+            if (nonce_length != 16) return PSA_ERROR_INVALID_ARGUMENT;
+            ocrypto_ascon_aead128_init((ocrypto_ascon_aead_ctx*)&operation->ctx, NULL, nonce);
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)nonce;
         (void)nonce_length;
@@ -193,6 +213,11 @@ psa_status_t oberon_aead_update_ad(
         ocrypto_chacha20_poly1305_update_aad((ocrypto_chacha20_poly1305_ctx*)&operation->ctx, input, input_length);
         break;
 #endif /* PSA_NEED_OBERON_CHACHA20_POLY1305 || PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+        ocrypto_ascon_aead128_update_aad((ocrypto_ascon_aead_ctx*)&operation->ctx, input, input_length);
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)input;
         (void)input_length;
@@ -242,6 +267,15 @@ psa_status_t oberon_aead_update(
         }
         break;
 #endif /* PSA_NEED_OBERON_CHACHA20_POLY1305 || PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+        if (operation->decrypt) {
+            ocrypto_ascon_aead128_update_dec((ocrypto_ascon_aead_ctx*)&operation->ctx, output, input, input_length);
+        } else {
+            ocrypto_ascon_aead128_update_enc((ocrypto_ascon_aead_ctx*)&operation->ctx, output, input, input_length);
+        }
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)input;
         (void)output;
@@ -284,6 +318,11 @@ psa_status_t oberon_aead_finish(
         ocrypto_chacha20_poly1305_final_enc((ocrypto_chacha20_poly1305_ctx*)&operation->ctx, tag);
         break;
 #endif /* PSA_NEED_OBERON_CHACHA20_POLY1305 || PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+        ocrypto_ascon_aead128_final_enc((ocrypto_ascon_aead_ctx*)&operation->ctx, tag);
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)tag;
         return PSA_ERROR_NOT_SUPPORTED;
@@ -323,6 +362,11 @@ psa_status_t oberon_aead_verify(
         res = ocrypto_chacha20_poly1305_final_dec((ocrypto_chacha20_poly1305_ctx*)&operation->ctx, tag);
         break;
 #endif /* PSA_NEED_OBERON_CHACHA20_POLY1305 || PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+        res = ocrypto_ascon_aead128_final_dec((ocrypto_ascon_aead_ctx*)&operation->ctx, tag);
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)tag;
         return PSA_ERROR_NOT_SUPPORTED;
@@ -351,6 +395,9 @@ typedef union {
 #if defined(PSA_NEED_OBERON_CHACHA20_POLY1305) || defined(PSA_NEED_OBERON_XCHACHA20_POLY1305)
     ocrypto_chacha20_poly1305_ctx cp;
 #endif
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    ocrypto_ascon_aead_ctx ascon;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     int dummy;
 } ocrypto_context;
 
@@ -433,6 +480,21 @@ psa_status_t oberon_aead_encrypt(
         }
         break;
 #endif /* PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_KEY_TYPE_ASCON:
+        if (alg == PSA_ALG_ASCON_AEAD128) {
+            if (key_length != 16 || nonce_length != 16) return PSA_ERROR_INVALID_ARGUMENT;
+            ocrypto_ascon_aead128_init(&ctx.ascon, key, nonce);
+            if (additional_data_length) {
+                ocrypto_ascon_aead128_update_aad(&ctx.ascon, additional_data, additional_data_length);
+            }
+            ocrypto_ascon_aead128_update_enc(&ctx.ascon, ciphertext, plaintext, plaintext_length);
+            ocrypto_ascon_aead128_final_enc(&ctx.ascon, ciphertext + plaintext_length);
+        } else {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)key;
         (void)key_length;
@@ -530,6 +592,21 @@ psa_status_t oberon_aead_decrypt(
         }
         break;
 #endif /* PSA_NEED_OBERON_XCHACHA20_POLY1305 */
+#ifdef PSA_NEED_OBERON_ASCON_AEAD128
+    case PSA_KEY_TYPE_ASCON:
+        if (alg == PSA_ALG_ASCON_AEAD128) {
+            if (key_length != 16 || nonce_length != 16) return PSA_ERROR_INVALID_ARGUMENT;
+            ocrypto_ascon_aead128_init(&ctx.ascon, key, nonce);
+            if (additional_data_length) {
+                ocrypto_ascon_aead128_update_aad(&ctx.ascon, additional_data, additional_data_length);
+            }
+            ocrypto_ascon_aead128_update_dec(&ctx.ascon, plaintext, ciphertext, pt_length);
+            res = ocrypto_ascon_aead128_final_dec(&ctx.ascon, ciphertext + pt_length);
+        } else {
+            return PSA_ERROR_NOT_SUPPORTED;
+        }
+        break;
+#endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
     default:
         (void)key;
         (void)key_length;

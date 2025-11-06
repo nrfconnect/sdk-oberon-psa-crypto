@@ -15,7 +15,10 @@
 #include "oberon_helpers.h"
 #include "psa_crypto_driver_wrappers.h"
 #ifdef PSA_NEED_OBERON_WPA3_SAE
+#include "ocrypto_version.h"
 #include "ocrypto_wpa3_sae_p256.h"
+
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090400
 
 #define P256_KEY_SIZE    32
 #define P256_POINT_SIZE  64
@@ -152,8 +155,8 @@ exit:
 
 static psa_status_t oberon_wpa3_sae_confirm(
     oberon_wpa3_sae_operation_t *op,
-    const uint8_t commit[98],
-    const uint8_t peer_commit[98],
+    const uint8_t commit[96],
+    const uint8_t peer_commit[96],
     uint16_t send_confirm,
     uint8_t confirm[34])
 {
@@ -169,13 +172,13 @@ static psa_status_t oberon_wpa3_sae_confirm(
     if (status) goto exit;
     status = psa_driver_wrapper_mac_update(&op->mac_op, confirm, 2);
     if (status) goto exit;
-    status = psa_driver_wrapper_mac_update(&op->mac_op, &commit[2], 32);
+    status = psa_driver_wrapper_mac_update(&op->mac_op, &commit[0], 32);
     if (status) goto exit;
-    status = psa_driver_wrapper_mac_update(&op->mac_op, &commit[34], 64);
+    status = psa_driver_wrapper_mac_update(&op->mac_op, &commit[32], 64);
     if (status) goto exit;
-    status = psa_driver_wrapper_mac_update(&op->mac_op, &peer_commit[2], 32);
+    status = psa_driver_wrapper_mac_update(&op->mac_op, &peer_commit[0], 32);
     if (status) goto exit;
-    status = psa_driver_wrapper_mac_update(&op->mac_op, &peer_commit[34], 64);
+    status = psa_driver_wrapper_mac_update(&op->mac_op, &peer_commit[32], 64);
     if (status) goto exit;
     status = psa_driver_wrapper_mac_sign_finish(&op->mac_op, &confirm[2], 32, &length);
     if (status) goto exit;
@@ -200,7 +203,7 @@ static psa_status_t oberon_wpa3_sae_keys(oberon_wpa3_sae_operation_t *op)
 
     // K = ((PWE * peer_scalar) + peer_element) * rand; k = K.x
     res = ocrypto_wpa3_sae_p256_secret_value(
-        k, ctx, op->pwe, &op->commit[2], &op->peer_commit[2], &op->peer_commit[34], op->rand);
+        k, ctx, op->pwe, &op->commit[0], &op->peer_commit[0], &op->peer_commit[32], op->rand);
     if (res) return PSA_ERROR_INVALID_ARGUMENT;
 
     // keyseed = H(0, k) or H(rej_list, k);
@@ -242,6 +245,8 @@ psa_status_t oberon_wpa3_sae_setup(
     const uint8_t *password, size_t password_length,
     const psa_pake_cipher_suite_t *cipher_suite)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "WPA3-SAE driver: ocrypto version incompatible");
     psa_key_type_t type = psa_get_key_type(attributes);
     psa_algorithm_t alg = psa_pake_cs_get_algorithm(cipher_suite);
     psa_algorithm_t hash_alg = PSA_ALG_GET_HASH(alg);
@@ -272,7 +277,7 @@ psa_status_t oberon_wpa3_sae_setup(
     operation->pmk_length = (uint8_t)pmk_length;
     operation->keys_set = 0;
     operation->salt_set = 0;
-    operation->use_h2e = PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type);
+    operation->use_h2e = PSA_KEY_TYPE_IS_WPA3_SAE_ECC(type);
     return PSA_SUCCESS;
 }
 
@@ -316,7 +321,7 @@ psa_status_t oberon_wpa3_sae_output(
 
     switch (step) {
     case PSA_PAKE_STEP_COMMIT:
-        if (output_size < 98) return PSA_ERROR_BUFFER_TOO_SMALL;
+        if (output_size < 96) return PSA_ERROR_BUFFER_TOO_SMALL;
         do {
             status = psa_generate_random(operation->rand, 32);
             if (status) return status;
@@ -325,8 +330,8 @@ psa_status_t oberon_wpa3_sae_output(
             // check for valid rand & mask and generate commit data
             res = ocrypto_wpa3_sae_p256_get_commit(operation->commit, operation->rand, mask, operation->pwe);
         } while (res);
-        memcpy(output, operation->commit, 98);
-        *output_length = 98;
+        memcpy(output, operation->commit, 96);
+        *output_length = 96;
         break;
     case PSA_PAKE_STEP_CONFIRM:
         if (output_size < 34) return PSA_ERROR_BUFFER_TOO_SMALL;
@@ -337,7 +342,7 @@ psa_status_t oberon_wpa3_sae_output(
         if (status) return status;
         *output_length = 34;
         break;
-    case PSA_PAKE_STEP_KEYID:
+    case PSA_PAKE_STEP_KEY_ID:
         if (output_size < 16) return PSA_ERROR_BUFFER_TOO_SMALL;
         memcpy(output, operation->pmkid, 16);
         *output_length = 16;
@@ -361,10 +366,10 @@ psa_status_t oberon_wpa3_sae_input(
 
     switch (step) {
     case PSA_PAKE_STEP_COMMIT:
-        if (input_length != 98) return PSA_ERROR_INVALID_ARGUMENT;
+        if (input_length != 96) return PSA_ERROR_INVALID_ARGUMENT;
         res = ocrypto_wpa3_sae_p256_check_commit(input);
         if (res) return PSA_ERROR_INVALID_ARGUMENT;
-        memcpy(operation->peer_commit, input, 98);
+        memcpy(operation->peer_commit, input, 96);
         break;
     case PSA_PAKE_STEP_SALT:
         // rejected groups list
@@ -382,7 +387,7 @@ psa_status_t oberon_wpa3_sae_input(
         res = oberon_ct_compare(input, verify, 34);
         if (res) return PSA_ERROR_INVALID_SIGNATURE;
         break;
-    case PSA_PAKE_STEP_SEND_CONFIRM:
+    case PSA_PAKE_STEP_CONFIRM_COUNT:
         if (input_length != 2) return PSA_ERROR_INVALID_ARGUMENT;
         operation->send_confirm = input[0] | (input[1] << 8);
         break;
@@ -412,7 +417,7 @@ psa_status_t oberon_wpa3_sae_abort(
 }
 
 
-#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_SECP_R1_256
 static psa_status_t hkdf_sha256_expand(uint8_t u[64], const uint8_t seed[32], const uint8_t *label, size_t label_len)
 {
     psa_mac_operation_t mac_op;
@@ -460,8 +465,8 @@ psa_status_t oberon_derive_wpa3_sae_pt_key(
     uint8_t u1[64], u2[64];
 
     switch (type) {
-#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256
-    case PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1):
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_SECP_R1_256
+    case PSA_KEY_TYPE_WPA3_SAE_ECC(PSA_ECC_FAMILY_SECP_R1):
         switch (bits) {
         case 256: 
             if (input_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
@@ -476,7 +481,7 @@ psa_status_t oberon_derive_wpa3_sae_pt_key(
         default:
             return PSA_ERROR_NOT_SUPPORTED;
         }
-#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT_SECP_R1_256 */
+#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_SECP_R1_256 */
 
     default:
         (void)input;
@@ -502,8 +507,8 @@ psa_status_t oberon_import_wpa3_sae_pt_key(
     psa_key_type_t type = psa_get_key_type(attributes);
 
     switch (type) {
-#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
-    case PSA_KEY_TYPE_WPA3_SAE_ECC_PT(PSA_ECC_FAMILY_SECP_R1):
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE
+    case PSA_KEY_TYPE_WPA3_SAE_ECC(PSA_ECC_FAMILY_SECP_R1):
         switch (data_length) {
         case 64:
             if (bits != 0 && bits != 256) return PSA_ERROR_INVALID_ARGUMENT;
@@ -514,7 +519,7 @@ psa_status_t oberon_import_wpa3_sae_pt_key(
             return PSA_ERROR_NOT_SUPPORTED;
         }
         break;
-#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT */
+#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE */
 
     default:
         (void)res;

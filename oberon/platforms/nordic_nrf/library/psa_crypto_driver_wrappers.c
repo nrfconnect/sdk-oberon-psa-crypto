@@ -34,6 +34,9 @@
 #ifdef PSA_NEED_OBERON_HASH_DRIVER
 #include "oberon_hash.h"
 #endif
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+#include "oberon_xof.h"
+#endif
 #ifdef PSA_NEED_OBERON_KEY_AGREEMENT_DRIVER
 #include "oberon_key_agreement.h"
 #endif
@@ -1318,6 +1321,84 @@ psa_status_t psa_driver_wrapper_hash_abort(
     case OBERON_DRIVER_ID:
         return oberon_hash_abort(&operation->ctx.oberon_hash_ctx);
 #endif /* PSA_NEED_OBERON_HASH_DRIVER */
+
+    default:
+        return PSA_SUCCESS;
+    }
+}
+
+/*
+ * XOF functions
+ */
+psa_status_t psa_driver_wrapper_xof_setup(
+    psa_xof_operation_t *operation,
+    psa_algorithm_t alg)
+{
+    psa_status_t status;
+
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+    status = oberon_xof_setup(
+        &operation->ctx.oberon_xof_ctx, alg);
+    if (status == PSA_SUCCESS) operation->id = OBERON_DRIVER_ID;
+    return status;
+#endif /* PSA_NEED_OBERON_XOF_DRIVER */
+
+    (void)status;
+    (void)operation;
+    (void)alg;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_xof_update(
+    psa_xof_operation_t *operation,
+    const uint8_t *input, size_t input_length)
+{
+    switch (operation->id) {
+
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_xof_update(
+            &operation->ctx.oberon_xof_ctx,
+            input, input_length);
+#endif /* PSA_NEED_OBERON_XOF_DRIVER */
+
+    default:
+        (void)input;
+        (void)input_length;
+        return PSA_ERROR_BAD_STATE;
+    }
+}
+
+psa_status_t psa_driver_wrapper_xof_output(
+    psa_xof_operation_t *operation,
+    uint8_t *output,
+    size_t output_length)
+{
+    switch (operation->id) {
+
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_xof_output(
+            &operation->ctx.oberon_xof_ctx,
+            output, output_length);
+#endif /* PSA_NEED_OBERON_XOF_DRIVER */
+
+    default:
+        (void)output;
+        (void)output_length;
+        return PSA_ERROR_BAD_STATE;
+    }
+}
+
+psa_status_t psa_driver_wrapper_xof_abort(
+    psa_xof_operation_t *operation)
+{
+    switch (operation->id) {
+
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_xof_abort(&operation->ctx.oberon_xof_ctx);
+#endif /* PSA_NEED_OBERON_XOF_DRIVER */
 
     default:
         return PSA_SUCCESS;

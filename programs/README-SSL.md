@@ -42,18 +42,18 @@ the _Mbed TLS_ README located in its `programs` directory:
 
 _Mbed TLS_ contains the SSL program examples and is required to run these samples
 on top of _Oberon PSA Crypto_. Download and unzip _Mbed TLS_ from the archive at
-<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.4> or clone_Mbed TLS_ and
-check out version 3.6.4 as follows:
+<https://github.com/Mbed-TLS/mbedtls/releases/tag/v3.6.5> or clone _Mbed TLS_ and
+check out version 3.6.5 as follows:
 
     cd path/to/new/folder
     git clone https://github.com/Mbed-TLS/mbedtls.git
-    git checkout v3.6.4
+    git checkout v3.6.5
 
 ### Build with CMake
 
-Provide the path to _ocrypto 3.9.2_ or later via _-DOCRYPTO_ROOT=path/to/ocrypto_.
+Provide the path to _ocrypto_ 3.9.4 or later via _-DOCRYPTO_ROOT=path/to/ocrypto_.
 
-Provide the path to _Mbed TLS_ 3.6.4 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
+Provide the path to _Mbed TLS_ 3.6.5 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
 
 Build the source in a separate directory `build` from the command line:
 
@@ -101,7 +101,7 @@ Run _PSA_ and SSL tests from same `build` directory:
 
 In existing projects that use the TLS protocol implementation from _Mbed TLS_,
 the crypto implementation can be replaced with the one from _Oberon PSA Crypto_.
-The migration requires projects building on _Mbed TLS_ 3.6.4.
+The migration requires projects building on _Mbed TLS_ 3.6.5.
 
 Configuration options are still limited and there are still build dependencies
 to some of the _Mbed TLS_ crypto code files even though the code is not used;
@@ -114,9 +114,6 @@ steps:
 2. In your project build files, replace code files from
    `mbedtls` with the path to the equivalent files in _Oberon PSA Crypto_:
     * `library/*.c`
-    * `programs/ssl/library/md.c`
-    * `programs/ssl/library/pk.c`
-    * `programs/ssl/library/psa_util.c`
 
 3. Add the _Oberon PSA Crypto_ include paths in the following order and make
    sure they are searched before the equivalent include paths in `mbedtls`:

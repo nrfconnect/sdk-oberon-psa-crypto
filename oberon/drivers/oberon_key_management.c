@@ -175,13 +175,13 @@ psa_status_t oberon_import_key(
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_XMSS_MT_PUBLIC_KEY */
 
-#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
-    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type)) {
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC(type)) {
         return oberon_import_wpa3_sae_pt_key(
             attributes, data, data_length,
             key, key_size, key_length, key_bits);
     } else
-#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT */
+#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE */
 
     {
         (void)data;
@@ -241,13 +241,13 @@ psa_status_t oberon_derive_key(
     } else
 #endif /* PSA_NEED_OBERON_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
 
-#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT
-    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(type)) {
+#ifdef PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC(type)) {
         return oberon_derive_wpa3_sae_pt_key(
             attributes, input, input_length,
             key, key_size, key_length);
     } else
-#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE_PT */
+#endif /* PSA_NEED_OBERON_KEY_TYPE_WPA3_SAE */
 
     {
         (void)input;

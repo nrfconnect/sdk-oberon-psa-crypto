@@ -56,6 +56,8 @@ set(OBERON_SOURCES
         oberon_wpa3_sae.h
         oberon_xmss.c
         oberon_xmss.h
+        oberon_xof.c
+        oberon_xof.h
 )
 
 target_sources(${PROJECT_NAME} PRIVATE ${OBERON_SOURCES})

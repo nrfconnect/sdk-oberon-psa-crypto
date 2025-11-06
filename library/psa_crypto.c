@@ -205,6 +205,13 @@ psa_status_t psa_validate_unstructured_key_bit_size(psa_key_type_t type,
             }
             break;
 #endif
+#if defined(PSA_WANT_KEY_TYPE_ASCON)
+        case PSA_KEY_TYPE_ASCON:
+            if (bits != 128) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif
 #if defined(PSA_WANT_KEY_TYPE_ARIA)
         case PSA_KEY_TYPE_ARIA:
             if (bits != 128 && bits != 192 && bits != 256) {
@@ -545,6 +552,12 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
         return PSA_ALG_KEY_AGREEMENT_GET_BASE(requested_alg) ==
                policy_alg;
     }
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH) || defined(PSA_WANT_ALG_WPA3_SAE_H2E)
+    if (policy_alg == PSA_ALG_WPA3_SAE_ANY) {
+        return PSA_ALG_IS_WPA3_SAE_H2E(requested_alg) || // any WPA3-SAE KDF
+               PSA_ALG_IS_WPA3_SAE(requested_alg);       // any WPA3-SAE PAKE
+    }
+#endif
     /* If it isn't explicitly permitted, it's forbidden. */
     return 0;
 }
@@ -933,13 +946,13 @@ psa_status_t psa_export_key_internal(
         PSA_KEY_TYPE_IS_ECC(type)     ||
         PSA_KEY_TYPE_IS_SPAKE2P(type) ||
         PSA_KEY_TYPE_IS_SRP(type)     ||
-        PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+        PSA_KEY_TYPE_IS_WPA3_SAE(type)) {
         return psa_export_key_buffer_internal(
             key_buffer, key_buffer_size,
             data, data_size, data_length);
     } else {
-        /* This shouldn't happen in the reference implementation, but
-           it is valid for a special-purpose implementation to omit
+        /* This shouldn't happen in the default implementation, but
+           it is valid for a special-purpose driver to omit
            support for exporting certain key types. */
         return PSA_ERROR_NOT_SUPPORTED;
     }
@@ -1760,6 +1773,108 @@ psa_status_t psa_hash_clone(const psa_hash_operation_t *source_operation,
                                                         target_operation);
     if (status != PSA_SUCCESS) {
         psa_hash_abort(target_operation);
+    }
+
+    return status;
+}
+
+
+/****************************************************************/
+/* Message digests with extended output (XOF) */
+/****************************************************************/
+
+psa_status_t psa_xof_abort(psa_xof_operation_t *operation)
+{
+    /* Aborting a non-active operation is allowed */
+    if (operation->id == 0) {
+        return PSA_SUCCESS;
+    }
+
+    psa_status_t status = psa_driver_wrapper_xof_abort(operation);
+    operation->id = 0;
+
+    return status;
+}
+
+psa_status_t psa_xof_setup(psa_xof_operation_t *operation,
+                           psa_algorithm_t alg)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    /* A context must be freshly initialized before it can be set up. */
+    if (operation->id != 0) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+    if (!PSA_ALG_IS_XOF(alg)) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    /* Make sure the driver-dependent part of the operation is zeroed.
+    * This is a guarantee we make to drivers. Initializing the operation
+    * does not necessarily take care of it, since the context is a
+    * union and initializing a union does not necessarily initialize
+    * all of its members. */
+    memset(&operation->ctx, 0, sizeof(operation->ctx));
+    operation->output = 0;
+
+    status = psa_driver_wrapper_xof_setup(operation, alg);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_xof_abort(operation);
+    }
+
+    return status;
+}
+
+psa_status_t psa_xof_update(psa_xof_operation_t *operation,
+                            const uint8_t *input,
+                            size_t input_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    if (operation->id == 0 || operation->output) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
+    /* Don't require xof implementations to behave correctly on a
+    * zero-length input, which may have an invalid pointer. */
+    if (input_length == 0) {
+        return PSA_SUCCESS;
+    }
+
+    status = psa_driver_wrapper_xof_update(operation, input, input_length);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_xof_abort(operation);
+    }
+
+    return status;
+}
+
+psa_status_t psa_xof_output(psa_xof_operation_t *operation,
+                            uint8_t *output,
+                            size_t output_length)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    if (operation->id == 0) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+    operation->output = 1;
+
+    status = psa_driver_wrapper_xof_output(
+        operation, output, output_length);
+
+exit:
+    if (status != PSA_SUCCESS) {
+        psa_xof_abort(operation);
     }
 
     return status;
@@ -2886,7 +3001,6 @@ psa_status_t psa_cipher_finish(psa_cipher_operation_t *operation,
                                size_t *output_length)
 {
     psa_status_t abort_status, status = PSA_ERROR_GENERIC_ERROR;
-    int32_t mask;
 
     if (operation->id == 0) {
         status = PSA_ERROR_BAD_STATE;
@@ -2905,9 +3019,12 @@ psa_status_t psa_cipher_finish(psa_cipher_operation_t *operation,
 
 exit:
     // constant-time error handling to avoid padding oracle attacks
-    mask = status >> 31; // SUCCESS: 0, error: -1
     abort_status = psa_cipher_abort(operation);
-    return (status & mask) | (abort_status & ~mask);
+    if (abort_status != PSA_SUCCESS) {
+        status = abort_status;
+    }
+    *output_length &= ~(status >> 31);
+    return status;
 }
 
 psa_status_t psa_cipher_abort(psa_cipher_operation_t *operation)
@@ -3031,15 +3148,12 @@ psa_status_t psa_cipher_decrypt(mbedtls_svc_key_id_t key,
         output, output_size, output_length);
 
 exit:
+    // constant-time error handling to avoid padding oracle attacks
     unlock_status = psa_unregister_read_under_mutex(slot);
-    if (status == PSA_SUCCESS) {
+    if (unlock_status != PSA_SUCCESS) {
         status = unlock_status;
     }
-
-    if (status != PSA_SUCCESS) {
-        *output_length = 0;
-    }
-
+    *output_length &= ~(status >> 31);
     return status;
 }
 
@@ -3097,6 +3211,13 @@ static psa_status_t psa_aead_check_nonce_length(psa_algorithm_t alg,
             }
             break;
 #endif /* PSA_WANT_ALG_XCHACHA20_POLY1305 */
+#if defined(PSA_WANT_ALG_ASCON_AEAD128)
+        case PSA_ALG_ASCON_AEAD128:
+            if (nonce_length == 16) {
+                return PSA_SUCCESS;
+            }
+            break;
+#endif /* PSA_WANT_ALG_ASCON_AEAD128 */
         default:
             (void) nonce_length;
             return PSA_ERROR_NOT_SUPPORTED;
@@ -3248,6 +3369,14 @@ static psa_status_t psa_validate_tag_length(psa_algorithm_t alg)
             }
             break;
 #endif /* PSA_WANT_ALG_CHACHA20_POLY1305 || PSA_WANT_ALG_XCHACHA20_POLY1305 */
+
+#if defined(PSA_WANT_ALG_ASCON_AEAD128)
+        case PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_ASCON_AEAD128, 0):
+            if (tag_len != 16) {
+                return PSA_ERROR_INVALID_ARGUMENT;
+            }
+            break;
+#endif /* PSA_WANT_ALG_ASCON_AEAD128 */
 
         default:
             (void) tag_len;
@@ -3979,7 +4108,7 @@ static psa_status_t psa_key_derivation_check_state(
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     } else
-#endif /* PSA_WANT_ALG_WPA3_SAE_PT */
+#endif /* PSA_WANT_ALG_WPA3_SAE_H2E */
 
 #if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC) || defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC)
 #if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC) && defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC)
@@ -4019,7 +4148,7 @@ static psa_status_t psa_key_derivation_check_state(
     return PSA_SUCCESS;
 }
 
-psa_status_t psa_key_derivation_output_bytes_internal(
+static psa_status_t psa_key_derivation_output_bytes_internal(
     psa_key_derivation_operation_t *operation,
     uint8_t *output,
     size_t output_length)
@@ -4065,16 +4194,16 @@ psa_status_t psa_key_derivation_output_bytes(
     return psa_key_derivation_output_bytes_internal(operation, output, output_length);
 }
 
-#ifdef PSA_WANT_KEY_TYPE_WPA3_SAE_PT
+#ifdef PSA_WANT_KEY_TYPE_WPA3_SAE
 static psa_status_t psa_wpa3_sae_pt_check_hash(psa_algorithm_t alg, psa_key_type_t key_type, size_t bits)
 {
     psa_algorithm_t hash;
     if (!PSA_ALG_IS_WPA3_SAE_H2E(alg)) return PSA_ERROR_INVALID_ARGUMENT;
-    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(key_type)) {
+    if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC(key_type)) {
         if (bits <= 256) hash = PSA_ALG_SHA_256;
         else if (bits <= 384) hash = PSA_ALG_SHA_384;
         else hash = PSA_ALG_SHA_512;
-    } else if (PSA_KEY_TYPE_IS_WPA3_SAE_DH_PT(key_type)) {
+    } else if (PSA_KEY_TYPE_IS_WPA3_SAE_DH(key_type)) {
         if (bits <= 2048) hash = PSA_ALG_SHA_256;
         else if (bits <= 3072) hash = PSA_ALG_SHA_384;
         else hash = PSA_ALG_SHA_512;
@@ -4136,14 +4265,14 @@ static psa_status_t psa_generate_derived_key_internal(
         if (!PSA_ALG_IS_SRP_PASSWORD_HASH(operation->alg)) return PSA_ERROR_INVALID_ARGUMENT;
         storage_size = bytes = PSA_HASH_LENGTH(operation->alg);
 #endif /* PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_DERIVE */
-#ifdef PSA_WANT_KEY_TYPE_WPA3_SAE_PT
-    } else if (PSA_KEY_TYPE_IS_WPA3_SAE_PT(type)) {
+#ifdef PSA_WANT_KEY_TYPE_WPA3_SAE
+    } else if (PSA_KEY_TYPE_IS_WPA3_SAE(type)) {
         status = psa_wpa3_sae_pt_check_hash(operation->alg, type, bits);
         if (status != PSA_SUCCESS) return status;
         storage_size = bytes * 2u;  // x : y
         bytes = PSA_HASH_LENGTH(operation->alg);
         calculate_key = 1;
-#endif /* PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE */
+#endif /* PSA_WANT_KEY_TYPE_WPA3_SAE */
     } else {
         (void)calculate_key;
         return PSA_ERROR_NOT_SUPPORTED;
@@ -4178,7 +4307,7 @@ static psa_status_t psa_generate_derived_key_internal(
         if (status != PSA_SUCCESS) goto exit;
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) || defined(PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE) || \
-    defined(PSA_WANT_KEY_TYPE_WPA3_SAE_PT)
+    defined(PSA_WANT_KEY_TYPE_WPA3_SAE)
         if (calculate_key) {
             status = psa_driver_wrapper_derive_key(
                 &slot->attr,
@@ -4187,7 +4316,7 @@ static psa_status_t psa_generate_derived_key_internal(
 
         } else
 #endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE || PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_DERIVE ||
-          PSA_WANT_KEY_TYPE_WPA3_SAE_PT */
+          PSA_WANT_KEY_TYPE_WPA3_SAE */
         {
             status = psa_driver_wrapper_import_key(
                 &slot->attr,
@@ -4802,16 +4931,16 @@ psa_status_t psa_pake_setup(psa_pake_operation_t *operation,
                 goto exit;
             }
         } else if (PSA_ALG_IS_WPA3_SAE(alg)) {
-            if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC_PT(ktype)) {
+            if (PSA_KEY_TYPE_IS_WPA3_SAE_ECC(ktype)) {
                 if (ptype != PSA_PAKE_PRIMITIVE_TYPE_ECC ||
-                    family != PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(ktype) ||
+                    family != PSA_KEY_TYPE_WPA3_SAE_ECC_GET_FAMILY(ktype) ||
                     bits != slot->attr.bits) {
                     status = PSA_ERROR_INVALID_ARGUMENT;
                     goto exit;
                 }
-            } else if (PSA_KEY_TYPE_IS_WPA3_SAE_DH_PT(ktype)) {
+            } else if (PSA_KEY_TYPE_IS_WPA3_SAE_DH(ktype)) {
                 if (ptype != PSA_PAKE_PRIMITIVE_TYPE_DH || 
-                    family != PSA_KEY_TYPE_WPA3_SAE_PT_GET_FAMILY(ktype) ||
+                    family != PSA_KEY_TYPE_WPA3_SAE_DH_GET_FAMILY(ktype) ||
                     bits != slot->attr.bits) {
                     status = PSA_ERROR_INVALID_ARGUMENT;
                     goto exit;
@@ -4863,7 +4992,7 @@ psa_status_t psa_pake_set_role(psa_pake_operation_t *operation,
         goto exit;
     }
 
-#if defined(PSA_WANT_ALG_JPAKE) || defined(PSA_WANT_ALG_WPA3_SAE)
+#if defined(PSA_WANT_ALG_JPAKE) || defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     if (PSA_ALG_IS_JPAKE(operation->alg) || PSA_ALG_IS_WPA3_SAE(operation->alg)) {
         if (role != PSA_PAKE_ROLE_NONE) return PSA_ERROR_INVALID_ARGUMENT;
     } else
@@ -4933,7 +5062,7 @@ psa_status_t psa_pake_set_user(psa_pake_operation_t *operation,
         }
     } else
 #endif
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
         if (user_id_len != 6) {
             status = PSA_ERROR_INVALID_ARGUMENT;
@@ -4991,7 +5120,7 @@ psa_status_t psa_pake_set_peer(psa_pake_operation_t *operation,
         }
     } else
 #endif
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
         if (!operation->user_set) {
             status = PSA_ERROR_BAD_STATE;
@@ -5202,7 +5331,7 @@ static psa_status_t psa_check_srp_sequence(psa_pake_operation_t *operation,
 }
 #endif
 
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
 /* WPA3-SAE sequence numbers:
  * (salt and share can be used in any order)
  *  ~1: output commit
@@ -5244,12 +5373,12 @@ static psa_status_t psa_check_wpa3_sae_sequence(psa_pake_operation_t *operation,
         }
         if ((sequence & 15) == 15) operation->done = 1;
         break;
-    case PSA_PAKE_STEP_SEND_CONFIRM:
+    case PSA_PAKE_STEP_CONFIRM_COUNT:
         if (output) return PSA_ERROR_INVALID_ARGUMENT;
         if (sequence < 3) return PSA_ERROR_BAD_STATE;
         sequence |= 32;
         break;
-    case PSA_PAKE_STEP_KEYID:
+    case PSA_PAKE_STEP_KEY_ID:
         if (!output) return PSA_ERROR_INVALID_ARGUMENT;
         if (sequence < 3) return PSA_ERROR_BAD_STATE;
         break;
@@ -5297,7 +5426,7 @@ psa_status_t psa_pake_output(psa_pake_operation_t *operation,
         if (status != PSA_SUCCESS) return status;
     } else
 #endif
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
         if (!operation->user_set || !operation->peer_set) return PSA_ERROR_BAD_STATE;
         status = psa_check_wpa3_sae_sequence(operation, step, 1);
@@ -5356,7 +5485,7 @@ psa_status_t psa_pake_input(psa_pake_operation_t *operation,
         if (status != PSA_SUCCESS) return status;
     } else
 #endif
-#ifdef PSA_WANT_ALG_WPA3_SAE
+#if defined(PSA_WANT_ALG_WPA3_SAE_FIXED) || defined(PSA_WANT_ALG_WPA3_SAE_GDH)
     if (PSA_ALG_IS_WPA3_SAE(operation->alg)) {
         if (!operation->user_set || !operation->peer_set) return PSA_ERROR_BAD_STATE;
         status = psa_check_wpa3_sae_sequence(operation, step, 0);
@@ -5463,7 +5592,7 @@ psa_status_t psa_pake_abort(psa_pake_operation_t *operation)
 /* Key Wrapping */
 /****************************************************************/
 
-psa_status_t oberon_psa_wrap_key(
+psa_status_t psa_wrap_key(
     mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
     mbedtls_svc_key_id_t key,
@@ -5513,7 +5642,7 @@ exit:
     return status;
 }
 
-psa_status_t oberon_psa_unwrap_key(
+psa_status_t psa_unwrap_key(
     const psa_key_attributes_t *attributes,
     mbedtls_svc_key_id_t wrapping_key,
     psa_algorithm_t alg,
@@ -5544,8 +5673,8 @@ psa_status_t oberon_psa_unwrap_key(
     if (status != PSA_SUCCESS) goto exit;
 
     switch (alg) {
-    case PSA_ALG_AES_KW:
-    case PSA_ALG_AES_KWP:
+    case PSA_ALG_KW:
+    case PSA_ALG_KWP:
         if (data_length < 8) {
             status = PSA_ERROR_INVALID_ARGUMENT;
             goto exit;

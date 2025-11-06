@@ -1,5 +1,49 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.5.3
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.3>
+2025-11-06 (372db7b)
+
+Oberon crypto software drivers require _ocrypto_ version 3.9.4 or later.
+
+### Compatibility
+- [PSA Certified Crypto API 1.3.2](https://arm-software.github.io/psa-api/crypto/1.3/IHI0086-PSA_Certified_Crypto_API-1.3.2.pdf)
+  - Includes the former PAKE extensions for EC-JPAKE and SPAKE2+.
+- Experimental extensions for PSA Crypto API 1.4
+  - WPA3 PAKE according to
+    [WPA3](https://github.com/ARM-software/psa-api/pull/293).
+  - SRP PAKE extension according to
+    [SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
+  - AES Key Wrap according to
+    [AES Key Wrap](https://github.com/ARM-software/psa-api/pull/224).
+  - XOF according to
+    [XOF](https://github.com/ARM-software/psa-api/pull/253).
+  - Ascon according to
+    [Ascon](https://github.com/ARM-software/psa-api/issues/60).
+- [PSA Crypto API 1.3 PQC Extension Beta 3](https://arm-software.github.io/psa-api/crypto/1.3/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.3_PQC_Extension-bet.3.pdf)
+  - LMS and HSS.
+  - XMSS and XMSS^MT.
+  - ML-KEM and ML-DSA.
+- [PSA Crypto Driver Interface 1.0.0 alpha 1](https://arm-software.github.io/psa-api/crypto-driver/1.0/111106-PSA_Certified_Crypto_Driver_Interface-1.0-alp.1.pdf)
+  - Largely compatible to this version of the new standard, except for KDF and RNG.
+- [PSA APIs Test Suite v1.9](https://github.com/ARM-software/psa-arch-tests/releases/tag/v25.08_API1.9_ADAC_1.0.2)
+- [Mbed TLS 3.6.5](https://github.com/Mbed-TLS/mbedtls/releases/tag/mbedtls-3.6.5).
+
+### New Features
+- Add XOF support.
+- Add Ascon support.
+
+### Improvements
+- Update AES Key Wrap to latest specification proposal.
+- Update WPA3 to latest specification proposal.
+- Update to PSA APIs test suite v1.9.
+- Update configuration for Mbed TLS `ssl_client2` and `ssl_server2` to Mbed TLS 3.6.5.
+- Remove Mbed TLS file copies previously required for SSL integration.
+  - `md.c`, `pk.c`, `psa_util.c` in `programs/ssl/library`.
+- Add ocrypto dependency check for WPA3 driver.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.5.2
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.2>
 2025-09-19 (8219b7f)
