@@ -1258,6 +1258,17 @@ static psa_status_t psa_start_key_creation(
  * PSA_SLOT_FULL, and the key slot can no longer be accessed as part of the
  * key creation process.
  *
+ * \note For persistent keys, the slot is automatically purged
+ *       after creation to prevent slot exhaustion.
+ *       This is safe because persistent keys can
+ *       be reloaded on-demand via psa_load_builtin_key_into_slot() or
+ *       psa_load_persistent_key_into_slot() when needed.
+ *
+ *       However, if the key has the PSA_KEY_USAGE_CACHE flag set in its
+ *       policy, the slot is not purged, as the application has explicitly
+ *       requested that the key material be kept in memory for efficiency
+ *       (see PSA Crypto API spec section 6.3.4).
+ *
  * \param[in,out] slot  Pointer to the slot with key material.
  * \param[in] driver    The secure element driver for the key,
  *                      or NULL for a transparent key.
@@ -1310,6 +1321,30 @@ static psa_status_t psa_finish_key_creation(
                                                PSA_SLOT_FULL);
         if (status != PSA_SUCCESS) {
             *key = MBEDTLS_SVC_KEY_ID_INIT;
+        } else {
+            /* For persistent keys, purge the slot immediately after
+             * creation to prevent slot exhaustion.
+             */
+            if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+                /* PSA_KEY_USAGE_CACHE may not be defined in all PSA implementations.
+                 * Define it here if not available. Value is 0x00000004 per PSA spec. */
+#ifndef PSA_KEY_USAGE_CACHE
+#define PSA_KEY_USAGE_CACHE ((psa_key_usage_t)0x00000004)
+#endif
+                /* Only purge if the CACHE flag is not set. If CACHE is set, the
+                 * application has requested that the key be kept in memory. */
+                if ((slot->attr.policy.usage & PSA_KEY_USAGE_CACHE) == 0) {
+					/* Remove key data and transition slot to EMPTY state.
+					 * This frees the slot for reuse while the key remains
+					 * accessible via persistent storage. */
+					psa_status_t remove_status = psa_remove_key_data_from_memory(slot);
+					if (remove_status == PSA_SUCCESS) {
+						slot->state = PSA_SLOT_EMPTY;
+					}
+					/* Don't fail key creation if cleanup fails - the key is
+					 * already stored persistently and creation succeeded. */
+					(void) remove_status;
+            }
         }
     }
 
