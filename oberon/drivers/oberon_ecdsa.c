@@ -79,7 +79,7 @@ static int ecdsa_sign_hash(
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_R1_384 */
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_521
     case PSA_BITS_TO_BYTES(521):
-        res = ocrypto_ecdsa_p521_sign_hash(signature, hash, key, ek);
+        res = ocrypto_ecdsa_p521_sign_hash(signature, hash + 2, key, ek);
         break;
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_R1_521 */
     default:
@@ -157,6 +157,9 @@ static psa_status_t deterministic_ecdsa_sign_hash(
     psa_status_t status;
     size_t len;
     int res;
+#ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_521
+    int i;
+#endif
 
     if (hash_length == 0) return PSA_ERROR_INVALID_ARGUMENT;
 
@@ -184,7 +187,13 @@ static psa_status_t deterministic_ecdsa_sign_hash(
             if (status) return status;
             memcpy(ek + len, V, key_length - len < hash_length ? key_length - len : hash_length); // T = T || V
         }
-
+#ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_521
+        // for P521 we need the first 521 bits right adjusted
+        if (key_length == 66) {
+            for (i = 65; i > 0; i--) ek[i] = (uint8_t)(ek[i] >> 7 | (ek[i - 1] << 1));
+            ek[0] >>= 7;
+        }
+#endif
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_K1_256
         res = ecdsa_sign_hash(key, key_length, family, hash, ek, signature);
 #else
@@ -462,7 +471,7 @@ psa_status_t oberon_ecdsa_verify_hash(
                 if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1)) {
                     ocrypto_ecdsa_p521_public_key(key_buf, key);
                 }
-                res = ocrypto_ecdsa_p521_verify_hash(signature, hash, pub_key);
+                res = ocrypto_ecdsa_p521_verify_hash(signature, hash + 2, pub_key);
                 break;
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_R1_521 */
             default:
