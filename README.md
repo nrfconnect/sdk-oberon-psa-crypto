@@ -71,8 +71,8 @@ The following file contains the change history of _Oberon PSA Crypto_:
 
 - `CHANGELOG.md`
 
-For every release, compatibility information is given; in particular regarding
-the _PSA Certified Crypto API_ version that is supported.
+For every release, API compatibility information is given regarding the
+_PSA Certified Crypto API_ version that is supported.
 
 The following file contains licensing information:
 

@@ -857,11 +857,86 @@ static int test_ascon_xof()
     ASSERT_COMPARE(h, 13, ascon_xof_res2 + 19, 13);
     TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
 
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_XOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 7) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_xof_in2, 11) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_XOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_xof_in1, 7) == PSA_ERROR_INVALID_ARGUMENT);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
     res = 1;
 exit:
     return res;
 }
 #endif // PSA_WANT_ALG_ASCON_XOF128
+
+#ifdef PSA_WANT_ALG_ASCON_CXOF128
+static const uint8_t ascon_cxof_in[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E};
+static const uint8_t ascon_cxof_ctx[] = {
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A};
+static const uint8_t ascon_cxof_res[] = {
+    0x30, 0xFE, 0x87, 0xD4, 0x5C, 0x34, 0xF1, 0x6A, 0x5A, 0x5E, 0xF7, 0x22, 0x6E, 0x77, 0xA3, 0x34,
+    0xE3, 0x70, 0xCE, 0xDC, 0x2E, 0xD2, 0x80, 0xE9, 0x76, 0x20, 0x04, 0xB7, 0x22, 0x97, 0x9B, 0x93};
+static const uint8_t ascon_cxof_resE[] = {
+    0xD7, 0x75, 0x26, 0x0D, 0x6E, 0x96, 0x3C, 0xCA, 0xD7, 0x89, 0x8A, 0x45, 0xE9, 0x45, 0x7C, 0xD0};
+static const uint8_t ascon_cxof_resEE[] = {
+    0x4F, 0x50, 0x15, 0x9E, 0xF7, 0x0B, 0xB3, 0xDA, 0xD8, 0x80, 0x7E, 0x03, 0x4E, 0xAE, 0xBD, 0x44};
+
+static int test_ascon_cxof()
+{
+    psa_xof_operation_t op = PSA_XOF_OPERATION_INIT;
+    uint8_t h[32];
+    int res = 0;
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_cxof_ctx, sizeof ascon_cxof_ctx) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_cxof_in, sizeof ascon_cxof_in) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 13) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 13, ascon_cxof_res, 13);
+    TEST_ASSERT(psa_xof_output(&op, h, 17) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 17, ascon_cxof_res + 13, 17);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_cxof_in, sizeof ascon_cxof_in) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 15) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 15, ascon_cxof_resE, 15);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 11) == PSA_SUCCESS);
+    ASSERT_COMPARE(h, 11, ascon_cxof_resEE, 11);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_cxof_in, sizeof ascon_cxof_in) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_cxof_ctx, sizeof ascon_cxof_ctx) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_update(&op, ascon_cxof_in, sizeof ascon_cxof_in) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 13) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_cxof_ctx, sizeof ascon_cxof_ctx) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_output(&op, h, 13) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_cxof_ctx, sizeof ascon_cxof_ctx) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_xof_setup(&op, PSA_ALG_ASCON_CXOF128) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_cxof_ctx, sizeof ascon_cxof_ctx) == PSA_SUCCESS);
+    TEST_ASSERT(psa_xof_set_context(&op, ascon_cxof_ctx, sizeof ascon_cxof_ctx) == PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(psa_xof_abort(&op) == PSA_SUCCESS);
+
+    res = 1;
+exit:
+    return res;
+}
+#endif // PSA_WANT_ALG_ASCON_CXOF128
 
 #ifdef PSA_WANT_ALG_ASCON_AEAD128
 static const uint8_t ascon_aead_key[] = {
@@ -1048,6 +1123,9 @@ int main(void)
 #ifdef PSA_WANT_ALG_ASCON_XOF128
     TEST_ASSERT(test_ascon_xof());
 #endif // PSA_WANT_ALG_ASCON_XOF128
+#ifdef PSA_WANT_ALG_ASCON_CXOF128
+    TEST_ASSERT(test_ascon_cxof());
+#endif // PSA_WANT_ALG_ASCON_CXOF128
 #ifdef PSA_WANT_ALG_ASCON_AEAD128
     TEST_ASSERT(test_ascon_aead());
 #endif // PSA_WANT_ALG_ASCON_AEAD128

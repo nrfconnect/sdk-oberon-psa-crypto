@@ -44,11 +44,36 @@ psa_status_t oberon_xof_setup(
         ocrypto_ascon_xof128_init((ocrypto_ascon_hash_ctx*)operation->ctx);
         break;
 #endif
+#ifdef PSA_NEED_OBERON_ASCON_CXOF128
+    _Static_assert(sizeof operation->ctx >= sizeof(ocrypto_ascon_hash_ctx), "oberon_xof_operation_t.ctx too small");
+    case PSA_ALG_ASCON_CXOF128:
+        break;
+#endif
     default:
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
     operation->alg = alg;
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_xof_set_context(
+    oberon_xof_operation_t *operation,
+    const uint8_t *context, size_t context_length)
+{
+    switch (operation->alg) {
+#ifdef PSA_NEED_OBERON_ASCON_CXOF128
+    case PSA_ALG_ASCON_CXOF128:
+        ocrypto_ascon_cxof128_init((ocrypto_ascon_hash_ctx*)operation->ctx, context, context_length);
+        operation->context = 1;
+        break;
+#endif
+    default:
+        (void)context;
+        (void)context_length;
+        return PSA_ERROR_NOT_SUPPORTED;
+    }
+
     return PSA_SUCCESS;
 }
 
@@ -69,6 +94,15 @@ psa_status_t oberon_xof_update(
 #endif
 #ifdef PSA_NEED_OBERON_ASCON_XOF128
     case PSA_ALG_ASCON_XOF128:
+        ocrypto_ascon_hash256_update((ocrypto_ascon_hash_ctx*)operation->ctx, input, input_length);
+        break;
+#endif
+#ifdef PSA_NEED_OBERON_ASCON_CXOF128
+    case PSA_ALG_ASCON_CXOF128:
+        if (!operation->context) {
+            ocrypto_ascon_cxof128_init((ocrypto_ascon_hash_ctx*)operation->ctx, NULL, 0);
+            operation->context = 1;
+        }
         ocrypto_ascon_hash256_update((ocrypto_ascon_hash_ctx*)operation->ctx, input, input_length);
         break;
 #endif
@@ -111,6 +145,19 @@ psa_status_t oberon_xof_output(
         if (operation->squeeze) {
             ocrypto_ascon_xof128_ext((ocrypto_ascon_hash_ctx*)operation->ctx, output, output_length);
         } else {
+            ocrypto_ascon_xof128_final((ocrypto_ascon_hash_ctx*)operation->ctx, output, output_length);
+            operation->squeeze = 1;
+        }
+        break;
+#endif
+#ifdef PSA_NEED_OBERON_ASCON_CXOF128
+    case PSA_ALG_ASCON_CXOF128:
+        if (operation->squeeze) {
+            ocrypto_ascon_xof128_ext((ocrypto_ascon_hash_ctx*)operation->ctx, output, output_length);
+        } else {
+            if (!operation->context) {
+                ocrypto_ascon_cxof128_init((ocrypto_ascon_hash_ctx*)operation->ctx, NULL, 0);
+            }
             ocrypto_ascon_xof128_final((ocrypto_ascon_hash_ctx*)operation->ctx, output, output_length);
             operation->squeeze = 1;
         }

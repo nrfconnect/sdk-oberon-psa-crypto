@@ -418,10 +418,11 @@ psa_status_t psa_generate_key_internal(const psa_key_attributes_t *attributes,
  * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
  * \retval #PSA_ERROR_INSUFFICIENT_ENTROPY \emptydescription
  */
-psa_status_t psa_sign_message_builtin(
+psa_status_t psa_sign_message_with_context_builtin(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg, const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length);
 
 /** Verify the signature of a message with a public key, using
@@ -455,10 +456,11 @@ psa_status_t psa_sign_message_builtin(
  * \retval #PSA_ERROR_INVALID_ARGUMENT \emptydescription
  * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
  */
-psa_status_t psa_verify_message_builtin(
+psa_status_t psa_verify_message_with_context_builtin(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg, const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length);
 
 /**

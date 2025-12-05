@@ -32,6 +32,7 @@
 //#define PSA_WANT_ALG_ASCON_AEAD128              1
 //#define PSA_WANT_ALG_ASCON_HASH256              1
 //#define PSA_WANT_ALG_ASCON_XOF128               1
+//#define PSA_WANT_ALG_ASCON_CXOF128              1
 #define PSA_WANT_ALG_CBC_NO_PADDING             1
 #define PSA_WANT_ALG_CBC_PKCS7                  1
 #define PSA_WANT_ALG_CCM                        1
@@ -53,6 +54,9 @@
 //#define PSA_WANT_ALG_JPAKE                      1
 //#define PSA_WANT_ALG_LMS                        1
 //#define PSA_WANT_ALG_ML_DSA                     1
+//#define PSA_WANT_ALG_HASH_ML_DSA                1
+//#define PSA_WANT_ALG_DETERMINISTIC_ML_DSA       1
+//#define PSA_WANT_ALG_DETERMINISTIC_HASH_ML_DSA  1
 //#define PSA_WANT_ALG_ML_KEM                     1
 //#define PSA_WANT_ALG_PBKDF2_HMAC                1
 //#define PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128    1

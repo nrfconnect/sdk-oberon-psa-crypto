@@ -51,7 +51,7 @@ check out version 3.6.5 as follows:
 
 ### Build with CMake
 
-Provide the path to _ocrypto_ 3.9.4 or later via _-DOCRYPTO_ROOT=path/to/ocrypto_.
+Provide the path to _ocrypto_ 3.9.5 or later via _-DOCRYPTO_ROOT=path/to/ocrypto_.
 
 Provide the path to _Mbed TLS_ 3.6.5 via _-DMBEDTLS_ROOT=path/to/mbedtls_.
 

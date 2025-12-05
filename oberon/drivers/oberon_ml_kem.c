@@ -25,6 +25,14 @@
 #include "ocrypto_ml_kem1024.h"
 #endif /* PSA_NEED_OBERON_ML_KEM_1024 */
 
+#if defined(PSA_NEED_OBERON_ML_KEM_512) || \
+    defined(PSA_NEED_OBERON_ML_KEM_768) || \
+    defined(PSA_NEED_OBERON_ML_KEM_1024)
+
+#include "ocrypto_version.h"
+
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
+
 
 #ifdef PSA_NEED_OBERON_ML_KEM_1024
 #define ML_KEM_PK_SIZE  ocrypto_ml_kem1024_PK_SIZE
@@ -119,6 +127,9 @@ psa_status_t oberon_ml_kem_encapsulate(
     uint8_t *output_key, size_t output_key_size, size_t *output_key_length,
     uint8_t *ciphertext, size_t ciphertext_size, size_t *ciphertext_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "ML-KEM Oberon driver: ocrypto version incompatible");
+
     ocrypto_ml_kem_ctx ctx;
     psa_key_type_t type = psa_get_key_type(attributes);
     size_t bits = psa_get_key_bits(attributes);
@@ -183,6 +194,9 @@ psa_status_t oberon_ml_kem_decapsulate(
     const psa_key_attributes_t *output_attributes,
     uint8_t *output_key, size_t output_key_size, size_t *output_key_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "ML-KEM Oberon driver: ocrypto version incompatible");
+
     ocrypto_ml_kem_ctx ctx;
     uint8_t sk[ML_KEM_SK_SIZE];
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -236,6 +250,9 @@ psa_status_t oberon_export_ml_kem_public_key(
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "ML-KEM Oberon driver: ocrypto version incompatible");
+
     ocrypto_ml_kem_ctx ctx;
     psa_key_type_t type = psa_get_key_type(attributes);
     size_t bits = psa_get_key_bits(attributes);
@@ -285,6 +302,9 @@ psa_status_t oberon_import_ml_kem_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "ML-KEM Oberon driver: ocrypto version incompatible");
+
     psa_key_type_t type = psa_get_key_type(attributes);
     size_t bits = psa_get_key_bits(attributes);
 
@@ -329,3 +349,4 @@ psa_status_t oberon_import_ml_kem_key(
     return PSA_SUCCESS;
 }
 
+#endif /* PSA_NEED_OBERON_ML_KEM_* */

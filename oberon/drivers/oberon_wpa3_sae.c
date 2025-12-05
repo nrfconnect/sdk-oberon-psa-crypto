@@ -246,7 +246,7 @@ psa_status_t oberon_wpa3_sae_setup(
     const psa_pake_cipher_suite_t *cipher_suite)
 {
     _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
-        "WPA3-SAE driver: ocrypto version incompatible");
+        "WPA3-SAE Oberon driver: ocrypto version incompatible");
     psa_key_type_t type = psa_get_key_type(attributes);
     psa_algorithm_t alg = psa_pake_cs_get_algorithm(cipher_suite);
     psa_algorithm_t hash_alg = PSA_ALG_GET_HASH(alg);

@@ -247,6 +247,8 @@ set(OBERON_SOURCES
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdh.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdsa.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdsa.h
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_eddsa.c
+        ${OBERON_PSA_DIR}/oberon/drivers/oberon_eddsa.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_ec_keys.c
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_ec_keys.h
         ${OBERON_PSA_DIR}/oberon/drivers/oberon_hash.c

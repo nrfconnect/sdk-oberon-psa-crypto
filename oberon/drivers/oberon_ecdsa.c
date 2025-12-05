@@ -29,18 +29,6 @@
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_K1_256
 #include "ocrypto_ecdsa_p256k1.h"
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_K1_256 */
-#ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255
-#include "ocrypto_ed25519.h"
-#endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255 */
-#ifdef PSA_NEED_OBERON_ED25519PH
-#include "ocrypto_ed25519ph.h"
-#endif /* PSA_NEED_OBERON_ED25519PH */
-#ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448
-#include "ocrypto_ed448.h"
-#endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448 */
-#ifdef PSA_NEED_OBERON_ED448PH
-#include "ocrypto_ed448ph.h"
-#endif /* PSA_NEED_OBERON_ED448PH */
 
 
 #if defined(PSA_NEED_OBERON_ECDSA_RANDOMIZED) || defined(PSA_NEED_OBERON_ECDSA_DETERMINISTIC)
@@ -79,7 +67,7 @@ static int ecdsa_sign_hash(
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_R1_384 */
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_521
     case PSA_BITS_TO_BYTES(521):
-        res = ocrypto_ecdsa_p521_sign_hash(signature, hash, key, ek);
+        res = ocrypto_ecdsa_p521_sign_hash(signature, hash + 2, key, ek);
         break;
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_R1_521 */
     default:
@@ -157,6 +145,9 @@ static psa_status_t deterministic_ecdsa_sign_hash(
     psa_status_t status;
     size_t len;
     int res;
+#ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_521
+    int i;
+#endif
 
     if (hash_length == 0) return PSA_ERROR_INVALID_ARGUMENT;
 
@@ -184,7 +175,13 @@ static psa_status_t deterministic_ecdsa_sign_hash(
             if (status) return status;
             memcpy(ek + len, V, key_length - len < hash_length ? key_length - len : hash_length); // T = T || V
         }
-
+#ifdef PSA_NEED_OBERON_ECDSA_SECP_R1_521
+        // for P521 we need the first 521 bits right adjusted
+        if (key_length == 66) {
+            for (i = 65; i > 0; i--) ek[i] = (uint8_t)(ek[i] >> 7 | (ek[i - 1] << 1));
+            ek[0] >>= 7;
+        }
+#endif
 #ifdef PSA_NEED_OBERON_ECDSA_SECP_K1_256
         res = ecdsa_sign_hash(key, key_length, family, hash, ek, signature);
 #else
@@ -272,104 +269,18 @@ psa_status_t oberon_ecdsa_sign_hash(
         return PSA_SUCCESS;
 #endif /* PSA_NEED_OBERON_ECDSA_RANDOMIZED || PSA_NEED_OBERON_ECDSA_DETERMINISTIC */
 
-#if defined(PSA_NEED_OBERON_ED25519PH) || defined(PSA_NEED_OBERON_ED448PH)
-    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS):
-        switch (psa_get_key_bits(attributes)) {
-#ifdef PSA_NEED_OBERON_ED25519PH
-        case 255:
-            if (hash_length != ocrypto_ed25519ph_HASH_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (key_length != ocrypto_ed25519ph_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_size < ocrypto_ed25519ph_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
-            *signature_length = ocrypto_ed25519ph_BYTES;
-            ocrypto_ed25519ph_public_key(ek, key); // calculate public key
-            ocrypto_ed25519ph_sign(signature, hash, key, ek);
-            break;
-#endif /* PSA_NEED_OBERON_ED25519PH */
-#ifdef PSA_NEED_OBERON_ED448PH
-        case 448:
-            if (hash_length != ocrypto_ed448ph_HASH_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (key_length != ocrypto_ed448ph_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_size < ocrypto_ed448ph_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
-            *signature_length = ocrypto_ed448ph_BYTES;
-            ocrypto_ed448ph_public_key(ek, key); // calculate public key
-            ocrypto_ed448ph_sign(signature, hash, key, ek);
-            break;
-#endif /* PSA_NEED_OBERON_ED448PH */
-        default:
-            return PSA_ERROR_NOT_SUPPORTED;
-        }
-        return PSA_SUCCESS;
-#endif /* PSA_NEED_OBERON_ED25519PH || PSA_NEED_OBERON_ED448PH */
-
     default:
         (void)key;
         (void)key_length;
         (void)alg;
+        (void)hash;
+        (void)hash_length;
         (void)signature;
         (void)signature_size;
         (void)signature_length;
-        (void)hash;
-        (void)hash_length;
         (void)ek;
         (void)status;
         (void)res;
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-}
-
-psa_status_t oberon_ecdsa_sign_message(
-    const psa_key_attributes_t *attributes,
-    const uint8_t *key, size_t key_length,
-    psa_algorithm_t alg,
-    const uint8_t *input, size_t input_length,
-    uint8_t *signature, size_t signature_size, size_t *signature_length)
-{
-#if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
-    uint8_t pub_key[57];
-#elif defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255)
-    uint8_t pub_key[32];
-#endif
-    psa_key_type_t type = psa_get_key_type(attributes);
-
-    switch (type) {
-#if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255) || defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
-    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS):
-        // EDDSA is only available in sign_message
-        // PSA_ALG_ED*PH must be delegated to sign_hash
-        if (alg != PSA_ALG_PURE_EDDSA) return PSA_ERROR_NOT_SUPPORTED;
-        switch (psa_get_key_bits(attributes)) {
-#ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255
-        case 255:
-            if (key_length != ocrypto_ed25519_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_size < ocrypto_ed25519_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
-            *signature_length = ocrypto_ed25519_BYTES;
-            ocrypto_ed25519_public_key(pub_key, key); // calculate public key
-            ocrypto_ed25519_sign(signature, input, input_length, key, pub_key);
-            break;
-#endif
-#ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448
-        case 448:
-            if (key_length != ocrypto_ed448_SECRET_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_size < ocrypto_ed448_BYTES) return PSA_ERROR_BUFFER_TOO_SMALL;
-            *signature_length = ocrypto_ed448_BYTES;
-            ocrypto_ed448_public_key(pub_key, key); // calculate public key
-            ocrypto_ed448_sign(signature, input, input_length, key, pub_key);
-            break;
-#endif
-        default:
-            return PSA_ERROR_NOT_SUPPORTED;
-        }
-        return PSA_SUCCESS;
-#endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255 || PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448 */
-    default:
-        (void)key;
-        (void)key_length;
-        (void)alg;
-        (void)input;
-        (void)input_length;
-        (void)signature;
-        (void)signature_size;
-        (void)signature_length;
         return PSA_ERROR_NOT_SUPPORTED;
     }
 }
@@ -460,7 +371,7 @@ psa_status_t oberon_ecdsa_verify_hash(
                 if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1)) {
                     ocrypto_ecdsa_p521_public_key(key_buf, key);
                 }
-                res = ocrypto_ecdsa_p521_verify_hash(signature, hash, pub_key);
+                res = ocrypto_ecdsa_p521_verify_hash(signature, hash + 2, pub_key);
                 break;
 #endif /* PSA_NEED_OBERON_ECDSA_SECP_R1_521 */
             default:
@@ -474,41 +385,6 @@ psa_status_t oberon_ecdsa_verify_hash(
         return PSA_SUCCESS;
 #endif /* PSA_NEED_OBERON_ECDSA_RANDOMIZED || PSA_NEED_OBERON_ECDSA_DETERMINISTIC */
 
-#if defined(PSA_NEED_OBERON_ED25519PH) || defined(PSA_NEED_OBERON_ED448PH)
-    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS):
-    case PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS):
-        switch (psa_get_key_bits(attributes)) {
-#ifdef PSA_NEED_OBERON_ED25519PH
-        case 255:
-            if (key_length != ocrypto_ed25519ph_PUBLIC_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (hash_length != ocrypto_ed25519ph_HASH_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_length != ocrypto_ed25519ph_BYTES) return PSA_ERROR_INVALID_SIGNATURE;
-            if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
-                ocrypto_ed25519ph_public_key(key_buf, key);
-                key = key_buf;
-            }
-            res = ocrypto_ed25519ph_verify(signature, hash, key);
-            break;
-#endif /* PSA_NEED_OBERON_ED25519PH */
-#ifdef PSA_NEED_OBERON_ED448PH
-        case 448:
-            if (key_length != ocrypto_ed448ph_PUBLIC_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (hash_length != ocrypto_ed448ph_HASH_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_length != ocrypto_ed448ph_BYTES) return PSA_ERROR_INVALID_SIGNATURE;
-            if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
-                ocrypto_ed448ph_public_key(key_buf, key);
-                key = key_buf;
-            }
-            res = ocrypto_ed448ph_verify(signature, hash, key);
-            break;
-#endif /* PSA_NEED_OBERON_ED448PH */
-        default:
-            return PSA_ERROR_NOT_SUPPORTED;
-        }
-        if (res) return PSA_ERROR_INVALID_SIGNATURE;
-        return PSA_SUCCESS;
-#endif /* PSA_NEED_OBERON_ED25519PH || PSA_NEED_OBERON_ED448PH */
-
     default:
         (void)key;
         (void)key_length;
@@ -519,70 +395,6 @@ psa_status_t oberon_ecdsa_verify_hash(
         (void)signature_length;
         (void)res;
         (void)key_buf;
-        return PSA_ERROR_NOT_SUPPORTED;
-    }
-}
-
-psa_status_t oberon_ecdsa_verify_message(
-    const psa_key_attributes_t *attributes,
-    const uint8_t *key, size_t key_length,
-    psa_algorithm_t alg,
-    const uint8_t *input, size_t input_length,
-    const uint8_t *signature, size_t signature_length)
-{
-    int res = 1;
-#if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
-    uint8_t pub_key[57];
-#elif defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255)
-    uint8_t pub_key[32];
-#endif
-    psa_key_type_t type = psa_get_key_type(attributes);
-
-    switch (type) {
-#if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255) || defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
-    case PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS):
-    case PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS):
-        // EDDSA is only available in verify_message
-        // PSA_ALG_ED*PH must be delegated to sign_hash
-        if (alg != PSA_ALG_PURE_EDDSA) return PSA_ERROR_NOT_SUPPORTED;
-        switch (psa_get_key_bits(attributes)) {
-#ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255
-        case 255:
-            if (key_length != ocrypto_ed25519_PUBLIC_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_length != ocrypto_ed25519_BYTES) return PSA_ERROR_INVALID_SIGNATURE;
-            if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
-                ocrypto_ed25519_public_key(pub_key, key);
-                key = pub_key;
-            }
-            res = ocrypto_ed25519_verify(signature, input, input_length, key);
-            break;
-#endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255 */
-#ifdef PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448
-        case 448:
-            if (key_length != ocrypto_ed448_PUBLIC_KEY_BYTES) return PSA_ERROR_INVALID_ARGUMENT;
-            if (signature_length != ocrypto_ed448_BYTES) return PSA_ERROR_INVALID_SIGNATURE;
-            if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
-                ocrypto_ed448_public_key(pub_key, key);
-                key = pub_key;
-            }
-            res = ocrypto_ed448_verify(signature, input, input_length, key);
-            break;
-#endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448 */
-        default:
-            return PSA_ERROR_NOT_SUPPORTED;
-        }
-        if (res) return PSA_ERROR_INVALID_SIGNATURE;
-        return PSA_SUCCESS;
-#endif /* PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255 || PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448 */
-    default:
-        (void)key;
-        (void)key_length;
-        (void)alg;
-        (void)input;
-        (void)input_length;
-        (void)signature;
-        (void)signature_length;
-        (void)res;
         return PSA_ERROR_NOT_SUPPORTED;
     }
 }

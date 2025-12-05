@@ -1,5 +1,54 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.5.4
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.4>
+2025-12-05 (8c154d5)
+
+Oberon crypto software drivers require _ocrypto_ version 3.9.5 or later.
+
+### API Compatibility
+- [PSA Certified Crypto API 1.4](https://arm-software.github.io/psa-api/crypto/1.4/IHI0086-PSA_Certified_Crypto_API-1.4.0.pdf)
+- [PSA Crypto API 1.4 PQC Extension](https://arm-software.github.io/psa-api/crypto/1.4/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.4_PQC_Extension.0.pdf)
+- [SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
+  - Experimental PAKE extension for SRP.
+- [PSA Crypto Driver Interface 1.0 alpha 1](https://arm-software.github.io/psa-api/crypto-driver/1.0/111106-PSA_Certified_Crypto_Driver_Interface-1.0-alp.1.pdf)
+  - Largely compatible to this version of the new standard, except for KDF, PAKE and RNG.
+- [PSA APIs Test Suite v1.9](https://github.com/ARM-software/psa-arch-tests/releases/tag/v25.08_API1.9_ADAC_1.0.2)
+  - This test suite primarily tests API compatibility.
+- [Mbed TLS 3.6.5](https://github.com/Mbed-TLS/mbedtls/releases/tag/mbedtls-3.6.5).
+  - Compatible regarding _PSA Crypto_ support, not legacy _Mbed TLS_ APIs.
+For information on the actually implemented cryptographic features in this release, see
+[Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
+
+### Improvements
+- Align with final PSA Crypto 1.4 specification.
+  - Relax verify key policy check for ECDSA & ML-DSA.
+  - Update `psa_export_key_internal` for ML-KEM & ML-DSA.
+  - Add `psa_xof_set_context()`.
+    - Implement them in _Crypto Core_ and _driver wrappers_, and in Ascon-CXOF128.
+  - Add context parameters in signature functions.
+    - Implement them for ML-DSA.
+  - Align the following macros: `PSA_ALG_IS_SIGN_HASH()`, `PSA_ALG_IS_SIGN_MESSAGE()`, `PSA_ALG_SIGN_GET_HASH()`.
+  - Align compatibility rules for ML-DSA random vs. deterministic variants.
+  - Align naming.
+    - `psa_key_encapsulate` -> `psa_encapsulate`
+    - `psa_key_decapsulate` -> `psa_decapsulate`
+- Split WANTs for ML-DSA algorithms.
+- Clean up ML-DSA implementation.
+- Add Ascon-XOF128 and Ascon-CXOF128 support.
+- Document `Implementation Restrictions` in `Appendix A: Supported Crypto Features`.
+- Fix key size handling for `psa_encapsulate()`, `psa_decapsulate()`, `psa_pake_get_shared_key()`, `psa_unwrap_key()`.
+- Check “minimum required ocrypto version” constraint for ML-DSA and ML-KEM.
+
+### Bug Fixes
+- Bug 19: Wrong size conversion for ECDSA P-521.
+
+### Contributions
+Part of the changes are based on the following patches contributed by Nordic:
+- Fix for Bug 19.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.5.3
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.3>
 2025-11-06 (372db7b)
