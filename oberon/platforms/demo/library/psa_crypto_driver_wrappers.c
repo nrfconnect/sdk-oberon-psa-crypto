@@ -104,11 +104,12 @@ void psa_driver_wrapper_free()
 #endif /* PSA_NEED_OPAQUE_DEMO_DRIVER */
 }
 
-psa_status_t psa_driver_wrapper_sign_message(
+psa_status_t psa_driver_wrapper_sign_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     psa_status_t status;
@@ -117,10 +118,11 @@ psa_status_t psa_driver_wrapper_sign_message(
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
-        status = oberon_sign_message(
+        status = oberon_sign_message_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_size, signature_length);
         if (status != PSA_ERROR_NOT_SUPPORTED) return status;
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
@@ -129,10 +131,11 @@ psa_status_t psa_driver_wrapper_sign_message(
         /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
-        return demo_opaque_signature_sign_message(
+        return demo_opaque_signature_sign_message_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_size, signature_length);
 #endif /* PSA_NEED_OPAQUE_DEMO_DRIVER */
 
@@ -143,18 +146,20 @@ psa_status_t psa_driver_wrapper_sign_message(
     }
 
     /* Use generic fallback */
-    return psa_sign_message_builtin(
+    return psa_sign_message_with_context_builtin(
         attributes, key_buffer, key_buffer_size,
         alg,
         input, input_length,
+        context, context_length,
         signature, signature_size, signature_length);
 }
 
-psa_status_t psa_driver_wrapper_verify_message(
+psa_status_t psa_driver_wrapper_verify_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
     psa_status_t status;
@@ -163,10 +168,11 @@ psa_status_t psa_driver_wrapper_verify_message(
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
-        status = oberon_verify_message(
+        status = oberon_verify_message_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_length);
         if (status != PSA_ERROR_NOT_SUPPORTED) return status;
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
@@ -175,10 +181,11 @@ psa_status_t psa_driver_wrapper_verify_message(
         /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
-        return demo_opaque_signature_verify_message(
+        return demo_opaque_signature_verify_message_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_length);
 #endif /* PSA_NEED_OPAQUE_DEMO_DRIVER */
 
@@ -189,27 +196,30 @@ psa_status_t psa_driver_wrapper_verify_message(
     }
 
     /* Use generic fallback */
-    return psa_verify_message_builtin(
+    return psa_verify_message_with_context_builtin(
         attributes, key_buffer, key_buffer_size,
         alg,
         input, input_length,
+        context, context_length,
         signature, signature_length);
 }
 
-psa_status_t psa_driver_wrapper_sign_hash(
+psa_status_t psa_driver_wrapper_sign_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
-        return oberon_sign_hash(
+        return oberon_sign_hash_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             hash, hash_length,
+            context, context_length,
             signature, signature_size, signature_length);
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
         return PSA_ERROR_NOT_SUPPORTED;
@@ -217,10 +227,11 @@ psa_status_t psa_driver_wrapper_sign_hash(
         /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
-        return demo_opaque_signature_sign_hash(
+        return demo_opaque_signature_sign_hash_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             hash, hash_length,
+            context, context_length,
             signature, signature_size, signature_length);
 #endif /* PSA_NEED_OPAQUE_DEMO_DRIVER */
 
@@ -231,6 +242,8 @@ psa_status_t psa_driver_wrapper_sign_hash(
         (void)alg;
         (void)hash;
         (void)hash_length;
+        (void)context;
+        (void)context_length;
         (void)signature;
         (void)signature_size;
         (void)signature_length;
@@ -238,20 +251,22 @@ psa_status_t psa_driver_wrapper_sign_hash(
     }
 }
 
-psa_status_t psa_driver_wrapper_verify_hash(
+psa_status_t psa_driver_wrapper_verify_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
     psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
     switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER
-        return oberon_verify_hash(
+        return oberon_verify_hash_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             hash, hash_length,
+            context, context_length,
             signature, signature_length);
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
         return PSA_ERROR_NOT_SUPPORTED;
@@ -259,10 +274,11 @@ psa_status_t psa_driver_wrapper_verify_hash(
         /* Add cases for opaque driver here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
-        return demo_opaque_signature_verify_hash(
+        return demo_opaque_signature_verify_hash_with_context(
             attributes, key_buffer, key_buffer_size,
             alg,
             hash, hash_length,
+            context, context_length,
             signature, signature_length);
 #endif /* PSA_NEED_OPAQUE_DEMO_DRIVER */
 
@@ -273,6 +289,8 @@ psa_status_t psa_driver_wrapper_verify_hash(
         (void)alg;
         (void)hash;
         (void)hash_length;
+        (void)context;
+        (void)context_length;
         (void)signature;
         (void)signature_length;
         return PSA_ERROR_INVALID_ARGUMENT;
@@ -1112,6 +1130,26 @@ psa_status_t psa_driver_wrapper_xof_setup(
     return PSA_ERROR_NOT_SUPPORTED;
 }
 
+psa_status_t psa_driver_wrapper_xof_set_context(psa_xof_operation_t *operation,
+    const uint8_t *context,
+    size_t context_length)
+{
+    switch (operation->id) {
+
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+    case OBERON_DRIVER_ID:
+        return oberon_xof_set_context(
+            &operation->ctx.oberon_xof_ctx,
+            context, context_length);
+#endif /* PSA_NEED_OBERON_XOF_DRIVER */
+
+    default:
+        (void)context;
+        (void)context_length;
+        return PSA_ERROR_BAD_STATE;
+    }
+}
+
 psa_status_t psa_driver_wrapper_xof_update(
     psa_xof_operation_t *operation,
     const uint8_t *input, size_t input_length)
@@ -1909,7 +1947,7 @@ psa_status_t psa_driver_wrapper_key_agreement(
 /*
  * Key encapsulation functions.
  */
-psa_status_t psa_driver_wrapper_key_encapsulate(
+psa_status_t psa_driver_wrapper_encapsulate(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
@@ -1921,7 +1959,7 @@ psa_status_t psa_driver_wrapper_key_encapsulate(
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_ENCAPSULATION_DRIVER
-        return oberon_key_encapsulate(
+        return oberon_encapsulate(
             attributes, key, key_length,
             alg, output_attributes,
             output_key, output_key_size, output_key_length,
@@ -1947,7 +1985,7 @@ psa_status_t psa_driver_wrapper_key_encapsulate(
     }
 }
 
-psa_status_t psa_driver_wrapper_key_decapsulate(
+psa_status_t psa_driver_wrapper_decapsulate(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
@@ -1959,7 +1997,7 @@ psa_status_t psa_driver_wrapper_key_decapsulate(
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
         /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_OBERON_KEY_ENCAPSULATION_DRIVER
-        return oberon_key_decapsulate(
+        return oberon_decapsulate(
             attributes, key, key_length,
             alg, ciphertext, ciphertext_length,
             output_attributes,

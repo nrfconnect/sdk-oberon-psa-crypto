@@ -500,6 +500,8 @@ struct psa_xof_operation_s {  /*!!OM*/
     unsigned int MBEDTLS_PRIVATE(id);
 
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
+    unsigned int MBEDTLS_PRIVATE(input) : 1;
+    unsigned int MBEDTLS_PRIVATE(context) : 1;
     unsigned int MBEDTLS_PRIVATE(output) : 1;
 
     psa_driver_xof_context_t MBEDTLS_PRIVATE(ctx);
@@ -510,7 +512,7 @@ struct psa_xof_operation_s {  /*!!OM*/
 #define PSA_XOF_OPERATION_INIT { 0 }
 #else
 /* This only zeroes out the first byte in the union, the rest is unspecified. */
-#define PSA_XOF_OPERATION_INIT { 0, 0, 0, { 0 } }
+#define PSA_XOF_OPERATION_INIT { 0, 0, 0, 0, 0, { 0 } }
 #endif
 static inline struct psa_xof_operation_s psa_xof_operation_init(void)
 {

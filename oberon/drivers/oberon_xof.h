@@ -26,6 +26,7 @@ typedef struct {
     uint64_t ctx[6];
 #endif
     psa_algorithm_t alg;
+    uint8_t context;
     uint8_t squeeze;
 } oberon_xof_operation_t;
 
@@ -33,6 +34,10 @@ typedef struct {
 psa_status_t oberon_xof_setup(
     oberon_xof_operation_t *operation,
     psa_algorithm_t alg);
+
+psa_status_t oberon_xof_set_context(
+    oberon_xof_operation_t *operation,
+    const uint8_t *context, size_t context_length);
 
 psa_status_t oberon_xof_update(
     oberon_xof_operation_t *operation,

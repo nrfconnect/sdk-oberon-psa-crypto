@@ -19,32 +19,36 @@ extern "C" {
 #endif
 
 
-psa_status_t oberon_sign_message(
+psa_status_t oberon_sign_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length);
 
-psa_status_t oberon_sign_hash(
+psa_status_t oberon_sign_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length);
 
-psa_status_t oberon_verify_message(
+psa_status_t oberon_verify_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length);
 
-psa_status_t oberon_verify_hash(
+psa_status_t oberon_verify_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length);
 
 

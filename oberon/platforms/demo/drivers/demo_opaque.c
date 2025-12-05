@@ -93,63 +93,67 @@ psa_status_t demo_opaque_generate_key(
 }
 
 
-psa_status_t demo_opaque_signature_sign_message(
+psa_status_t demo_opaque_signature_sign_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     psa_key_attributes_t local_attr = *attributes;
     psa_set_key_lifetime(&local_attr, PSA_KEY_LIFETIME_VOLATILE);
-    return psa_driver_wrapper_sign_message(
+    return psa_driver_wrapper_sign_message_with_context(
         &local_attr, key, key_length,
-        alg, input, input_length,
+        alg, input, input_length, context, context_length,
         signature, signature_size, signature_length);
 }
 
-psa_status_t demo_opaque_signature_verify_message(
+psa_status_t demo_opaque_signature_verify_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
     psa_key_attributes_t local_attr = *attributes;
     psa_set_key_lifetime(&local_attr, PSA_KEY_LIFETIME_VOLATILE);
-    return psa_driver_wrapper_verify_message(
+    return psa_driver_wrapper_verify_message_with_context(
         &local_attr, key, key_length,
-        alg, input, input_length,
+        alg, input, input_length, context, context_length,
         signature, signature_length);
 }
 
-psa_status_t demo_opaque_signature_sign_hash(
+psa_status_t demo_opaque_signature_sign_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     psa_key_attributes_t local_attr = *attributes;
     psa_set_key_lifetime(&local_attr, PSA_KEY_LIFETIME_VOLATILE);
-    return psa_driver_wrapper_sign_hash(
+    return psa_driver_wrapper_sign_hash_with_context(
         &local_attr, key, key_length,
-        alg, hash, hash_length,
+        alg, hash, hash_length, context, context_length,
         signature, signature_size, signature_length);
 }
 
-psa_status_t demo_opaque_signature_verify_hash(
+psa_status_t demo_opaque_signature_verify_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
     psa_key_attributes_t local_attr = *attributes;
     psa_set_key_lifetime(&local_attr, PSA_KEY_LIFETIME_VOLATILE);
-    return psa_driver_wrapper_verify_hash(
+    return psa_driver_wrapper_verify_hash_with_context(
         &local_attr, key, key_length,
-        alg, hash, hash_length,
+        alg, hash, hash_length, context, context_length,
         signature, signature_length);
 }
 

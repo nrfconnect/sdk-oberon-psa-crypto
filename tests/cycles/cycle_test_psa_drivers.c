@@ -785,7 +785,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
     t0 = cpucycles();
-    status = psa_driver_wrapper_sign_hash(&attr, pk, 32, PSA_ALG_ECDSA(PSA_ALG_SHA_256), data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_hash_with_context(
+        &attr, pk, 32, PSA_ALG_ECDSA(PSA_ALG_SHA_256), data, 32, NULL, 0, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -801,7 +802,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_ECDSA(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH);
     t0 = cpucycles();
-    status = psa_driver_wrapper_verify_hash(&attr, ecc_key_pair, 65, PSA_ALG_ECDSA(PSA_ALG_SHA_256), msg_data, 32, ecc_sig, 64);
+    status = psa_driver_wrapper_verify_hash_with_context(
+        &attr, ecc_key_pair, 65, PSA_ALG_ECDSA(PSA_ALG_SHA_256), msg_data, 32, NULL, 0, ecc_sig, 64);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -833,7 +835,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_PURE_EDDSA);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_MESSAGE);
     t0 = cpucycles();
-    status = psa_driver_wrapper_sign_message(&attr, key_data, 32, PSA_ALG_PURE_EDDSA, data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_message_with_context(
+        &attr, key_data, 32, PSA_ALG_PURE_EDDSA, data, 32, NULL, 0, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
     psa_destroy_key(key);
@@ -851,7 +854,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_PURE_EDDSA);
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
     t0 = cpucycles();
-    status = psa_driver_wrapper_verify_message(&attr, ecc_key1, 32, PSA_ALG_PURE_EDDSA, msg_data, 32, ecc_sig1, sizeof(ecc_sig1));
+    status = psa_driver_wrapper_verify_message_with_context(
+        &attr, ecc_key1, 32, PSA_ALG_PURE_EDDSA, msg_data, 32, NULL, 0, ecc_sig1, sizeof(ecc_sig1));
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -885,7 +889,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
     t0 = cpucycles();
-    status = psa_driver_wrapper_sign_hash(&attr, rsa_key_1024, sizeof rsa_key_1024, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_hash_with_context(
+        &attr, rsa_key_1024, sizeof rsa_key_1024, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, NULL, 0, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -902,7 +907,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH);
     t0 = cpucycles();
-    status = psa_driver_wrapper_verify_hash(&attr, rsa_pk_1024, sizeof rsa_pk_1024, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, rsa_sig_1024, sizeof rsa_sig_1024);
+    status = psa_driver_wrapper_verify_hash_with_context(
+        &attr, rsa_pk_1024, sizeof rsa_pk_1024, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, NULL, 0, rsa_sig_1024, sizeof rsa_sig_1024);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -954,7 +960,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_SIGN_HASH);
     t0 = cpucycles();
-    status = psa_driver_wrapper_sign_hash(&attr, rsa_key_2048, sizeof rsa_key_2048, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), data, 32, sig, sizeof sig, &length);
+    status = psa_driver_wrapper_sign_hash_with_context(
+        &attr, rsa_key_2048, sizeof rsa_key_2048, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), data, 32, NULL, 0, sig, sizeof sig, &length);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);
@@ -971,7 +978,8 @@ int main(void)
     psa_set_key_algorithm(&attr, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256));
     psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_VERIFY_HASH);
     t0 = cpucycles();
-    status = psa_driver_wrapper_verify_hash(&attr, rsa_pk_2048, sizeof rsa_pk_2048, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, rsa_sig_2048, sizeof rsa_sig_2048);
+    status = psa_driver_wrapper_verify_hash_with_context(
+        &attr, rsa_pk_2048, sizeof rsa_pk_2048, PSA_ALG_RSA_PSS(PSA_ALG_SHA_256), msg_data, 32, NULL, 0, rsa_sig_2048, sizeof rsa_sig_2048);
     if (status) goto error;
     t1 = cpucycles();
     printf("%lld\r\n", t1 - t0);

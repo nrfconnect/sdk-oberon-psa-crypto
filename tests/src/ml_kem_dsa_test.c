@@ -29,7 +29,8 @@
 #include "oberon_test_drbg.h"
 
 
-#ifdef PSA_WANT_ALG_ML_DSA
+#if defined(PSA_WANT_ALG_ML_DSA) || defined(PSA_WANT_ALG_DETERMINISTIC_ML_DSA) || \
+    defined(PSA_WANT_ALG_HASH_ML_DSA) || defined(PSA_WANT_ALG_DETERMINISTIC_HASH_ML_DSA)
 
 // Test vectors from KAT/MLDSA
 
@@ -41,6 +42,8 @@ static const uint8_t rnd[32] = {
     0x42, 0x22, 0x9e, 0xf5, 0xcb, 0x12, 0xc6, 0x76, 0xea, 0x6f, 0xcc, 0x7c, 0x08, 0xe9, 0xec, 0xab};
 static const uint8_t msg[] = {
     0x6D, 0xBB, 0xC4, 0x37, 0x51, 0x36, 0xDF, 0x3B, 0x07, 0xF7, 0xC7, 0x0E, 0x63, 0x9E, 0x22, 0x3E};
+static const uint8_t ctx[16] = "ThisIsTheContext";
+
 
 static const uint8_t pk_44[] = {
     0x18, 0x28, 0x82, 0x49, 0xb9, 0x0b, 0xcb, 0xd4, 0x8d, 0x47, 0x3d, 0x2a, 0x50, 0x7c, 0xc3, 0xc1,
@@ -57,6 +60,12 @@ static const uint8_t sigH_44[] = {
 static const uint8_t sigHD_44[] = {
     0x3a, 0xf0, 0x48, 0xb9, 0x03, 0x1c, 0x53, 0x11, 0xef, 0x91, 0x11, 0xa7, 0x10, 0xd0, 0xa2, 0x24,
     0x7b, 0xdb, 0x19, 0x54, 0x90, 0xa2, 0x1a, 0xf1, 0x45, 0x69, 0x9b, 0x92, 0x3f, 0xe5, 0x37, 0xb7};
+static const uint8_t sigC_44[] = {
+    0x8d, 0x77, 0x6f, 0xec, 0x4d, 0xc8, 0x7d, 0xf5, 0x02, 0xeb, 0x62, 0x35, 0x89, 0x63, 0xca, 0xf8,
+    0x3a, 0x6e, 0xa3, 0xf6, 0x84, 0xdc, 0x5b, 0x8f, 0x61, 0x9b, 0x5d, 0x0f, 0xa9, 0x84, 0xae, 0x7d};
+static const uint8_t sigHC_44[] = {
+    0x4a, 0x02, 0x66, 0x73, 0xf8, 0xbd, 0x6d, 0x72, 0x42, 0x81, 0xad, 0x34, 0x92, 0xe0, 0x37, 0xad,
+    0x61, 0x14, 0x2e, 0x45, 0x60, 0x1d, 0xc4, 0x74, 0x19, 0x03, 0x0a, 0x56, 0xd2, 0x96, 0xbd, 0x98};
 static const uint8_t pk_65[] = {
     0xab, 0x0f, 0x27, 0xcf, 0xe4, 0xf8, 0x4d, 0x2a, 0x9f, 0xa7, 0x4d, 0x48, 0x46, 0x74, 0x39, 0xdf,
     0x9e, 0x5d, 0xd8, 0x40, 0x1f, 0x87, 0x15, 0xf8, 0x2e, 0xd7, 0x0e, 0x43, 0xa3, 0x71, 0x40, 0x0a};
@@ -72,6 +81,12 @@ static const uint8_t sigH_65[] = {
 static const uint8_t sigHD_65[] = {
     0x6f, 0xf4, 0xe8, 0x66, 0x70, 0x50, 0x16, 0x5f, 0x99, 0xe6, 0x1a, 0x2b, 0x12, 0x08, 0x75, 0x17,
     0x1a, 0x42, 0x11, 0x5f, 0x49, 0xa2, 0x87, 0x99, 0x0a, 0x95, 0x8f, 0x7e, 0xea, 0x38, 0xad, 0x4d};
+static const uint8_t sigC_65[] = {
+    0x89, 0x7c, 0x7a, 0x29, 0xaa, 0x56, 0x32, 0x19, 0x72, 0x08, 0x66, 0x54, 0x55, 0x88, 0x03, 0xad,
+    0xa4, 0xd4, 0x16, 0xc5, 0x82, 0xf4, 0x8b, 0x6f, 0xf0, 0xda, 0x6f, 0x87, 0x47, 0xde, 0x5e, 0x9b};
+static const uint8_t sigHC_65[] = {
+    0x26, 0x14, 0xd4, 0x56, 0xe9, 0xad, 0xa2, 0xb3, 0x20, 0xf4, 0xf3, 0x2e, 0x00, 0x98, 0xd4, 0xe7,
+    0x5c, 0x0b, 0x77, 0x7e, 0x75, 0x66, 0x26, 0x5a, 0xb9, 0xb7, 0xec, 0x69, 0x69, 0xcf, 0x08, 0x68};
 static const uint8_t pk_87[] = {
     0xb5, 0x09, 0xc4, 0xeb, 0xd6, 0xb5, 0xfa, 0x67, 0x00, 0x9c, 0x73, 0xcc, 0x7c, 0xeb, 0xe5, 0x5a,
     0x3f, 0x38, 0x48, 0x6a, 0x24, 0xac, 0xfb, 0xf9, 0xd9, 0x1d, 0xd0, 0x4f, 0x63, 0xe6, 0x60, 0xb5};
@@ -87,6 +102,12 @@ static const uint8_t sigH_87[] = {
 static const uint8_t sigHD_87[] = {
     0xee, 0x7b, 0x04, 0xf1, 0x32, 0xb7, 0x83, 0xe6, 0xaa, 0xcf, 0x50, 0xb3, 0xf5, 0x9c, 0xf3, 0xcc,
     0x14, 0x55, 0x4e, 0x7c, 0xe6, 0x70, 0x8a, 0x43, 0x4c, 0xd1, 0xe1, 0x64, 0x8d, 0x64, 0xb4, 0x30};
+static const uint8_t sigC_87[] = {
+    0x4b, 0x9d, 0xe9, 0xf5, 0x6a, 0xef, 0xaa, 0x0a, 0x88, 0xd4, 0xba, 0x47, 0x7e, 0x4a, 0x98, 0x1d,
+    0x42, 0xca, 0x1d, 0x0b, 0xb9, 0xc8, 0xc2, 0x9f, 0x2a, 0xdf, 0x64, 0x56, 0x9f, 0x1c, 0x4f, 0x98};
+static const uint8_t sigHC_87[] = {
+    0x44, 0x57, 0xef, 0x89, 0x05, 0x29, 0x75, 0xbf, 0x89, 0x4e, 0x4c, 0x5e, 0x8b, 0xd6, 0xc2, 0xf7,
+    0xee, 0x2d, 0x89, 0xdd, 0x70, 0x35, 0x74, 0x30, 0x83, 0x52, 0x05, 0xfc, 0xea, 0x35, 0x49, 0x09};
 
 #define ML_DSA44_PK_SIZE 1312
 #define ML_DSA65_PK_SIZE 1952
@@ -115,11 +136,13 @@ static int test_ml_dsa(int n, int k)
     }
 
     switch (n) {
-    case 4: alg = PSA_ALG_ML_DSA; break;
-    case 5: alg = PSA_ALG_HASH_ML_DSA(PSA_ALG_SHA_256); break;
-    case 6: alg = PSA_ALG_HASH_ML_DSA(PSA_ALG_SHAKE128_256); break;
-    case 7: alg = PSA_ALG_DETERMINISTIC_HASH_ML_DSA(PSA_ALG_SHA_256); break;
-    case 8: alg = PSA_ALG_DETERMINISTIC_HASH_ML_DSA(PSA_ALG_SHAKE128_256); break;
+    case 4:
+    case 5: alg = PSA_ALG_ML_DSA; break;
+    case 6: alg = PSA_ALG_HASH_ML_DSA(PSA_ALG_SHA_256); break;
+    case 7: alg = PSA_ALG_HASH_ML_DSA(PSA_ALG_SHAKE128_256); break;
+    case 8: alg = PSA_ALG_DETERMINISTIC_HASH_ML_DSA(PSA_ALG_SHA_256); break;
+    case 9: alg = PSA_ALG_DETERMINISTIC_HASH_ML_DSA(PSA_ALG_SHAKE128_256); break;
+    case 10: alg = PSA_ALG_HASH_ML_DSA(PSA_ALG_SHA_256); break;
     default: alg = PSA_ALG_DETERMINISTIC_ML_DSA;
     }
 
@@ -135,12 +158,12 @@ static int test_ml_dsa(int n, int k)
         TEST_ASSERT(psa_import_key(&key_attr, seed, 32, &dkey) == PSA_SUCCESS);
     }
 
-    if (n == 5) {
-        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_SIGN_HASH);
-    } else if (n == 3) {
+    if (n == 6) {
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH);
+    } else if (n == 3 || n == 5 || n == 10) {
         psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE);
     } else {
-        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE);
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_EXPORT);
     }
     psa_set_key_algorithm(&key_attr, alg);
     psa_set_key_type(&key_attr, PSA_KEY_TYPE_ML_DSA_KEY_PAIR);
@@ -153,6 +176,8 @@ static int test_ml_dsa(int n, int k)
     } else if (n == 2) {
         oberon_test_drbg_setup(seed, 32);
         TEST_ASSERT(psa_generate_key(&key_attr, &key) == PSA_SUCCESS);
+        TEST_ASSERT(psa_export_key(key, h, sizeof h, &len) == PSA_SUCCESS);
+        ASSERT_COMPARE(h, len, seed, 32);
     } else {
         TEST_ASSERT(psa_import_key(&key_attr, seed, 32, &key) == PSA_SUCCESS);
     }
@@ -168,7 +193,12 @@ static int test_ml_dsa(int n, int k)
     }
 
     oberon_test_drbg_setup(rnd, 32);
-    TEST_ASSERT(psa_sign_message(key, alg, msg, sizeof msg, sig, sig_size, &slen) == PSA_SUCCESS);
+    if (n == 5 || n == 10) {
+        TEST_ASSERT(psa_sign_message_with_context(key, alg, msg, sizeof msg, ctx, sizeof ctx,
+                                                  sig, sig_size, &slen) == PSA_SUCCESS);
+    } else {
+        TEST_ASSERT(psa_sign_message(key, alg, msg, sizeof msg, sig, sig_size, &slen) == PSA_SUCCESS);
+    }
     switch (n) {
     case 0:
     case 2:
@@ -191,12 +221,20 @@ static int test_ml_dsa(int n, int k)
     case 5:
         psa_hash_compute(PSA_ALG_SHA_256, sig, sig_size, h, sizeof h, &len);
         switch (k) {
+        case 0: ASSERT_COMPARE(h, len, sigC_44, sizeof sigC_44); break;
+        case 1: ASSERT_COMPARE(h, len, sigC_65, sizeof sigC_65); break;
+        case 2: ASSERT_COMPARE(h, len, sigC_87, sizeof sigC_87); break;
+        }
+        break;
+    case 6:
+        psa_hash_compute(PSA_ALG_SHA_256, sig, sig_size, h, sizeof h, &len);
+        switch (k) {
         case 0: ASSERT_COMPARE(h, len, sigH_44, sizeof sigH_44); break;
         case 1: ASSERT_COMPARE(h, len, sigH_65, sizeof sigH_65); break;
         case 2: ASSERT_COMPARE(h, len, sigH_87, sizeof sigH_87); break;
         }
         break;
-    case 7:
+    case 8:
         psa_hash_compute(PSA_ALG_SHA_256, sig, sig_size, h, sizeof h, &len);
         switch (k) {
         case 0: ASSERT_COMPARE(h, len, sigHD_44, sizeof sigHD_44); break;
@@ -204,9 +242,17 @@ static int test_ml_dsa(int n, int k)
         case 2: ASSERT_COMPARE(h, len, sigHD_87, sizeof sigHD_87); break;
         }
         break;
+    case 10:
+        psa_hash_compute(PSA_ALG_SHA_256, sig, sig_size, h, sizeof h, &len);
+        switch (k) {
+        case 0: ASSERT_COMPARE(h, len, sigHC_44, sizeof sigHC_44); break;
+        case 1: ASSERT_COMPARE(h, len, sigHC_65, sizeof sigHC_65); break;
+        case 2: ASSERT_COMPARE(h, len, sigHC_87, sizeof sigHC_87); break;
+        }
+        break;
     }
 
-    if (n == 5) {
+    if (n == 6) {
         TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_256, msg, sizeof msg, h, sizeof h, &len) == PSA_SUCCESS);
         oberon_test_drbg_setup(rnd, 32);
         TEST_ASSERT(psa_sign_hash(key, alg, h, len, sig, sig_size, &slen) == PSA_SUCCESS);
@@ -218,8 +264,13 @@ static int test_ml_dsa(int n, int k)
         }
     }
 
+    // test relaxed key policy for verify
+    alg = alg ^ PSA_ALG_ML_DSA_DETERMINISTIC_FLAG; // hedged <-> deterministic
+
     if (n == 3) {
         TEST_ASSERT(psa_verify_message(key, alg, msg, sizeof msg, sig, slen) == PSA_SUCCESS);
+    } else if (n == 5 || n == 10) {
+        TEST_ASSERT(psa_verify_message_with_context(key, alg, msg, sizeof msg, ctx, sizeof ctx, sig, slen) == PSA_SUCCESS);
     } else {
         psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
         psa_set_key_type(&key_attr, PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY);
@@ -227,12 +278,14 @@ static int test_ml_dsa(int n, int k)
         TEST_ASSERT(psa_verify_message(pkey, alg, msg, sizeof msg, sig, slen) == PSA_SUCCESS);
     }
 
-    if (n == 5) {
+    if (n == 6) {
         psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_HASH);
         psa_set_key_type(&key_attr, PSA_KEY_TYPE_ML_DSA_PUBLIC_KEY);
         TEST_ASSERT(psa_import_key(&key_attr, pub, plen, &pkey) == PSA_SUCCESS);
         TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_256, msg, sizeof msg, h, sizeof h, &len) == PSA_SUCCESS);
         TEST_ASSERT(psa_verify_hash(pkey, alg, h, len, sig, slen) == PSA_SUCCESS);
+        // use secret key
+        TEST_ASSERT(psa_verify_hash(key, alg, h, len, sig, slen) == PSA_SUCCESS);
     }
 
     res = 1;
@@ -295,6 +348,21 @@ static int test_ml_dsa_err(int n, int k)
         oberon_test_drbg_setup(rnd, 32);
         TEST_ASSERT(psa_sign_hash(key, PSA_ALG_DETERMINISTIC_HASH_ML_DSA(PSA_ALG_MD5), h, len, sig, sig_size, &slen) == PSA_ERROR_NOT_SUPPORTED);
         goto abort;
+    } else if (n == 7) { // sign_message with wrong context length
+        psa_set_key_algorithm(&key_attr, PSA_ALG_ML_DSA);
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE);
+        TEST_ASSERT(psa_import_key(&key_attr, seed, 32, &key) == PSA_SUCCESS);
+        oberon_test_drbg_setup(rnd, 32);
+        TEST_ASSERT(psa_sign_message_with_context(key, PSA_ALG_ML_DSA, msg, sizeof msg, ctx, 512, sig, sig_size, &slen) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    } else if (n == 8) { // sign_hash with wrong context length
+        psa_set_key_algorithm(&key_attr, PSA_ALG_HASH_ML_DSA(PSA_ALG_SHA_256));
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_HASH);
+        TEST_ASSERT(psa_import_key(&key_attr, seed, 32, &key) == PSA_SUCCESS);
+        TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_256, msg, sizeof msg, h, sizeof h, &len) == PSA_SUCCESS);
+        oberon_test_drbg_setup(rnd, 32);
+        TEST_ASSERT(psa_sign_hash_with_context(key, PSA_ALG_HASH_ML_DSA(PSA_ALG_SHA_256), h, len, ctx, 512, sig, sig_size, &slen) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
     } else {
         psa_set_key_algorithm(&key_attr, PSA_ALG_ML_DSA);
         psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE);
@@ -320,6 +388,17 @@ static int test_ml_dsa_err(int n, int k)
         TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_256, msg, sizeof msg, h, sizeof h, &len) == PSA_SUCCESS);
         TEST_ASSERT(psa_verify_hash(pkey, PSA_ALG_DETERMINISTIC_ML_DSA, h, len, sig, slen) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
+    } else if (n == 9) { // verify_message with wrong context length
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
+        TEST_ASSERT(psa_import_key(&key_attr, pub, plen, &pkey) == PSA_SUCCESS);
+        TEST_ASSERT(psa_verify_message_with_context(pkey, PSA_ALG_ML_DSA, msg, sizeof msg, ctx, 512, sig, slen) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
+    } else if (n == 10) { // verify_hash with wrong context length
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_HASH);
+        TEST_ASSERT(psa_import_key(&key_attr, pub, plen, &pkey) == PSA_SUCCESS);
+        TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_256, msg, sizeof msg, h, sizeof h, &len) == PSA_SUCCESS);
+        TEST_ASSERT(psa_verify_hash_with_context(pkey, PSA_ALG_ML_DSA, h, len, ctx, 512, sig, slen) == PSA_ERROR_INVALID_ARGUMENT);
+        goto abort;
     } else {
         psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_MESSAGE);
         TEST_ASSERT(psa_import_key(&key_attr, pub, plen, &pkey) == PSA_SUCCESS);
@@ -338,6 +417,65 @@ exit:
     return 0;
 }
 #endif /* PSA_WANT_ALG_ML_DSA */
+
+static const uint8_t data[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+
+int test_wrong_context()
+{
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0;
+    uint8_t h[64], sig[65];
+    size_t hlen, slen;
+    psa_algorithm_t alg;
+
+    // illegal context
+    alg = PSA_ALG_ECDSA(PSA_ALG_SHA_256);
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    psa_set_key_bits(&key_attr, 256);
+    psa_set_key_algorithm(&key_attr, alg);
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE | PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH);
+#if defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ALG_SHA_256)
+    TEST_ASSERT(psa_generate_key(&key_attr, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_sign_message_with_context(key, alg, data, sizeof data, data, 4, sig, sizeof sig, &slen) == PSA_ERROR_INVALID_ARGUMENT);
+    TEST_ASSERT(psa_sign_message_with_context(key, alg, data, sizeof data, data, 0, sig, sizeof sig, &slen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_verify_message_with_context(key, alg, data, sizeof data, data, 4, sig, slen) == PSA_ERROR_INVALID_ARGUMENT);
+    TEST_ASSERT(psa_verify_message_with_context(key, alg, data, sizeof data, data, 0, sig, slen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_256, data, sizeof data, h, sizeof h, &hlen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_sign_hash_with_context(key, alg, h, hlen, data, 4, sig, sizeof sig, &slen) == PSA_ERROR_INVALID_ARGUMENT);
+    TEST_ASSERT(psa_sign_hash_with_context(key, alg, h, hlen, data, 0, sig, sizeof sig, &slen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_verify_hash_with_context(key, alg, h, hlen, data, 4, sig, slen) == PSA_ERROR_INVALID_ARGUMENT);
+    TEST_ASSERT(psa_verify_hash_with_context(key, alg, h, hlen, data, 0, sig, slen) == PSA_SUCCESS);
+#endif
+    psa_destroy_key(key);
+
+    // not implemented context
+    alg = PSA_ALG_ED25519PH;
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS));
+    psa_set_key_bits(&key_attr, 255);
+    psa_set_key_algorithm(&key_attr, alg);
+#if defined(PSA_WANT_ALG_ED25519PH) && defined(PSA_WANT_ALG_SHA_512)
+    TEST_ASSERT(psa_generate_key(&key_attr, &key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_sign_message_with_context(key, alg, data, sizeof data, data, 4, sig, sizeof sig, &slen) == PSA_ERROR_NOT_SUPPORTED);
+    TEST_ASSERT(psa_sign_message_with_context(key, alg, data, sizeof data, data, 0, sig, sizeof sig, &slen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_verify_message_with_context(key, alg, data, sizeof data, data, 4, sig, slen) == PSA_ERROR_NOT_SUPPORTED);
+    TEST_ASSERT(psa_verify_message_with_context(key, alg, data, sizeof data, data, 0, sig, slen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_hash_compute(PSA_ALG_SHA_512, data, sizeof data, h, sizeof h, &hlen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_sign_hash_with_context(key, alg, h, hlen, data, 4, sig, sizeof sig, &slen) == PSA_ERROR_NOT_SUPPORTED);
+    TEST_ASSERT(psa_sign_hash_with_context(key, alg, h, hlen, data, 0, sig, sizeof sig, &slen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_verify_hash_with_context(key, alg, h, hlen, data, 4, sig, slen) == PSA_ERROR_NOT_SUPPORTED);
+    TEST_ASSERT(psa_verify_hash_with_context(key, alg, h, hlen, data, 0, sig, slen) == PSA_SUCCESS);
+#endif
+    psa_destroy_key(key);
+
+    return 1;
+exit:
+    psa_destroy_key(key);
+    (void)h;
+    (void)sig;
+    (void)hlen;
+    (void)slen;
+    return 0;
+}
 
 #ifdef PSA_WANT_ALG_ML_KEM
 
@@ -390,7 +528,7 @@ static int test_ml_kem(int n, int k)
     psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
     psa_key_id_t key = 0, pkey = 0, skey = 0, dkey = 0;
     uint8_t pub[ML_KEM1024_PK_SIZE], ct[ML_KEM1024_CT_SIZE];
-    uint8_t h[32], secret1[32], secret2[32];
+    uint8_t h[64], secret1[32], secret2[32];
     size_t clen, plen, slen, len;
     size_t key_size = (k + 2) * 256; // 512, 768, 1024
     size_t pk_size, ct_size;
@@ -418,7 +556,7 @@ static int test_ml_kem(int n, int k)
     if (n == 2) {
         psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
     } else {
-        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_DECRYPT);
+        psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_EXPORT);
     }
     psa_set_key_algorithm(&key_attr, PSA_ALG_ML_KEM);
     psa_set_key_type(&key_attr, PSA_KEY_TYPE_ML_KEM_KEY_PAIR);
@@ -431,6 +569,8 @@ static int test_ml_kem(int n, int k)
     } else if (n == 1) {
         oberon_test_drbg_setup(kem_rnd, 64);
         TEST_ASSERT(psa_generate_key(&key_attr, &key) == PSA_SUCCESS);
+        TEST_ASSERT(psa_export_key(key, h, sizeof h, &len) == PSA_SUCCESS);
+        ASSERT_COMPARE(h, len, kem_rnd, 64);
     } else {
         TEST_ASSERT(psa_import_key(&key_attr, kem_rnd, 64, &key) == PSA_SUCCESS);
     }
@@ -455,9 +595,9 @@ static int test_ml_kem(int n, int k)
     psa_set_key_bits(&key_attr, 0);
     oberon_test_drbg_setup(kem_msg, sizeof kem_msg);
     if (n == 2) {
-        TEST_ASSERT(psa_key_encapsulate(key, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_SUCCESS);
+        TEST_ASSERT(psa_encapsulate(key, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_SUCCESS);
     } else {
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_SUCCESS);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_SUCCESS);
     }
     TEST_ASSERT(psa_export_key(skey, secret1, sizeof secret1, &slen) == PSA_SUCCESS);
     TEST_ASSERT(slen == 32);
@@ -476,7 +616,8 @@ static int test_ml_kem(int n, int k)
     }
 
     TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
-    TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_SUCCESS);
+    psa_set_key_bits(&key_attr, 256);
+    TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(skey, secret2, sizeof secret2, &slen) == PSA_SUCCESS);
     TEST_ASSERT(slen == 32);
     switch (k) {
@@ -553,36 +694,36 @@ static int test_ml_kem_err(int n, int k)
     }
     oberon_test_drbg_setup(kem_msg, sizeof kem_msg);
     if (n == 1) { // key does not permit encrypt
-        TEST_ASSERT(psa_key_encapsulate(key, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
+        TEST_ASSERT(psa_encapsulate(key, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
         goto abort;
     } else if (n == 2) { // not permitted algorithm 
-        TEST_ASSERT(psa_key_encapsulate(key, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
+        TEST_ASSERT(psa_encapsulate(key, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
         goto abort;
     } else if (n == 3) { // key does not permit encrypt 
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
         goto abort;
     } else if (n == 4) { // not permitted algorithm 
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_NOT_PERMITTED);
         goto abort;
     } else if (n == 5) { // wrong algorithm 
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_DSA, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_DSA, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else if (n == 6) { // wrong output key type 
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else if (n == 7) { // wrong output key size 
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else if (n == 8) { // buffer too small 
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size - 1, &clen) == PSA_ERROR_BUFFER_TOO_SMALL);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size - 1, &clen) == PSA_ERROR_BUFFER_TOO_SMALL);
         goto abort;
     } else {
-        TEST_ASSERT(psa_key_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_SUCCESS);
+        TEST_ASSERT(psa_encapsulate(pkey, PSA_ALG_ML_KEM, &key_attr, &skey, ct, ct_size, &clen) == PSA_SUCCESS);
     }
     TEST_ASSERT(psa_destroy_key(skey) == PSA_SUCCESS);
 
     if (n == 9) { // key does not permit decrypt
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_NOT_PERMITTED);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_NOT_PERMITTED);
         goto abort;
     } else if (n == 10) { // not permitted algorithm 
         psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
@@ -590,25 +731,25 @@ static int test_ml_kem_err(int n, int k)
         psa_set_key_type(&attr, PSA_KEY_TYPE_ML_KEM_KEY_PAIR);
         psa_set_key_bits(&attr, key_size);
         TEST_ASSERT(psa_import_key(&attr, kem_rnd, 64, &key) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_NOT_PERMITTED);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_NOT_PERMITTED);
         goto abort;
     } else if (n == 11) { // wrong algorithm 
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_DSA, ct, clen, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_DSA, ct, clen, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else if (n == 12) { // wrong output key type 
         psa_set_key_algorithm(&key_attr, PSA_ALG_RSA_PKCS1V15_CRYPT);
         psa_set_key_type(&key_attr, PSA_KEY_TYPE_RSA_KEY_PAIR);
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else if (n == 13) { // wrong output key size 
         psa_set_key_bits(&key_attr, 7);
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else if (n == 14) { // wrong ciphertext size 
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen - 1, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen - 1, &key_attr, &skey) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
     } else {
-        TEST_ASSERT(psa_key_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_SUCCESS);
+        TEST_ASSERT(psa_decapsulate(key, PSA_ALG_ML_KEM, ct, clen, &key_attr, &skey) == PSA_SUCCESS);
     }
 
 abort:
@@ -633,13 +774,21 @@ int main(void)
 
     TEST_ASSERT(psa_crypto_init() == PSA_SUCCESS);
 
-#ifdef PSA_WANT_ALG_ML_DSA
+#if defined(PSA_WANT_ALG_ML_DSA) || defined(PSA_WANT_ALG_DETERMINISTIC_ML_DSA)
     for (k = 0; k < 3; k++) {
-        for (i = 0; i <= 8; i++) {
+        for (i = 0; i <= 5; i++) {
             TEST_ASSERT(test_ml_dsa(i, k));
         }
-        for (i = 0; i <= 6; i++) {
+        for (i = 0; i <= 10; i++) {
             TEST_ASSERT(test_ml_dsa_err(i, k));
+        }
+    }
+#endif
+
+#if defined(PSA_WANT_ALG_HASH_ML_DSA) || defined(PSA_WANT_ALG_DETERMINISTIC_HASH_ML_DSA)
+    for (k = 0; k < 3; k++) {
+        for (i = 6; i <= 10; i++) {
+            TEST_ASSERT(test_ml_dsa(i, k));
         }
     }
 #endif
@@ -654,6 +803,8 @@ int main(void)
         }
     }
 #endif
+
+    TEST_ASSERT(test_wrong_context());
 
 return 0;
 exit:

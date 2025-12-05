@@ -12,20 +12,33 @@
 #include "oberon_asymmetric_signature.h"
 
 #include "oberon_ecdsa.h"
+#include "oberon_eddsa.h"
 #include "oberon_lms.h"
 #include "oberon_ml_dsa.h"
 #include "oberon_xmss.h"
 #include "oberon_rsa.h"
 
 
-psa_status_t oberon_sign_hash(
+psa_status_t oberon_sign_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     psa_key_type_t type = psa_get_key_type(attributes);
+
+#ifdef PSA_NEED_OBERON_EDDSA_SIGN
+    if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
+        return oberon_eddsa_sign_hash_with_context(
+            attributes, key, key_length,
+            alg,
+            hash, hash_length,
+            context, context_length,
+            signature, signature_size, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_EDDSA_SIGN */
 
 #ifdef PSA_NEED_OBERON_ECDSA_SIGN
     if (PSA_KEY_TYPE_IS_ECC(type)) {
@@ -48,13 +61,16 @@ psa_status_t oberon_sign_hash(
 #endif /* PSA_NEED_OBERON_RSA_ANY_SIGN */
 
 #ifdef PSA_NEED_OBERON_ML_DSA_SIGN
+#ifdef PSA_NEED_OBERON_HASH_ML_DSA
     if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-        return oberon_ml_dsa_sign_hash(
+        return oberon_ml_dsa_sign_hash_with_context(
             attributes, key, key_length,
             alg,
             hash, hash_length,
+            context, context_length,
             signature, signature_size, signature_length);
     } else
+#endif /* PSA_NEED_OBERON_HASH_ML_DSA */
 #endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
 
     {
@@ -63,6 +79,8 @@ psa_status_t oberon_sign_hash(
         (void)alg;
         (void)hash;
         (void)hash_length;
+        (void)context;
+        (void)context_length;
         (void)signature;
         (void)signature_size;
         (void)signature_length;
@@ -71,33 +89,38 @@ psa_status_t oberon_sign_hash(
     }
 }
 
-psa_status_t oberon_sign_message(
+psa_status_t oberon_sign_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
     psa_key_type_t type = psa_get_key_type(attributes);
 
-#ifdef PSA_NEED_OBERON_ECDSA_SIGN
-    if (PSA_KEY_TYPE_IS_ECC(type)) {
-        return oberon_ecdsa_sign_message(
+#ifdef PSA_NEED_OBERON_EDDSA_SIGN
+    if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
+        return oberon_eddsa_sign_message_with_context(
             attributes, key, key_length,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_size, signature_length);
     } else
-#endif /* PSA_NEED_OBERON_ECDSA_SIGN */
+#endif /* PSA_NEED_OBERON_EDDSA_SIGN */
 
 #ifdef PSA_NEED_OBERON_ML_DSA_SIGN
+#ifdef PSA_NEED_OBERON_MESSAGE_ML_DSA
     if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-        return oberon_ml_dsa_sign_message(
+        return oberon_ml_dsa_sign_message_with_context(
             attributes, key, key_length,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_size, signature_length);
     } else
+#endif /* PSA_NEED_OBERON_MESSAGE_ML_DSA */
 #endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
 
     {
@@ -106,6 +129,8 @@ psa_status_t oberon_sign_message(
         (void)alg;
         (void)input;
         (void)input_length;
+        (void)context;
+        (void)context_length;
         (void)signature;
         (void)signature_size;
         (void)signature_length;
@@ -114,14 +139,27 @@ psa_status_t oberon_sign_message(
     }
 }
 
-psa_status_t oberon_verify_hash(
+psa_status_t oberon_verify_hash_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
     psa_key_type_t type = psa_get_key_type(attributes);
+
+#ifdef PSA_NEED_OBERON_EDDSA_VERIFY
+        if (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) ==
+            PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
+            return oberon_eddsa_verify_hash_with_context(
+            attributes, key, key_length,
+            alg,
+            hash, hash_length,
+            context, context_length,
+            signature, signature_length);
+    } else
+#endif /* PSA_NEED_OBERON_EDDSA_VERIFY */
 
 #ifdef PSA_NEED_OBERON_ECDSA_VERIFY
     if (PSA_KEY_TYPE_IS_ECC(type)) {
@@ -144,14 +182,17 @@ psa_status_t oberon_verify_hash(
 #endif /* PSA_NEED_OBERON_RSA_ANY_VERIFY */
 
 #ifdef PSA_NEED_OBERON_ML_DSA_VERIFY
+#ifdef PSA_NEED_OBERON_HASH_ML_DSA
     if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-        return oberon_ml_dsa_verify_hash(
+        return oberon_ml_dsa_verify_hash_with_context(
             attributes, key, key_length,
             alg,
             hash, hash_length,
+            context, context_length,
             signature, signature_length);
     } else
-#endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
+#endif /* PSA_NEED_OBERON_HASH_ML_DSA */
+#endif /* PSA_NEED_OBERON_ML_DSA_VERIFY */
 
     {
         (void)key;
@@ -159,6 +200,8 @@ psa_status_t oberon_verify_hash(
         (void)alg;
         (void)hash;
         (void)hash_length;
+        (void)context;
+        (void)context_length;
         (void)signature;
         (void)signature_length;
         (void)type;
@@ -166,34 +209,40 @@ psa_status_t oberon_verify_hash(
     }
 }
 
-psa_status_t oberon_verify_message(
+psa_status_t oberon_verify_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
     const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
     psa_key_type_t type = psa_get_key_type(attributes);
 
-#ifdef PSA_NEED_OBERON_ECDSA_VERIFY
-    if (PSA_KEY_TYPE_IS_ECC(type)) {
-        return oberon_ecdsa_verify_message(
+#ifdef PSA_NEED_OBERON_EDDSA_VERIFY
+    if (PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(type) ==
+        PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
+        return oberon_eddsa_verify_message_with_context(
             attributes, key, key_length,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_length);
     } else
-#endif /* PSA_NEED_OBERON_ECDSA_VERIFY */
+#endif /* PSA_NEED_OBERON_EDDSA_VERIFY */
 
 #ifdef PSA_NEED_OBERON_ML_DSA_VERIFY
-    if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
-        return oberon_ml_dsa_verify_message(
+#ifdef PSA_NEED_OBERON_MESSAGE_ML_DSA
+        if (PSA_KEY_TYPE_IS_ML_DSA(type)) {
+        return oberon_ml_dsa_verify_message_with_context(
             attributes, key, key_length,
             alg,
             input, input_length,
+            context, context_length,
             signature, signature_length);
     } else
-#endif /* PSA_NEED_OBERON_ML_DSA_SIGN */
+#endif /* PSA_NEED_OBERON_MESSAGE_ML_DSA */
+#endif /* PSA_NEED_OBERON_ML_DSA_VERIFY */
 
 #ifdef PSA_NEED_OBERON_LMS_VERIFY
     if (type == PSA_KEY_TYPE_LMS_PUBLIC_KEY) {
@@ -241,6 +290,8 @@ psa_status_t oberon_verify_message(
         (void)alg;
         (void)input;
         (void)input_length;
+        (void)context;
+        (void)context_length;
         (void)signature;
         (void)signature_length;
         (void)type;

@@ -21,37 +21,36 @@ void psa_driver_wrapper_free(void);
 /*
  * Signature functions
  */
-psa_status_t psa_driver_wrapper_sign_message(
-    const psa_key_attributes_t *attributes,
-    const uint8_t *key_buffer,
-    size_t key_buffer_size,
-    psa_algorithm_t alg,
-    const uint8_t *input,
-    size_t input_length,
-    uint8_t *signature,
-    size_t signature_size,
-    size_t *signature_length);
-
-psa_status_t psa_driver_wrapper_verify_message(
-    const psa_key_attributes_t *attributes,
-    const uint8_t *key_buffer,
-    size_t key_buffer_size,
-    psa_algorithm_t alg,
-    const uint8_t *input,
-    size_t input_length,
-    const uint8_t *signature,
-    size_t signature_length);
-
-psa_status_t psa_driver_wrapper_sign_hash(
+psa_status_t psa_driver_wrapper_sign_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
-    psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
+    psa_algorithm_t alg,
+    const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length);
 
-psa_status_t psa_driver_wrapper_verify_hash(
+psa_status_t psa_driver_wrapper_verify_message_with_context(
     const psa_key_attributes_t *attributes,
     const uint8_t *key_buffer, size_t key_buffer_size,
-    psa_algorithm_t alg, const uint8_t *hash, size_t hash_length,
+    psa_algorithm_t alg,
+    const uint8_t *input, size_t input_length,
+    const uint8_t *context, size_t context_length,
+    const uint8_t *signature, size_t signature_length);
+
+psa_status_t psa_driver_wrapper_sign_hash_with_context(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg,
+    const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
+    uint8_t *signature, size_t signature_size, size_t *signature_length);
+
+psa_status_t psa_driver_wrapper_verify_hash_with_context(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer, size_t key_buffer_size,
+    psa_algorithm_t alg,
+    const uint8_t *hash, size_t hash_length,
+    const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length);
 
 /*
@@ -240,6 +239,10 @@ psa_status_t psa_driver_wrapper_hash_abort(
  */
 psa_status_t psa_driver_wrapper_xof_setup(psa_xof_operation_t *operation,
     psa_algorithm_t alg);
+
+psa_status_t psa_driver_wrapper_xof_set_context(psa_xof_operation_t *operation,
+    const uint8_t *context,
+    size_t context_length);
 
 psa_status_t psa_driver_wrapper_xof_update(psa_xof_operation_t *operation,
     const uint8_t *input,
@@ -448,7 +451,7 @@ psa_status_t psa_driver_wrapper_key_derivation_abort(
 /*
  * Key encapsulation functions.
  */
- psa_status_t psa_driver_wrapper_key_encapsulate(
+ psa_status_t psa_driver_wrapper_encapsulate(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,
@@ -456,7 +459,7 @@ psa_status_t psa_driver_wrapper_key_derivation_abort(
     uint8_t *output_key, size_t output_key_size, size_t *output_key_length,
     uint8_t *ciphertext, size_t ciphertext_size, size_t *ciphertext_length);
 
-psa_status_t psa_driver_wrapper_key_decapsulate(
+psa_status_t psa_driver_wrapper_decapsulate(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg,

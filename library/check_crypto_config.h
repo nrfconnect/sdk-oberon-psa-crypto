@@ -212,9 +212,14 @@
 #error "PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS defined, but not all prerequisites"
 #endif
 
-#if defined(PSA_WANT_ALG_ML_DSA) && \
+#if (defined(PSA_WANT_ALG_ML_DSA) || \
+     defined(PSA_WANT_ALG_HASH_ML_DSA) || \
+     defined(PSA_WANT_ALG_DETERMINISTIC_ML_DSA) || \
+     defined(PSA_WANT_ALG_DETERMINISTIC_HASH_ML_DSA)) && \
     !(defined(PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC) || \
-    defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY))
+      defined(PSA_WANT_KEY_TYPE_ML_DSA_PUBLIC_KEY)) && \
+    !defined(PSA_WANT_ALG_SHAKE128) && \
+    !defined(PSA_WANT_ALG_SHAKE256) 
 #error "PSA_WANT_ALG_ML_DSA defined, but not all prerequisites"
 #endif
 
@@ -234,7 +239,11 @@
 
 #if defined(PSA_WANT_ALG_ML_KEM) && \
     !(defined(PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC) || \
-    defined(PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY))
+    defined(PSA_WANT_KEY_TYPE_ML_KEM_PUBLIC_KEY)) && \
+    !defined(PSA_WANT_ALG_SHAKE128) && \
+    !defined(PSA_WANT_ALG_SHAKE256) && \
+    !defined(PSA_WANT_ALG_SHA3_256) && \
+    !defined(PSA_WANT_ALG_SHA3_512)
 #error "PSA_WANT_ALG_ML_KEM defined, but not all prerequisites"
 #endif
 

@@ -2492,6 +2492,43 @@ static psa_xof_operation_t psa_xof_operation_init(void);
 psa_status_t psa_xof_setup(psa_xof_operation_t *operation,
                            psa_algorithm_t alg);
 
+/** Provide a context for a multi-part XOF operation.
+ * 
+ * The application must call psa_xof_setup() before calling this function.
+ * For an XOF algorithm with a context parameter, this function must be called
+ * immediately after psa_xof_setup(), before calling any other function on the
+ * XOF operation.
+ * 
+ * This function must not be called if the XOF algorithm does not have a
+ * context parameter. The macro PSA_ALG_XOF_HAS_CONTEXT() can be used to
+ * determine if a context value is required for the XOF algorithm.
+ * 
+ * If this function returns an error status, the operation enters an error
+ * state and must be aborted by calling psa_xof_abort().
+ *
+ * \param[in,out] operation   Active XOF operation.
+ * \param[in] context         Buffer containing the context value.
+ * \param[in] context_length  Size of the \p context in bytes.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         The context value is not valid for the XOF algorithm.
+ * \retval #PSA_ERROR_NOT_SUPPORTED
+ *         The context value is not supported by this implementation.
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_BAD_STATE
+ *         The operation state is not valid: it must be active, and no call to
+ *         psa_xof_set_context(), psa_xof_output(), or psa_xof_output() has
+ *         been made, or the library requires initializing by a call to
+ *         psa_crypto_init().
+ */
+psa_status_t psa_xof_set_context(psa_xof_operation_t *operation,
+                                 const uint8_t *context,
+                                 size_t context_length);
+
 /** Add input to a multi-part XOF operation.
  * 
  * The application must call psa_xof_setup() before calling this function.
@@ -2593,6 +2630,9 @@ psa_status_t psa_xof_abort(psa_xof_operation_t *operation);
  */
 #define PSA_ALG_IS_XOF(alg) \
         (((alg) & 0x7f000000) == 0x0D000000)
+
+#define PSA_ALG_XOF_HAS_CONTEXT(alg) \
+        (((alg) & 0x00008000) != 0)
 
 
 /** LMS signature algorithm
@@ -2752,10 +2792,11 @@ psa_status_t psa_xof_abort(psa_xof_operation_t *operation);
  */
 #define PSA_ALG_DETERMINISTIC_HASH_ML_DSA(hash_alg) \
     (PSA_ALG_DETERMINISTIC_HASH_ML_DSA_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+#define PSA_ALG_ML_DSA_DETERMINISTIC_FLAG ((psa_algorithm_t) 0x00000100)
 
-/** Whether the specified algorithm is a ML-DSA algorithm. */
+/** Whether the specified algorithm is a non-hash ML-DSA algorithm. */
 #define PSA_ALG_IS_ML_DSA(alg) \
-    (((alg) & ~0x000003ff) == PSA_ALG_ML_DSA)
+    (((alg) & ~PSA_ALG_ML_DSA_DETERMINISTIC_FLAG) == PSA_ALG_ML_DSA)
 
 /** Whether the specified algorithm is a hash ML-DSA algorithm. */
 #define PSA_ALG_IS_HASH_ML_DSA(alg) \
@@ -2768,10 +2809,6 @@ psa_status_t psa_xof_abort(psa_xof_operation_t *operation);
 /** Whether the specified algorithm is a deterministic hash ML-DSA algorithm. */
 #define PSA_ALG_IS_DETERMINISTIC_HASH_ML_DSA(alg) \
     (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_DETERMINISTIC_HASH_ML_DSA_BASE)
-
-/** Whether the specified algorithm is a deterministic ML-DSA algorithm. */
-#define PSA_ALG_IS_DETERMINISTIC_ML_DSA(alg) \
-    (((alg) & ~0x000002ff) == PSA_ALG_DETERMINISTIC_ML_DSA)
 
 /** ML-DSA key pair: both the private and public key.
  *
@@ -2850,8 +2887,11 @@ psa_status_t psa_xof_abort(psa_xof_operation_t *operation);
 /** Ascon-Hash256 hash algorithm. */
 #define PSA_ALG_ASCON_HASH256 ((psa_algorithm_t)0x02000020)
 
-/** Ascon-XOF256 extended output function algorithm. */
+/** Ascon-XOF128 extended output function algorithm. */
 #define PSA_ALG_ASCON_XOF128  ((psa_algorithm_t)0x0D000300)
+
+/** Ascon-CXOF128 extended output function algorithm, with context. */
+#define PSA_ALG_ASCON_CXOF128  ((psa_algorithm_t)0x0D008300)
 
 /** @} */
 

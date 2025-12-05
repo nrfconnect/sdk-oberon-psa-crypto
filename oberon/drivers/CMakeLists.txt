@@ -16,6 +16,8 @@ set(OBERON_SOURCES
         oberon_ecdh.h
         oberon_ecdsa.c
         oberon_ecdsa.h
+        oberon_eddsa.c
+        oberon_eddsa.h
         oberon_ec_keys.c
         oberon_ec_keys.h
         oberon_hash.c

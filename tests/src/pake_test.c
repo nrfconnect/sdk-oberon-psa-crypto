@@ -16,7 +16,7 @@
  */
 
 /*
- * Additional tests for PAKE, K1_256, ML-DSA, ML-KEM, RSA OAEP.
+ * Additional tests for PAKE, K1_256, ECDSA-P521, ML-DSA, ML-KEM, RSA OAEP.
  * These tests use the oberon_test_drbg to inject specific random bytes.
  */
 
@@ -1720,6 +1720,7 @@ static int test_sae(const uint8_t mac[6], const uint8_t peer_mac[6], const char 
         psa_set_key_bits(&attributes, 256);
         psa_set_key_type(&attributes, PSA_KEY_TYPE_WPA3_SAE_ECC(PSA_ECC_FAMILY_SECP_R1));
         TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &ekey) == PSA_SUCCESS);
+        TEST_ASSERT(psa_key_derivation_abort(&kdf) == PSA_SUCCESS);
         TEST_ASSERT(psa_export_key(ekey, data, sizeof data, &length1) == PSA_SUCCESS);
         if (n == 4) {
             ASSERT_COMPARE(data, length1, pt2, sizeof pt2);
@@ -1964,6 +1965,11 @@ static int setup_sae_endpoint_err(psa_pake_operation_t *op,
         return 1;
     }
 
+    if (n == 15) { // wrong set_context
+        TEST_ASSERT(psa_pake_set_context(op, peer, 5) == PSA_ERROR_BAD_STATE);
+        return 1;
+    }
+
     return 1;
 exit:
     return 0;
@@ -1978,13 +1984,13 @@ static int test_sae_err(const char *ssid, int n)
     uint8_t data[256], send_count[2] = {1, 0};
     size_t length;
 
-    if (n <= 14) { // error in local setup
+    if (n <= 15) { // error in local setup
         TEST_ASSERT(setup_sae_endpoint_err(&local, local_mac1, peer_mac1, ssid, &lkey, n));
         goto abort;
     } else {
         TEST_ASSERT(setup_sae_endpoint_err(&local, local_mac1, peer_mac1, ssid, &lkey, 0));
     }
-    if (n > 14 && n <= 28) { // error in peer setup
+    if (n > 16 && n <= 30) { // error in peer setup
         TEST_ASSERT(setup_sae_endpoint_err(&peer, peer_mac1, local_mac1, ssid, &pkey, n - 14));
         goto abort;
     } else {
@@ -1992,51 +1998,51 @@ static int test_sae_err(const char *ssid, int n)
     }
 
     switch (n) {
-    case 29: // early set salt
+    case 31: // early set salt
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_SALT, rejected, sizeof rejected) == PSA_ERROR_BAD_STATE);
         goto abort;
-    case 30: // early send-confirm
+    case 32: // early send-confirm
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_ERROR_BAD_STATE);
         goto abort;
-    case 31: // early confirm
+    case 33: // early confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_CONFIRM, 1));
         goto abort;
-    case 32: // early key id
+    case 34: // early key id
         TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEY_ID, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
         goto abort;
-    case 33: // wrong commit size
+    case 35: // wrong commit size
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 2));
         goto abort;
-    case 34: // wrong commit data
+    case 36: // wrong commit data
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 5));
         goto abort;
-    case 35: // salt output
+    case 37: // salt output
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_SALT, data, sizeof data, &length) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
-    case 36: // send-confirm output
+    case 38: // send-confirm output
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_CONFIRM_COUNT, data, sizeof data, &length) == PSA_ERROR_INVALID_ARGUMENT);
         goto abort;
-    case 37: // no send-confirm
+    case 39: // no send-confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_CONFIRM, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
         goto abort;
-    case 38: // no send-confirm
+    case 40: // no send-confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(psa_pake_output(&peer, PSA_PAKE_STEP_CONFIRM, data, sizeof data, &length) == PSA_ERROR_BAD_STATE);
         goto abort;
-    case 39: // wrong confirm size
+    case 41: // wrong confirm size
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_CONFIRM, 3));
         goto abort;
-    case 40: // wrong confirm
+    case 42: // wrong confirm
         TEST_ASSERT(send_message_err(&local, &peer, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(send_message_err(&peer, &local, PSA_PAKE_STEP_COMMIT, 0));
         TEST_ASSERT(psa_pake_input(&local, PSA_PAKE_STEP_CONFIRM_COUNT, send_count, 2) == PSA_SUCCESS);
@@ -2058,17 +2064,17 @@ static int test_sae_err(const char *ssid, int n)
     psa_set_key_bits(&attributes, 0);
 
     switch (n) {
-    case 41: // invalid key type
+    case 43: // invalid key type
         psa_set_key_type(&attributes, PSA_KEY_TYPE_RSA_PUBLIC_KEY);
         TEST_ASSERT(psa_pake_get_shared_key(&local, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
         TEST_ASSERT(key == 0);
         break;
-    case 42: // key size > 0
+    case 44: // key size > 0
         psa_set_key_bits(&attributes, 256);
         TEST_ASSERT(psa_pake_get_shared_key(&local, &attributes, &key) == PSA_ERROR_INVALID_ARGUMENT);
         TEST_ASSERT(key == 0);
         break;
-    case 43: // small key id buffer
+    case 45: // small key id buffer
         TEST_ASSERT(psa_pake_output(&local, PSA_PAKE_STEP_KEY_ID, data, 12, &length) == PSA_ERROR_BUFFER_TOO_SMALL);
         break;
     }
@@ -2201,6 +2207,104 @@ exit:
 }
 #endif // PSA_WANT_ALG_ECDSA
 #endif // PSA_WANT_ECC_SECP_K1_256
+
+#if defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_521)
+static const uint8_t ecdsa_p521_msg[4] = "test";
+static const uint8_t ecdsa_p521_sk[66] = {
+    0x00, 0xFA, 0xD0, 0x6D, 0xAA, 0x62, 0xBA, 0x3B, 0x25, 0xD2, 0xFB, 0x40, 0x13, 0x3D, 0xA7, 0x57,
+    0x20, 0x5D, 0xE6, 0x7F, 0x5B, 0xB0, 0x01, 0x8F, 0xEE, 0x8C, 0x86, 0xE1, 0xB6, 0x8C, 0x7E, 0x75,
+    0xCA, 0xA8, 0x96, 0xEB, 0x32, 0xF1, 0xF4, 0x7C, 0x70, 0x85, 0x58, 0x36, 0xA6, 0xD1, 0x6F, 0xCC,
+    0x14, 0x66, 0xF6, 0xD8, 0xFB, 0xEC, 0x67, 0xDB, 0x89, 0xEC, 0x0C, 0x08, 0xB0, 0xE9, 0x96, 0xB8, 0x35, 0x38};
+static const uint8_t ecdsa_p521_pk[133] = {
+    0x04, 0x01, 0x89, 0x45, 0x50, 0xD0, 0x78, 0x59, 0x32, 0xE0, 0x0E, 0xAA, 0x23, 0xB6, 0x94, 0xF2, 0x13,
+    0xF8, 0xC3, 0x12, 0x1F, 0x86, 0xDC, 0x97, 0xA0, 0x4E, 0x5A, 0x71, 0x67, 0xDB, 0x4E, 0x5B, 0xCD,
+    0x37, 0x11, 0x23, 0xD4, 0x6E, 0x45, 0xDB, 0x6B, 0x5D, 0x53, 0x70, 0xA7, 0xF2, 0x0F, 0xB6, 0x33,
+    0x15, 0x5D, 0x38, 0xFF, 0xA1, 0x6D, 0x2B, 0xD7, 0x61, 0xDC, 0xAC, 0x47, 0x4B, 0x9A, 0x2F, 0x50, 0x23, 0xA4,
+    0x00, 0x49, 0x31, 0x01, 0xC9, 0x62, 0xCD, 0x4D, 0x2F, 0xDD, 0xF7, 0x82, 0x28, 0x5E, 0x64, 0x58,
+    0x41, 0x39, 0xC2, 0xF9, 0x1B, 0x47, 0xF8, 0x7F, 0xF8, 0x23, 0x54, 0xD6, 0x63, 0x0F, 0x74, 0x6A,
+    0x28, 0xA0, 0xDB, 0x25, 0x74, 0x1B, 0x5B, 0x34, 0xA8, 0x28, 0x00, 0x8B, 0x22, 0xAC, 0xC2, 0x3F,
+    0x92, 0x4F, 0xAA, 0xFB, 0xD4, 0xD3, 0x3F, 0x81, 0xEA, 0x66, 0x95, 0x6D, 0xFE, 0xAA, 0x2B, 0xFD, 0xFC, 0xF5};
+static const uint8_t ecdsa_p521_rnd[66] = {
+    0x01, 0x62, 0x00, 0x81, 0x30, 0x20, 0xEC, 0x98, 0x68, 0x63, 0xBE, 0xDF, 0xC1, 0xB1, 0x21, 0xF6,
+    0x05, 0xC1, 0x21, 0x56, 0x45, 0x01, 0x8A, 0xEA, 0x1A, 0x7B, 0x21, 0x5A, 0x56, 0x4D, 0xE9, 0xEB,
+    0x1B, 0x38, 0xA6, 0x7A, 0xA1, 0x12, 0x8B, 0x80, 0xCE, 0x39, 0x1C, 0x4F, 0xB7, 0x11, 0x87, 0x65,
+    0x4A, 0xAA, 0x34, 0x31, 0x02, 0x7B, 0xFC, 0x7F, 0x39, 0x57, 0x66, 0xCA, 0x98, 0x8C, 0x96, 0x4D, 0xC5, 0x6D};
+static const uint8_t ecdsa_p521_sig[132] = {
+    0x01, 0x3E, 0x99, 0x02, 0x0A, 0xBF, 0x5C, 0xEE, 0x75, 0x25, 0xD1, 0x6B, 0x69, 0xB2, 0x29, 0x65,
+    0x2A, 0xB6, 0xBD, 0xF2, 0xAF, 0xFC, 0xAE, 0xF3, 0x87, 0x73, 0xB4, 0xB7, 0xD0, 0x87, 0x25, 0xF1,
+    0x0C, 0xDB, 0x93, 0x48, 0x2F, 0xDC, 0xC5, 0x4E, 0xDC, 0xEE, 0x91, 0xEC, 0xA4, 0x16, 0x6B, 0x2A,
+    0x7C, 0x62, 0x65, 0xEF, 0x0C, 0xE2, 0xBD, 0x70, 0x51, 0xB7, 0xCE, 0xF9, 0x45, 0xBA, 0xBD, 0x47, 0xEE, 0x6D,
+    0x01, 0xFB, 0xD0, 0x01, 0x3C, 0x67, 0x4A, 0xA7, 0x9C, 0xB3, 0x98, 0x49, 0x52, 0x79, 0x16, 0xCE,
+    0x30, 0x1C, 0x66, 0xEA, 0x7C, 0xE8, 0xB8, 0x06, 0x82, 0x78, 0x6A, 0xD6, 0x0F, 0x98, 0xF7, 0xE7,
+    0x8A, 0x19, 0xCA, 0x69, 0xEF, 0xF5, 0xC5, 0x74, 0x00, 0xE3, 0xB3, 0xA0, 0xAD, 0x66, 0xCE, 0x09,
+    0x78, 0x21, 0x4D, 0x13, 0xBA, 0xF4, 0xE9, 0xAC, 0x60, 0x75, 0x2F, 0x7B, 0x15, 0x5E, 0x2D, 0xE4, 0xDC, 0xE3};
+
+#ifdef PSA_WANT_ALG_DETERMINISTIC_ECDSA
+static const uint8_t ecdsa_p521_m[6] = "sample";
+static const uint8_t ecdsa_p521_k[66] = {
+    0x00, 0xFA, 0xD0, 0x6D, 0xAA, 0x62, 0xBA, 0x3B, 0x25, 0xD2, 0xFB, 0x40, 0x13, 0x3D, 0xA7, 0x57,
+    0x20, 0x5D, 0xE6, 0x7F, 0x5B, 0xB0, 0x01, 0x8F, 0xEE, 0x8C, 0x86, 0xE1, 0xB6, 0x8C, 0x7E, 0x75,
+    0xCA, 0xA8, 0x96, 0xEB, 0x32, 0xF1, 0xF4, 0x7C, 0x70, 0x85, 0x58, 0x36, 0xA6, 0xD1, 0x6F, 0xCC,
+    0x14, 0x66, 0xF6, 0xD8, 0xFB, 0xEC, 0x67, 0xDB, 0x89, 0xEC, 0x0C, 0x08, 0xB0, 0xE9, 0x96, 0xB8, 0x35, 0x38};
+static const uint8_t ecdsa_p521_s[132] = {
+    0x00, 0xC3, 0x28, 0xFA, 0xFC, 0xBD, 0x79, 0xDD, 0x77, 0x85, 0x03, 0x70, 0xC4, 0x63, 0x25, 0xD9,
+    0x87, 0xCB, 0x52, 0x55, 0x69, 0xFB, 0x63, 0xC5, 0xD3, 0xBC, 0x53, 0x95, 0x0E, 0x6D, 0x4C, 0x5F,
+    0x17, 0x4E, 0x25, 0xA1, 0xEE, 0x90, 0x17, 0xB5, 0xD4, 0x50, 0x60, 0x6A, 0xDD, 0x15, 0x2B, 0x53,
+    0x49, 0x31, 0xD7, 0xD4, 0xE8, 0x45, 0x5C, 0xC9, 0x1F, 0x9B, 0x15, 0xBF, 0x05, 0xEC, 0x36, 0xE3, 0x77, 0xFA,
+    0x00, 0x61, 0x7C, 0xCE, 0x7C, 0xF5, 0x06, 0x48, 0x06, 0xC4, 0x67, 0xF6, 0x78, 0xD3, 0xB4, 0x08,
+    0x0D, 0x6F, 0x1C, 0xC5, 0x0A, 0xF2, 0x6C, 0xA2, 0x09, 0x41, 0x73, 0x08, 0x28, 0x1B, 0x68, 0xAF,
+    0x28, 0x26, 0x23, 0xEA, 0xA6, 0x3E, 0x5B, 0x5C, 0x07, 0x23, 0xD8, 0xB8, 0xC3, 0x7F, 0xF0, 0x77,
+    0x7B, 0x1A, 0x20, 0xF8, 0xCC, 0xB1, 0xDC, 0xCC, 0x43, 0x99, 0x7F, 0x1E, 0xE0, 0xE4, 0x4D, 0xA4, 0xA6, 0x7A};
+#endif
+
+static int test_ecdsa_p521()
+{
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key = 0, pkey = 0;
+    uint8_t pub[133], sig[132];
+    size_t len;
+    int res = 0;
+
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_ECDSA(PSA_ALG_SHA_512));
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    TEST_ASSERT(psa_import_key(&key_attr, ecdsa_p521_sk, sizeof ecdsa_p521_sk, &key) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_export_public_key(key, pub, sizeof pub, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(pub, len, ecdsa_p521_pk, sizeof ecdsa_p521_pk);
+
+    oberon_test_drbg_setup(ecdsa_p521_rnd, sizeof ecdsa_p521_rnd);
+    TEST_ASSERT(psa_sign_message(key, PSA_ALG_ECDSA(PSA_ALG_SHA_512), ecdsa_p521_msg, sizeof ecdsa_p521_msg, sig, sizeof sig, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(sig, len, ecdsa_p521_sig, sizeof ecdsa_p521_sig);
+
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_VERIFY_HASH);
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_PUBLIC_KEY(PSA_ECC_FAMILY_SECP_R1));
+    TEST_ASSERT(psa_import_key(&key_attr, ecdsa_p521_pk, sizeof ecdsa_p521_pk, &pkey) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_verify_message(pkey, PSA_ALG_ECDSA(PSA_ALG_SHA_512), ecdsa_p521_msg, sizeof ecdsa_p521_msg, sig, len) == PSA_SUCCESS);
+
+#ifdef PSA_WANT_ALG_DETERMINISTIC_ECDSA
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+
+    psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_SIGN_MESSAGE | PSA_KEY_USAGE_VERIFY_MESSAGE);
+    psa_set_key_algorithm(&key_attr, PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_512)); // PSA_ALG_DETERMINISTIC_ECDSA
+    psa_set_key_type(&key_attr, PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+    TEST_ASSERT(psa_import_key(&key_attr, ecdsa_p521_k, sizeof ecdsa_p521_k, &key) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_sign_message(key, PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_512), ecdsa_p521_m, 6, sig, sizeof sig, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(sig, len, ecdsa_p521_s, sizeof ecdsa_p521_s);
+
+    TEST_ASSERT(psa_verify_message(key, PSA_ALG_DETERMINISTIC_ECDSA(PSA_ALG_SHA_512), ecdsa_p521_m, 6, sig, len) == PSA_SUCCESS);
+#endif
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(pkey) == PSA_SUCCESS);
+
+    return res;
+}
+#endif // PSA_WANT_ALG_ECDSA && PSA_WANT_ECC_SECP_R1_521
 
 #ifdef PSA_WANT_ALG_RSA_OAEP
 static const uint8_t rsa_label[] = "This is some text used as a OAEP encryption label";
@@ -2354,7 +2458,7 @@ int main(void)
     for (i = 6; i <= 9; i++) {
         TEST_ASSERT(test_sae(local_mac1, peer_mac1, "byteme", "thisisreallysecret", NULL, rejected, sizeof rejected, 77, i));
     }
-    for (i = 1; i <= 43; i++) {
+    for (i = 1; i <= 45; i++) {
         TEST_ASSERT(test_sae_err(NULL, i));
         TEST_ASSERT(test_sae_err("ssid", i));
     }
@@ -2368,6 +2472,10 @@ int main(void)
     TEST_ASSERT(test_ecdsa_p256k1());
 #endif // PSA_WANT_ALG_ECDSA
 #endif // PSA_WANT_ECC_SECP_K1_256
+
+#if defined(PSA_WANT_ALG_ECDSA) && defined(PSA_WANT_ECC_SECP_R1_521)
+    TEST_ASSERT(test_ecdsa_p521());
+#endif
 
 #ifdef PSA_WANT_ALG_RSA_OAEP
     TEST_ASSERT(test_rsa_oaep());

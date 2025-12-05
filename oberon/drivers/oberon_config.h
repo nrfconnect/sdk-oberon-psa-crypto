@@ -407,15 +407,23 @@
     #endif
 #endif
 
+#if defined(PSA_NEED_OBERON_ECDSA_VERIFY) && defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+#define PSA_NEED_OBERON_ECDSA_DETERMINISTIC 1
+#endif
+
+#if defined(PSA_NEED_OBERON_ECDSA_VERIFY) && defined(PSA_WANT_ALG_ECDSA)
+#define PSA_NEED_OBERON_ECDSA_RANDOMIZED 1
+#endif
+
 #if defined(PSA_WANT_ALG_PURE_EDDSA)
     #if defined(PSA_WANT_ECC_TWISTED_EDWARDS_255) && !defined(PSA_ACCEL_PURE_EDDSA_TWISTED_EDWARDS_255)
         #ifdef PSA_HW_DRIVERS_ONLY
             #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PURE_EDDSA_TWISTED_EDWARDS_255"
         #endif
         #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
-        #define PSA_NEED_OBERON_ECDSA_VERIFY 1
+        #define PSA_NEED_OBERON_EDDSA_VERIFY 1
         #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
-            #define PSA_NEED_OBERON_ECDSA_SIGN 1
+            #define PSA_NEED_OBERON_EDDSA_SIGN 1
         #endif
         #define PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255 1
     #endif
@@ -424,9 +432,9 @@
             #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for PURE_EDDSA_TWISTED_EDWARDS_448"
         #endif
         #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
-        #define PSA_NEED_OBERON_ECDSA_VERIFY 1
+        #define PSA_NEED_OBERON_EDDSA_VERIFY 1
         #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
-            #define PSA_NEED_OBERON_ECDSA_SIGN 1
+            #define PSA_NEED_OBERON_EDDSA_SIGN 1
         #endif
         #define PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448 1
     #endif
@@ -437,9 +445,9 @@
         #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ED25519PH"
     #endif
     #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
-    #define PSA_NEED_OBERON_ECDSA_VERIFY 1
+    #define PSA_NEED_OBERON_EDDSA_VERIFY 1
     #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
-        #define PSA_NEED_OBERON_ECDSA_SIGN 1
+        #define PSA_NEED_OBERON_EDDSA_SIGN 1
     #endif
     #define PSA_NEED_OBERON_ED25519PH 1
 #endif
@@ -449,9 +457,9 @@
         #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ED448PH"
     #endif
     #define PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER 1
-    #define PSA_NEED_OBERON_ECDSA_VERIFY 1
+    #define PSA_NEED_OBERON_EDDSA_VERIFY 1
     #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC)
-        #define PSA_NEED_OBERON_ECDSA_SIGN 1
+        #define PSA_NEED_OBERON_EDDSA_SIGN 1
     #endif
     #define PSA_NEED_OBERON_ED448PH 1
 #endif
@@ -488,7 +496,10 @@
     #define PSA_NEED_OBERON_XMSS_MT_VERIFY 1
 #endif
 
-#if defined(PSA_WANT_ALG_ML_DSA) && !defined(PSA_ACCEL_ML_DSA)
+#if (defined(PSA_WANT_ALG_ML_DSA) || \
+     defined(PSA_WANT_ALG_DETERMINISTIC_ML_DSA) || \
+     defined(PSA_WANT_ALG_HASH_ML_DSA) || \
+     defined(PSA_WANT_ALG_DETERMINISTIC_HASH_ML_DSA)) && !defined(PSA_ACCEL_ML_DSA)
     #ifdef PSA_HW_DRIVERS_ONLY
         #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ML_DSA"
     #endif
@@ -507,6 +518,14 @@
     #ifdef PSA_WANT_ML_DSA_KEY_SIZE_87
         #define PSA_NEED_OBERON_ML_DSA_87
     #endif
+    #if defined(PSA_WANT_ALG_ML_DSA) || \
+        defined(PSA_WANT_ALG_DETERMINISTIC_ML_DSA)
+        #define PSA_NEED_OBERON_MESSAGE_ML_DSA 1
+    #endif
+    #if defined(PSA_WANT_ALG_HASH_ML_DSA) || \
+        defined(PSA_WANT_ALG_DETERMINISTIC_HASH_ML_DSA)
+        #define PSA_NEED_OBERON_HASH_ML_DSA 1
+    #endif
 #endif
 
 #if defined(PSA_WANT_ALG_ML_KEM) && !defined(PSA_ACCEL_ML_KEM)
@@ -524,14 +543,6 @@
     #ifdef PSA_WANT_ML_KEM_KEY_SIZE_1024
         #define PSA_NEED_OBERON_ML_KEM_1024
     #endif
-#endif
-
-#if defined(PSA_NEED_OBERON_ECDSA_VERIFY) && defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
-    #define PSA_NEED_OBERON_ECDSA_DETERMINISTIC 1
-#endif
-
-#if defined(PSA_NEED_OBERON_ECDSA_VERIFY) && defined(PSA_WANT_ALG_ECDSA)
-    #define PSA_NEED_OBERON_ECDSA_RANDOMIZED 1
 #endif
 
 #if defined(PSA_WANT_ALG_RSA_PSS)
@@ -1226,6 +1237,14 @@
     #endif
     #define PSA_NEED_OBERON_XOF_DRIVER 1
     #define PSA_NEED_OBERON_ASCON_XOF128 1
+#endif
+
+#if defined(PSA_WANT_ALG_ASCON_CXOF128) && !defined(PSA_ACCEL_ASCON_CXOF128)
+    #ifdef PSA_HW_DRIVERS_ONLY
+        #error "PSA_HW_DRIVERS_ONLY defined, but no hardware acceleration for ASCON_CXOF128"
+    #endif
+    #define PSA_NEED_OBERON_XOF_DRIVER 1
+    #define PSA_NEED_OBERON_ASCON_CXOF128 1
 #endif
 
 /* Oberon Key Management Driver */

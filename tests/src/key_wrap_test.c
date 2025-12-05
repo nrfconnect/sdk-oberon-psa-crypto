@@ -130,6 +130,7 @@ int test_aes_kw()
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&attributes, PSA_ALG_CTR);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_AES);
+    psa_set_key_bits(&attributes, 256);
     TEST_ASSERT(psa_unwrap_key(&attributes, kek, PSA_ALG_KW, ct, length, &key) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(key, pt, sizeof pt, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(pt, length, key256, sizeof key256);
@@ -296,6 +297,11 @@ int test_aes_kw_err(int n)
         expected = PSA_ERROR_INVALID_HANDLE;
     }
 
+    if (n == 24) {
+        psa_set_key_bits(&key_attr, 128);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     TEST_ASSERT(psa_unwrap_key(&key_attr, kek, alg, ct, length, &key) == expected);
 
 abort:
@@ -354,6 +360,7 @@ int test_aes_kwp()
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&attributes, PSA_ALG_CTR);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+    psa_set_key_bits(&attributes, sizeof key2 * 8);
     TEST_ASSERT(psa_unwrap_key(&attributes, kek, PSA_ALG_KWP, ct, length, &key) == PSA_SUCCESS);
     TEST_ASSERT(psa_export_key(key, pt, sizeof pt, &length) == PSA_SUCCESS);
     ASSERT_COMPARE(pt, length, key2, sizeof key2);
@@ -529,6 +536,11 @@ int test_aes_kwp_err(int n)
         expected = PSA_ERROR_INVALID_HANDLE;
     }
 
+    if (n == 26) {
+        psa_set_key_bits(&key_attr, 255);
+        expected = PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     TEST_ASSERT(psa_unwrap_key(&key_attr, kek, alg, ctp, length, &key) == expected);
 
 abort:
@@ -583,14 +595,14 @@ int main(void)
 
 #ifdef PSA_WANT_ALG_KW
     TEST_ASSERT(test_aes_kw());
-    for (i = 1; i <= 23; i++) {
+    for (i = 1; i <= 24; i++) {
         TEST_ASSERT(test_aes_kw_err(i));
     }
 #endif
 
 #ifdef PSA_WANT_ALG_KWP
     TEST_ASSERT(test_aes_kwp());
-    for (i = 1; i <= 25; i++) {
+    for (i = 1; i <= 26; i++) {
         TEST_ASSERT(test_aes_kwp_err(i));
     }
 #endif

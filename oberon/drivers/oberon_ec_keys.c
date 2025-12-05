@@ -465,6 +465,9 @@ psa_status_t oberon_generate_ec_key(
             do {
                 status = psa_generate_random(key, length);
                 if (status) return status;
+#ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_521
+                if (length == 66) key[0] &= 0x01; // use 521 bits
+#endif
             } while (oberon_ct_compare_zero(key, length) == 0);
             switch (bits) {
 #ifdef PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R1_224
