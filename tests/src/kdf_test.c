@@ -16,7 +16,8 @@
  */
 
 /*
- * Additional tests for key derivation, XCHACHA20, CBC-PKCS7, Ascon, and XOF.
+ * Additional tests for key derivation, XCHACHA20, CBC-PKCS7, Ascon, XOF,
+ * and in-place one time call cipher/AEAD.
  */
 
 
@@ -1001,6 +1002,79 @@ exit:
 }
 #endif // PSA_WANT_ALG_ASCON_AEAD128
 
+#ifdef PSA_WANT_AES_KEY_SIZE_256
+#if defined(PSA_WANT_ALG_GCM) || defined(PSA_WANT_ALG_CCM) || \
+    defined(PSA_WANT_ALG_CHACHA20_POLY1305) || defined(PSA_WANT_ALG_XCHACHA20_POLY1305)
+static int test_aead_buffer_overlap(psa_key_type_t type, psa_algorithm_t alg)
+{
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t pt[256], ct[300], buf[300];
+    psa_key_id_t key = 0;
+    size_t clen, blen, len;
+    size_t nonce_len = PSA_AEAD_NONCE_LENGTH(type, alg);
+    int res = 0;
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, type);
+    psa_set_key_bits(&attr, 256);
+    TEST_ASSERT(psa_generate_key(&attr, &key) == PSA_SUCCESS);
+
+    memset(pt, 'x', 256);
+    memset(buf, 'x', 256);
+    TEST_ASSERT(psa_aead_encrypt(key, alg, pt, nonce_len, NULL, 0, pt, 256, ct, sizeof ct, &clen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_aead_encrypt(key, alg, pt, nonce_len, NULL, 0, buf, 256, buf, sizeof buf, &blen) == PSA_SUCCESS);
+    ASSERT_COMPARE(buf, blen, ct, clen);
+    TEST_ASSERT(psa_aead_decrypt(key, alg, pt, nonce_len, NULL, 0, buf, blen, buf, sizeof buf, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(buf, len, pt, 256);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    return res;
+}
+#endif
+
+#if defined(PSA_WANT_ALG_CTR) || defined(PSA_WANT_ALG_CBC_NO_PADDING) || \
+    defined(PSA_WANT_ALG_CBC_PKCS7) || defined(PSA_WANT_ALG_CCM_STAR_NO_TAG) || \
+    defined(PSA_WANT_KEY_TYPE_CHACHA20) || defined(PSA_WANT_KEY_TYPE_XCHACHA20)
+static int test_cipher_buffer_overlap(psa_key_type_t type, psa_algorithm_t alg)
+{
+    psa_cipher_operation_t op = PSA_CIPHER_OPERATION_INIT;
+    psa_key_attributes_t attr = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t pt[256], ct[300], buf[300];
+    psa_key_id_t key = 0;
+    size_t clen, blen, len;
+    size_t iv_len = PSA_CIPHER_IV_LENGTH(type, alg);
+    int res = 0;
+
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
+    psa_set_key_algorithm(&attr, alg);
+    psa_set_key_type(&attr, type);
+    psa_set_key_bits(&attr, 256);
+    TEST_ASSERT(psa_generate_key(&attr, &key) == PSA_SUCCESS);
+
+    memset(pt, 'x', 256);
+    memset(buf, 'x', 256);
+    TEST_ASSERT(psa_cipher_encrypt(key, alg, buf, 256, buf, sizeof buf, &blen) == PSA_SUCCESS);
+    TEST_ASSERT(blen >= 256 + iv_len);
+    TEST_ASSERT(psa_cipher_encrypt_setup(&op, key, alg) == PSA_SUCCESS);
+    TEST_ASSERT(psa_cipher_set_iv(&op, buf, iv_len) == PSA_SUCCESS);
+    TEST_ASSERT(psa_cipher_update(&op, pt, 256, ct, sizeof ct, &clen) == PSA_SUCCESS);
+    TEST_ASSERT(psa_cipher_finish(&op, ct + clen, sizeof ct - clen, &len) == PSA_SUCCESS);
+    clen += len;
+    ASSERT_COMPARE(buf + iv_len, blen - iv_len, ct, clen);
+    TEST_ASSERT(psa_cipher_decrypt(key, alg, buf, blen, buf, sizeof buf, &len) == PSA_SUCCESS);
+    ASSERT_COMPARE(buf, len, pt, 256);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key) == PSA_SUCCESS);
+    return res;
+}
+#endif
+#endif
+
 
 int main(void)
 {
@@ -1129,6 +1203,39 @@ int main(void)
 #ifdef PSA_WANT_ALG_ASCON_AEAD128
     TEST_ASSERT(test_ascon_aead());
 #endif // PSA_WANT_ALG_ASCON_AEAD128
+
+#ifdef PSA_WANT_AES_KEY_SIZE_256
+#ifdef PSA_WANT_ALG_GCM
+    TEST_ASSERT(test_aead_buffer_overlap(PSA_KEY_TYPE_AES, PSA_ALG_GCM));
+#endif
+#ifdef PSA_WANT_ALG_CCM
+    TEST_ASSERT(test_aead_buffer_overlap(PSA_KEY_TYPE_AES, PSA_ALG_CCM));
+#endif
+#ifdef PSA_WANT_ALG_CHACHA20_POLY1305
+    TEST_ASSERT(test_aead_buffer_overlap(PSA_KEY_TYPE_CHACHA20, PSA_ALG_CHACHA20_POLY1305));
+#endif
+#ifdef PSA_WANT_ALG_XCHACHA20_POLY1305
+    TEST_ASSERT(test_aead_buffer_overlap(PSA_KEY_TYPE_XCHACHA20, PSA_ALG_XCHACHA20_POLY1305));
+#endif
+#ifdef PSA_WANT_ALG_CTR
+    TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_AES, PSA_ALG_CTR));
+#endif
+#ifdef PSA_WANT_ALG_CBC_NO_PADDING
+    TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_AES, PSA_ALG_CBC_NO_PADDING));
+#endif
+#ifdef PSA_WANT_ALG_CBC_PKCS7
+    TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_AES, PSA_ALG_CBC_PKCS7));
+#endif
+#ifdef PSA_WANT_ALG_CCM_STAR_NO_TAG
+    TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_AES, PSA_ALG_CCM_STAR_NO_TAG));
+#endif
+#ifdef PSA_WANT_KEY_TYPE_CHACHA20
+    TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_CHACHA20, PSA_ALG_STREAM_CIPHER));
+#endif
+#ifdef PSA_WANT_KEY_TYPE_XCHACHA20
+    TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_XCHACHA20, PSA_ALG_STREAM_CIPHER));
+#endif
+#endif
 
     return 0;
 exit:

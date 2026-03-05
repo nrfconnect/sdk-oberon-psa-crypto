@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2026 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -19,11 +19,36 @@
 #if defined(PSA_WANT_ALG_SHA_512_256) && !defined(PSA_ACCEL_SHA_512_256)
     #error "No software implementation for SHA-512-256"
 #endif
+#if defined(PSA_WANT_ALG_MD2) && !defined(PSA_ACCEL_MD2)
+    #error "No software implementation for MD2"
+#endif
+#if defined(PSA_WANT_ALG_MD4) && !defined(PSA_ACCEL_MD4)
+    #error "No software implementation for MD4"
+#endif
 #if defined(PSA_WANT_ALG_MD5) && !defined(PSA_ACCEL_MD5)
     #error "No software implementation for MD5"
 #endif
 #if defined(PSA_WANT_ALG_RIPEMD160) && !defined(PSA_ACCEL_RIPEMD160)
     #error "No software implementation for RIPEMD160"
+#endif
+#if defined(PSA_WANT_ALG_AES_MMO_ZIGBEE) && !defined(PSA_ACCEL_AES_MMO_ZIGBEE)
+    #error "No software implementation for AES_MMO_ZIGBEE"
+#endif
+#if defined(PSA_WANT_ALG_SM3) && !defined(PSA_ACCEL_SM3)
+    #error "No software implementation for SM3"
+#endif
+#if defined(PSA_WANT_ALG_EDDSA_CTX) && !defined(PSA_ACCEL_EDDSA_CTX)
+    #error "No software implementation for EDDSA_CTX"
+#endif
+#if defined(PSA_WANT_ALG_ECIES_SEC1) && !defined(PSA_ACCEL_ECIES_SEC1)
+    #error "No software implementation for ECIES_SEC1"
+#endif
+
+#if (defined(PSA_WANT_ALG_SLH_DSA) || \
+     defined(PSA_WANT_ALG_DETERMINISTIC_SLH_DSA) || \
+     defined(PSA_WANT_ALG_HASH_SLH_DSA) || \
+     defined(PSA_WANT_ALG_DETERMINISTIC_HASH_SLH_DSA)) && !defined(PSA_ACCEL_SLH_DSA)
+    #error "No software implementation for SLH-DSA"
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_AES) && defined(PSA_WANT_ALG_CFB)
@@ -143,6 +168,25 @@
     #endif
     #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_192)
         #error "No software implementation for secp-r1-192 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_SECP_R2_160)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_SECP_R2_160)
+        #error "No software implementation for secp-r2-160 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECP_R2_160)
+        #error "No software implementation for secp-r2-160 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_R2_160)
+        #error "No software implementation for secp-r2-160 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && \
+        !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECP_R2_160)
+        #error "No software implementation for secp-r2-160 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R2_160)
+        #error "No software implementation for secp-r2-160 key pair derive"
     #endif
 #endif
 
@@ -355,6 +399,79 @@
     #endif
 #endif
 
+#if defined(PSA_WANT_ECC_SECT_R2_163)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_SECT_R2_163)
+        #error "No software implementation for sect-r2-163 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_SECT_R2_163)
+        #error "No software implementation for sect-r2-163 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECT_R2_163)
+        #error "No software implementation for sect-r2-163 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && \
+        !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_SECT_R2_163)
+        #error "No software implementation for sect-r2-163 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECT_R2_163)
+        #error "No software implementation for sect-r2-163 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_160)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_160)
+        #error "No software implementation for brainpoolP160r1 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_192)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_192)
+        #error "No software implementation for brainpoolP192r1 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_224)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_224)
+        #error "No software implementation for brainpoolP224r1 key pair derive"
+    #endif
+#endif
+
 #if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
     #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_256)
         #error "No software implementation for brainpoolP256r1 public key"
@@ -374,6 +491,24 @@
     #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && \
         !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_256)
         #error "No software implementation for brainpoolP256r1 key pair derive"
+    #endif
+#endif
+
+#if defined(PSA_WANT_ECC_BRAINPOOL_P_R1_320)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_BRAINPOOL_P_R1_320)
+        #error "No software implementation for brainpoolP320r1 key pair derive"
     #endif
 #endif
 
@@ -421,6 +556,24 @@
     #endif
 #endif
 
+#if defined(PSA_WANT_ECC_FRP)
+    #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY) && !defined(PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY_FRP_256)
+        #error "No software implementation for FRP256v1 public key"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_IMPORT_FRP_256)
+        #error "No software implementation for FRP256v1 key pair import"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_EXPORT_FRP_256)
+        #error "No software implementation for FRP256v1 key pair export"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_GENERATE_FRP_256)
+        #error "No software implementation for FRP256v1 key pair generate"
+    #endif
+    #if defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_FRP_256)
+        #error "No software implementation for FRP256v1 key pair derive"
+    #endif
+#endif
+
 #if defined(PSA_WANT_KEY_TYPE_ARIA)
     #if defined(PSA_WANT_ALG_CCM) && !defined(PSA_ACCEL_CCM_ARIA)
         #error "No software implementation for ARIA-CCM"
@@ -454,6 +607,15 @@
     #endif
     #if defined(PSA_WANT_ALG_CMAC) && !defined(PSA_ACCEL_CMAC_ARIA)
         #error "No software implementation for ARIA-CMAC"
+    #endif
+    #if defined(PSA_WANT_ALG_KW) && !defined(PSA_ACCEL_KW_ARIA)
+        #error "No software implementation for ARIA-KW"
+    #endif
+    #if defined(PSA_WANT_ALG_KWP) && !defined(PSA_ACCEL_KWP_ARIA)
+        #error "No software implementation for ARIA-KWP"
+    #endif
+    #if defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC) && !defined(PSA_ACCEL_SP800_108_COUNTER_CMAC_ARIA)
+        #error "No software implementation for ARIA-SP800-108-counter-CMAC"
     #endif
 #endif
 
@@ -491,6 +653,15 @@
     #if defined(PSA_WANT_ALG_CMAC) && !defined(PSA_ACCEL_CMAC_CAMELLIA)
         #error "No software implementation for CAMELLIA-CMAC"
     #endif
+    #if defined(PSA_WANT_ALG_KW) && !defined(PSA_ACCEL_KW_CAMELLIA)
+        #error "No software implementation for CAMELLIA-KW"
+    #endif
+    #if defined(PSA_WANT_ALG_KWP) && !defined(PSA_ACCEL_KWP_CAMELLIA)
+        #error "No software implementation for CAMELLIA-KWP"
+    #endif
+    #if defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC) && !defined(PSA_ACCEL_SP800_108_COUNTER_CMAC_CAMELLIA)
+        #error "No software implementation for CAMELLIA-SP800-108-counter-CMAC"
+    #endif
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_DES)
@@ -520,6 +691,57 @@
     #endif
     #if defined(PSA_WANT_ALG_CMAC) && !defined(PSA_ACCEL_CMAC_DES)
         #error "No software implementation for DES-CMAC"
+    #endif
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_SM4)
+    #if defined(PSA_WANT_ALG_CCM) && !defined(PSA_ACCEL_CCM_SM4)
+        #error "No software implementation for SM4-CCM"
+    #endif
+    #if defined(PSA_WANT_ALG_GCM) && !defined(PSA_ACCEL_GCM_SM4)
+        #error "No software implementation for SM4-GCM"
+    #endif
+    #if defined(PSA_WANT_ALG_CTR) && !defined(PSA_ACCEL_CTR_SM4)
+        #error "No software implementation for SM4-CTR"
+    #endif
+    #if defined(PSA_WANT_ALG_CBC_PKCS7) && !defined(PSA_ACCEL_CBC_PKCS7_SM4)
+        #error "No software implementation for SM4-CBC-PKCS7"
+    #endif
+    #if defined(PSA_WANT_ALG_CBC_NO_PADDING) && !defined(PSA_ACCEL_CBC_NO_PADDING_SM4)
+        #error "No software implementation for SM4-CBC-no-padding"
+    #endif
+    #if defined(PSA_WANT_ALG_ECB_NO_PADDING) && !defined(PSA_ACCEL_ECB_NO_PADDING_SM4)
+        #error "No software implementation for SM4-ECB-no-padding"
+    #endif
+    #if defined(PSA_WANT_ALG_CFB) && !defined(PSA_ACCEL_CFB_SM4)
+        #error "No software implementation for SM4-CFB"
+    #endif
+    #if defined(PSA_WANT_ALG_OFB) && !defined(PSA_ACCEL_OFB_SM4)
+        #error "No software implementation for SM4-OFB"
+    #endif
+    #if defined(PSA_WANT_ALG_XTS) && !defined(PSA_ACCEL_XTS_SM4)
+        #error "No software implementation for SM4-XTS"
+    #endif
+    #if defined(PSA_WANT_ALG_CBC_MAC) && !defined(PSA_ACCEL_CBC_MAC_SM4)
+        #error "No software implementation for SM4-CBC-MAC"
+    #endif
+    #if defined(PSA_WANT_ALG_CMAC) && !defined(PSA_ACCEL_CMAC_SM4)
+        #error "No software implementation for SM4-CMAC"
+    #endif
+    #if defined(PSA_WANT_ALG_KW) && !defined(PSA_ACCEL_KW_SM4)
+        #error "No software implementation for SM4-KW"
+    #endif
+    #if defined(PSA_WANT_ALG_KWP) && !defined(PSA_ACCEL_KWP_SM4)
+        #error "No software implementation for SM4-KWP"
+    #endif
+    #if defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC) && !defined(PSA_ACCEL_SP800_108_COUNTER_CMAC_SM4)
+        #error "No software implementation for SM4-SP800-108-counter-CMAC"
+    #endif
+#endif
+
+#if defined(PSA_WANT_KEY_TYPE_ARC4)
+    #if defined(PSA_WANT_ALG_STREAM_CIPHER) && !defined(PSA_ACCEL_STREAM_CIPHER_ARC4)
+        #error "No software implementation for ARC4"
     #endif
 #endif
 

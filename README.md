@@ -2,29 +2,34 @@
 
 ## Oberon PSA Crypto
 
-_Oberon PSA Crypto_ is a software library developed by _Oberon microsystems_.
+_Oberon PSA Crypto_ is a software product developed by _Oberon microsystems_.
 It implements the _PSA Certified Crypto API_ specification, which aims at
 standardizing a cryptography API for embedded systems. _Oberon PSA Crypto_
 is a lightweight implementation of this API optimized for resource-constrained
-microcontrollers: it is focused in particular on small memory footprint and
-high speed in software for hardware that contains only limited – or no –
-hardware crypto accelerators.
+microcontrollers: it is focused in particular on small memory footprint and high
+speed - in software, hardware, and in mixed hardware/software configurations.
 
-The library is compatible with the _PSA Certified Crypto API_ version as
+The software is compatible with the _PSA Certified Crypto API_ version as
 specified in
 [PSA Certified Crypto API](https://arm-software.github.io/psa-api/crypto/),
 and is aligned with the current version of Arm's _Mbed TLS_. For the currently
 supported API versions, see the _Compatibility_ section in the
 [CHANGELOG](CHANGELOG.md) document.
 
-The supported crypto feature set is documented in
+The software consists of a portable _PSA_ _Crypto Core_ that exposes the
+_PSA Certified Crypto API_. It delegates crypto processing to a number of
+software _crypto drivers_ (_Oberon drivers_) that can be mixed and matched with
+vendor-specific _hardware drivers_ where available.
+
+The crypto feature set supported by the core and the software drivers is
+documented in
 [Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
 
-The library passes the _PSA APIs Test Suite_ for cryptographic functions and
+The software passes the _PSA APIs Test Suite_ for cryptographic functions and
 thereby demonstrates compliance with the standard. See its official
 [PSA Certified Crypto API compliance certificate](https://www.psacertified.org/products/oberon-psa-crypto/).
 
-The _Oberon PSA Crypto_ repo is a clone of Arm's _MBed TLS_ repo, with most
+The _Oberon PSA Crypto_ repo is derived from Arm's _MBed TLS_ repo, with most
 files that are not needed for _PSA Crypto_ compatibility stripped away.
 _Mbed TLS_ files that have been modified by Oberon contain a _NOTICE_ line.
 
@@ -37,7 +42,8 @@ subdirectories:
 - `tests`
 
 The following directory contains the source code of the _Oberon drivers_.
-They depend on the _ocrypto_ library (which is not included in this repo):
+Some of them depend on the _ocrypto_ software product (which is not included in
+this repo):
 
 - `oberon/drivers`
 

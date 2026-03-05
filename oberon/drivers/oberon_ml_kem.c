@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2026 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -7,6 +7,10 @@
 
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
+
+/* 
+This driver implementation of ML-KEM is deprecated.
+*/
 
 #include <string.h>
 
@@ -31,7 +35,7 @@
 
 #include "ocrypto_version.h"
 
-#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
+#define REQUIRED_OCRYPTO_VERSION  0x03090500
 
 
 #ifdef PSA_NEED_OBERON_ML_KEM_1024
@@ -127,7 +131,7 @@ psa_status_t oberon_ml_kem_encapsulate(
     uint8_t *output_key, size_t output_key_size, size_t *output_key_length,
     uint8_t *ciphertext, size_t ciphertext_size, size_t *ciphertext_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-KEM Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_kem_ctx ctx;
@@ -194,7 +198,7 @@ psa_status_t oberon_ml_kem_decapsulate(
     const psa_key_attributes_t *output_attributes,
     uint8_t *output_key, size_t output_key_size, size_t *output_key_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-KEM Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_kem_ctx ctx;
@@ -250,7 +254,7 @@ psa_status_t oberon_export_ml_kem_public_key(
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-KEM Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_kem_ctx ctx;
@@ -302,7 +306,7 @@ psa_status_t oberon_import_ml_kem_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-KEM Oberon driver: ocrypto version incompatible");
 
     psa_key_type_t type = psa_get_key_type(attributes);

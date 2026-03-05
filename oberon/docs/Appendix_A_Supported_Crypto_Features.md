@@ -174,17 +174,26 @@ _Oberon PSA Crypto_:
 
 ### Overlap Rules
 
-All functions comply with overlap rules as specified in
-`PSA API 1.1.2, 5.4.4 Overlap between parameters`, except for `psa_cipher_update`
-and `psa_aead_update`. For the latter functions, two overlap scenarios are
-supported:
+All functions comply with overlap rules as specified in the
+_PSA Certified Crypto API_ specification, section
+`5.4.4 Overlap between parameters`, except for
 
-1. For each individual update call input and output parameters point to the same
-buffer.
-2. A single common buffer may be used for the whole plaintext and ciphertext, if
-buffer pointers for input and output of the first call are equal and incremented
-individually by the input and output size for each further call (meaning the
-plaintext and ciphertext are stored contiguously in the common buffer).
+- `psa_cipher_encrypt`
+- `psa_cipher_decrypt`
+- `psa_cipher_update`
+- `psa_aead_encrypt`
+- `psa_aead_decrypt`
+- `psa_aead_update`
+
+For the latter functions, the following two overlap scenarios are supported:
+
+1. Input and output parameters point to the same buffer.
+2. For the multi-call functions `psa_cipher_update` and `psa_aead_update`, a
+   single common buffer may be used for the whole plaintext and ciphertext, if
+   buffer pointers for input and output of the first update call are equal and
+   are incremented individually by the input and output size for each further
+   call (meaning the plaintext and ciphertext are stored contiguously in the
+   common buffer).
 
 This file by _Oberon microsystems_ is licensed under the
 [Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

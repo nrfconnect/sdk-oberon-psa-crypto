@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2026 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -7,6 +7,10 @@
 
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
+
+/* 
+This driver implementation of ML-DSA is deprecated.
+*/
 
 #include <string.h>
 
@@ -30,7 +34,7 @@
 
 #include "ocrypto_version.h"
 
-#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
+#define REQUIRED_OCRYPTO_VERSION  0x03090500
 
 
 #ifdef PSA_NEED_OBERON_HASH_ML_DSA
@@ -89,6 +93,7 @@ static uint8_t const * oberon_get_hash_oid(psa_algorithm_t alg)
     case PSA_ALG_SHA3_384: return sha3_384_oid;
     case PSA_ALG_SHA3_512: return sha3_512_oid;
     case PSA_ALG_SHAKE128_256: return shake128_oid;
+    case PSA_ALG_SHAKE256_256:
     case PSA_ALG_SHAKE256_512: return shake256_oid;
     default: return NULL;
     }
@@ -104,7 +109,7 @@ psa_status_t oberon_ml_dsa_sign_message_with_context(
     const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
     
     ocrypto_ml_dsa_ctx ctx;
@@ -173,7 +178,7 @@ psa_status_t oberon_ml_dsa_sign_hash_with_context(
     const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -293,7 +298,7 @@ psa_status_t oberon_ml_dsa_verify_message_with_context(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -405,7 +410,7 @@ psa_status_t oberon_ml_dsa_verify_hash_with_context(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -469,7 +474,7 @@ psa_status_t oberon_export_ml_dsa_public_key(
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -521,7 +526,7 @@ psa_status_t oberon_import_ml_dsa_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     psa_key_type_t type = psa_get_key_type(attributes);

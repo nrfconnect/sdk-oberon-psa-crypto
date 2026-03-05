@@ -2095,7 +2095,7 @@ psa_status_t psa_mac_update(psa_mac_operation_t *operation,
         return PSA_ERROR_BAD_STATE;
     }
 
-    /* Don't require hash implementations to behave correctly on a
+    /* Don't require mac implementations to behave correctly on a
      * zero-length input, which may have an invalid pointer. */
     if (input_length == 0) {
         return PSA_SUCCESS;
@@ -3202,6 +3202,7 @@ psa_status_t psa_cipher_encrypt(mbedtls_svc_key_id_t key,
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot = NULL;
     uint8_t local_iv[PSA_CIPHER_IV_MAX_SIZE];
+    uint8_t *out_ptr = output;
     size_t default_iv_length = 0;
 
     if (!PSA_ALG_IS_CIPHER(alg)) {
@@ -3223,6 +3224,11 @@ psa_status_t psa_cipher_encrypt(mbedtls_svc_key_id_t key,
     }
 
     if (default_iv_length > 0) {
+        if (output == NULL) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+
         if (output_size < default_iv_length) {
             status = PSA_ERROR_BUFFER_TOO_SMALL;
             goto exit;
@@ -3232,13 +3238,25 @@ psa_status_t psa_cipher_encrypt(mbedtls_svc_key_id_t key,
         if (status != PSA_SUCCESS) {
             goto exit;
         }
+
+        if (input != output) {
+            out_ptr = output + default_iv_length;
+        }
     }
 
     status = psa_driver_wrapper_cipher_encrypt(
         &slot->attr, slot->key.data, slot->key.bytes,
         alg, local_iv, default_iv_length, input, input_length,
-        psa_crypto_buffer_offset(output, default_iv_length),
-        output_size - default_iv_length, output_length);
+        out_ptr, output_size - default_iv_length, output_length);
+    if (status != PSA_SUCCESS) goto exit;
+
+    if (default_iv_length > 0) {
+        if (input == output) {
+            memmove(output + default_iv_length, output, *output_length);
+        }
+        memcpy(output, local_iv, default_iv_length);
+        *output_length += default_iv_length;
+    }
 
 exit:
     unlock_status = psa_unregister_read_under_mutex(slot);
@@ -3246,12 +3264,7 @@ exit:
         status = unlock_status;
     }
 
-    if (status == PSA_SUCCESS) {
-        if (default_iv_length > 0) {
-            memcpy(output, local_iv, default_iv_length);
-        }
-        *output_length += default_iv_length;
-    } else {
+    if (status != PSA_SUCCESS) {
         *output_length = 0;
     }
 

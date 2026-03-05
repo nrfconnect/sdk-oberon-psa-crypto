@@ -182,6 +182,9 @@ static void test_generate_key(int key_type_arg, int bits_arg, int expected_statu
     PSA_ASSERT(psa_crypto_init());
     psa_set_key_type(&attributes, key_type);
     psa_set_key_bits(&attributes, bits);
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    TEST_ASSUME(PSA_BITS_TO_BYTES(bits) <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
+#endif
     TEST_EQUAL(psa_generate_key(&attributes, &key_id),
                expected_status);
 

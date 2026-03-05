@@ -194,6 +194,9 @@ static int test_written_key(const psa_key_attributes_t *attributes,
     int ok = 0;
 
     /* Create a key with the given parameters. */
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    TEST_ASSUME(material->len <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
+#endif
     PSA_ASSERT(psa_import_key(attributes, material->x, material->len,
                               &created_key_id));
     TEST_ASSERT(mbedtls_svc_key_id_equal(psa_get_key_id(attributes),

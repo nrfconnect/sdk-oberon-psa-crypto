@@ -286,7 +286,7 @@
 #elif defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 512u
 #elif defined(PSA_WANT_ECC_TWISTED_EDWARDS_448)
-#define PSA_VENDOR_ECC_MAX_CURVE_BITS 449u
+#define PSA_VENDOR_ECC_MAX_CURVE_BITS 456u
 #elif defined(PSA_WANT_ECC_MONTGOMERY_448)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 448u
 #elif defined(PSA_WANT_ECC_SECP_R1_384)
@@ -312,7 +312,7 @@
 #elif defined(PSA_WANT_ECC_SECP_K1_192)
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 192u
 #else
-#define PSA_VENDOR_ECC_MAX_CURVE_BITS 0u
+#define PSA_VENDOR_ECC_MAX_CURVE_BITS 1u
 #endif
 
 /* The maximum size of an ML-DSA public key on this implementation, in bytes.

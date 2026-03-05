@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2025 Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2026 Nordic Semiconductor ASA
  * Copyright (c) since 2020 Oberon microsystems AG
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
@@ -205,7 +205,7 @@ psa_status_t oberon_unwrap_key(
     psa_status_t status;
 #endif /* PSA_NEED_OBERON_AES_KW || PSA_NEED_OBERON_AES_KWP */
 #ifdef PSA_NEED_OBERON_AES_KWP
-    size_t len, pad_len;
+    size_t len, pad_len, length;
 #endif /* PSA_NEED_OBERON_AES_KWP */
 
     switch (alg) {
@@ -261,7 +261,7 @@ psa_status_t oberon_unwrap_key(
         if (status != PSA_SUCCESS) goto exit;
 
         if (n == 1) {
-            status = psa_driver_wrapper_cipher_update(&cipher_op, data, data_length, a, 16, key_length);
+            status = psa_driver_wrapper_cipher_update(&cipher_op, data, data_length, a, 16, &length);
             if (status != PSA_SUCCESS) goto exit;
             memcpy(key, a + 8, 8);
         } else {

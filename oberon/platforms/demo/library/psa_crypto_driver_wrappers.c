@@ -75,6 +75,9 @@
 
 #ifdef OBERON_RANDOM_INJECT
 #include "oberon_test_drbg.h"
+#ifdef PSA_NEED_OBERON_XOF_DRIVER
+#include "oberon_test_xof.h"
+#endif
 #endif
 
 
@@ -82,6 +85,7 @@
 #define OBERON_DRIVER_ID         1
 #define OPAQUE_DEMO_DRIVER_ID    3
 #define HARDWARE_DEMO_DRIVER_ID  4
+#define OBERON_TEST_DRIVER_ID    100
 
 
 psa_status_t psa_driver_wrapper_init()
@@ -1118,6 +1122,11 @@ psa_status_t psa_driver_wrapper_xof_setup(
     psa_status_t status;
 
 #ifdef PSA_NEED_OBERON_XOF_DRIVER
+#ifdef OBERON_RANDOM_INJECT
+    status = oberon_test_xof_setup(&operation->ctx.oberon_xof_ctx, alg);
+    if (status == PSA_SUCCESS) operation->id = OBERON_TEST_DRIVER_ID;
+    if (status != PSA_ERROR_NOT_SUPPORTED) return status;
+#endif /* OBERON_RANDOM_INJECT */
     status = oberon_xof_setup(
         &operation->ctx.oberon_xof_ctx, alg);
     if (status == PSA_SUCCESS) operation->id = OBERON_DRIVER_ID;
@@ -1141,6 +1150,10 @@ psa_status_t psa_driver_wrapper_xof_set_context(psa_xof_operation_t *operation,
         return oberon_xof_set_context(
             &operation->ctx.oberon_xof_ctx,
             context, context_length);
+#ifdef OBERON_RANDOM_INJECT
+    case OBERON_TEST_DRIVER_ID:
+        return PSA_ERROR_NOT_SUPPORTED;
+#endif /* OBERON_RANDOM_INJECT */
 #endif /* PSA_NEED_OBERON_XOF_DRIVER */
 
     default:
@@ -1161,6 +1174,12 @@ psa_status_t psa_driver_wrapper_xof_update(
         return oberon_xof_update(
             &operation->ctx.oberon_xof_ctx,
             input, input_length);
+#ifdef OBERON_RANDOM_INJECT
+    case OBERON_TEST_DRIVER_ID:
+        return oberon_test_xof_update(
+            &operation->ctx.oberon_xof_ctx,
+            input, input_length);
+#endif /* OBERON_RANDOM_INJECT */
 #endif /* PSA_NEED_OBERON_XOF_DRIVER */
 
     default:
@@ -1182,6 +1201,12 @@ psa_status_t psa_driver_wrapper_xof_output(
         return oberon_xof_output(
             &operation->ctx.oberon_xof_ctx,
             output, output_length);
+#ifdef OBERON_RANDOM_INJECT
+    case OBERON_TEST_DRIVER_ID:
+        return oberon_test_xof_output(
+            &operation->ctx.oberon_xof_ctx,
+            output, output_length);
+#endif /* OBERON_RANDOM_INJECT */
 #endif /* PSA_NEED_OBERON_XOF_DRIVER */
 
     default:
@@ -1199,6 +1224,10 @@ psa_status_t psa_driver_wrapper_xof_abort(
 #ifdef PSA_NEED_OBERON_XOF_DRIVER
     case OBERON_DRIVER_ID:
         return oberon_xof_abort(&operation->ctx.oberon_xof_ctx);
+#ifdef OBERON_RANDOM_INJECT
+    case OBERON_TEST_DRIVER_ID:
+        return oberon_test_xof_abort(&operation->ctx.oberon_xof_ctx);
+#endif /* OBERON_RANDOM_INJECT */
 #endif /* PSA_NEED_OBERON_XOF_DRIVER */
 
     default:

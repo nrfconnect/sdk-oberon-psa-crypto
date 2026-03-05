@@ -4845,6 +4845,9 @@ static void test_cipher_bad_key(int alg_arg, int key_type_arg, data_t *key_data)
     TEST_EQUAL(PSA_CIPHER_UPDATE_OUTPUT_SIZE(key_type, alg, 16), 0);
 
 
+#ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS  /* !!OM */
+    TEST_ASSUME(key_data->len <= MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE);
+#endif
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
 

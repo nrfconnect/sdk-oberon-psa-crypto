@@ -18,6 +18,11 @@ option(CONFIG_MBEDTLS_THREADING      "Build for multi-threading"                
 option(CONFIG_TESTS_FROM_EXPORT      "Build PSA API Tests from exported library"        OFF)
 option(CONFIG_TEST_EXAMPLE_CONFIGS   "Test set of example configurations in platforms"  OFF)
 option(CONFIG_TF_PSA_CRYPTO_DIRS     "Use Directory Structure from TF-PSA-Crypto"       OFF)
+option(OBERON_ML_DSA_FAST            "Optimize ML-DSA for maximum speed"                OFF)
+option(OBERON_ML_DSA_SMALL           "Optimize ML-DSA for minimum RAM usage"            OFF)
+if(OBERON_ML_DSA_FAST AND OBERON_ML_DSA_SMALL)
+    message(FATAL_ERROR "OBERON_ML_DSA_FAST and OBERON_ML_DSA_SMALL are mutually exclusive")
+endif()
 
 if(MSVC)
     set(CONFIG_PSA_API_TESTS OFF)
@@ -48,7 +53,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/oberon/platforms/${PLATFORM}/CMakeLists.txt)
             message(STATUS " - CONFIG_PSA_API_TESTS:          SKIPPED")
             message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS:      SKIPPED")
             message(STATUS " - CONFIG_MBEDTLS_PSA_TESTS_LONG: SKIPPED")
-            message(STATUS " - CONFIG_MBEDTLS_THREADING:     ${CONFIG_MBEDTLS_THREADING}")
+            message(STATUS " - CONFIG_MBEDTLS_THREADING:      ${CONFIG_MBEDTLS_THREADING}")
+            message(STATUS " - OBERON_ML_DSA_FAST:            ${OBERON_ML_DSA_FAST}")
+            message(STATUS " - OBERON_ML_DSA_SMALL:           ${OBERON_ML_DSA_SMALL}")
         endif()
     else()
         message(STATUS " - CONFIG_PSA_API_TESTS:          ${CONFIG_PSA_API_TESTS}")
@@ -295,6 +302,11 @@ if(NOT(CONFIG_TESTS_FROM_EXPORT))
         DESTINATION "include/oberon"
     )
 
+endif()
+
+if (CONFIG_BUILD_EXAMPLES AND EXISTS examples/CMakeLists.txt AND EXISTS "${OCRYPTO_ROOT}/include/internal")
+    include(CTest)
+    add_subdirectory(examples)
 endif()
 
 # PSA Certified APIs Architecture Test Suite; uses demo drivers for entropy and opaque

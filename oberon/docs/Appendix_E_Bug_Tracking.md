@@ -10,6 +10,7 @@ vulnerabilities are listed in a separate table below.
 
 | Bug ID | Fixed in Release | Title                                                     | Description                                                                                                                                                |
 | ------:|:---------------- |:--------------------------------------------------------- |:---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|     20 | 1.6.0            | Wrong AES key-wrap driver error behavior                  | The AES key-wrap driver returns an unexpected key length in some error cases. This can lead to problems during key slot cleanup.                           |
 |     19 | 1.5.4            | Wrong size conversion for ECDSA P-521                     | Wrong conversion from hash size to curve size for ECDSA sign/verify with P-521.                                                                            |
 |     18 | 1.5.2            | Wrong check for SRP password hashing                      | KDF driver checks for `OBERON_PBKDF2_HMAC_ALG` instead of `OBERON_SRP_PASSWORD_HASH_ALG`.                                                                  |
 |     17 | 1.5.2            | Violation of PSA spec in AES-CBC buffer handling          | AES-CBC always required passing a buffer of length 16 even for blocks with padding data.                                                                   |

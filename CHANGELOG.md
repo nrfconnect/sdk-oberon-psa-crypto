@@ -1,5 +1,42 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 1.6.0
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.6.0>
+2026-03-05 (c790c90)
+
+Some Oberon crypto software drivers require _ocrypto_ version 4.0.0 or later.
+
+### API Compatibility
+- [PSA Certified Crypto API 1.4](https://arm-software.github.io/psa-api/crypto/1.4/IHI0086-PSA_Certified_Crypto_API-1.4.0.pdf)
+- [PSA Crypto API 1.4 PQC Extension](https://arm-software.github.io/psa-api/crypto/1.4/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.4_PQC_Extension.0.pdf)
+- [SRP-6/6a PAKE protocol](https://github.com/ARM-software/psa-api/issues/179).
+  - Experimental PAKE extension for SRP.
+- [PSA Crypto Driver Interface 1.0 alpha 1](https://arm-software.github.io/psa-api/crypto-driver/1.0/111106-PSA_Certified_Crypto_Driver_Interface-1.0-alp.1.pdf)
+  - Largely compatible to this version of the new standard, except for KDF, PAKE and RNG.
+- [PSA APIs Test Suite v1.9](https://github.com/ARM-software/psa-arch-tests/releases/tag/v25.08_API1.9_ADAC_1.0.2)
+  - This test suite primarily tests API compatibility.
+- [Mbed TLS 3.6.5](https://github.com/Mbed-TLS/mbedtls/releases/tag/mbedtls-3.6.5).
+  - Compatible regarding _PSA Crypto_ support, not regarding legacy _Mbed TLS_ APIs.
+For information on the actually implemented cryptographic features in this release, see
+[Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
+
+### Improvements
+- ML-KEM and ML-DSA: Redesign PQC driver to support driver chaining (for hardware accelerators).
+  - Requires ocrypto 4.0.0 or later.
+- ML-DSA: Adapt to changed ocrypto API.
+  - Requires ocrypto 4.0.0 or later.
+- ML-KEM and ML-DSA: Add more PQC tests.
+- Update documentation of overlap rules, see `Appendix A: Supported Crypto Features`.
+- Use `_Static_assert` where applicable.
+- Add more checks in `oberon_check_unsupported.h`.
+- Use secret key size for Ed448 `PSA_VENDOR_ECC_MAX_CURVE_BITS`.
+- Allow for in place cipher encrypt operations for single call API, when a non-empty IV is provided.
+
+### Bug Fixes
+- Bug 20: Wrong AES key-wrap driver error behavior.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 1.5.4
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.5.4>
 2025-12-05 (8c154d5)
