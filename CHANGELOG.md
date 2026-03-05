@@ -4,7 +4,7 @@
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v1.6.0>
 2026-03-05 (c790c90)
 
-Some Oberon crypto software drivers require _ocrypto_ version 4.0.0 or later.
+Warning: we keep compatibility between this Oberon PSA Crypto 1.6.0 and the previous ocrypto 3.9.5 to avoid the need for upgrading ocrypto. The new ocrypto 4.0.0 already contains a breaking change that will be required by future versions of Oberon PSA Crypto that feature XOF driver chaining for ML-DSA and ML-KEM.
 
 ### API Compatibility
 - [PSA Certified Crypto API 1.4](https://arm-software.github.io/psa-api/crypto/1.4/IHI0086-PSA_Certified_Crypto_API-1.4.0.pdf)
@@ -21,11 +21,6 @@ For information on the actually implemented cryptographic features in this relea
 [Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
 
 ### Improvements
-- ML-KEM and ML-DSA: Redesign PQC driver to support driver chaining (for hardware accelerators).
-  - Requires ocrypto 4.0.0 or later.
-- ML-DSA: Adapt to changed ocrypto API.
-  - Requires ocrypto 4.0.0 or later.
-- ML-KEM and ML-DSA: Add more PQC tests.
 - Update documentation of overlap rules, see `Appendix A: Supported Crypto Features`.
 - Use `_Static_assert` where applicable.
 - Add more checks in `oberon_check_unsupported.h`.
