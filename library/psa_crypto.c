@@ -1725,7 +1725,7 @@ psa_status_t psa_copy_key(mbedtls_svc_key_id_t source_key,
      *   copy_key entry point through the dispatch layer.
      * */
     if (psa_key_lifetime_is_external(actual_attributes.lifetime)
-#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) && defined(HALTIUM_XXAA)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS) && (defined(NRF54H_SERIES) || defined(NRF92_SERIES))
     /* NCSDK-36345: See if this change can be standardized for all platforms */
     || psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(target_slot->attr.id))
 #endif
