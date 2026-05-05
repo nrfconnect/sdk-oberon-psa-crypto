@@ -49,6 +49,16 @@ extern "C" {
 #define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE  \
     ((PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE > PSA_CIPHER_MAX_KEY_LENGTH) ? \
      PSA_EXPORT_KEY_PAIR_OR_PUBLIC_MAX_SIZE : PSA_CIPHER_MAX_KEY_LENGTH)
+
+/* For HMAC, it's typical but not mandatory to use a key size that is equal to
+ * the hash size. */
+#if defined(PSA_WANT_ALG_HMAC)
+#if PSA_HASH_MAX_SIZE > MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
+#undef MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
+#define MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE PSA_HASH_MAX_SIZE
+#endif
+#endif /* PSA_WANT_ALG_HMAC */
+
 #endif /* !MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE*/
 
 /** \addtogroup attributes
