@@ -8,12 +8,19 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_JPAKE_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
 #include "oberon_jpake.h"
 #include "oberon_helpers.h"
 #include "psa_crypto_driver_wrappers.h"
+#include "ocrypto_version.h"
+
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 #ifdef PSA_NEED_OBERON_JPAKE
 #include "ocrypto_ecjpake_p256.h"
@@ -218,6 +225,8 @@ psa_status_t oberon_jpake_setup(
     const uint8_t *password, size_t password_length,
     const psa_pake_cipher_suite_t *cipher_suite)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "J-PAKE Oberon driver: ocrypto version incompatible");
     (void)attributes;
 
     if (psa_pake_cs_get_primitive(cipher_suite) !=

@@ -34,10 +34,12 @@ This driver implementation of ML-DSA is deprecated.
 
 #include "ocrypto_version.h"
 
-#define REQUIRED_OCRYPTO_VERSION  0x03090500
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
+#define HASH_ID_OCRYPTO_VERSION   0x03090600
 
 
 #ifdef PSA_NEED_OBERON_HASH_ML_DSA
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
 static const uint8_t sha256_oid[11]   = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01};
 static const uint8_t sha384_oid[11]   = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02};
 static const uint8_t sha512_oid[11]   = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03};
@@ -46,6 +48,7 @@ static const uint8_t sha3_384_oid[11] = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x6
 static const uint8_t sha3_512_oid[11] = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x0A};
 static const uint8_t shake128_oid[11] = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x0B};
 static const uint8_t shake256_oid[11] = {0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x0C};
+#endif /* HASH_ID_OCRYPTO_VERSION */
 #endif /* PSA_NEED_OBERON_HASH_ML_DSA */
 
 
@@ -83,6 +86,7 @@ typedef union {
 
 
 #ifdef PSA_NEED_OBERON_HASH_ML_DSA
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
 static uint8_t const * oberon_get_hash_oid(psa_algorithm_t alg)
 {
     switch (PSA_ALG_GET_HASH(alg)) {
@@ -98,6 +102,24 @@ static uint8_t const * oberon_get_hash_oid(psa_algorithm_t alg)
     default: return NULL;
     }
 }
+#else
+static uint8_t oberon_get_hash_alg(psa_algorithm_t alg)
+{
+    // last byte of hash OID
+    switch (PSA_ALG_GET_HASH(alg)) {
+    case PSA_ALG_SHA_256: return 0x01;
+    case PSA_ALG_SHA_384: return 0x02;
+    case PSA_ALG_SHA_512: return 0x03;
+    case PSA_ALG_SHA3_256: return 0x08;
+    case PSA_ALG_SHA3_384: return 0x09;
+    case PSA_ALG_SHA3_512: return 0x0A;
+    case PSA_ALG_SHAKE128_256: return 0x0B;
+    case PSA_ALG_SHAKE256_256:
+    case PSA_ALG_SHAKE256_512: return 0x0C;
+    default: return 0;
+    }
+}
+#endif /* HASH_ID_OCRYPTO_VERSION */
 #endif /* PSA_NEED_OBERON_HASH_ML_DSA */
 
 
@@ -109,7 +131,7 @@ psa_status_t oberon_ml_dsa_sign_message_with_context(
     const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
     
     ocrypto_ml_dsa_ctx ctx;
@@ -178,7 +200,7 @@ psa_status_t oberon_ml_dsa_sign_hash_with_context(
     const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -186,7 +208,11 @@ psa_status_t oberon_ml_dsa_sign_hash_with_context(
     psa_key_type_t type = psa_get_key_type(attributes);
     size_t bits = psa_get_key_bits(attributes);
     uint8_t rnd[32];
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
     const uint8_t *oid;
+#else
+    uint8_t oid;
+#endif
     psa_status_t status;
 
     if (type != PSA_KEY_TYPE_ML_DSA_KEY_PAIR) return PSA_ERROR_NOT_SUPPORTED;
@@ -201,8 +227,13 @@ psa_status_t oberon_ml_dsa_sign_hash_with_context(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
     oid = oberon_get_hash_oid(alg);
     if (oid == NULL) return PSA_ERROR_NOT_SUPPORTED;
+#else
+    oid = oberon_get_hash_alg(alg);
+    if (oid == 0) return PSA_ERROR_NOT_SUPPORTED;
+#endif
 
     switch (bits) {
 #ifdef PSA_NEED_OBERON_ML_DSA_44
@@ -298,7 +329,7 @@ psa_status_t oberon_ml_dsa_verify_message_with_context(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -356,7 +387,11 @@ psa_status_t oberon_ml_dsa_verify_message_with_context(
 static psa_status_t oberon_ml_dsa_verify_hash_sk(
     ocrypto_ml_dsa_ctx *ctx,
     const uint8_t *key, size_t bits,
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
     const uint8_t *oid,
+#else
+    uint8_t oid,
+#endif
     const uint8_t *hash, size_t hash_length,
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
@@ -410,20 +445,29 @@ psa_status_t oberon_ml_dsa_verify_hash_with_context(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
     psa_key_type_t type = psa_get_key_type(attributes);
     size_t bits = psa_get_key_bits(attributes);
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
     const uint8_t *oid;
+#else
+    uint8_t oid;
+#endif
     int res;
 
     if (!PSA_ALG_IS_HASH_ML_DSA(alg)) return PSA_ERROR_NOT_SUPPORTED;
     if (context_length >= 256) return PSA_ERROR_INVALID_ARGUMENT;
 
+#if OCRYPTO_VERSION_NUMBER < HASH_ID_OCRYPTO_VERSION
     oid = oberon_get_hash_oid(alg);
     if (oid == NULL) return PSA_ERROR_NOT_SUPPORTED;
+#else
+    oid = oberon_get_hash_alg(alg);
+    if (oid == 0) return PSA_ERROR_NOT_SUPPORTED;
+#endif
 
     if (type == PSA_KEY_TYPE_ML_DSA_KEY_PAIR) {
         if (key_length != 32) return PSA_ERROR_INVALID_ARGUMENT;
@@ -474,7 +518,7 @@ psa_status_t oberon_export_ml_dsa_public_key(
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     ocrypto_ml_dsa_ctx ctx;
@@ -526,7 +570,7 @@ psa_status_t oberon_import_ml_dsa_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
-    _Static_assert(OCRYPTO_VERSION_NUMBER == REQUIRED_OCRYPTO_VERSION, 
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
         "ML-DSA Oberon driver: ocrypto version incompatible");
 
     psa_key_type_t type = psa_get_key_type(attributes);

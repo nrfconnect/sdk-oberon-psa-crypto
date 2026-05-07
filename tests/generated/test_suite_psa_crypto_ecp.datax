@@ -1,0 +1,83 @@
+ECC generate: unknown family (0)
+0:int:0:int:256:int:64:exp:0
+
+ECC generate: unknown family (0xff)
+0:int:0xff:int:256:int:64:exp:0
+
+ECC generate: SECP_R1 bad bit-size (0)
+0:exp:1:int:0:int:64:exp:0
+
+ECC generate: SECP_R1 bad bit-size (512)
+0:exp:1:int:512:int:64:exp:0
+
+ECC generate: SECP_R1 bad bit-size (528)
+0:exp:1:int:528:int:64:exp:0
+
+ECC generate: SECP_R1 256-bit not supported
+depends_on:0
+0:exp:1:int:256:int:32:exp:0
+
+ECC generate: SECP_R1 384-bit not supported
+depends_on:1
+0:exp:1:int:384:int:48:exp:0
+
+ECC generate: SECP_R1 521-bit not supported
+depends_on:2
+0:exp:1:int:521:int:66:exp:0
+
+ECC generate: SECP_K1 256-bit not supported
+depends_on:3
+0:exp:2:int:256:int:32:exp:0
+
+ECC generate: Curve25519 not supported
+depends_on:4
+0:exp:3:int:255:int:32:exp:0
+
+ECC generate: Curve448 not supported
+depends_on:5
+0:exp:3:int:448:int:56:exp:0
+
+ECC generate: SECP_R1 256-bit, size=31, too small
+depends_on:6
+0:exp:1:int:256:int:31:exp:4
+
+ECC generate: SECP_R1 256-bit, size=32, ok
+depends_on:6
+0:exp:1:int:256:int:32:exp:5
+
+ECC generate: SECP_R1 256-bit, size=33, ok
+depends_on:6
+0:exp:1:int:256:int:33:exp:5
+
+ECC generate: SECP_R1 521-bit, size=65, too small
+depends_on:7
+0:exp:1:int:521:int:65:exp:4
+
+ECC generate: SECP_R1 521-bit, size=66, ok
+depends_on:7
+0:exp:1:int:521:int:66:exp:5
+
+ECC generate: Curve25519, size=31, too small
+depends_on:8
+0:exp:3:int:255:int:31:exp:4
+
+ECC generate: Curve25519, size=32, ok
+depends_on:8
+0:exp:3:int:255:int:32:exp:5
+
+ECC generate: Curve25519, size=33, ok
+depends_on:8
+0:exp:3:int:255:int:33:exp:5
+
+ECC generate: Curve448, size=55, too small
+depends_on:9
+0:exp:3:int:448:int:55:exp:4
+
+ECC generate: Curve448, size=56, ok
+depends_on:9
+0:exp:3:int:448:int:56:exp:5
+
+ECC generate: Curve448, size=57, ok
+depends_on:9
+0:exp:3:int:448:int:57:exp:5
+

@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_RSA_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -17,7 +21,9 @@
 #if PSA_MAX_RSA_KEY_BITS > 0
 #include "ocrypto_rsa_primitives.h"
 #endif
+#include "ocrypto_version.h"
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 #define SEQ_TAG  0x30
 #define INT_TAG  0x02
@@ -219,6 +225,8 @@ psa_status_t oberon_export_rsa_public_key(
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "RSA Oberon driver: ocrypto version incompatible");
     psa_status_t status;
     key_info_t key_info;
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -262,6 +270,8 @@ psa_status_t oberon_import_rsa_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "RSA Oberon driver: ocrypto version incompatible");
     psa_status_t status;
     key_info_t key_info;
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -853,6 +863,8 @@ psa_status_t oberon_rsa_sign_hash(
     const uint8_t *hash, size_t hash_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "RSA Oberon driver: ocrypto version incompatible");
     int res;
     psa_status_t status;
     size_t bits = psa_get_key_bits(attributes);
@@ -919,6 +931,8 @@ psa_status_t oberon_rsa_verify_hash(
     const uint8_t *hash, size_t hash_length,
     const uint8_t *signature, size_t signature_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "RSA Oberon driver: ocrypto version incompatible");
     int res;
     psa_status_t status;
     size_t bits = psa_get_key_bits(attributes);
@@ -983,6 +997,8 @@ psa_status_t oberon_rsa_encrypt(
     const uint8_t *salt, size_t salt_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "RSA Oberon driver: ocrypto version incompatible");
     psa_status_t status;
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -1050,6 +1066,8 @@ psa_status_t oberon_rsa_decrypt(
     const uint8_t *salt, size_t salt_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "RSA Oberon driver: ocrypto version incompatible");
     int res;
     psa_status_t status;
     size_t bits = psa_get_key_bits(attributes);

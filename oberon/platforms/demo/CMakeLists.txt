@@ -75,13 +75,13 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
 
                 if(${VARIANT} STREQUAL "random_inject")
                     target_compile_definitions(${PROJECT_NAME} PRIVATE OBERON_RANDOM_INJECT)
-                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/oberon_test_drbg.c")
-                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/src/oberon_test_xof.c")
+                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/src/oberon_test_drbg.c")
+                    target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/src/oberon_test_xof.c")
                 endif()
                 if(${THREADING} STREQUAL "multi")
                     target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_C)
                     target_compile_definitions(${PROJECT_NAME} PRIVATE MBEDTLS_THREADING_PTHREAD)
-                    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC}/threading.c)
+                    target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform/threading.c)
                 endif()
 
                 if(OBERON_ML_DSA_FAST)
@@ -100,11 +100,18 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
                 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
 
                 # add mbed includes
-                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/include)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/core)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/dispatch)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/utilities)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/extras)
                 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_SRC})
-                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_LEGACY_MBEDTLS_INC})
-                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/${PATH_CORE})
+
+                # add mbed includes for testing
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/framework/tests/include)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/src)
+                target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/include)
 
                 foreach(SUITE_FILE ${TEST_SUITES})
                     get_filename_component(SUITE "${SUITE_FILE}" NAME)
@@ -114,15 +121,15 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
                             (${TEST_CONFIG} STREQUAL "crypto_config_oberon" AND 
                                 ((${THREADING_CONFIG} STREQUAL "single") OR (${THREADING} STREQUAL "multi"))))
 
-                            if((${VARIANT} STREQUAL "random_inject" AND (${SUITE} STREQUAL "pake_test" OR ${SUITE} STREQUAL "ml_kem_dsa_test")) OR
-                                (NOT(${VARIANT} STREQUAL "random_inject") AND NOT(${SUITE} STREQUAL "pake_test" OR ${SUITE} STREQUAL "ml_kem_dsa_test")))
+                            if((${VARIANT} STREQUAL "random_inject" AND (${SUITE} STREQUAL "oberon_test_pake" OR ${SUITE} STREQUAL "oberon_test_ml_kem_dsa")) OR
+                                (NOT(${VARIANT} STREQUAL "random_inject") AND NOT(${SUITE} STREQUAL "oberon_test_pake" OR ${SUITE} STREQUAL "oberon_test_ml_kem_dsa")))
 
                             project("${TEST_CONFIG}-${SUITE}-${VARIANT}-${THREADING}")
                             message(STATUS "Add test suite ${SUITE}")
                             add_executable(${PROJECT_NAME})
                             set_target_properties(${PROJECT_NAME} PROPERTIES
                                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
-                            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${PATH_TESTS}/${SUITE_FILE}.c")
+                            target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.c")
 
                             if(UNIX)
                                 set(DATAX_DIR "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}-${VARIANT}-${THREADING}")
@@ -135,7 +142,7 @@ if (CONFIG_MBEDTLS_PSA_TESTS OR CONFIG_MBEDTLS_PSA_TESTS_LONG)
                                 add_custom_command(
                                     TARGET ${PROJECT_NAME} PRE_LINK
                                     COMMAND ${CMAKE_COMMAND} -E copy
-                                    ${CMAKE_SOURCE_DIR}/${PATH_TESTS}/${SUITE_FILE}.datax
+                                    ${CMAKE_SOURCE_DIR}/tests/${SUITE_FILE}.datax
                                     ${DATAX_DIR}/
                                 )
                             endif()

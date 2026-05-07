@@ -14,6 +14,17 @@
 #include <psa/crypto_driver_common.h>
 
 
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_KEY_WRAP_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_KEY_WRAP_VERSION_MINOR 0
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -27,7 +27,7 @@ In real applications, only a subset will actually be used. Therefore, the
 avoid dead code in the firmware image.
 For demonstration purposes, this configuration contains the C define for a mock
 "hardware driver" (`PSA_USE_DEMO_HARDWARE_DRIVER`). It also contains a C define
-for an opaque driver. In most configurations today, drivers are _transparent_,
+for a mock opaque driver. In most configurations today, drivers are _transparent_,
 meaning that keys can be seen by the application in their raw form. In contrast,
 _opaque_ drivers use IDs for keys. The raw keys are hidden within secure elements
 that are protected from application code.

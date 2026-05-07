@@ -19,6 +19,17 @@ extern "C" {
 #endif
 
 
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_XOF_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_XOF_VERSION_MINOR 0
+
+
 typedef struct {
 #if defined(PSA_NEED_OBERON_SHAKE128) || defined(PSA_NEED_OBERON_SHAKE256)
     uint64_t ctx[27];

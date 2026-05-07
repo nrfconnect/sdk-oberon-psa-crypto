@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_HMAC_DRBG_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -16,7 +20,6 @@
 
 
 /* HMAC_DRBG implementation based on NIST.SP.800-90Ar1 */
-
 
 #define ENTROPY_FACTOR       4  // fraction of entropy in entropy data
 #define RESEED_INTERVAL      10000
@@ -33,6 +36,7 @@ static psa_status_t hmac_drbg_hmac(
     oberon_hmac_drbg_context_t *context,
     uint8_t tag, // 0xFF = no tag
     const uint8_t *data, size_t data_length, // may be NULL
+    const uint8_t *perso, size_t perso_size, // may be NULL
     uint8_t output[BLOCK_LEN])
 {
     psa_status_t status;
@@ -62,6 +66,11 @@ static psa_status_t hmac_drbg_hmac(
         if (status) goto exit;
     }
 
+    if (perso) {
+        status = psa_driver_wrapper_mac_update(&context->hmac_op, perso, perso_size);
+        if (status) goto exit;
+    }
+
     status = psa_driver_wrapper_mac_sign_finish(&context->hmac_op, output, BLOCK_LEN, &len);
 
 exit:
@@ -72,21 +81,22 @@ exit:
 // update the generator state
 static psa_status_t hmac_drbg_update(
     oberon_hmac_drbg_context_t *context,
-    const uint8_t *data, size_t data_length) // may be NULL
+    const uint8_t *data, size_t data_length, // may be NULL
+    const uint8_t *perso, size_t perso_size) // may be NULL
 {
     psa_status_t status;
 
-    status = hmac_drbg_hmac(context, 0x00, data, data_length, context->k);
+    status = hmac_drbg_hmac(context, 0x00, data, data_length, perso, perso_size, context->k);
     if (status) return status;
 
-    status = hmac_drbg_hmac(context, 0xFF, NULL, 0, context->v);
+    status = hmac_drbg_hmac(context, 0xFF, NULL, 0, NULL, 0, context->v);
     if (status) return status;
 
     if (data) {
-        status = hmac_drbg_hmac(context, 0x01, data, data_length, context->k);
+        status = hmac_drbg_hmac(context, 0x01, data, data_length, perso, perso_size, context->k);
         if (status) return status;
 
-        status = hmac_drbg_hmac(context, 0xFF, NULL, 0, context->v);
+        status = hmac_drbg_hmac(context, 0xFF, NULL, 0, NULL, 0, context->v);
         if (status) return status;
     }
 
@@ -96,7 +106,8 @@ static psa_status_t hmac_drbg_update(
 // update the generator state with new entropy
 static psa_status_t hmac_drbg_entropy_update(
     oberon_hmac_drbg_context_t *context,
-    size_t entropy_bits)
+    size_t entropy_bits,
+    const uint8_t *perso, size_t perso_size)
 {
     psa_status_t status;
     uint8_t seed[MAX_ENTROPY_DATA];
@@ -114,7 +125,7 @@ static psa_status_t hmac_drbg_entropy_update(
     } while (total_bits < entropy_bits);
 
     // update state
-    return hmac_drbg_update(context, seed, seed_length);
+    return hmac_drbg_update(context, seed, seed_length, perso, perso_size);
 }
 
 // instantiate the generator state
@@ -132,7 +143,7 @@ psa_status_t oberon_hmac_drbg_init(
     memset(context->v, 1, sizeof context->v); // 0x01 .. 0x01
 
     // initial seeding
-    status = hmac_drbg_entropy_update(context, MAX_ENTROPY_BITS);
+    status = hmac_drbg_entropy_update(context, MAX_ENTROPY_BITS, NULL, 0);
     if (status) return status;
 
     context->reseed_counter = 1;
@@ -157,8 +168,8 @@ psa_status_t oberon_hmac_drbg_get_random(
     if (output_size > PSA_BITS_TO_BYTES(MAX_BITS_PER_REQUEST)) return PSA_ERROR_INVALID_ARGUMENT;
 
     // reseed generator if necessary
-    if (context->reseed_counter > RESEED_INTERVAL) {
-        status = hmac_drbg_entropy_update(context, PSA_BYTES_TO_BITS(KEY_LEN));
+    if (context->prediction_resistance || context->reseed_counter > RESEED_INTERVAL) {
+        status = hmac_drbg_entropy_update(context, PSA_BYTES_TO_BITS(KEY_LEN), NULL, 0);
         if (status) return status;
         context->reseed_counter = 1;
     }
@@ -166,7 +177,7 @@ psa_status_t oberon_hmac_drbg_get_random(
     // generate output
     for (;;) {
         // generate a MAC block
-        status = hmac_drbg_hmac(context, 0xFF, NULL, 0, context->v);
+        status = hmac_drbg_hmac(context, 0xFF, NULL, 0, NULL, 0, context->v);
         if (status) return status;
         if (output_size <= BLOCK_LEN) {
             memcpy(output, context->v, output_size);
@@ -178,7 +189,7 @@ psa_status_t oberon_hmac_drbg_get_random(
     }
 
     // update generator state for backtracking resistance
-    status = hmac_drbg_update(context, NULL, 0);
+    status = hmac_drbg_update(context, NULL, 0, NULL, 0);
     if (status) return status;
 
     context->reseed_counter++;
@@ -189,6 +200,46 @@ psa_status_t oberon_hmac_drbg_get_random(
     }
 #endif
 
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_hmac_drbg_random_reseed(
+    oberon_hmac_drbg_context_t *context,
+    const uint8_t *perso, size_t perso_size)
+{
+    psa_status_t status;
+
+#ifdef OBERON_USE_MUTEX
+    if (oberon_mutex_lock(&context->mutex)) {
+        return PSA_ERROR_GENERIC_ERROR;
+    }
+#endif
+
+    status = hmac_drbg_entropy_update(context, PSA_BYTES_TO_BITS(KEY_LEN), perso, perso_size);
+    if (status) return status;
+    context->reseed_counter = 1;
+
+#ifdef OBERON_USE_MUTEX
+    if (oberon_mutex_unlock(&context->mutex)) {
+        return PSA_ERROR_GENERIC_ERROR;
+    }
+#endif
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_hmac_drbg_random_deplete(
+    oberon_hmac_drbg_context_t *context)
+{
+    context->reseed_counter = RESEED_INTERVAL + 1;
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_hmac_drbg_random_set_prediction_resistance(
+    oberon_hmac_drbg_context_t *context,
+    unsigned enabled)
+{
+    context->prediction_resistance = enabled;
     return PSA_SUCCESS;
 }
 

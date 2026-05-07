@@ -1,0 +1,35 @@
+PSA import persistent key: raw data, 8 bits
+depends_on:0
+120:hex:"2a":exp:0:int:8:exp:1:int:0:exp:2
+
+PSA import persistent key: AES, 128 bits, exportable
+depends_on:1:2:0
+120:hex:"2b7e151628aed2a6abf7158809cf4f3c":exp:3:int:128:exp:4:exp:5:exp:2
+
+PSA import persistent key: AES, 128 bits, non-exportable
+depends_on:1:2:0
+120:hex:"2b7e151628aed2a6abf7158809cf4f3c":exp:3:int:128:exp:6:exp:5:exp:2
+
+PSA generate persistent key: raw data, 8 bits, exportable
+depends_on:0
+120:hex:"":exp:0:int:8:exp:1:int:0:exp:7
+
+PSA generate persistent key: AES, 128 bits, exportable
+depends_on:1:2:0
+120:hex:"":exp:3:int:128:exp:8:exp:5:exp:7
+
+PSA generate persistent key: AES, 128 bits, non-exportable
+depends_on:1:2:0
+120:hex:"":exp:3:int:128:exp:9:exp:5:exp:7
+
+PSA generate persistent key: RSA, minimum size key, exportable
+depends_on:3:4:5:0:6
+120:hex:"":exp:10:exp:11:exp:12:exp:13:exp:7
+
+PSA generate persistent key: ECC, SECP256R1, exportable
+depends_on:7:8:9:0
+120:hex:"":exp:14:int:256:exp:12:exp:15:exp:7
+
+PSA derive persistent key: HKDF SHA-256, exportable
+120:hex:"0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b":exp:0:int:1024:exp:1:int:0:exp:16
+

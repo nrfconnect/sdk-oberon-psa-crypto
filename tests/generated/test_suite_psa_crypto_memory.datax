@@ -1,0 +1,63 @@
+PSA input buffer copy: straightforward copy
+0:int:20:int:20:exp:0
+
+PSA input buffer copy: copy buffer larger than required
+0:int:10:int:20:exp:0
+
+PSA input buffer copy: copy buffer too small
+0:int:20:int:10:exp:1
+
+PSA input buffer copy: zero-length source buffer
+0:int:0:int:10:exp:0
+
+PSA input buffer copy: zero-length both buffers
+0:int:0:int:0:exp:0
+
+PSA output buffer copy: straightforward copy
+1:int:20:int:20:exp:0
+
+PSA output buffer copy: output buffer larger than required
+1:int:10:int:20:exp:0
+
+PSA output buffer copy: output buffer too small
+1:int:20:int:10:exp:2
+
+PSA output buffer copy: zero-length source buffer
+1:int:0:int:10:exp:0
+
+PSA output buffer copy: zero-length both buffers
+1:int:0:int:0:exp:0
+
+PSA crypto local input alloc
+2:int:200:exp:0
+
+PSA crypto local input alloc, NULL buffer
+2:int:0:exp:0
+
+PSA crypto local input free
+3:int:200
+
+PSA crypto local input free, NULL buffer
+3:int:0
+
+PSA crypto local input round-trip
+4
+
+PSA crypto local output alloc
+5:int:200:exp:0
+
+PSA crypto local output alloc, NULL buffer
+5:int:0:exp:0
+
+PSA crypto local output free
+6:int:200:int:0:exp:0
+
+PSA crypto local output free, NULL buffer
+6:int:0:int:0:exp:0
+
+PSA crypto local output free, NULL original buffer
+6:int:200:int:1:exp:1
+
+PSA crypto local output round-trip
+7
+

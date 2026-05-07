@@ -19,6 +19,17 @@ extern "C" {
 #endif
 
 
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_AEAD_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_AEAD_VERSION_MINOR 0
+
+
 typedef struct {
     struct {
         uint64_t l[5]; // 64 bit alignment for Ascon

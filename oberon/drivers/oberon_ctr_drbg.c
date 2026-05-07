@@ -8,12 +8,15 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_CTR_DRBG_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
 #include "oberon_ctr_drbg.h"
 #include "psa_crypto_driver_wrappers.h"
-
 
 /* CTR_DRBG implementation based on NIST.SP.800-90Ar1 */
 
@@ -31,7 +34,8 @@
 // get entropy from entropy driver
 static psa_status_t get_entropy(
     uint8_t data[SEED_LEN],
-    size_t entropy_bits)
+    size_t entropy_bits,
+    const uint8_t *perso, size_t perso_size)
 {
 #if ENTROPY_FACTOR == 1
     // Use entropy input without derivation function.
@@ -42,6 +46,11 @@ static psa_status_t get_entropy(
     status = psa_driver_wrapper_get_entropy(0, &estimate_bits, data, SEED_LEN);
     if (status) return status;
     if (estimate_bits < entropy_bits) return PSA_ERROR_INSUFFICIENT_ENTROPY;
+
+    if (perso) {
+        if (perso_size > SEED_LEN) return PSA_ERROR_NOT_SUPPORTED;
+        oberon_xor(data, data, perso, perso_size);
+    }
 
     return PSA_SUCCESS;
 #else /* ENTROPY_FACTOR > 1 */
@@ -91,8 +100,12 @@ static psa_status_t get_entropy(
         iv[0] = i;
         status = psa_driver_wrapper_mac_update(&u.mac_op, iv, BLOCK_LEN); // IV
         if (status) return status;
-        status = psa_driver_wrapper_mac_update(&u.mac_op, u.input, in_length); // input
+        status = psa_driver_wrapper_mac_update(&u.mac_op, u.input, in_length); // entropy input
         if (status) return status;
+        if (perso) {
+            status = psa_driver_wrapper_mac_update(&u.mac_op, perso, perso_size); // additional input
+            if (status) return status;
+        }
         status = psa_driver_wrapper_mac_sign_finish(&u.mac_op, temp + temp_length, BLOCK_LEN, &len);
         if (status) return status;
         i++;
@@ -243,7 +256,7 @@ psa_status_t oberon_ctr_drbg_init(
     if (status) return status;
 
     // initial seeding
-    status = get_entropy(data, PSA_BYTES_TO_BITS(SEED_LEN));
+    status = get_entropy(data, PSA_BYTES_TO_BITS(SEED_LEN), NULL, 0);
     if (status) return status;
     status = ctr_drbg_update(context, data);
     if (status) return status;
@@ -271,9 +284,9 @@ psa_status_t oberon_ctr_drbg_get_random(
     if (output_size > PSA_BITS_TO_BYTES(MAX_BITS_PER_REQUEST)) return PSA_ERROR_INVALID_ARGUMENT;
 
     // reseed generator if necessary
-    if (context->reseed_counter > RESEED_INTERVAL) {
+    if (context->prediction_resistance || context->reseed_counter > RESEED_INTERVAL) {
         // get new seed
-        status = get_entropy(seed, PSA_BYTES_TO_BITS(KEY_LEN));
+        status = get_entropy(seed, PSA_BYTES_TO_BITS(KEY_LEN), NULL, 0);
         if (status) return status;
         // update generator state with new seed
         status = ctr_drbg_update(context, seed);
@@ -297,6 +310,51 @@ psa_status_t oberon_ctr_drbg_get_random(
     }
 #endif
 
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_ctr_drbg_random_reseed(
+    oberon_ctr_drbg_context_t *context,
+    const uint8_t *perso, size_t perso_size)
+{
+    uint8_t seed[SEED_LEN];
+    psa_status_t status;
+
+#ifdef OBERON_USE_MUTEX
+    if (oberon_mutex_lock(&context->mutex)) {
+        return PSA_ERROR_GENERIC_ERROR;
+    }
+#endif
+
+    // get new seed
+    status = get_entropy(seed, PSA_BYTES_TO_BITS(KEY_LEN), perso, perso_size);
+    if (status) return status;
+    // update generator state with new seed
+    status = ctr_drbg_update(context, seed);
+    if (status) return status;
+    context->reseed_counter = 1;
+
+#ifdef OBERON_USE_MUTEX
+    if (oberon_mutex_unlock(&context->mutex)) {
+        return PSA_ERROR_GENERIC_ERROR;
+    }
+#endif
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_ctr_drbg_random_deplete(
+    oberon_ctr_drbg_context_t *context)
+{
+    context->reseed_counter = RESEED_INTERVAL + 1;
+    return PSA_SUCCESS;
+}
+
+psa_status_t oberon_ctr_drbg_random_set_prediction_resistance(
+    oberon_ctr_drbg_context_t *context,
+    unsigned enabled)
+{
+    context->prediction_resistance = enabled;
     return PSA_SUCCESS;
 }
 

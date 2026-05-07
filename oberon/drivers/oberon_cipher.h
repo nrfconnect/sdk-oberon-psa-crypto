@@ -19,6 +19,17 @@ extern "C" {
 #endif
 
 
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_CIPHER_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_CIPHER_VERSION_MINOR 0
+
+
 typedef struct {
     uint32_t ctx[70];
     psa_algorithm_t alg;

@@ -36,8 +36,8 @@ typedef struct {
     psa_status_t            expected_status;
 } test_data;
 
-#if (defined(ARCH_TEST_ECC_CURVE_SECP256R1) && (defined(ARCH_TEST_SHA256)))
 static const test_data check1[] = {
+#if (defined(ARCH_TEST_ECC_CURVE_SECP256R1) && (defined(ARCH_TEST_SHA256)))
 #ifdef ARCH_TEST_SPAKE2P
 #ifdef ARCH_TEST_SPAKE2P_HMAC
 {
@@ -178,5 +178,5 @@ static const test_data check1[] = {
   .expected_status  = PSA_ERROR_BAD_STATE
  },
 #endif
-};
 #endif
+};

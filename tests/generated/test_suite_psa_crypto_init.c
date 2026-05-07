@@ -1,0 +1,1487 @@
+#line 2 "suites/main_test.function"
+/*
+ * *** THIS FILE HAS BEEN MACHINE GENERATED ***
+ *
+ * This file has been machine generated using the script:
+ * generate_test_code.py
+ *
+ * Test file      : ./test_suite_psa_crypto_init.c
+ *
+ * The following files were used to create this file.
+ *
+ *      Main code file      : tests/suites/main_test.function
+ *      Platform code file  : tests/suites/host_test.function
+ *      Helper file         : tests/suites/helpers.function
+ *      Test suite file     : tests/suites/test_suite_psa_crypto_init.function
+ *      Test suite data     : tests/suites/test_suite_psa_crypto_init.data
+ *
+ */
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#if !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200112L // for fileno() from <stdio.h>
+#endif
+#endif
+
+/* On Mingw-w64, force the use of a C99-compliant printf() and friends.
+ * This is necessary on older versions of Mingw and/or Windows runtimes
+ * where snprintf does not always zero-terminate the buffer, and does
+ * not support formats such as "%zu" for size_t and "%lld" for long long.
+ */
+#if !defined(__USE_MINGW_ANSI_STDIO)
+#define __USE_MINGW_ANSI_STDIO 1
+#endif
+
+#include "mbedtls/build_info.h"
+
+/* Test code may use deprecated identifiers only if the preprocessor symbol
+ * MBEDTLS_TEST_DEPRECATED is defined. When building tests, set
+ * MBEDTLS_TEST_DEPRECATED explicitly if MBEDTLS_DEPRECATED_WARNING is
+ * enabled but the corresponding warnings are not treated as errors.
+ */
+#if !defined(MBEDTLS_DEPRECATED_REMOVED) && !defined(MBEDTLS_DEPRECATED_WARNING)
+#define MBEDTLS_TEST_DEPRECATED
+#endif
+
+/*----------------------------------------------------------------------------*/
+/* Common helper code */
+
+#line 2 "suites/helpers.function"
+/*----------------------------------------------------------------------------*/
+/* Headers */
+
+#include <test/arguments.h>
+#include <test/helpers.h>
+#include <test/macros.h>
+#include <test/random.h>
+#include <test/bignum_helpers.h>
+#include <test/psa_crypto_helpers.h>
+#include <test/threading_helpers.h>
+
+#include <errno.h>
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "mbedtls/private/error_common.h"
+#include "mbedtls/platform.h"
+
+#if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
+#include "mbedtls/memory_buffer_alloc.h"
+#endif
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#include <unistd.h>
+#endif
+
+/*----------------------------------------------------------------------------*/
+/* Status and error constants */
+
+#define DEPENDENCY_SUPPORTED            0   /* Dependency supported by build */
+#define KEY_VALUE_MAPPING_FOUND         0   /* Integer expression found */
+#define DISPATCH_TEST_SUCCESS           0   /* Test dispatch successful */
+
+#define KEY_VALUE_MAPPING_NOT_FOUND     -1  /* Integer expression not found */
+#define DEPENDENCY_NOT_SUPPORTED        -2  /* Dependency not supported */
+#define DISPATCH_TEST_FN_NOT_FOUND      -3  /* Test function not found */
+#define DISPATCH_INVALID_TEST_DATA      -4  /* Invalid test parameter type.
+                                               Only int, string, binary data
+                                               and integer expressions are
+                                               allowed */
+#define DISPATCH_UNSUPPORTED_SUITE      -5  /* Test suite not supported by the
+                                               build */
+
+/*----------------------------------------------------------------------------*/
+/* Global variables */
+
+/*----------------------------------------------------------------------------*/
+/* Helper flags for complex dependencies */
+
+
+/*----------------------------------------------------------------------------*/
+/* Helper Functions */
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+static int redirect_output(FILE *out_stream, const char *path)
+{
+    int out_fd, dup_fd;
+    FILE *path_stream;
+
+    out_fd = fileno(out_stream);
+    dup_fd = dup(out_fd);
+
+    if (dup_fd == -1) {
+        return -1;
+    }
+
+    path_stream = fopen(path, "w");
+    if (path_stream == NULL) {
+        close(dup_fd);
+        return -1;
+    }
+
+    fflush(out_stream);
+    if (dup2(fileno(path_stream), out_fd) == -1) {
+        close(dup_fd);
+        fclose(path_stream);
+        return -1;
+    }
+
+    fclose(path_stream);
+    return dup_fd;
+}
+
+static int restore_output(FILE *out_stream, int dup_fd)
+{
+    int out_fd = fileno(out_stream);
+
+    fflush(out_stream);
+    if (dup2(dup_fd, out_fd) == -1) {
+        close(out_fd);
+        close(dup_fd);
+        return -1;
+    }
+
+    close(dup_fd);
+    return 0;
+}
+#endif /* __unix__ || __APPLE__ __MACH__ */
+
+
+#line 52 "suites/main_test.function"
+
+
+/*----------------------------------------------------------------------------*/
+/* Test Suite Code */
+
+
+#define TEST_SUITE_ACTIVE
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#line 2 "tests/suites/test_suite_psa_crypto_init.function"
+#include <stdint.h>
+
+#include "psa_crypto_core.h"
+/* For mbedtls_psa_crypto_configure_entropy_sources() */
+#include "psa_crypto_invasive.h"
+
+static int check_stats(void)
+{
+    mbedtls_psa_stats_t stats;
+    mbedtls_psa_get_stats(&stats);
+
+    TEST_EQUAL(stats.volatile_slots, MBEDTLS_TEST_PSA_INTERNAL_KEYS);
+    TEST_EQUAL(stats.persistent_slots, 0);
+    TEST_EQUAL(stats.external_slots, 0);
+    TEST_EQUAL(stats.half_filled_slots, 0);
+    TEST_EQUAL(stats.locked_slots, 0);
+
+    return 1;
+
+exit:
+    return 0;
+}
+
+#if defined MBEDTLS_THREADING_PTHREAD
+
+typedef struct {
+    int do_init;
+} thread_psa_init_ctx_t;
+
+static void *thread_psa_init_function(void *ctx)
+{
+    thread_psa_init_ctx_t *init_context = (thread_psa_init_ctx_t *) ctx;
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    uint8_t random[10] = { 0 };
+
+    if (init_context->do_init) {
+        PSA_ASSERT(psa_crypto_init());
+    }
+
+    /* If this is a test only thread, then we can assume PSA is being started
+     * up on another thread and thus we cannot know whether the following tests
+     * will be successful or not. These checks are still useful, however even
+     * without checking the return codes as they may show up race conditions on
+     * the flags they check under TSAN.*/
+
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+
+    /* Test getting global_data.rng_state. */
+    status = mbedtls_psa_crypto_configure_entropy_sources(NULL, NULL);
+
+    if (init_context->do_init) {
+        /* Bad state due to entropy sources already being setup in
+         * psa_crypto_init() */
+        TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    }
+#endif /* !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) */
+
+    /* Test using the PSA RNG ony if we know PSA is up and running. */
+    if (init_context->do_init) {
+        status = psa_generate_random(random, sizeof(random));
+
+        TEST_EQUAL(status, PSA_SUCCESS);
+    }
+
+exit:
+    return NULL;
+}
+#endif /* defined MBEDTLS_THREADING_PTHREAD */
+
+#line 79 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_init_deinit(int count)
+{
+    psa_status_t status;
+    int i;
+    for (i = 0; i < count; i++) {
+        mbedtls_test_set_step(2 * i);
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        if (!check_stats()) {
+            goto exit;
+        }
+
+        mbedtls_test_set_step(2 * i);
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        if (!check_stats()) {
+            goto exit;
+        }
+        PSA_DONE();
+    }
+exit:
+    PSA_DONE();
+}
+
+static void test_init_deinit_wrapper( void ** params )
+{
+
+    test_init_deinit( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#line 105 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_deinit_without_init(int count)
+{
+    int i;
+    for (i = 0; i < count; i++) {
+        PSA_ASSERT(psa_crypto_init());
+        PSA_DONE();
+    }
+    PSA_DONE();
+exit:
+    ;
+}
+
+static void test_deinit_without_init_wrapper( void ** params )
+{
+
+    test_deinit_without_init( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#if defined(MBEDTLS_THREADING_PTHREAD)
+#line 117 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_psa_threaded_init(int arg_thread_count)
+{
+    thread_psa_init_ctx_t init_context;
+    thread_psa_init_ctx_t init_context_2;
+
+    size_t thread_count = (size_t) arg_thread_count;
+    mbedtls_test_thread_t *threads = NULL;
+
+    TEST_CALLOC(threads, sizeof(mbedtls_test_thread_t) * thread_count);
+
+    init_context.do_init = 1;
+
+    /* Test initialising PSA and testing certain protected globals on multiple
+     * threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(
+            mbedtls_test_thread_create(&threads[i],
+                                       thread_psa_init_function,
+                                       (void *) &init_context),
+            0);
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+
+    PSA_DONE();
+
+    init_context_2.do_init = 0;
+
+    /* Test initialising PSA whilst also testing flags on other threads. */
+    for (size_t i = 0; i < thread_count; i++) {
+
+        if (i & 1) {
+
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context),
+                0);
+        } else {
+            TEST_EQUAL(
+                mbedtls_test_thread_create(&threads[i],
+                                           thread_psa_init_function,
+                                           (void *) &init_context_2),
+                0);
+        }
+    }
+
+    for (size_t i = 0; i < thread_count; i++) {
+        TEST_EQUAL(mbedtls_test_thread_join(&threads[i]), 0);
+    }
+exit:
+
+    PSA_DONE();
+
+    mbedtls_free(threads);
+}
+
+static void test_psa_threaded_init_wrapper( void ** params )
+{
+
+    test_psa_threaded_init( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#endif /* MBEDTLS_THREADING_PTHREAD */
+#line 178 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_validate_module_init_generate_random(int count)
+{
+    psa_status_t status;
+    uint8_t random[10] = { 0 };
+    int i;
+    for (i = 0; i < count; i++) {
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        PSA_DONE();
+    }
+    status = psa_generate_random(random, sizeof(random));
+    TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+exit:
+    ;
+}
+
+static void test_validate_module_init_generate_random_wrapper( void ** params )
+{
+
+    test_validate_module_init_generate_random( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#line 194 "tests/suites/test_suite_psa_crypto_init.function"
+static void test_validate_module_init_key_based(int count)
+{
+    psa_status_t status;
+    uint8_t data[10] = { 0 };
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t key = mbedtls_svc_key_id_make(0xdead, 0xdead);
+    int i;
+
+    for (i = 0; i < count; i++) {
+        status = psa_crypto_init();
+        PSA_ASSERT(status);
+        PSA_DONE();
+    }
+    psa_set_key_type(&attributes, PSA_KEY_TYPE_RAW_DATA);
+    status = psa_import_key(&attributes, data, sizeof(data), &key);
+    TEST_EQUAL(status, PSA_ERROR_BAD_STATE);
+    TEST_ASSERT(mbedtls_svc_key_id_is_null(key));
+exit:
+    ;
+}
+
+static void test_validate_module_init_key_based_wrapper( void ** params )
+{
+
+    test_validate_module_init_key_based( ((mbedtls_test_argument_t *) params[0])->sint );
+}
+#endif /* MBEDTLS_PSA_CRYPTO_C */
+
+
+#line 63 "suites/main_test.function"
+
+
+/*----------------------------------------------------------------------------*/
+/* Test dispatch code */
+
+
+/**
+ * \brief       Evaluates an expression/macro into its literal integer value.
+ *              For optimizing space for embedded targets each expression/macro
+ *              is identified by a unique identifier instead of string literals.
+ *              Identifiers and evaluation code is generated by script:
+ *              generate_test_code.py
+ *
+ * \param exp_id    Expression identifier.
+ * \param out_value Pointer to int to hold the integer.
+ *
+ * \return       0 if exp_id is found. 1 otherwise.
+ */
+static int get_expression(int32_t exp_id, intmax_t *out_value)
+{
+    int ret = KEY_VALUE_MAPPING_FOUND;
+
+    (void) exp_id;
+    (void) out_value;
+
+    switch (exp_id) {
+    
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+
+#endif
+
+#line 91 "suites/main_test.function"
+        default:
+        {
+            ret = KEY_VALUE_MAPPING_NOT_FOUND;
+        }
+        break;
+    }
+    return ret;
+}
+
+
+/**
+ * \brief       Checks if the dependency i.e. the compile flag is set.
+ *              For optimizing space for embedded targets each dependency
+ *              is identified by a unique identifier instead of string literals.
+ *              Identifiers and check code is generated by script:
+ *              generate_test_code.py
+ *
+ * \param dep_id    Dependency identifier.
+ *
+ * \return       DEPENDENCY_SUPPORTED if set else DEPENDENCY_NOT_SUPPORTED
+ */
+static int dep_check(int dep_id)
+{
+    int ret = DEPENDENCY_NOT_SUPPORTED;
+
+    (void) dep_id;
+
+    switch (dep_id) {
+    
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+
+#endif
+
+#line 121 "suites/main_test.function"
+        default:
+            break;
+    }
+    return ret;
+}
+
+
+/**
+ * \brief       Function pointer type for test function wrappers.
+ *
+ * A test function wrapper decodes the parameters and passes them to the
+ * underlying test function. Both the wrapper and the underlying function
+ * return void. Test wrappers assume that they are passed a suitable
+ * parameter array and do not perform any error detection.
+ *
+ * \param param_array   The array of parameters. Each element is a `void *`
+ *                      which the wrapper casts to the correct type and
+ *                      dereferences. Each wrapper function hard-codes the
+ *                      number and types of the parameters.
+ */
+typedef void (*TestWrapper_t)(void **param_array);
+
+
+/**
+ * \brief       Table of test function wrappers. Used by dispatch_test().
+ *              This table is populated by script:
+ *              generate_test_code.py
+ *
+ */
+TestWrapper_t test_funcs[] =
+{
+    /* Function Id: 0 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_init_deinit_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 1 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_deinit_without_init_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 2 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_THREADING_PTHREAD)
+    test_psa_threaded_init_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 3 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_validate_module_init_generate_random_wrapper,
+#else
+    NULL,
+#endif
+/* Function Id: 4 */
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    test_validate_module_init_key_based_wrapper,
+#else
+    NULL,
+#endif
+
+#line 154 "suites/main_test.function"
+};
+
+/**
+ * \brief        Dispatches test functions based on function index.
+ *
+ * \param func_idx    Test function index.
+ * \param params      The array of parameters to pass to the test function.
+ *                    It will be decoded by the #TestWrapper_t wrapper function.
+ *
+ * \return       DISPATCH_TEST_SUCCESS if found
+ *               DISPATCH_TEST_FN_NOT_FOUND if not found
+ *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
+ */
+static int dispatch_test(size_t func_idx, void **params)
+{
+    int ret = DISPATCH_TEST_SUCCESS;
+    TestWrapper_t fp = NULL;
+
+    if (func_idx < (int) (sizeof(test_funcs) / sizeof(TestWrapper_t))) {
+        fp = test_funcs[func_idx];
+        if (fp) {
+            #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+            mbedtls_test_enable_insecure_external_rng();
+            #endif
+
+            fp(params);
+
+            #if defined(MBEDTLS_TEST_MUTEX_USAGE)
+            mbedtls_test_mutex_usage_check();
+            #endif /* MBEDTLS_TEST_MUTEX_USAGE */
+        } else {
+            ret = DISPATCH_UNSUPPORTED_SUITE;
+        }
+    } else {
+        ret = DISPATCH_TEST_FN_NOT_FOUND;
+    }
+
+    return ret;
+}
+
+
+/**
+ * \brief       Checks if test function is supported in this build-time
+ *              configuration.
+ *
+ * \param func_idx    Test function index.
+ *
+ * \return       DISPATCH_TEST_SUCCESS if found
+ *               DISPATCH_TEST_FN_NOT_FOUND if not found
+ *               DISPATCH_UNSUPPORTED_SUITE if not compile time enabled.
+ */
+static int check_test(size_t func_idx)
+{
+    int ret = DISPATCH_TEST_SUCCESS;
+    TestWrapper_t fp = NULL;
+
+    if (func_idx < (int) (sizeof(test_funcs)/sizeof(TestWrapper_t))) {
+        fp = test_funcs[func_idx];
+        if (fp == NULL) {
+            ret = DISPATCH_UNSUPPORTED_SUITE;
+        }
+    } else {
+        ret = DISPATCH_TEST_FN_NOT_FOUND;
+    }
+
+    return ret;
+}
+
+
+#line 2 "suites/host_test.function"
+
+/**
+ * \brief       Verifies that string is in string parameter format i.e. "<str>"
+ *              It also strips enclosing '"' from the input string.
+ *
+ * \param str   String parameter.
+ *
+ * \return      0 if success else 1
+ */
+static int verify_string(char **str)
+{
+    if ((*str)[0] != '"' ||
+        (*str)[strlen(*str) - 1] != '"') {
+        mbedtls_fprintf(stderr,
+                        "Expected string (with \"\") for parameter and got: %s\n", *str);
+        return -1;
+    }
+
+    (*str)++;
+    (*str)[strlen(*str) - 1] = '\0';
+
+    return 0;
+}
+
+/**
+ * \brief       Verifies that string is an integer. Also gives the converted
+ *              integer value.
+ *
+ * \param str   Input string.
+ * \param p_value Pointer to output value.
+ *
+ * \return      0 if success else 1
+ */
+static int verify_int(char *str, intmax_t *p_value)
+{
+    char *end = NULL;
+    errno = 0;
+    /* Limit the range to long: for large integers, the test framework will
+     * use expressions anyway. */
+    long value = strtol(str, &end, 0);
+    if (errno == EINVAL || *end != '\0') {
+        mbedtls_fprintf(stderr,
+                        "Expected integer for parameter and got: %s\n", str);
+        return KEY_VALUE_MAPPING_NOT_FOUND;
+    }
+    if (errno == ERANGE) {
+        mbedtls_fprintf(stderr, "Integer out of range: %s\n", str);
+        return KEY_VALUE_MAPPING_NOT_FOUND;
+    }
+    *p_value = value;
+    return 0;
+}
+
+
+/**
+ * \brief       Usage string.
+ *
+ */
+#define USAGE \
+    "Usage: %s [OPTIONS] files...\n\n" \
+    "   Command line arguments:\n" \
+    "     files...          One or more test data files. If no file is\n" \
+    "                       specified the following default test case\n" \
+    "                       file is used:\n" \
+    "                           %s\n\n" \
+    "   Options:\n" \
+    "     -v | --verbose    Display full information about each test\n" \
+    "     -h | --help       Display this information\n\n", \
+    argv[0], \
+    "TESTCASE_FILENAME"
+
+
+/** A variable-size text buffer. */
+typedef struct {
+    /** Null-terminated string, or NULL if not allocated. */
+    char *content;
+    /** Number of allocated bytes. \c 0 if not allocated. */
+    size_t size;
+} string_buffer_t;
+
+/**
+ * \brief               Read a line from the passed file pointer.
+ *                      Empty lines and comments are skipped.
+ *
+ * \param f             FILE pointer
+ * \param buffer        Buffer for the line content.
+ *                      It is filled with a null-terminated string.
+ *
+ * \return              The number of bytes of the resulting line, not
+ *                      including the terminating null byte.
+ *                      On end of file, (size_t) -1.
+ */
+static size_t get_line(FILE *f, string_buffer_t *buffer)
+{
+    char *ret = NULL;
+    size_t offset = 0;
+    size_t length = 0;
+    int have_full_line = 0;
+
+    /* Read until we get a valid line */
+    do {
+        ret = fgets(buffer->content + offset, buffer->size - offset, f);
+        if (ret == NULL) {
+            return (size_t) -1;
+        }
+        length = offset + strlen(buffer->content + offset);
+
+        if (length == buffer->size - 1 && buffer->content[length - 1] != '\n') {
+            /* Unfinished line. Enlarge the buffer. */
+            /* We don't use realloc() because it may not be available
+             * (e.g. MBEDTLS_MEMORY_BUFFER_ALLOC_C doesn't provide it). */
+            size_t new_size = buffer->size * 2;
+            char *new_buffer = mbedtls_calloc(1, new_size);
+            if (new_buffer == NULL) {
+                fprintf(stderr, "FATAL: failed to allocate %zu bytes\n", new_size);
+                mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+            }
+            memcpy(new_buffer, buffer->content, length);
+            mbedtls_free(buffer->content);
+            buffer->content = new_buffer;
+            buffer->size = new_size;
+            offset = length;
+            continue;
+        }
+
+        /* Now we have a full line. */
+        offset = 0;
+
+        /* Strip new line and carriage return. */
+        while (length > 0 && (buffer->content[length - 1] == '\n' ||
+                              buffer->content[length - 1] == '\r')) {
+            --length;
+            buffer->content[length] = 0;
+        }
+
+        if (length == 0) {
+            /* Skip empty line */
+            continue;
+        }
+        if (buffer->content[0] == '#') {
+            /* Skip comment line */
+            continue;
+        }
+        have_full_line = 1;
+    } while (!have_full_line);
+
+    return length;
+}
+
+/**
+ * \brief       Splits string delimited by ':'. Ignores '\:'.
+ *
+ * \param buf           Input string
+ * \param len           Input string length
+ * \param params        Out params found
+ * \param params_len    Out params array len
+ *
+ * \return      Count of strings found.
+ */
+static int parse_arguments(char *buf, size_t len, char **params,
+                           size_t params_len)
+{
+    size_t cnt = 0, i;
+    char *cur = buf;
+    char *p = buf, *q;
+
+    params[cnt++] = cur;
+
+    while (*p != '\0' && p < (buf + len)) {
+        if (*p == '\\') {
+            p++;
+            p++;
+            continue;
+        }
+        if (*p == ':') {
+            if (p + 1 < buf + len) {
+                cur = p + 1;
+                TEST_HELPER_ASSERT(cnt < params_len);
+                params[cnt++] = cur;
+            }
+            *p = '\0';
+        }
+
+        p++;
+    }
+
+    /* Replace backslash escapes in strings */
+    for (i = 0; i < cnt; i++) {
+        p = params[i];
+        q = params[i];
+
+        while (*p != '\0') {
+            if (*p == '\\') {
+                ++p;
+                switch (*p) {
+                    case 'n':
+                        *p = '\n';
+                        break;
+                    default:
+                        // Fall through to copying *p
+                        break;
+                }
+            }
+            *(q++) = *(p++);
+        }
+        *q = '\0';
+    }
+
+    return cnt;
+}
+
+/**
+ * \brief       Converts parameters into test function consumable parameters.
+ *              Example: Input:  {"int", "0", "char*", "Hello",
+ *                                "hex", "abef", "exp", "1"}
+ *                      Output:  {
+ *                                0,                // Verified int
+ *                                "Hello",          // Verified string
+ *                                2, { 0xab, 0xef },// Converted len,hex pair
+ *                                9600              // Evaluated expression
+ *                               }
+ *
+ *
+ * \param cnt               Parameter array count.
+ * \param params            Out array of found parameters.
+ * \param int_params_store  Memory for storing processed integer parameters.
+ *
+ * \return      0 for success else 1
+ */
+static int convert_params(size_t cnt, char **params,
+                          mbedtls_test_argument_t *int_params_store)
+{
+    char **cur = params;
+    char **out = params;
+    int ret = DISPATCH_TEST_SUCCESS;
+
+    while (cur < params + cnt) {
+        char *type = *cur++;
+        char *val = *cur++;
+
+        if (strcmp(type, "char*") == 0) {
+            if (verify_string(&val) == 0) {
+                *out++ = val;
+            } else {
+                ret = (DISPATCH_INVALID_TEST_DATA);
+                break;
+            }
+        } else if (strcmp(type, "int") == 0) {
+            if (verify_int(val, &int_params_store->sint) == 0) {
+                *out++ = (char *) int_params_store++;
+            } else {
+                ret = (DISPATCH_INVALID_TEST_DATA);
+                break;
+            }
+        } else if (strcmp(type, "hex") == 0) {
+            if (verify_string(&val) == 0) {
+                size_t len;
+
+                TEST_HELPER_ASSERT(
+                    mbedtls_test_unhexify((unsigned char *) val, strlen(val),
+                                          val, &len) == 0);
+
+                int_params_store->len = len;
+                *out++ = val;
+                *out++ = (char *) (int_params_store++);
+            } else {
+                ret = (DISPATCH_INVALID_TEST_DATA);
+                break;
+            }
+        } else if (strcmp(type, "exp") == 0) {
+            int exp_id = strtol(val, NULL, 10);
+            if (get_expression(exp_id, &int_params_store->sint) == 0) {
+                *out++ = (char *) int_params_store++;
+            } else {
+                ret = (DISPATCH_INVALID_TEST_DATA);
+                break;
+            }
+        } else {
+            ret = (DISPATCH_INVALID_TEST_DATA);
+            break;
+        }
+    }
+    return ret;
+}
+
+/**
+ * \brief       Tests snprintf implementation with test input.
+ *
+ * \note
+ * At high optimization levels (e.g. gcc -O3), this function may be
+ * inlined in run_test_snprintf. This can trigger a spurious warning about
+ * potential misuse of snprintf from gcc -Wformat-truncation (observed with
+ * gcc 7.2). This warning makes tests in run_test_snprintf redundant on gcc
+ * only. They are still valid for other compilers. Avoid this warning by
+ * forbidding inlining of this function by gcc.
+ *
+ * \param n         Buffer test length.
+ * \param ref_buf   Expected buffer.
+ * \param ref_ret   Expected snprintf return value.
+ *
+ * \return      0 for success else 1
+ */
+#if defined(__GNUC__)
+#  if defined(__dietlibc__)
+/* __noinline__ is a macro in dietlibc... */
+__attribute__((noinline))
+#  else
+__attribute__((__noinline__))
+#  endif
+#endif
+static int test_snprintf(size_t n, const char *ref_buf, int ref_ret)
+{
+    int ret;
+    char buf[10] = "xxxxxxxxx";
+    const char ref[10] = "xxxxxxxxx";
+
+    if (n >= sizeof(buf)) {
+        return -1;
+    }
+    ret = mbedtls_snprintf(buf, n, "%s", "123");
+    if (ret < 0 || (size_t) ret >= n) {
+        ret = -1;
+    }
+
+    if (strncmp(ref_buf, buf, sizeof(buf)) != 0 ||
+        ref_ret != ret ||
+        memcmp(buf + n, ref + n, sizeof(buf) - n) != 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+ * \brief       Tests snprintf implementation.
+ *
+ * \return      0 for success else 1
+ */
+static int run_test_snprintf(void)
+{
+    return test_snprintf(0, "xxxxxxxxx",  -1) != 0 ||
+           test_snprintf(1, "",           -1) != 0 ||
+           test_snprintf(2, "1",          -1) != 0 ||
+           test_snprintf(3, "12",         -1) != 0 ||
+           test_snprintf(4, "123",         3) != 0 ||
+           test_snprintf(5, "123",         3) != 0;
+}
+
+/** \brief Write the description of the test case to the outcome CSV file.
+ *
+ * \param outcome_file  The file to write to.
+ *                      If this is \c NULL, this function does nothing.
+ * \param argv0         The test suite name.
+ * \param test_case     The test case description.
+ */
+static void write_outcome_entry(FILE *outcome_file,
+                                const char *argv0,
+                                const char *test_case)
+{
+    /* The non-varying fields are initialized on first use. */
+    static const char *platform = NULL;
+    static const char *configuration = NULL;
+    static const char *test_suite = NULL;
+
+    if (outcome_file == NULL) {
+        return;
+    }
+
+    if (platform == NULL) {
+        platform = getenv("MBEDTLS_TEST_PLATFORM");
+        if (platform == NULL) {
+            platform = "unknown";
+        }
+    }
+    if (configuration == NULL) {
+        configuration = getenv("MBEDTLS_TEST_CONFIGURATION");
+        if (configuration == NULL) {
+            configuration = "unknown";
+        }
+    }
+    if (test_suite == NULL) {
+        test_suite = strrchr(argv0, '/');
+        if (test_suite != NULL) {
+            test_suite += 1; // skip the '/'
+        } else {
+            test_suite = argv0;
+        }
+    }
+
+    /* Write the beginning of the outcome line.
+     * Ignore errors: writing the outcome file is on a best-effort basis. */
+    mbedtls_fprintf(outcome_file, "%s;%s;%s;%s;",
+                    platform, configuration, test_suite, test_case);
+}
+
+/** \brief Write the result of the test case to the outcome CSV file.
+ *
+ * \param outcome_file  The file to write to.
+ *                      If this is \c NULL, this function does nothing.
+ * \param unmet_dep_count            The number of unmet dependencies.
+ * \param unmet_dependencies         The array of unmet dependencies.
+ * \param missing_unmet_dependencies Non-zero if there was a problem tracking
+ *                                   all unmet dependencies, 0 otherwise.
+ * \param ret                        The test dispatch status (DISPATCH_xxx).
+ */
+static void write_outcome_result(FILE *outcome_file,
+                                 size_t unmet_dep_count,
+                                 int unmet_dependencies[],
+                                 int missing_unmet_dependencies,
+                                 int ret)
+{
+    if (outcome_file == NULL) {
+        return;
+    }
+
+    /* Write the end of the outcome line.
+     * Ignore errors: writing the outcome file is on a best-effort basis. */
+    switch (ret) {
+        case DISPATCH_TEST_SUCCESS:
+            if (unmet_dep_count > 0) {
+                size_t i;
+                mbedtls_fprintf(outcome_file, "SKIP");
+                for (i = 0; i < unmet_dep_count; i++) {
+                    mbedtls_fprintf(outcome_file, "%c%d",
+                                    i == 0 ? ';' : ':',
+                                    unmet_dependencies[i]);
+                }
+                if (missing_unmet_dependencies) {
+                    mbedtls_fprintf(outcome_file, ":...");
+                }
+                break;
+            }
+            switch (mbedtls_test_get_result()) {
+                case MBEDTLS_TEST_RESULT_SUCCESS:
+                    mbedtls_fprintf(outcome_file, "PASS;");
+                    break;
+                case MBEDTLS_TEST_RESULT_SKIPPED:
+                    mbedtls_fprintf(outcome_file, "SKIP;Runtime skip");
+                    break;
+                default:
+                    mbedtls_fprintf(outcome_file, "FAIL;%s:%d:%s",
+                                    mbedtls_get_test_filename(),
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_test_get_test());
+                    break;
+            }
+            break;
+        case DISPATCH_TEST_FN_NOT_FOUND:
+            mbedtls_fprintf(outcome_file, "FAIL;Test function not found");
+            break;
+        case DISPATCH_INVALID_TEST_DATA:
+            mbedtls_fprintf(outcome_file, "FAIL;Invalid test data");
+            break;
+        case DISPATCH_UNSUPPORTED_SUITE:
+            mbedtls_fprintf(outcome_file, "SKIP;Unsupported suite");
+            break;
+        default:
+            mbedtls_fprintf(outcome_file, "FAIL;Unknown cause");
+            break;
+    }
+    mbedtls_fprintf(outcome_file, "\n");
+    fflush(outcome_file);
+}
+
+#if defined(__unix__) ||                                \
+    (defined(__APPLE__) && defined(__MACH__))
+#define MBEDTLS_HAVE_CHDIR
+#endif
+
+#if defined(MBEDTLS_HAVE_CHDIR)
+/** Try chdir to the directory containing argv0.
+ *
+ * Failures are silent.
+ */
+static void try_chdir_if_supported(const char *argv0)
+{
+    /* We might want to allow backslash as well, for Windows. But then we also
+     * need to consider chdir() vs _chdir(), and different conventions
+     * regarding paths in argv[0] (naively enabling this code with
+     * backslash support on Windows leads to chdir into the wrong directory
+     * on the CI). */
+    const char *slash = strrchr(argv0, '/');
+    if (slash == NULL) {
+        return;
+    }
+    size_t path_size = slash - argv0 + 1;
+    char *path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        return;
+    }
+    memcpy(path, argv0, path_size - 1);
+    path[path_size - 1] = 0;
+    int ret = chdir(path);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
+    mbedtls_free(path);
+}
+#else /* MBEDTLS_HAVE_CHDIR */
+/* No chdir() or no support for parsing argv[0] on this platform. */
+static void try_chdir_if_supported(const char *argv0)
+{
+    (void) argv0;
+    return;
+}
+#endif /* MBEDTLS_HAVE_CHDIR */
+
+/**
+ * \brief       Desktop implementation of execute_tests().
+ *              Parses command line and executes tests from
+ *              supplied or default data file.
+ *
+ * \param argc  Command line argument count.
+ * \param argv  Argument array.
+ *
+ * \return      Program exit status.
+ */
+static int execute_tests(int argc, const char **argv)
+{
+    /* Local Configurations and options */
+    const char *default_filename = "./test_suite_psa_crypto_init.datax";
+    const char *test_filename = NULL;
+    const char **test_files = NULL;
+    size_t testfile_count = 0;
+    int option_verbose = 0;
+    size_t function_id = 0;
+
+    /* Other Local variables */
+    int arg_index = 1;
+    const char *next_arg;
+    size_t testfile_index, i, cnt;
+    unsigned total_errors = 0, total_tests = 0, total_skipped = 0;
+    FILE *file;
+    string_buffer_t line = { NULL, 0 };
+    char *params[50];
+    /* Store for processed integer params. */
+    mbedtls_test_argument_t int_params[50];
+    void *pointer;
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+    int stdout_fd = -1;
+#endif /* __unix__ || __APPLE__ __MACH__ */
+    const char *outcome_file_name = getenv("MBEDTLS_TEST_OUTCOME_FILE");
+    FILE *outcome_file = NULL;
+
+#if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
+    !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
+    unsigned char alloc_buf[1000000];
+    mbedtls_memory_buffer_alloc_init(alloc_buf, sizeof(alloc_buf));
+#endif
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_init();
+#endif
+
+    /*
+     * The C standard doesn't guarantee that all-bits-0 is the representation
+     * of a NULL pointer. We do however use that in our code for initializing
+     * structures, which should work on every modern platform. Let's be sure.
+     */
+    memset(&pointer, 0, sizeof(void *));
+    if (pointer != NULL) {
+        mbedtls_fprintf(stderr, "all-bits-zero is not a NULL pointer\n");
+        return 1;
+    }
+
+    /*
+     * Make sure we have a snprintf that correctly zero-terminates
+     */
+    if (run_test_snprintf() != 0) {
+        mbedtls_fprintf(stderr, "the snprintf implementation is broken\n");
+        return 1;
+    }
+
+    if (outcome_file_name != NULL && *outcome_file_name != '\0') {
+        outcome_file = fopen(outcome_file_name, "a");
+        if (outcome_file == NULL) {
+            mbedtls_fprintf(stderr, "Unable to open outcome file. Continuing anyway.\n");
+        }
+    }
+
+    line.size = 256;
+    line.content = mbedtls_calloc(1, line.size);
+    if (line.content == NULL) {
+        fprintf(stderr, "FATAL: failed to allocate %zu bytes\n", line.size);
+        mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+    }
+
+    while (arg_index < argc) {
+        next_arg = argv[arg_index];
+
+        if (strcmp(next_arg, "--verbose") == 0 ||
+            strcmp(next_arg, "-v") == 0) {
+            option_verbose = 1;
+        } else if (strcmp(next_arg, "--help") == 0 ||
+                   strcmp(next_arg, "-h") == 0) {
+            mbedtls_fprintf(stdout, USAGE);
+            mbedtls_exit(EXIT_SUCCESS);
+        } else {
+            /* Not an option, therefore treat all further arguments as the file
+             * list.
+             */
+            test_files = &argv[arg_index];
+            testfile_count = argc - arg_index;
+            break;
+        }
+
+        arg_index++;
+    }
+
+    /* If no files were specified, assume a default */
+    if (test_files == NULL || testfile_count == 0) {
+        test_files = &default_filename;
+        testfile_count = 1;
+    }
+
+    /* Initialize the struct that holds information about the last test */
+    mbedtls_test_info_reset();
+
+    /* Now begin to execute the tests in the testfiles */
+    for (testfile_index = 0;
+         testfile_index < testfile_count;
+         testfile_index++) {
+        size_t unmet_dep_count = 0;
+        int unmet_dependencies[20];
+        int missing_unmet_dependencies = 0;
+
+        test_filename = test_files[testfile_index];
+
+        file = fopen(test_filename, "r");
+        if (file == NULL) {
+            mbedtls_fprintf(stderr, "Failed to open test file: %s\n",
+                            test_filename);
+            if (outcome_file != NULL) {
+                fclose(outcome_file);
+            }
+            return 1;
+        }
+
+        while (!feof(file)) {
+            if (unmet_dep_count > 0) {
+                mbedtls_fprintf(stderr,
+                                "FATAL: Dep count larger than zero at start of loop\n");
+                mbedtls_exit(MBEDTLS_EXIT_FAILURE);
+            }
+            unmet_dep_count = 0;
+            missing_unmet_dependencies = 0;
+
+            size_t length = get_line(file, &line);
+            if (length == (size_t) -1) {
+                break;
+            }
+            mbedtls_fprintf(stdout, "%s%.66s",
+                            mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_FAILED ?
+                            "\n" : "", line.content);
+            mbedtls_fprintf(stdout, " ");
+            for (i = length + 1; i < 67; i++) {
+                mbedtls_fprintf(stdout, ".");
+            }
+            mbedtls_fprintf(stdout, " ");
+            fflush(stdout);
+            write_outcome_entry(outcome_file, argv[0], line.content);
+
+            total_tests++;
+
+            length = get_line(file, &line);
+            if (length == (size_t) -1) {
+                break;
+            }
+            cnt = parse_arguments(line.content, length, params,
+                                  sizeof(params) / sizeof(params[0]));
+
+            if (strcmp(params[0], "depends_on") == 0) {
+                for (i = 1; i < cnt; i++) {
+                    int dep_id = strtol(params[i], NULL, 10);
+                    if (dep_check(dep_id) != DEPENDENCY_SUPPORTED) {
+                        if (unmet_dep_count <
+                            ARRAY_LENGTH(unmet_dependencies)) {
+                            unmet_dependencies[unmet_dep_count] = dep_id;
+                            unmet_dep_count++;
+                        } else {
+                            missing_unmet_dependencies = 1;
+                        }
+                    }
+                }
+
+                length = get_line(file, &line);
+                if (length == (size_t) -1) {
+                    break;
+                }
+                cnt = parse_arguments(line.content, length, params,
+                                      sizeof(params) / sizeof(params[0]));
+            }
+
+            // If there are no unmet dependencies execute the test
+            int ret = DISPATCH_TEST_SUCCESS; /*also covers test case skip*/
+            if (unmet_dep_count == 0) {
+                mbedtls_test_info_reset();
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+                /* Suppress all output from the library unless we're verbose
+                 * mode
+                 */
+                if (!option_verbose) {
+                    stdout_fd = redirect_output(stdout, "/dev/null");
+                    if (stdout_fd == -1) {
+                        /* Redirection has failed with no stdout so exit */
+                        exit(1);
+                    }
+                }
+#endif /* __unix__ || __APPLE__ __MACH__ */
+
+                function_id = strtoul(params[0], NULL, 10);
+                ret = check_test(function_id);
+                if (ret == DISPATCH_TEST_SUCCESS) {
+                    ret = convert_params(cnt - 1, params + 1, int_params);
+                    if (DISPATCH_TEST_SUCCESS == ret) {
+                        ret = dispatch_test(function_id, (void **) (params + 1));
+                    }
+                }
+
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+                if (!option_verbose && restore_output(stdout, stdout_fd)) {
+                    /* Redirection has failed with no stdout so exit */
+                    exit(1);
+                }
+#endif /* __unix__ || __APPLE__ __MACH__ */
+
+            }
+
+            write_outcome_result(outcome_file,
+                                 unmet_dep_count, unmet_dependencies,
+                                 missing_unmet_dependencies,
+                                 ret);
+            if (unmet_dep_count > 0 || ret == DISPATCH_UNSUPPORTED_SUITE) {
+                total_skipped++;
+                mbedtls_fprintf(stdout, "----");
+
+                if (1 == option_verbose && ret == DISPATCH_UNSUPPORTED_SUITE) {
+                    mbedtls_fprintf(stdout, "\n   Test Suite not enabled");
+                }
+
+                if (1 == option_verbose && unmet_dep_count > 0) {
+                    mbedtls_fprintf(stdout, "\n   Unmet dependencies: ");
+                    for (i = 0; i < unmet_dep_count; i++) {
+                        mbedtls_fprintf(stdout, "%d ",
+                                        unmet_dependencies[i]);
+                    }
+                    if (missing_unmet_dependencies) {
+                        mbedtls_fprintf(stdout, "...");
+                    }
+                }
+                mbedtls_fprintf(stdout, "\n");
+                fflush(stdout);
+
+                unmet_dep_count = 0;
+                missing_unmet_dependencies = 0;
+            } else if (ret == DISPATCH_TEST_SUCCESS) {
+                if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SUCCESS) {
+                    mbedtls_fprintf(stdout, "PASS\n");
+                } else if (mbedtls_test_get_result() == MBEDTLS_TEST_RESULT_SKIPPED) {
+                    mbedtls_fprintf(stdout, "----\n");
+                    total_skipped++;
+                } else {
+                    char line_buffer[MBEDTLS_TEST_LINE_LENGTH];
+
+                    total_errors++;
+                    mbedtls_fprintf(stdout, "FAILED\n");
+                    mbedtls_fprintf(stdout, "  %s\n  at ",
+                                    mbedtls_test_get_test());
+                    if (mbedtls_test_get_step() != (unsigned long) (-1)) {
+                        mbedtls_fprintf(stdout, "step %lu, ",
+                                        mbedtls_test_get_step());
+                    }
+                    mbedtls_fprintf(stdout, "line %d, %s",
+                                    mbedtls_test_get_line_no(),
+                                    mbedtls_get_test_filename());
+
+                    mbedtls_test_get_line1(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
+                    }
+                    mbedtls_test_get_line2(line_buffer);
+                    if (line_buffer[0] != 0) {
+                        mbedtls_fprintf(stdout, "\n  %s", line_buffer);
+                    }
+                }
+                fflush(stdout);
+            } else if (ret == DISPATCH_INVALID_TEST_DATA) {
+                mbedtls_fprintf(stderr, "FAILED: FATAL PARSE ERROR\n");
+                fclose(file);
+                mbedtls_exit(2);
+            } else if (ret == DISPATCH_TEST_FN_NOT_FOUND) {
+                mbedtls_fprintf(stderr, "FAILED: FATAL TEST FUNCTION NOT FOUND\n");
+                fclose(file);
+                mbedtls_exit(2);
+            } else {
+                total_errors++;
+            }
+        }
+        fclose(file);
+    }
+
+    if (outcome_file != NULL) {
+        fclose(outcome_file);
+    }
+
+    mbedtls_fprintf(stdout,
+                    "\n----------------------------------------------------------------------------\n\n");
+    if (total_errors == 0) {
+        mbedtls_fprintf(stdout, "PASSED");
+    } else {
+        mbedtls_fprintf(stdout, "FAILED");
+    }
+
+    mbedtls_fprintf(stdout, " (%u / %u tests (%u skipped))\n",
+                    total_tests - total_errors, total_tests, total_skipped);
+
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    mbedtls_test_mutex_usage_end();
+#endif
+
+    mbedtls_free(line.content);
+
+#if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
+    !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)
+#if defined(MBEDTLS_MEMORY_DEBUG)
+    mbedtls_memory_buffer_alloc_status();
+#endif
+    mbedtls_memory_buffer_alloc_free();
+#endif
+
+    return total_errors != 0;
+}
+
+
+#line 226 "suites/main_test.function"
+
+/*----------------------------------------------------------------------------*/
+/* Main Test code */
+
+
+/**
+ * \brief       Program main. Invokes platform specific execute_tests().
+ *
+ * \param argc      Command line arguments count.
+ * \param argv      Array of command line arguments.
+ *
+ * \return       Exit code.
+ */
+int main(int argc, const char *argv[])
+{
+#if defined(MBEDTLS_TEST_HOOKS)
+    extern void (*mbedtls_test_hook_test_fail)(const char *test, int line, const char *file);
+    mbedtls_test_hook_test_fail = &mbedtls_test_fail;
+#endif
+
+    /* Try changing to the directory containing the executable, if
+     * using the default data file. This allows running the executable
+     * from another directory (e.g. the project root) and still access
+     * the .datax file as well as data files used by test cases
+     * (typically from framework/data_files).
+     *
+     * Note that we do this before the platform setup (which may access
+     * files such as a random seed). We also do this before accessing
+     * test-specific files such as the outcome file, which is arguably
+     * not desirable and should be fixed later.
+     */
+    if (argc == 1) {
+        try_chdir_if_supported(argv[0]);
+    }
+
+    int ret = mbedtls_test_platform_setup();
+    if (ret != 0) {
+        mbedtls_fprintf(stderr,
+                        "FATAL: Failed to initialize platform - error %d\n",
+                        ret);
+        return -1;
+    }
+
+    ret = execute_tests(argc, argv);
+    mbedtls_test_platform_teardown();
+    return ret;
+}

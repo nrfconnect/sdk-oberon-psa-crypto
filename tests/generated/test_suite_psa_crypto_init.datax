@@ -1,0 +1,24 @@
+PSA init/deinit
+0:int:2
+
+PSA deinit without init
+1:int:0
+
+PSA deinit twice
+1:int:1
+
+PSA threaded init checks
+2:int:100
+
+No random without init
+3:int:0
+
+No key slot access without init
+4:int:0
+
+No random after deinit
+3:int:1
+
+No key slot access after deinit
+4:int:1
+

@@ -47,5 +47,8 @@ Exposures):
 | CVE-2025-9071  |  1.0.0 <= version <= 1.5.1 without `rsa_oaep_padding.patch` | low      | Insecure RSA-OAEP implementation with all-zero seed for padding in Oberon PSA Crypto. |
 | CVE-2025-7383  |  1.0.0 <= version <= 1.5.0                                  | medium   | Timing side-channel vulnerability in AES-CBC decryption with PKCS#7 padding.          |
 
+The detailed security advisories can be found at
+[Oberon Security Advisories](https://www.oberon.ch/security-advisories/).
+
 If you have found a potential vulnerability, please report it via your Slack
 support channel, or via <vulnerability@oberon.ch>.

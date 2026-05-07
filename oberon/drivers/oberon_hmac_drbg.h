@@ -20,6 +20,17 @@ extern "C" {
 #endif
 
 
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_HMAC_DRBG_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_HMAC_DRBG_VERSION_MINOR 0
+
+
 #if !defined(OBERON_HMAC_DRBG_HASH_ALG)
 #define OBERON_HMAC_DRBG_HASH_ALG  PSA_ALG_SHA_256
 #endif
@@ -30,6 +41,7 @@ typedef struct {
     uint8_t k[PSA_HASH_LENGTH(OBERON_HMAC_DRBG_HASH_ALG)];
     uint8_t v[PSA_HASH_LENGTH(OBERON_HMAC_DRBG_HASH_ALG)];
     uint32_t reseed_counter;
+    uint32_t prediction_resistance;
 #ifdef OBERON_USE_MUTEX
     oberon_mutex_type mutex;
 #endif
@@ -43,6 +55,17 @@ psa_status_t oberon_hmac_drbg_get_random(
     oberon_hmac_drbg_context_t *context,
     uint8_t *output,
     size_t output_size);
+
+psa_status_t oberon_hmac_drbg_random_reseed(
+    oberon_hmac_drbg_context_t *context,
+    const uint8_t *perso, size_t perso_size);
+
+psa_status_t oberon_hmac_drbg_random_deplete(
+    oberon_hmac_drbg_context_t *context);
+
+psa_status_t oberon_hmac_drbg_random_set_prediction_resistance(
+    oberon_hmac_drbg_context_t *context,
+    unsigned enabled);
 
 psa_status_t oberon_hmac_drbg_free(
     oberon_hmac_drbg_context_t *context);

@@ -6,9 +6,8 @@ chapter.
 ## Provide Template with "USE" directives for System Crypto Configuration
 
 To make the job of a _system crypto configurator_ as easy as possible, a template
-file with the appropriate "use" directives should be provided for the _target
-platform_. See
-[Crypto Configuration](Crypto_Configuration.md)
+file with the appropriate "use" directives for hardware drivers should be provided
+for the _target platform_. See [Crypto Configuration](Crypto_Configuration.md)
 for more information.
 
 ## Provide Key Storage Implementation
@@ -16,11 +15,11 @@ for more information.
 An implementation of the _PSA_ key storage mechanism must be provided for the
 _target platform_. For this purpose, the following file must be adapted:
 
-- `library/psa_its_file.c`
+- `core/psa_its_file.c`
 
-For demonstration purposes, this file assumes that the file-based implementation
-of `library/psa_crypto_storage.c` will be used. For production systems, the
-latter needs to be replaced by some other suitable implementation.
+For demonstration purposes, this document assumes that the file-based
+implementation of `core/psa_crypto_storage.c` is used. For production systems,
+the latter needs to be replaced by a production-quality implementation.
 
 See the specification of the _PSA Secure Storage API_ for more information.
 
@@ -64,10 +63,10 @@ configuration is provided at:
 - `oberon/platforms/demo/`
 
 It includes mock drivers located in subdirectory `drivers/`, example
-configurations located in subdirectory `example_config/` (see 
+configurations located in subdirectory `example_config/` (see
 [Appendix C: System Crypto Configuration Examples](Appendix_C_System_Crypto_Configuration_Examples.md)),
 default driver configuration and context type definition headers located in
-`include/psa/`, and a default _driver wrappers_ implementation located in 
+`include/psa/`, and a default _driver wrappers_ implementation located in
 `library/`.
 
 ## Provide Crypto Driver Configuration
@@ -77,22 +76,22 @@ be adapted and placed in:
 
 - `include/psa/crypto_driver_config.h`
 
-In this file, there should be one `# include` statement to the _hardware driver
+In this file, there should be one `#include` statement to the _hardware driver
 crypto configuration_ file for every _hardware driver_. The rest of the file must
 not be modified.
 
 ## Adapt the Driver Wrappers
 
-To make the set of available _hardware drivers_ known to _Oberon PSA Crypto_ 
-and its configuration mechanism, the _driver wrappers_ C file provided in 
+To make the set of available _hardware drivers_ known to _Oberon PSA Crypto_
+and its configuration mechanism, the _driver wrappers_ C file provided in
 `oberon/platforms/demo/` must be adapted and placed in:
 
-- `library/psa_crypto_driver_wrappers.c`
+- `dispatch/psa_crypto_driver_wrappers.c`
 
 See the _PSA_ documentation regarding the naming rules that must be obeyed in
 this file.
 
-The following header files provided in `oberon/platforms/demo/` may need to be 
+The following header files provided in `oberon/platforms/demo/` may need to be
 extended to include the context data types (operation types):
 
 - `psa/crypto_driver_contexts_primitives.h`

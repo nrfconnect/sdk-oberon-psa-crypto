@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_EDDSA_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -26,7 +30,9 @@
 #ifdef PSA_NEED_OBERON_ED448PH
 #include "ocrypto_ed448ph.h"
 #endif /* PSA_NEED_OBERON_ED448PH */
+#include "ocrypto_version.h"
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 psa_status_t oberon_eddsa_sign_hash_with_context(
     const psa_key_attributes_t *attributes,
@@ -36,6 +42,8 @@ psa_status_t oberon_eddsa_sign_hash_with_context(
     const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EDDSA Oberon driver: ocrypto version incompatible");
     int res;
     psa_status_t status;
     uint8_t ek[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
@@ -98,6 +106,8 @@ psa_status_t oberon_eddsa_sign_message_with_context(
     const uint8_t *context, size_t context_length,
     uint8_t *signature, size_t signature_size, size_t *signature_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EDDSA Oberon driver: ocrypto version incompatible");
 #if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
     uint8_t pub_key[57];
 #elif defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_255)
@@ -158,6 +168,8 @@ psa_status_t oberon_eddsa_verify_hash_with_context(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EDDSA Oberon driver: ocrypto version incompatible");
     int res = 1;
     uint8_t key_buf[2 * PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -223,6 +235,8 @@ psa_status_t oberon_eddsa_verify_message_with_context(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EDDSA Oberon driver: ocrypto version incompatible");
     int res = 1;
 #if defined(PSA_NEED_OBERON_PURE_EDDSA_TWISTED_EDWARDS_448)
     uint8_t pub_key[57];

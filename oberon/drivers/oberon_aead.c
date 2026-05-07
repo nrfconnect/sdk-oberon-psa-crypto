@@ -8,6 +8,10 @@
 //
 // This file implements functions from the PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_AEAD_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -25,7 +29,9 @@
 #ifdef PSA_NEED_OBERON_ASCON_AEAD128
 #include "ocrypto_ascon_aead.h"
 #endif /* PSA_NEED_OBERON_ASCON_AEAD128 */
+#include "ocrypto_version.h"
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 static psa_status_t oberon_aead_setup(
     oberon_aead_operation_t *operation,
@@ -33,6 +39,8 @@ static psa_status_t oberon_aead_setup(
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg, uint8_t decrypt)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "AEAD Oberon driver: ocrypto version incompatible");
     size_t tag_length;
     psa_algorithm_t short_alg;
 #if defined(PSA_NEED_OBERON_CHACHA20_POLY1305) || defined(PSA_NEED_OBERON_XCHACHA20_POLY1305)
@@ -410,6 +418,8 @@ psa_status_t oberon_aead_encrypt(
     const uint8_t *plaintext, size_t plaintext_length,
     uint8_t *ciphertext, size_t ciphertext_size, size_t *ciphertext_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "AEAD Oberon driver: ocrypto version incompatible");
     ocrypto_context ctx;
     size_t tag_length = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
     size_t length = plaintext_length + tag_length;
@@ -520,6 +530,8 @@ psa_status_t oberon_aead_decrypt(
     const uint8_t *ciphertext, size_t ciphertext_length,
     uint8_t *plaintext, size_t plaintext_size, size_t *plaintext_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "AEAD Oberon driver: ocrypto version incompatible");
     ocrypto_context ctx;
     int res = 1;
     size_t tag_length = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);

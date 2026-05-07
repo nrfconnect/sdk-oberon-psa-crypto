@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_WPA3_SAE_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -460,6 +464,8 @@ psa_status_t oberon_derive_wpa3_sae_pt_key(
     const uint8_t *input, size_t input_length,
     uint8_t *key, size_t key_size, size_t *key_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "WPA3-SAE Oberon driver: ocrypto version incompatible");
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
     uint8_t u1[64], u2[64];
@@ -502,6 +508,8 @@ psa_status_t oberon_import_wpa3_sae_pt_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "WPA3-SAE Oberon driver: ocrypto version incompatible");
     int res;
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);

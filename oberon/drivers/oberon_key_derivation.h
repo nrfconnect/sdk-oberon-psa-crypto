@@ -20,7 +20,18 @@ extern "C" {
 #endif
 
 
-#define OBERON_KDF_MAX_INFO_BYTES  256
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_KEY_DERIVATION_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_KEY_DERIVATION_VERSION_MINOR 0
+
+
+#define OBERON_KDF_MAX_INFO_BYTES  322
 #define OBERON_TLS12_PRF_MAX_KEY_BYTES  516
 
 

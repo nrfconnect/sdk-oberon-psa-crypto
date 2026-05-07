@@ -20,4 +20,6 @@
 #include "demo_driver_config.h"
 #endif
 
+#include "oberon_config.h"
+
 #endif /* PSA_CRYPTO_DRIVER_CONFIG_H */

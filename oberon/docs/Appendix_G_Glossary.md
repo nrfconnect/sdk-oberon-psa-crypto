@@ -47,9 +47,11 @@ directives that are needed by _Oberon PSA Crypto_ for dead code elimination in
 the _crypto core_ and in the _driver wrappers_. A simple mock example is located
 in file `oberon/platforms/demo/drivers/demo_driver_config.h`.
 
-_Mbed TLS_: Arm's open source implementation of the TLS protocol standard. It
-contains a cryptographic part that is currently being migrated towards _PSA
-Certified Crypto API_ and _PSA Crypto Driver API_ compatibility.
+_Mbed TLS_: Arm's open source implementation of the TLS protocol standard. Before
+version 4.0, it contained a cryptographic part that partially supported the
+_PSA Certified Crypto API_ in addition to its incompatible legacy API. Since
+_Mbed TLS_ 4.0, the crypto part is provided as a separate repository with the
+name _TF-PSA-Crypto_.
 
 _Oberon driver_: A software-only _crypto driver_ that is provided as part of
 _Oberon PSA Crypto_. It implements the _PSA Crypto Driver API_ so that it can be
@@ -116,7 +118,7 @@ tests and services are available for implementations of these APIs. For _Oberon
 PSA Crypto_, only the _PSA Certified Crypto API_ and _PSA Certified Secure
 Storage API_ are relevant.
 
-_PSA APIs Test Suite_: Suite of tests for the functionality of an implementation
+_PSA API Test Suite_: Suite of tests for the functionality of an implementation
 of _PSA Certified APIs_ against the specification of these APIs. For
 _Oberon PSA Crypto_, only the cryptography-related part of the test suite is
 relevant.
@@ -165,6 +167,10 @@ what _hardware drivers_ are available for the _target platform_.
 _Target platform_: Hardware chip(s) or device(s), with or without a real-time
 operating system, on which an application can run using _Oberon PSA Crypto_. The
 hardware may or may not have hardware accelerators for cryptographic operations.
+
+_TF-PSA-Crypto_: Formerly the crypto component of _Mbed TLS_ 3.x, now a separate
+repository. _Oberon PSA Crypto_ can be used as a direct replacement of
+_TF-PSA-Crypto_.
 
 This file by _Oberon microsystems_ is licensed under the
 [Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

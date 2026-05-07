@@ -25,7 +25,7 @@ Syntax for identifier parts (symbols) used in the chapters below:
 represented as two consecutive underscores in the syntax, but only one underscore
 must be used in actual code.*
 
-From the _Mbed TLS_ documentation:
+From the _TF-PSA-Crypto_ documentation:
 A _PSA Crypto_ configuration symbol is a C preprocessor symbol whose name starts
 with `PSA_WANT_`.
 

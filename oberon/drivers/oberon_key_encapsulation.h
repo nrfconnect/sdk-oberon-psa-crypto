@@ -19,6 +19,17 @@ extern "C" {
 #endif
 
 
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_KEY_ENCAPSULATION_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_KEY_ENCAPSULATION_VERSION_MINOR 0
+
+
 psa_status_t oberon_encapsulate(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,

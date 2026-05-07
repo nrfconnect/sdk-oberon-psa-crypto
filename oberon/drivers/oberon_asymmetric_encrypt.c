@@ -8,13 +8,16 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_ASYMMETRIC_ENCRYPT_VERSION_NUMBER 1.6.0
+ */
+
 #include "psa/crypto.h"
 #include "oberon_asymmetric_encrypt.h"
 
 #ifdef PSA_NEED_OBERON_RSA_ANY_CRYPT
 #include "oberon_rsa.h"
 #endif
-
 
 psa_status_t oberon_asymmetric_encrypt(
     const psa_key_attributes_t *attributes,

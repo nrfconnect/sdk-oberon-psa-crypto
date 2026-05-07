@@ -28,9 +28,7 @@ organization.
 
 *Note: A protocol stack that uses cryptographic functions is considered part of
 the application and is not discussed separately. _Mbed TLS_ is an example of a
-(TLS) protocol stack that can use the _PSA Certified Crypto API_. Currently,
-_Mbed TLS_ also contains an _implementation_ of _PSA Crypto_. This is subject to
-change in the next major release of _Mbed TLS_.*
+(TLS) protocol stack that can use the _PSA Certified Crypto API_.*
 
 A _PSA Crypto_ implementation may also support the _PSA Crypto Driver API_.
 Through this API, a _PSA Crypto_ implementation can delegate actual cryptographic

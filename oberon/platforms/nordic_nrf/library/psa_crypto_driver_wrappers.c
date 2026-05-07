@@ -11,7 +11,7 @@
  * NOTICE: This file has been modified by Oberon microsystems AG.
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 #include "psa/crypto.h"
 #include "psa_crypto_core.h"
 #include "psa_crypto_driver_wrappers.h"
@@ -2816,6 +2816,53 @@ psa_status_t psa_driver_wrapper_get_random(
     (void)context;
     (void)output;
     (void)output_size;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_random_reseed(
+    psa_driver_random_context_t *context,
+    const uint8_t *perso, size_t perso_size)
+{
+#ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
+    return oberon_ctr_drbg_random_reseed(&context->oberon_ctr_drbg_ctx, perso, perso_size);
+#endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */
+#ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
+    return oberon_hmac_drbg_random_reseed(&context->oberon_hmac_drbg_ctx, perso, perso_size);
+#endif /* PSA_NEED_OBERON_HMAC_DRBG_DRIVER */
+
+    (void)context;
+    (void)perso;
+    (void)perso_size;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_random_deplete(
+    psa_driver_random_context_t *context)
+{
+#ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
+    return oberon_ctr_drbg_random_deplete(&context->oberon_ctr_drbg_ctx);
+#endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */
+#ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
+    return oberon_hmac_drbg_random_deplete(&context->oberon_hmac_drbg_ctx);
+#endif /* PSA_NEED_OBERON_HMAC_DRBG_DRIVER */
+
+    (void)context;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_random_set_prediction_resistance(
+    psa_driver_random_context_t *context,
+    unsigned enabled)
+{
+#ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
+    return oberon_ctr_drbg_random_set_prediction_resistance(&context->oberon_ctr_drbg_ctx, enabled);
+#endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */
+#ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
+    return oberon_hmac_drbg_random_set_prediction_resistance(&context->oberon_hmac_drbg_ctx, enabled);
+#endif /* PSA_NEED_OBERON_HMAC_DRBG_DRIVER */
+
+    (void)context;
+    (void)enabled;
     return PSA_ERROR_NOT_SUPPORTED;
 }
 

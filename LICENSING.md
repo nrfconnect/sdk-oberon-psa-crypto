@@ -27,34 +27,30 @@ They are licensed under _CC BY-SA 4.0_ (text, illustrations) and _Apache 2.0_
 *Note: The _PSA Certified Crypto Driver Interface_ is currently still in alpha
 state.*
 
-### Mbed TLS
+### TF-PSA Crypto (formerly the crypto component of Mbed TLS)
 
 The high-level part of this software (i.e., the _crypto core_) is a fork of the
-crypto component of Arm's _Mbed TLS_ open source project:
-[Mbed TLS](https://github.com/Mbed-TLS/mbedtls).
+crypto component of Arm's _Mbed TLS_ open source project, which is now a separate
+repository with the name _TF-PSA-Crypto_:
+[TF-PSA-Crypto](https://github.com/Mbed-TLS/TF-PSA-Crypto).
 
-_Mbed TLS_ is licensed under both an `Apache-2.0` and a `GPL-2.0-or-later`
+_TF-PSA-Crypto_ is licensed under both an `Apache-2.0` and a `GPL-2.0-or-later`
 license:
-[Mbed TLS Licenses](https://github.com/Mbed-TLS/mbedtls/blob/development/LICENSE).
+[TF-PSA-Crypto Licenses](https://github.com/Mbed-TLS/TF-PSA-Crypto?tab=License-1-ov-file).
 
-Some files that originate from _Mbed TLS_ have been modified by Oberon
+Some files that originate from _TF-PSA-Crypto_ have been modified by Oberon
 microsystems AG. They contain the following notice:
 
 `NOTICE: This file has been modified by Oberon microsystems AG.`
 
-*Note: In October 2025, the crypto component of _Mbed TLS_ has been factored out
-into the separate _TF-PSA-Crypto_ repo that provides better _PSA Crypto_
-support:*
-[TF-PSA-Crypto](https://github.com/Mbed-TLS/TF-PSA-Crypto).
-
-### PSA APIs Test Suite
+### PSA API Test Suite
 
 For certification testing against the _PSA Certified APIs_, the
-_PSA APIs Test Suite_ is included:
-[PSA APIs Test Suite](https://github.com/ARM-software/psa-arch-tests).
+_PSA API Test Suite_ is included:
+[PSA API Test Suite](https://github.com/ARM-software/psa-arch-tests).
 
 The test suite is licensed under the _Apache 2.0_ license:
-[PSA APIs Test Suite License](https://github.com/ARM-software/psa-arch-tests/blob/main/LICENSE.md).
+[PSA API Test Suite License](https://github.com/ARM-software/psa-arch-tests/blob/main/LICENSE.md).
 
 The test suite depends on the _Arm_ test library `val_common`, which is licensed
 under a BSD license (SPDX identifier `BSD-3-Clause`).

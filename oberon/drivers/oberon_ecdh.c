@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_ECDH_VERSION_NUMBER 1.6.0
+ */
+
 #include "psa/crypto.h"
 #include "oberon_ecdh.h"
 
@@ -32,7 +36,9 @@
 #ifdef PSA_NEED_OBERON_ECDH_MONTGOMERY_448
 #include "ocrypto_curve448.h"
 #endif /* PSA_NEED_OBERON_ECDH_MONTGOMERY_448 */
+#include "ocrypto_version.h"
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 psa_status_t oberon_ecdh(
     const psa_key_attributes_t *attributes,
@@ -41,6 +47,8 @@ psa_status_t oberon_ecdh(
     const uint8_t *peer_key, size_t peer_key_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "ECDH Oberon driver: ocrypto version incompatible");
     int res = 1;
     size_t bits = psa_get_key_bits(attributes);
     if (alg != PSA_ALG_ECDH) return PSA_ERROR_NOT_SUPPORTED;

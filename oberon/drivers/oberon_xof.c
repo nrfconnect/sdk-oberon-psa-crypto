@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_XOF_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -19,12 +23,16 @@
 #if defined(PSA_NEED_OBERON_ASCON_XOF128)
 #include "ocrypto_ascon_hash.h"
 #endif
+#include "ocrypto_version.h"
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 psa_status_t oberon_xof_setup(
     oberon_xof_operation_t *operation,
     psa_algorithm_t alg)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "XOF Oberon driver: ocrypto version incompatible");
     switch (alg) {
 #ifdef PSA_NEED_OBERON_SHAKE128
     _Static_assert(sizeof operation->ctx >= sizeof(ocrypto_shake_ctx), "oberon_xof_operation_t.ctx too small");

@@ -1,0 +1,3447 @@
+Attempt to register multiple PSKs
+55
+
+Attempt to register multiple PSKS, incl. opaque PSK, #0
+56:int:0
+
+Attempt to register multiple PSKs, incl. opaque PSK, #1
+56:int:1
+
+Attempt to register multiple PSKs, incl. opaque PSK, #2
+56:int:2
+
+Test callback buffer sanity
+0
+
+Callback buffer test: Exercise simple write/read
+1:int:50:int:25:int:25:int:25:int:25:int:0:int:0:int:0:int:0
+
+Callback buffer test: Filling up the buffer
+1:int:50:int:50:int:50:int:50:int:50:int:0:int:0:int:0:int:0
+
+Callback buffer test: Filling up the buffer in two steps
+1:int:50:int:20:int:20:int:0:int:0:int:30:int:30:int:50:int:50
+
+Callback buffer test: Reading out the buffer in two steps
+1:int:50:int:50:int:50:int:30:int:30:int:0:int:0:int:20:int:20
+
+Callback buffer test: Data wraps in buffer
+1:int:50:int:45:int:45:int:10:int:10:int:10:int:10:int:45:int:45
+
+Callback buffer test: Data starts at the end
+1:int:50:int:50:int:50:int:49:int:49:int:10:int:10:int:11:int:11
+
+Callback buffer test: Can write less than requested
+1:int:50:int:75:int:50:int:30:int:30:int:25:int:25:int:45:int:45
+
+Callback buffer test: Can read less than requested
+1:int:50:int:25:int:25:int:30:int:25:int:5:int:5:int:5:int:5
+
+Callback buffer test: Writing to full buffer
+1:int:50:int:50:int:50:int:0:int:0:int:10:int:0:int:60:int:50
+
+Callback buffer test: Reading from empty buffer
+1:int:50:int:0:int:0:int:10:int:0:int:0:int:0:int:0:int:0
+
+Test mock socket sanity
+2
+
+Test mock blocking TCP connection
+3:int:1
+
+Test mock non-blocking TCP connection
+3:int:0
+
+Test mock blocking TCP connection (interleaving)
+4:int:1
+
+Test mock non-blocking TCP connection (interleaving)
+4:int:0
+
+Message queue - sanity
+5
+
+Message queue - basic test
+6
+
+Message queue - overflow/underflow
+7
+
+Message queue - interleaved
+8
+
+Message queue - insufficient buffer
+9
+
+Message transport mock - uninitialized structures
+10
+
+Message transport mock - basic test
+11
+
+Message transport mock - queue overflow/underflow
+12
+
+Message transport mock - socket overflow
+13
+
+Message transport mock - truncated message
+14
+
+Message transport mock - socket read error
+15
+
+Message transport mock - one-way interleaved sends/reads
+16
+
+Message transport mock - two-way interleaved sends/reads
+17
+
+Test mbedtls_endpoint sanity for the client
+40:exp:0
+
+Test mbedtls_endpoint sanity for the server
+depends_on:0
+40:exp:1
+
+TLS 1.2:Move client handshake to HELLO_REQUEST
+depends_on:0
+41:exp:0:exp:2:exp:3:int:1
+
+TLS 1.2:Move client handshake to CLIENT_HELLO
+depends_on:0
+41:exp:0:exp:2:exp:4:int:1
+
+TLS 1.2:Move client handshake to SERVER_HELLO
+depends_on:0
+41:exp:0:exp:2:exp:5:int:1
+
+TLS 1.2:Move client handshake to SERVER_CERTIFICATE
+depends_on:0:1
+41:exp:0:exp:2:exp:6:int:1
+
+TLS 1.2:Move client handshake to SERVER_KEY_EXCHANGE
+depends_on:0:1
+41:exp:0:exp:2:exp:7:int:1
+
+TLS 1.2:Move client handshake to CERTIFICATE_REQUEST
+depends_on:0:1
+41:exp:0:exp:2:exp:8:int:1
+
+TLS 1.2:Move client handshake to SERVER_HELLO_DONE
+depends_on:0:1
+41:exp:0:exp:2:exp:9:int:1
+
+TLS 1.2:Move client handshake to CLIENT_CERTIFICATE
+depends_on:0:1
+41:exp:0:exp:2:exp:10:int:1
+
+TLS 1.2:Move client handshake to CLIENT_KEY_EXCHANGE
+depends_on:0:1
+41:exp:0:exp:2:exp:11:int:1
+
+TLS 1.2:Move client handshake to CERTIFICATE_VERIFY
+depends_on:0:1
+41:exp:0:exp:2:exp:12:int:1
+
+TLS 1.2:Move client handshake to CLIENT_CHANGE_CIPHER_SPEC
+depends_on:0:1
+41:exp:0:exp:2:exp:13:int:1
+
+TLS 1.2:Move client handshake to CLIENT_FINISHED
+depends_on:0:1
+41:exp:0:exp:2:exp:14:int:1
+
+TLS 1.2:Move client handshake to SERVER_CHANGE_CIPHER_SPEC
+depends_on:0:1
+41:exp:0:exp:2:exp:15:int:1
+
+TLS 1.2:Move client handshake to SERVER_FINISHED
+depends_on:0:1
+41:exp:0:exp:2:exp:16:int:1
+
+TLS 1.2:Move client handshake to FLUSH_BUFFERS
+depends_on:0:1
+41:exp:0:exp:2:exp:17:int:1
+
+TLS 1.2:Move client handshake to HANDSHAKE_WRAPUP
+depends_on:0:1
+41:exp:0:exp:2:exp:18:int:1
+
+TLS 1.2:Move client handshake to HANDSHAKE_OVER
+depends_on:0:1
+41:exp:0:exp:2:exp:19:int:1
+
+TLS 1.3:Move client handshake to HELLO_REQUEST
+depends_on:2:3
+41:exp:0:exp:20:exp:3:int:1
+
+TLS 1.3:Move client handshake to CLIENT_HELLO
+depends_on:2:3
+41:exp:0:exp:20:exp:4:int:1
+
+TLS 1.3:Move client handshake to SERVER_HELLO
+depends_on:2:3
+41:exp:0:exp:20:exp:5:int:1
+
+TLS 1.3:Move client handshake to ENCRYPTED_EXTENSIONS
+depends_on:2:3
+41:exp:0:exp:20:exp:21:int:1
+
+TLS 1.3:Move client handshake to CERTIFICATE_REQUEST
+depends_on:2:3:4
+41:exp:0:exp:20:exp:8:int:1
+
+TLS 1.3:Move client handshake to SERVER_CERTIFICATE
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:6:int:1
+
+TLS 1.3:Move client handshake to CERTIFICATE_VERIFY
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:12:int:1
+
+TLS 1.3:Move client handshake to SERVER_FINISHED
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:16:int:1
+
+TLS 1.3:Move client handshake to CLIENT_CERTIFICATE
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:10:int:1
+
+TLS 1.3:Move client handshake to CLIENT_CERTIFICATE_VERIFY
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:22:int:1
+
+TLS 1.3:Move client handshake to CLIENT_FINISHED
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:14:int:1
+
+TLS 1.3:Move client handshake to FLUSH_BUFFERS
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:17:int:1
+
+TLS 1.3:Move client handshake to HANDSHAKE_WRAPUP
+depends_on:2:3:4:5:6
+41:exp:0:exp:20:exp:18:int:1
+
+TLS 1.3:Move client handshake to CLIENT_CCS_AFTER_SERVER_FINISHED
+depends_on:2:3:4:5:6:7
+41:exp:0:exp:20:exp:23:int:1
+
+TLS 1.2:Move server handshake to HELLO_REQUEST
+depends_on:0
+41:exp:1:exp:2:exp:3:int:1
+
+TLS 1.2:Move server handshake to CLIENT_HELLO
+depends_on:0
+41:exp:1:exp:2:exp:4:int:1
+
+TLS 1.2:Move server handshake to SERVER_HELLO
+depends_on:0:1
+41:exp:1:exp:2:exp:5:int:1
+
+TLS 1.2:Move server handshake to SERVER_CERTIFICATE
+depends_on:0:1
+41:exp:1:exp:2:exp:6:int:1
+
+TLS 1.2:Move server handshake to SERVER_KEY_EXCHANGE
+depends_on:0:1
+41:exp:1:exp:2:exp:7:int:1
+
+TLS 1.2:Move server handshake to CERTIFICATE_REQUEST
+depends_on:0:1
+41:exp:1:exp:2:exp:8:int:1
+
+TLS 1.2:Move server handshake to SERVER_HELLO_DONE
+depends_on:0:1
+41:exp:1:exp:2:exp:9:int:1
+
+TLS 1.2:Move server handshake to CLIENT_CERTIFICATE
+depends_on:0:1
+41:exp:1:exp:2:exp:10:int:1
+
+TLS 1.2:Move server handshake to CLIENT_KEY_EXCHANGE
+depends_on:0:1
+41:exp:1:exp:2:exp:11:int:1
+
+TLS 1.2:Move server handshake to CERTIFICATE_VERIFY
+depends_on:0:1
+41:exp:1:exp:2:exp:12:int:1
+
+TLS 1.2:Move server handshake to CLIENT_CHANGE_CIPHER_SPEC
+depends_on:0:1
+41:exp:1:exp:2:exp:13:int:1
+
+TLS 1.2:Move server handshake to CLIENT_FINISHED
+depends_on:0:1
+41:exp:1:exp:2:exp:14:int:1
+
+TLS 1.2:Move server handshake to SERVER_CHANGE_CIPHER_SPEC
+depends_on:0:1
+41:exp:1:exp:2:exp:15:int:1
+
+TLS 1.2:Move server handshake to SERVER_FINISHED
+depends_on:0:1
+41:exp:1:exp:2:exp:16:int:1
+
+TLS 1.2:Move server handshake to FLUSH_BUFFERS
+depends_on:0:1
+41:exp:1:exp:2:exp:17:int:1
+
+TLS 1.2:Move server handshake to HANDSHAKE_WRAPUP
+depends_on:0:1
+41:exp:1:exp:2:exp:18:int:1
+
+TLS 1.2:Move server handshake to HANDSHAKE_OVER
+depends_on:0:1
+41:exp:1:exp:2:exp:19:int:1
+
+TLS 1.3:Move server handshake to HELLO_REQUEST
+depends_on:2:3
+41:exp:1:exp:20:exp:3:int:1
+
+TLS 1.3:Move server handshake to CLIENT_HELLO
+depends_on:2:3
+41:exp:1:exp:20:exp:4:int:1
+
+TLS 1.3:Move server handshake to SERVER_HELLO
+depends_on:2:3
+41:exp:1:exp:20:exp:5:int:1
+
+TLS 1.3:Move server handshake to ENCRYPTED_EXTENSIONS
+depends_on:2:3
+41:exp:1:exp:20:exp:21:int:1
+
+TLS 1.3:Move server handshake to CERTIFICATE_REQUEST
+depends_on:2:3:4
+41:exp:1:exp:20:exp:8:int:1
+
+TLS 1.3:Move server handshake to SERVER_CERTIFICATE
+depends_on:2:3:4
+41:exp:1:exp:20:exp:6:int:1
+
+TLS 1.3:Move server handshake to CERTIFICATE_VERIFY
+depends_on:2:3:4:8:6
+41:exp:1:exp:20:exp:12:int:1
+
+TLS 1.3:Move server handshake to SERVER_CCS_AFTER_SERVER_HELLO
+depends_on:2:3:7
+41:exp:1:exp:20:exp:24:int:1
+
+TLS 1.3:Move server handshake to SERVER_FINISHED
+depends_on:2:3:4:8:6
+41:exp:1:exp:20:exp:16:int:1
+
+TLS 1.3:Move server handshake to CLIENT_FINISHED
+depends_on:2:3:4:5:6
+41:exp:1:exp:20:exp:14:int:1
+
+TLS 1.3:Move server handshake to HANDSHAKE_WRAPUP
+depends_on:2:3:4:5:6
+41:exp:1:exp:20:exp:18:int:1
+
+TLS 1.3:Move server handshake to CLIENT_CERTIFICATE
+depends_on:2:3:4:5:6
+41:exp:1:exp:20:exp:10:int:1
+
+TLS 1.3:Move server handshake to CLIENT_CERTIFICATE_VERIFY
+depends_on:2:3:4:5:6
+41:exp:1:exp:20:exp:22:int:1
+
+TLS 1.2:Negative test moving clients ssl to state: VERIFY_REQUEST_SENT
+depends_on:0
+41:exp:0:exp:2:exp:25:int:0
+
+TLS 1.2:Negative test moving servers ssl to state: NEW_SESSION_TICKET
+depends_on:0
+41:exp:1:exp:2:exp:26:int:0
+
+Handshake, tls1_2
+depends_on:0:1
+42:int:0:exp:2:exp:2:exp:2:exp:2:exp:2
+
+Handshake, tls1_3
+depends_on:2:3:4:8:6
+42:int:0:exp:20:exp:20:exp:20:exp:20:exp:20
+
+Handshake, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:12:13:14:15
+44:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:int:0
+
+Handshake, ECDHE-RSA-WITH-AES-128-CBC-SHA256
+depends_on:10:16:17:12:13:14
+44:char*:"TLS-ECDHE-RSA-WITH-AES-128-CBC-SHA256":exp:27:int:0
+
+Handshake, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:12:13:14:15
+44:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384":exp:27:int:0
+
+Handshake, ECDHE-ECDSA-WITH-AES-256-CCM
+depends_on:10:18:19:13:20:15
+44:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:int:0
+
+Handshake, PSK-WITH-AES-128-CBC-SHA
+depends_on:10:16:12:13:21:22
+43:char*:"TLS-PSK-WITH-AES-128-CBC-SHA":exp:27:hex:"abc123":int:0
+
+DTLS Handshake, tls1_2
+depends_on:0:23:1
+42:int:1:exp:2:exp:2:exp:2:exp:2:exp:2
+
+DTLS Handshake, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:12:13:14:23:15
+44:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:int:1
+
+DTLS Handshake, ECDHE-RSA-WITH-AES-128-CBC-SHA256
+depends_on:10:16:17:12:13:23:14
+44:char*:"TLS-ECDHE-RSA-WITH-AES-128-CBC-SHA256":exp:27:int:1
+
+DTLS Handshake, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:12:13:23:14:15
+44:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384":exp:27:int:1
+
+DTLS Handshake, ECDHE-ECDSA-WITH-AES-256-CCM
+depends_on:10:18:19:13:23:20:15
+44:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:int:1
+
+DTLS Handshake, PSK-WITH-AES-128-CBC-SHA
+depends_on:10:16:12:13:23:21:22
+43:char*:"TLS-PSK-WITH-AES-128-CBC-SHA":exp:27:hex:"abc123":int:1
+
+DTLS Handshake with serialization, tls1_2
+49
+
+DTLS Handshake fragmentation, MFL=512
+depends_on:23:15
+50:exp:29:int:1:int:1
+
+DTLS Handshake fragmentation, MFL=1024
+depends_on:23:15
+50:exp:30:int:0:int:1
+
+Handshake min/max version check, all -> 1.2
+depends_on:0:24:1
+42:int:0:exp:31:exp:31:exp:31:exp:31:exp:2
+
+Handshake min/max version check, all -> 1.3
+depends_on:2:3:4:8:6
+42:int:0:exp:31:exp:31:exp:31:exp:31:exp:20
+
+Handshake, select ECDHE-RSA-WITH-AES-256-GCM-SHA384, non-opaque
+depends_on:9:10:11:12:25:13:14:15
+45:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:hex:"":exp:32:exp:32:int:0:int:0:exp:33
+
+Handshake, select ECDHE-RSA-WITH-AES-256-GCM-SHA384, opaque, PSA_ALG_ANY_HASH
+depends_on:9:10:11:12:25:13:14:15
+45:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:hex:"":exp:34:exp:32:exp:35:int:0:exp:33
+
+Handshake, select ECDHE-RSA-WITH-AES-256-GCM-SHA384, opaque, PSA_ALG_SHA_384
+depends_on:9:10:11:12:25:13:14:15
+45:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:hex:"":exp:36:exp:32:exp:35:int:0:exp:33
+
+Handshake, select ECDHE-RSA-WITH-AES-256-GCM-SHA384, opaque, invalid alg
+depends_on:9:10:11:12:25:13:14:15
+45:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:hex:"":exp:37:exp:32:exp:35:exp:38:int:0
+
+Handshake, select ECDHE-RSA-WITH-AES-256-GCM-SHA384, opaque, bad alg
+depends_on:9:10:11:12:25:13:14:15
+45:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:hex:"":exp:39:exp:32:exp:35:exp:38:int:0
+
+Handshake, select ECDHE-RSA-WITH-AES-256-GCM-SHA384, opaque, bad usage
+depends_on:9:10:11:12:25:13:14:15
+45:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384":exp:27:hex:"":exp:34:exp:32:exp:40:exp:38:int:0
+
+Handshake, select ECDHE-ECDSA-WITH-AES-256-CCM, non-opaque
+depends_on:17:10:18:19:13:20:15
+45:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:hex:"":exp:32:exp:32:int:0:int:0:exp:41
+
+Handshake, select ECDHE-ECDSA-WITH-AES-256-CCM, opaque, PSA_ALG_ANY_HASH
+depends_on:17:10:18:19:13:20:15
+45:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:hex:"":exp:42:exp:32:exp:35:int:0:exp:41
+
+Handshake, select ECDHE-ECDSA-WITH-AES-256-CCM, opaque, PSA_ALG_SHA_256
+depends_on:17:10:18:19:13:20:15
+45:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:hex:"":exp:43:exp:32:exp:35:int:0:exp:41
+
+Handshake, select ECDHE-ECDSA-WITH-AES-256-CCM, opaque, bad alg
+depends_on:17:10:18:19:13:20:15
+45:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:hex:"":exp:44:exp:32:exp:35:exp:38:int:0
+
+Handshake, select ECDHE-ECDSA-WITH-AES-256-CCM, opaque, bad usage
+depends_on:17:10:18:19:13:20:15
+45:char*:"TLS-ECDHE-ECDSA-WITH-AES-256-CCM":exp:28:hex:"":exp:45:exp:32:exp:40:exp:38:int:0
+
+Sending app data via TLS, MFL=512 without fragmentation
+depends_on:26
+47:exp:29:int:400:int:512:int:1:int:1
+
+Sending app data via TLS, MFL=512 with fragmentation
+depends_on:26
+47:exp:29:int:513:int:1536:int:2:int:3
+
+Sending app data via TLS, MFL=1024 without fragmentation
+depends_on:26
+47:exp:30:int:1000:int:1024:int:1:int:1
+
+Sending app data via TLS, MFL=1024 with fragmentation
+depends_on:26
+47:exp:30:int:1025:int:5120:int:2:int:5
+
+Sending app data via TLS, MFL=2048 without fragmentation
+depends_on:26
+47:exp:46:int:2000:int:2048:int:1:int:1
+
+Sending app data via TLS, MFL=2048 with fragmentation
+depends_on:26
+47:exp:46:int:2049:int:8192:int:2:int:4
+
+Sending app data via TLS, MFL=4096 without fragmentation
+depends_on:26
+47:exp:47:int:4000:int:4096:int:1:int:1
+
+Sending app data via TLS, MFL=4096 with fragmentation
+depends_on:26
+47:exp:47:int:4097:int:12288:int:2:int:3
+
+Sending app data via TLS without MFL and without fragmentation
+47:exp:48:int:16001:int:16384:int:1:int:1
+
+Sending app data via TLS without MFL and with fragmentation
+47:exp:48:int:16385:int:100000:int:2:int:7
+
+Sending app data via DTLS, MFL=512 without fragmentation
+depends_on:26
+48:exp:29:int:400:int:512:int:1:int:1
+
+Sending app data via DTLS, MFL=512 with fragmentation
+depends_on:26
+48:exp:29:int:513:int:1536:int:0:int:0
+
+Sending app data via DTLS, MFL=1024 without fragmentation
+depends_on:26
+48:exp:30:int:1000:int:1024:int:1:int:1
+
+Sending app data via DTLS, MFL=1024 with fragmentation
+depends_on:26
+48:exp:30:int:1025:int:5120:int:0:int:0
+
+Sending app data via DTLS, MFL=2048 without fragmentation
+depends_on:26
+48:exp:46:int:2000:int:2048:int:1:int:1
+
+Sending app data via DTLS, MFL=2048 with fragmentation
+depends_on:26
+48:exp:46:int:2049:int:8192:int:0:int:0
+
+Sending app data via DTLS, MFL=4096 without fragmentation
+depends_on:26
+48:exp:47:int:4000:int:4096:int:1:int:1
+
+Sending app data via DTLS, MFL=4096 with fragmentation
+depends_on:26
+48:exp:47:int:4097:int:12288:int:0:int:0
+
+Sending app data via DTLS, without MFL and without fragmentation
+48:exp:48:int:16001:int:16384:int:1:int:1
+
+Sending app data via DTLS, without MFL and with fragmentation
+48:exp:48:int:16385:int:100000:int:0:int:0
+
+DTLS renegotiation: no legacy renegotiation
+52:exp:49
+
+DTLS renegotiation: legacy renegotiation
+52:exp:50
+
+DTLS renegotiation: legacy break handshake
+52:exp:51
+
+DTLS serialization with MFL=512
+53:exp:29
+
+DTLS serialization with MFL=1024
+53:exp:30
+
+DTLS serialization with MFL=2048
+53:exp:46
+
+DTLS serialization with MFL=4096
+53:exp:47
+
+DTLS no legacy renegotiation with MFL=512
+depends_on:12:1
+54:exp:29:exp:49:char*:""
+
+DTLS no legacy renegotiation with MFL=1024
+depends_on:12:1
+54:exp:30:exp:49:char*:""
+
+DTLS no legacy renegotiation with MFL=2048
+depends_on:12:1
+54:exp:46:exp:49:char*:""
+
+DTLS no legacy renegotiation with MFL=4096
+depends_on:12:1
+54:exp:47:exp:49:char*:""
+
+DTLS legacy allow renegotiation with MFL=512
+depends_on:12:1
+54:exp:29:exp:50:char*:""
+
+DTLS legacy allow renegotiation with MFL=1024
+depends_on:12:1
+54:exp:30:exp:50:char*:""
+
+DTLS legacy allow renegotiation with MFL=2048
+depends_on:12:1
+54:exp:46:exp:50:char*:""
+
+DTLS legacy allow renegotiation with MFL=4096
+depends_on:12:1
+54:exp:47:exp:50:char*:""
+
+DTLS legacy break handshake renegotiation with MFL=512
+depends_on:12:1
+54:exp:29:exp:51:char*:""
+
+DTLS legacy break handshake renegotiation with MFL=1024
+depends_on:12:1
+54:exp:30:exp:51:char*:""
+
+DTLS legacy break handshake renegotiation with MFL=2048
+depends_on:12:1
+54:exp:46:exp:51:char*:""
+
+DTLS legacy break handshake renegotiation with MFL=4096
+depends_on:12:1
+54:exp:47:exp:51:char*:""
+
+DTLS no legacy renegotiation with MFL=512, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:29:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS no legacy renegotiation with MFL=1024, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:30:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS no legacy renegotiation with MFL=2048, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:46:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS no legacy renegotiation with MFL=4096, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:47:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy allow renegotiation with MFL=512, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:29:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy allow renegotiation with MFL=1024, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:30:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy allow renegotiation with MFL=2048, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:46:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy allow renegotiation with MFL=4096, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:47:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=512, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:29:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=1024, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:30:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=2048, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:46:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=4096, ECDHE-RSA-WITH-AES-256-GCM-SHA384
+depends_on:9:10:11:14:15
+54:exp:47:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384"
+
+DTLS no legacy renegotiation with MFL=512, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:29:exp:49:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS no legacy renegotiation with MFL=1024, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:30:exp:49:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS no legacy renegotiation with MFL=2048, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:46:exp:49:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS no legacy renegotiation with MFL=4096, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:47:exp:49:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy allow renegotiation with MFL=512, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:29:exp:50:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy allow renegotiation with MFL=1024, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:30:exp:50:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy allow renegotiation with MFL=2048, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:46:exp:50:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy allow renegotiation with MFL=4096, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:47:exp:50:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy break handshake renegotiation with MFL=512, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:29:exp:51:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy break handshake renegotiation with MFL=1024, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:30:exp:51:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy break handshake renegotiation with MFL=2048, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:46:exp:51:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS legacy break handshake renegotiation with MFL=4096, ECDHE-ECDSA-WITH-AES-128-CCM
+depends_on:18:10:19:20
+54:exp:47:exp:51:char*:"TLS-ECDHE-ECDSA-WITH-AES-128-CCM"
+
+DTLS no legacy renegotiation with MFL=512, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:29:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS no legacy renegotiation with MFL=1024, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:30:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS no legacy renegotiation with MFL=2048, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:46:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS no legacy renegotiation with MFL=4096, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:47:exp:49:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy allow renegotiation with MFL=512, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:29:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy allow renegotiation with MFL=1024, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:30:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy allow renegotiation with MFL=2048, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:46:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy allow renegotiation with MFL=4096, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:47:exp:50:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=512, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:29:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=1024, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:30:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=2048, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:46:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+DTLS legacy break handshake renegotiation with MFL=4096, ECDHE-RSA-WITH-AES-256-CBC-SHA384
+depends_on:10:16:9:14:15
+54:exp:47:exp:51:char*:"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384"
+
+SSL DTLS replay: initial state, seqnum 0
+18:hex:"":hex:"000000000000":int:0
+
+SSL DTLS replay: 0 seen, 1 arriving
+18:hex:"000000000000":hex:"000000000001":int:0
+
+SSL DTLS replay: 0 seen, 0 replayed
+18:hex:"000000000000":hex:"000000000000":int:-1
+
+SSL DTLS replay: 0-1 seen, 2 arriving
+18:hex:"000000000000000000000001":hex:"000000000002":int:0
+
+SSL DTLS replay: 0-1 seen, 1 replayed
+18:hex:"000000000000000000000001":hex:"000000000001":int:-1
+
+SSL DTLS replay: 0-1 seen, 0 replayed
+18:hex:"000000000000000000000001":hex:"000000000000":int:-1
+
+SSL DTLS replay: new
+18:hex:"abcd12340000abcd12340001abcd12340003":hex:"abcd12340004":int:0
+
+SSL DTLS replay: way new
+18:hex:"abcd12340000abcd12340001abcd12340003":hex:"abcd12350000":int:0
+
+SSL DTLS replay: delayed
+18:hex:"abcd12340000abcd12340001abcd12340003":hex:"abcd12340002":int:0
+
+SSL DTLS replay: last replayed
+18:hex:"abcd12340000abcd12340001abcd12340003":hex:"abcd12340003":int:-1
+
+SSL DTLS replay: older replayed
+18:hex:"abcd12340000abcd12340001abcd12340003":hex:"abcd12340001":int:-1
+
+SSL DTLS replay: most recent in window, replayed
+18:hex:"abcd12340000abcd12340002abcd12340003":hex:"abcd12340002":int:-1
+
+SSL DTLS replay: oldest in window, replayed
+18:hex:"abcd12340000abcd12340001abcd1234003f":hex:"abcd12340000":int:-1
+
+SSL DTLS replay: oldest in window, not replayed
+18:hex:"abcd12340001abcd12340002abcd1234003f":hex:"abcd12340000":int:0
+
+SSL DTLS replay: just out of the window
+18:hex:"abcd12340001abcd12340002abcd1234003f":hex:"abcd1233ffff":int:-1
+
+SSL DTLS replay: way out of the window
+18:hex:"abcd12340001abcd12340002abcd1234003f":hex:"abcd12330000":int:-1
+
+SSL DTLS replay: big jump then replay
+18:hex:"abcd12340000abcd12340100":hex:"abcd12340100":int:-1
+
+SSL DTLS replay: big jump then new
+18:hex:"abcd12340000abcd12340100":hex:"abcd12340101":int:0
+
+SSL DTLS replay: big jump then just delayed
+18:hex:"abcd12340000abcd12340100":hex:"abcd123400ff":int:0
+
+SSL SET_HOSTNAME memory leak: call ssl_set_hostname twice
+19:char*:"server0":char*:"server1"
+
+SSL session serialization: Wrong major version
+depends_on:0
+38:int:1:int:0:int:0:int:0:int:0:exp:2
+
+SSL session serialization: Wrong minor version
+depends_on:0
+38:int:0:int:1:int:0:int:0:int:0:exp:2
+
+SSL session serialization: Wrong patch version
+depends_on:0
+38:int:0:int:0:int:1:int:0:int:0:exp:2
+
+SSL session serialization: Wrong config
+depends_on:0
+38:int:0:int:0:int:0:int:1:int:0:exp:2
+
+TLS 1.3: CLI: session serialization: Wrong major version
+depends_on:2:27:28
+38:int:1:int:0:int:0:int:0:exp:0:exp:20
+
+TLS 1.3: CLI: session serialization: Wrong minor version
+depends_on:2:27:28
+38:int:0:int:1:int:0:int:0:exp:0:exp:20
+
+TLS 1.3: CLI: session serialization: Wrong patch version
+depends_on:2:27:28
+38:int:0:int:0:int:1:int:0:exp:0:exp:20
+
+TLS 1.3: CLI: session serialization: Wrong config
+depends_on:2:27:28
+38:int:0:int:0:int:0:int:1:exp:0:exp:20
+
+TLS 1.3: SRV: session serialization: Wrong major version
+depends_on:2:29:28
+38:int:1:int:0:int:0:int:0:exp:1:exp:20
+
+TLS 1.3: SRV: session serialization: Wrong minor version
+depends_on:2:29:28
+38:int:0:int:1:int:0:int:0:exp:1:exp:20
+
+TLS 1.3: SRV: session serialization: Wrong patch version
+depends_on:2:29:28
+38:int:0:int:0:int:1:int:0:exp:1:exp:20
+
+TLS 1.3: SRV: session serialization: Wrong config
+depends_on:2:29:28
+38:int:0:int:0:int:0:int:1:exp:1:exp:20
+
+Test Session id & Ciphersuite accessors TLS 1.2
+depends_on:0
+39:exp:2
+
+Test Session id & Ciphersuite accessors TLS 1.3
+depends_on:2
+39:exp:20
+
+Record crypt, AES-128-CBC, 1.2, SHA-384
+depends_on:10:16:0:9
+20:exp:52:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:10:16:0:9
+20:exp:52:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:10:16:0:9
+20:exp:52:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-384, EtM
+depends_on:10:16:0:9:31
+20:exp:52:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:10:16:0:9:31
+20:exp:52:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:10:16:0:9:31
+20:exp:52:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-256
+depends_on:10:16:0:17
+20:exp:52:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:10:16:0:17
+20:exp:52:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:10:16:0:17
+20:exp:52:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-256, EtM
+depends_on:10:16:0:17:31
+20:exp:52:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:10:16:0:17:31
+20:exp:52:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:10:16:0:17:31
+20:exp:52:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-1
+depends_on:10:16:0:21
+20:exp:52:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:10:16:0:21
+20:exp:52:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:10:16:0:21
+20:exp:52:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-1, EtM
+depends_on:10:16:0:21:31
+20:exp:52:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:10:16:0:21:31
+20:exp:52:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:10:16:0:21:31
+20:exp:52:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, MD5
+depends_on:10:16:0:32
+20:exp:52:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, MD5, CID 4+4
+depends_on:30:10:16:0:32
+20:exp:52:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, MD5, CID 4+0
+depends_on:30:10:16:0:32
+20:exp:52:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CBC, 1.2, MD5, EtM
+depends_on:10:16:0:32:31
+20:exp:52:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:10:16:0:32:31
+20:exp:52:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:10:16:0:32:31
+20:exp:52:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-384
+depends_on:10:16:0:9:15
+20:exp:57:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:10:16:0:9:15
+20:exp:57:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:10:16:0:9:15
+20:exp:57:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-384, EtM
+depends_on:10:16:0:9:31:15
+20:exp:57:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:10:16:0:9:31:15
+20:exp:57:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:10:16:0:9:31:15
+20:exp:57:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-256
+depends_on:10:16:0:17:15
+20:exp:57:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:10:16:0:17:15
+20:exp:57:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:10:16:0:17:15
+20:exp:57:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-256, EtM
+depends_on:10:16:0:17:31:15
+20:exp:57:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:10:16:0:17:31:15
+20:exp:57:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:10:16:0:17:31:15
+20:exp:57:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-1
+depends_on:10:16:0:21:15
+20:exp:57:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:10:16:0:21:15
+20:exp:57:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:10:16:0:21:15
+20:exp:57:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-1, EtM
+depends_on:10:16:0:21:31:15
+20:exp:57:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:10:16:0:21:31:15
+20:exp:57:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:10:16:0:21:31:15
+20:exp:57:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, MD5
+depends_on:10:16:0:32:15
+20:exp:57:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, MD5, CID 4+4
+depends_on:30:10:16:0:32:15
+20:exp:57:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, MD5, CID 4+0
+depends_on:30:10:16:0:32:15
+20:exp:57:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CBC, 1.2, MD5, EtM
+depends_on:10:16:0:32:31:15
+20:exp:57:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:10:16:0:32:31:15
+20:exp:57:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:10:16:0:32:31:15
+20:exp:57:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-384
+depends_on:33:16:0:9
+20:exp:58:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:33:16:0:9
+20:exp:58:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:33:16:0:9
+20:exp:58:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-384, EtM
+depends_on:33:16:0:9:31
+20:exp:58:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:33:16:0:9:31
+20:exp:58:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:33:16:0:9:31
+20:exp:58:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-256
+depends_on:33:16:0:17
+20:exp:58:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:33:16:0:17
+20:exp:58:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:33:16:0:17
+20:exp:58:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-256, EtM
+depends_on:33:16:0:17:31
+20:exp:58:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:33:16:0:17:31
+20:exp:58:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:33:16:0:17:31
+20:exp:58:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-1
+depends_on:33:16:0:21
+20:exp:58:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:33:16:0:21
+20:exp:58:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:33:16:0:21
+20:exp:58:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-1, EtM
+depends_on:33:16:0:21:31
+20:exp:58:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:33:16:0:21:31
+20:exp:58:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:33:16:0:21:31
+20:exp:58:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, MD5
+depends_on:33:16:0:32
+20:exp:58:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, MD5, CID 4+4
+depends_on:30:33:16:0:32
+20:exp:58:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, MD5, CID 4+0
+depends_on:30:33:16:0:32
+20:exp:58:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, MD5, EtM
+depends_on:33:16:0:32:31
+20:exp:58:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-128-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:33:16:0:32:31
+20:exp:58:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-128-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:33:16:0:32:31
+20:exp:58:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-384
+depends_on:33:16:0:9
+20:exp:59:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:33:16:0:9
+20:exp:59:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:33:16:0:9
+20:exp:59:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-384, EtM
+depends_on:33:16:0:9:31
+20:exp:59:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:33:16:0:9:31
+20:exp:59:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:33:16:0:9:31
+20:exp:59:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-256
+depends_on:33:16:0:17
+20:exp:59:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:33:16:0:17
+20:exp:59:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:33:16:0:17
+20:exp:59:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-256, EtM
+depends_on:33:16:0:17:31
+20:exp:59:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:33:16:0:17:31
+20:exp:59:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:33:16:0:17:31
+20:exp:59:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-1
+depends_on:33:16:0:21
+20:exp:59:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:33:16:0:21
+20:exp:59:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:33:16:0:21
+20:exp:59:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-1, EtM
+depends_on:33:16:0:21:31
+20:exp:59:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:33:16:0:21:31
+20:exp:59:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:33:16:0:21:31
+20:exp:59:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, MD5
+depends_on:33:16:0:32
+20:exp:59:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, MD5, CID 4+4
+depends_on:30:33:16:0:32
+20:exp:59:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, MD5, CID 4+0
+depends_on:30:33:16:0:32
+20:exp:59:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, MD5, EtM
+depends_on:33:16:0:32:31
+20:exp:59:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ARIA-256-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:33:16:0:32:31
+20:exp:59:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, ARIA-256-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:33:16:0:32:31
+20:exp:59:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-384
+depends_on:34:16:0:9
+20:exp:60:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:34:16:0:9
+20:exp:60:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:34:16:0:9
+20:exp:60:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-384, EtM
+depends_on:34:16:0:9:31
+20:exp:60:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:34:16:0:9:31
+20:exp:60:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:34:16:0:9:31
+20:exp:60:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-256
+depends_on:34:16:0:17
+20:exp:60:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:34:16:0:17
+20:exp:60:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:34:16:0:17
+20:exp:60:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-256, EtM
+depends_on:34:16:0:17:31
+20:exp:60:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:34:16:0:17:31
+20:exp:60:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:34:16:0:17:31
+20:exp:60:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-1
+depends_on:34:16:0:21
+20:exp:60:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:34:16:0:21
+20:exp:60:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:34:16:0:21
+20:exp:60:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-1, EtM
+depends_on:34:16:0:21:31
+20:exp:60:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:34:16:0:21:31
+20:exp:60:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:34:16:0:21:31
+20:exp:60:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, MD5
+depends_on:34:16:0:32
+20:exp:60:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, MD5, CID 4+4
+depends_on:30:34:16:0:32
+20:exp:60:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, MD5, CID 4+0
+depends_on:30:34:16:0:32
+20:exp:60:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, MD5, EtM
+depends_on:34:16:0:32:31
+20:exp:60:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:34:16:0:32:31
+20:exp:60:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:34:16:0:32:31
+20:exp:60:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-384
+depends_on:34:16:0:9
+20:exp:61:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:34:16:0:9
+20:exp:61:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:34:16:0:9
+20:exp:61:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-384, EtM
+depends_on:34:16:0:9:31
+20:exp:61:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:34:16:0:9:31
+20:exp:61:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:34:16:0:9:31
+20:exp:61:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-256
+depends_on:34:16:0:17
+20:exp:61:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:34:16:0:17
+20:exp:61:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:34:16:0:17
+20:exp:61:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-256, EtM
+depends_on:34:16:0:17:31
+20:exp:61:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:34:16:0:17:31
+20:exp:61:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:34:16:0:17:31
+20:exp:61:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-1
+depends_on:34:16:0:21
+20:exp:61:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:34:16:0:21
+20:exp:61:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:34:16:0:21
+20:exp:61:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-1, EtM
+depends_on:34:16:0:21:31
+20:exp:61:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:34:16:0:21:31
+20:exp:61:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:34:16:0:21:31
+20:exp:61:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, MD5
+depends_on:34:16:0:32
+20:exp:61:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, MD5, CID 4+4
+depends_on:30:34:16:0:32
+20:exp:61:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, MD5, CID 4+0
+depends_on:30:34:16:0:32
+20:exp:61:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, MD5, EtM
+depends_on:34:16:0:32:31
+20:exp:61:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:34:16:0:32:31
+20:exp:61:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:34:16:0:32:31
+20:exp:61:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-GCM, 1.2
+depends_on:10:0:11
+20:exp:62:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-GCM, 1.3
+depends_on:10:2:11
+20:exp:62:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, AES-128-GCM, 1.2, CID 4+4
+depends_on:30:10:0:11
+20:exp:62:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-GCM, 1.2, CID 4+0
+depends_on:30:10:0:11
+20:exp:62:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-192-GCM, 1.2
+depends_on:10:0:11:15
+20:exp:63:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-192-GCM, 1.3
+depends_on:10:2:11:15
+20:exp:63:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, AES-192-GCM, 1.2, CID 4+4
+depends_on:30:10:0:11:15
+20:exp:63:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-192-GCM, 1.2, CID 4+0
+depends_on:30:10:0:11:15
+20:exp:63:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-GCM, 1.2
+depends_on:10:0:11:15
+20:exp:64:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-GCM, 1.3
+depends_on:10:2:11:15
+20:exp:64:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, AES-256-GCM, 1.2, CID 4+4
+depends_on:30:10:0:11:15
+20:exp:64:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-GCM, 1.2, CID 4+0
+depends_on:30:10:0:11:15
+20:exp:64:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-GCM, 1.2
+depends_on:34:0:11
+20:exp:65:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-GCM, 1.2, CID 4+4
+depends_on:30:34:0:11
+20:exp:65:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-GCM, 1.2, CID 4+0
+depends_on:30:34:0:11
+20:exp:65:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-192-GCM, 1.2
+depends_on:34:0:11
+20:exp:66:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-192-GCM, 1.2, CID 4+4
+depends_on:30:34:0:11
+20:exp:66:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-192-GCM, 1.2, CID 4+0
+depends_on:30:34:0:11
+20:exp:66:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-GCM, 1.2
+depends_on:34:0:11
+20:exp:67:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-GCM, 1.2, CID 4+4
+depends_on:30:34:0:11
+20:exp:67:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-GCM, 1.2, CID 4+0
+depends_on:30:34:0:11
+20:exp:67:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CCM, 1.2
+depends_on:10:0:18
+20:exp:68:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-128-CCM, 1.3
+depends_on:10:2:18
+20:exp:68:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, AES-128-CCM, 1.2, CID 4+4
+depends_on:30:10:0:18
+20:exp:68:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-128-CCM, 1.2, CID 4+0
+depends_on:30:10:0:18
+20:exp:68:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-128-CCM, 1.2, short tag
+depends_on:10:0:18
+20:exp:68:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, AES-128-CCM, 1.2, short tag, CID 4+4
+depends_on:30:10:0:18
+20:exp:68:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, AES-128-CCM, 1.2, short tag, CID 4+0
+depends_on:30:10:0:18
+20:exp:68:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, AES-192-CCM, 1.2
+depends_on:10:0:18:15
+20:exp:69:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-192-CCM, 1.3
+depends_on:10:2:18:15
+20:exp:69:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, AES-192-CCM, 1.2, CID 4+4
+depends_on:30:10:0:18:15
+20:exp:69:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-192-CCM, 1.2, CID 4+0
+depends_on:30:10:0:18:15
+20:exp:69:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-192-CCM, 1.2, short tag
+depends_on:10:0:18:15
+20:exp:69:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, AES-192-CCM, 1.2, short tag, CID 4+4
+depends_on:30:10:0:18:15
+20:exp:69:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, AES-192-CCM, 1.2, short tag, CID 4+0
+depends_on:30:10:0:18:15
+20:exp:69:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, AES-256-CCM, 1.2
+depends_on:10:0:18:15
+20:exp:70:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, AES-256-CCM, 1.3
+depends_on:10:2:18:15
+20:exp:70:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, AES-256-CCM, 1.2, CID 4+4
+depends_on:30:10:0:18:15
+20:exp:70:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, AES-256-CCM, 1.2, CID 4+0
+depends_on:30:10:0:18:15
+20:exp:70:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, AES-256-CCM, 1.2, short tag
+depends_on:10:0:18:15
+20:exp:70:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, AES-256-CCM, 1.2, short tag, CID 4+4
+depends_on:30:10:0:18:15
+20:exp:70:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, AES-256-CCM, 1.2, short tag, CID 4+0
+depends_on:30:10:0:18:15
+20:exp:70:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CCM, 1.2
+depends_on:34:0:18
+20:exp:71:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CCM, 1.2, CID 4+4
+depends_on:30:34:0:18
+20:exp:71:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CCM, 1.2, CID 4+0
+depends_on:30:34:0:18
+20:exp:71:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-128-CCM, 1.2, short tag
+depends_on:34:0:18
+20:exp:71:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-128-CCM, 1.2, short tag, CID 4+4
+depends_on:30:34:0:18
+20:exp:71:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-128-CCM, 1.2, short tag, CID 4+0
+depends_on:30:34:0:18
+20:exp:71:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-192-CCM, 1.2
+depends_on:34:0:18
+20:exp:72:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-192-CCM, 1.2, CID 4+4
+depends_on:30:34:0:18
+20:exp:72:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-192-CCM, 1.2, CID 4+0
+depends_on:30:34:0:18
+20:exp:72:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-192-CCM, 1.2, short tag
+depends_on:34:0:18
+20:exp:72:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-192-CCM, 1.2, short tag, CID 4+4
+depends_on:30:34:0:18
+20:exp:72:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-192-CCM, 1.2, short tag, CID 4+0
+depends_on:30:34:0:18
+20:exp:72:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CCM, 1.2
+depends_on:34:0:18
+20:exp:73:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CCM, 1.2, CID 4+4
+depends_on:30:34:0:18
+20:exp:73:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CCM, 1.2, CID 4+0
+depends_on:30:34:0:18
+20:exp:73:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, CAMELLIA-256-CCM, 1.2, short tag
+depends_on:34:0:18
+20:exp:73:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, CAMELLIA-256-CCM, 1.2, short tag, CID 4+4
+depends_on:30:34:0:18
+20:exp:73:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, CAMELLIA-256-CCM, 1.2, short tag, CID 4+0
+depends_on:30:34:0:18
+20:exp:73:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, NULL cipher, 1.2, SHA-384
+depends_on:35:0:9
+20:exp:74:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, SHA-384, EtM
+depends_on:35:0:9:31
+20:exp:74:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, SHA-256
+depends_on:35:0:17
+20:exp:74:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, SHA-256, EtM
+depends_on:35:0:17:31
+20:exp:74:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, SHA-1
+depends_on:35:0:21
+20:exp:74:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, SHA-1, EtM
+depends_on:35:0:21:31
+20:exp:74:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, MD5
+depends_on:35:0:32
+20:exp:74:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, NULL cipher, 1.2, MD5, EtM
+depends_on:35:0:32:31
+20:exp:74:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, ChachaPoly
+depends_on:36:0
+20:exp:75:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, ChachaPoly, 1.3
+depends_on:36:2
+20:exp:75:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, ChachaPoly
+depends_on:36:0
+21:exp:75:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ChachaPoly, 1.3
+depends_on:36:2
+21:exp:75:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, ChachaPoly, CID 4+4
+depends_on:30:36:0
+21:exp:75:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ChachaPoly, CID 4+0
+depends_on:30:36:0
+21:exp:75:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-384
+depends_on:10:16:0:9
+21:exp:52:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:10:16:0:9
+21:exp:52:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:10:16:0:9
+21:exp:52:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-384, EtM
+depends_on:10:16:0:9:31
+21:exp:52:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:10:16:0:9:31
+21:exp:52:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:10:16:0:9:31
+21:exp:52:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-256
+depends_on:10:16:0:17
+21:exp:52:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:10:16:0:17
+21:exp:52:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:10:16:0:17
+21:exp:52:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-256, EtM
+depends_on:10:16:0:17:31
+21:exp:52:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:10:16:0:17:31
+21:exp:52:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:10:16:0:17:31
+21:exp:52:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-1
+depends_on:10:16:0:21
+21:exp:52:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:10:16:0:21
+21:exp:52:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:10:16:0:21
+21:exp:52:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-1, EtM
+depends_on:10:16:0:21:31
+21:exp:52:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:10:16:0:21:31
+21:exp:52:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:10:16:0:21:31
+21:exp:52:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, MD5
+depends_on:10:16:0:32
+21:exp:52:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, MD5, CID 4+4
+depends_on:30:10:16:0:32
+21:exp:52:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, MD5, CID 4+0
+depends_on:30:10:16:0:32
+21:exp:52:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, MD5, EtM
+depends_on:10:16:0:32:31
+21:exp:52:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:10:16:0:32:31
+21:exp:52:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:10:16:0:32:31
+21:exp:52:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-384
+depends_on:10:16:0:9:15
+21:exp:57:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:10:16:0:9:15
+21:exp:57:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:10:16:0:9:15
+21:exp:57:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-384, EtM
+depends_on:10:16:0:9:31:15
+21:exp:57:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:10:16:0:9:31:15
+21:exp:57:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:10:16:0:9:31:15
+21:exp:57:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-256
+depends_on:10:16:0:17:15
+21:exp:57:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:10:16:0:17:15
+21:exp:57:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:10:16:0:17:15
+21:exp:57:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-256, EtM
+depends_on:10:16:0:17:31:15
+21:exp:57:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:10:16:0:17:31:15
+21:exp:57:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:10:16:0:17:31:15
+21:exp:57:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-1
+depends_on:10:16:0:21:15
+21:exp:57:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:10:16:0:21:15
+21:exp:57:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:10:16:0:21:15
+21:exp:57:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-1, EtM
+depends_on:10:16:0:21:31:15
+21:exp:57:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:10:16:0:21:31:15
+21:exp:57:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:10:16:0:21:31:15
+21:exp:57:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, MD5
+depends_on:10:16:0:32:15
+21:exp:57:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, MD5, CID 4+4
+depends_on:30:10:16:0:32:15
+21:exp:57:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, MD5, CID 4+0
+depends_on:30:10:16:0:32:15
+21:exp:57:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, MD5, EtM
+depends_on:10:16:0:32:31:15
+21:exp:57:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:10:16:0:32:31:15
+21:exp:57:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:10:16:0:32:31:15
+21:exp:57:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-384
+depends_on:33:16:0:9
+21:exp:58:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:33:16:0:9
+21:exp:58:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:33:16:0:9
+21:exp:58:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-384, EtM
+depends_on:33:16:0:9:31
+21:exp:58:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:33:16:0:9:31
+21:exp:58:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:33:16:0:9:31
+21:exp:58:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-256
+depends_on:33:16:0:17
+21:exp:58:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:33:16:0:17
+21:exp:58:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:33:16:0:17
+21:exp:58:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-256, EtM
+depends_on:33:16:0:17:31
+21:exp:58:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:33:16:0:17:31
+21:exp:58:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:33:16:0:17:31
+21:exp:58:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-1
+depends_on:33:16:0:21
+21:exp:58:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:33:16:0:21
+21:exp:58:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:33:16:0:21
+21:exp:58:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-1, EtM
+depends_on:33:16:0:21:31
+21:exp:58:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:33:16:0:21:31
+21:exp:58:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:33:16:0:21:31
+21:exp:58:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, MD5
+depends_on:33:16:0:32
+21:exp:58:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, MD5, CID 4+4
+depends_on:30:33:16:0:32
+21:exp:58:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, MD5, CID 4+0
+depends_on:30:33:16:0:32
+21:exp:58:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, MD5, EtM
+depends_on:33:16:0:32:31
+21:exp:58:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-128-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:33:16:0:32:31
+21:exp:58:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-128-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:33:16:0:32:31
+21:exp:58:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-384
+depends_on:33:16:0:9
+21:exp:59:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:33:16:0:9
+21:exp:59:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:33:16:0:9
+21:exp:59:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-384, EtM
+depends_on:33:16:0:9:31
+21:exp:59:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:33:16:0:9:31
+21:exp:59:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:33:16:0:9:31
+21:exp:59:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-256
+depends_on:33:16:0:17
+21:exp:59:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:33:16:0:17
+21:exp:59:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:33:16:0:17
+21:exp:59:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-256, EtM
+depends_on:33:16:0:17:31
+21:exp:59:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:33:16:0:17:31
+21:exp:59:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:33:16:0:17:31
+21:exp:59:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-1
+depends_on:33:16:0:21
+21:exp:59:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:33:16:0:21
+21:exp:59:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:33:16:0:21
+21:exp:59:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-1, EtM
+depends_on:33:16:0:21:31
+21:exp:59:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:33:16:0:21:31
+21:exp:59:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:33:16:0:21:31
+21:exp:59:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, MD5
+depends_on:33:16:0:32
+21:exp:59:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, MD5, CID 4+4
+depends_on:30:33:16:0:32
+21:exp:59:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, MD5, CID 4+0
+depends_on:30:33:16:0:32
+21:exp:59:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, MD5, EtM
+depends_on:33:16:0:32:31
+21:exp:59:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, ARIA-256-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:33:16:0:32:31
+21:exp:59:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, ARIA-256-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:33:16:0:32:31
+21:exp:59:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-384
+depends_on:34:16:0:9
+21:exp:60:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:34:16:0:9
+21:exp:60:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:34:16:0:9
+21:exp:60:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-384, EtM
+depends_on:34:16:0:9:31
+21:exp:60:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:34:16:0:9:31
+21:exp:60:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:34:16:0:9:31
+21:exp:60:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-256
+depends_on:34:16:0:17
+21:exp:60:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:34:16:0:17
+21:exp:60:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:34:16:0:17
+21:exp:60:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-256, EtM
+depends_on:34:16:0:17:31
+21:exp:60:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:34:16:0:17:31
+21:exp:60:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:34:16:0:17:31
+21:exp:60:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-1
+depends_on:34:16:0:21
+21:exp:60:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:34:16:0:21
+21:exp:60:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:34:16:0:21
+21:exp:60:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-1, EtM
+depends_on:34:16:0:21:31
+21:exp:60:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:34:16:0:21:31
+21:exp:60:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:34:16:0:21:31
+21:exp:60:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, MD5
+depends_on:34:16:0:32
+21:exp:60:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, MD5, CID 4+4
+depends_on:30:34:16:0:32
+21:exp:60:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, MD5, CID 4+0
+depends_on:30:34:16:0:32
+21:exp:60:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, MD5, EtM
+depends_on:34:16:0:32:31
+21:exp:60:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:34:16:0:32:31
+21:exp:60:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:34:16:0:32:31
+21:exp:60:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-384
+depends_on:34:16:0:9
+21:exp:61:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-384, CID 4+4
+depends_on:30:34:16:0:9
+21:exp:61:exp:53:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-384, CID 4+0
+depends_on:30:34:16:0:9
+21:exp:61:exp:53:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-384, EtM
+depends_on:34:16:0:9:31
+21:exp:61:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-384, EtM, CID 4+4
+depends_on:30:34:16:0:9:31
+21:exp:61:exp:53:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-384, EtM, CID 4+0
+depends_on:30:34:16:0:9:31
+21:exp:61:exp:53:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-256
+depends_on:34:16:0:17
+21:exp:61:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-256, CID 4+4
+depends_on:30:34:16:0:17
+21:exp:61:exp:54:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-256, CID 4+0
+depends_on:30:34:16:0:17
+21:exp:61:exp:54:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-256, EtM
+depends_on:34:16:0:17:31
+21:exp:61:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-256, EtM, CID 4+4
+depends_on:30:34:16:0:17:31
+21:exp:61:exp:54:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-256, EtM, CID 4+0
+depends_on:30:34:16:0:17:31
+21:exp:61:exp:54:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-1
+depends_on:34:16:0:21
+21:exp:61:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-1, CID 4+4
+depends_on:30:34:16:0:21
+21:exp:61:exp:55:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-1, CID 4+0
+depends_on:30:34:16:0:21
+21:exp:61:exp:55:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-1, EtM
+depends_on:34:16:0:21:31
+21:exp:61:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-1, EtM, CID 4+4
+depends_on:30:34:16:0:21:31
+21:exp:61:exp:55:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, SHA-1, EtM, CID 4+0
+depends_on:30:34:16:0:21:31
+21:exp:61:exp:55:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, MD5
+depends_on:34:16:0:32
+21:exp:61:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, MD5, CID 4+4
+depends_on:30:34:16:0:32
+21:exp:61:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, MD5, CID 4+0
+depends_on:30:34:16:0:32
+21:exp:61:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, MD5, EtM
+depends_on:34:16:0:32:31
+21:exp:61:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, MD5, EtM, CID 4+4
+depends_on:30:34:16:0:32:31
+21:exp:61:exp:56:int:1:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CBC, 1.2, MD5, EtM, CID 4+0
+depends_on:30:34:16:0:32:31
+21:exp:61:exp:56:int:1:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-GCM, 1.2
+depends_on:10:0:11
+21:exp:62:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-GCM, 1.3
+depends_on:10:2:11
+21:exp:62:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, AES-128-GCM, 1.2, CID 4+4
+depends_on:30:10:0:11
+21:exp:62:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-GCM, 1.2, CID 4+0
+depends_on:30:10:0:11
+21:exp:62:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-192-GCM, 1.2
+depends_on:10:0:11:15
+21:exp:63:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-192-GCM, 1.3
+depends_on:10:2:11:15
+21:exp:63:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, AES-192-GCM, 1.2, CID 4+4
+depends_on:30:10:0:11:15
+21:exp:63:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-192-GCM, 1.2, CID 4+0
+depends_on:30:10:0:11:15
+21:exp:63:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-GCM, 1.2
+depends_on:10:0:11:15
+21:exp:64:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-GCM, 1.3
+depends_on:10:2:11:15
+21:exp:64:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, AES-256-GCM, 1.2, CID 4+4
+depends_on:30:10:0:11:15
+21:exp:64:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-GCM, 1.2, CID 4+0
+depends_on:30:10:0:11:15
+21:exp:64:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-GCM, 1.2
+depends_on:34:0:11
+21:exp:65:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-GCM, 1.2, CID 4+4
+depends_on:30:34:0:11
+21:exp:65:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-GCM, 1.2, CID 4+0
+depends_on:30:34:0:11
+21:exp:65:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-192-GCM, 1.2
+depends_on:34:0:11
+21:exp:66:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-192-GCM, 1.2, CID 4+4
+depends_on:30:34:0:11
+21:exp:66:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-192-GCM, 1.2, CID 4+0
+depends_on:30:34:0:11
+21:exp:66:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-GCM, 1.2
+depends_on:34:0:11
+21:exp:67:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-GCM, 1.2, CID 4+4
+depends_on:30:34:0:11
+21:exp:67:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-GCM, 1.2, CID 4+0
+depends_on:30:34:0:11
+21:exp:67:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CCM, 1.2
+depends_on:10:0:18
+21:exp:68:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CCM, 1.3
+depends_on:10:2:18
+21:exp:68:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, AES-128-CCM, 1.2, CID 4+4
+depends_on:30:10:0:18
+21:exp:68:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CCM, 1.2, CID 4+0
+depends_on:30:10:0:18
+21:exp:68:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-128-CCM, 1.2, short tag
+depends_on:10:0:18
+21:exp:68:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, little space, AES-128-CCM, 1.2, short tag, CID 4+4
+depends_on:30:10:0:18
+21:exp:68:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, little space, AES-128-CCM, 1.2, short tag, CID 4+0
+depends_on:30:10:0:18
+21:exp:68:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, little space, AES-192-CCM, 1.2
+depends_on:10:0:18:15
+21:exp:69:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-192-CCM, 1.3
+depends_on:10:2:18:15
+21:exp:69:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, AES-192-CCM, 1.2, CID 4+4
+depends_on:30:10:0:18:15
+21:exp:69:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-192-CCM, 1.2, CID 4+0
+depends_on:30:10:0:18:15
+21:exp:69:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-192-CCM, 1.2, short tag
+depends_on:10:0:18:15
+21:exp:69:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, little space, AES-192-CCM, 1.2, short tag, CID 4+4
+depends_on:30:10:0:18:15
+21:exp:69:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, little space, AES-192-CCM, 1.2, short tag, CID 4+0
+depends_on:30:10:0:18:15
+21:exp:69:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CCM, 1.2
+depends_on:10:0:18:15
+21:exp:70:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CCM, 1.3
+depends_on:10:2:18:15
+21:exp:70:exp:56:int:0:int:0:exp:20:int:0:int:0
+
+Record crypt, little space, AES-256-CCM, 1.2, CID 4+4
+depends_on:30:10:0:18:15
+21:exp:70:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CCM, 1.2, CID 4+0
+depends_on:30:10:0:18:15
+21:exp:70:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, AES-256-CCM, 1.2, short tag
+depends_on:10:0:18:15
+21:exp:70:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, little space, AES-256-CCM, 1.2, short tag, CID 4+4
+depends_on:30:10:0:18:15
+21:exp:70:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, little space, AES-256-CCM, 1.2, short tag, CID 4+0
+depends_on:30:10:0:18:15
+21:exp:70:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CCM, 1.2
+depends_on:34:0:18
+21:exp:71:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CCM, 1.2, CID 4+4
+depends_on:30:34:0:18
+21:exp:71:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CCM, 1.2, CID 4+0
+depends_on:30:34:0:18
+21:exp:71:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-128-CCM, 1.2, short tag
+depends_on:34:0:18
+21:exp:71:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-128-CCM, 1.2, short tag, CID 4+4
+depends_on:30:34:0:18
+21:exp:71:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-128-CCM, 1.2, short tag, CID 4+0
+depends_on:30:34:0:18
+21:exp:71:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-192-CCM, 1.2
+depends_on:34:0:18
+21:exp:72:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-192-CCM, 1.2, CID 4+4
+depends_on:30:34:0:18
+21:exp:72:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-192-CCM, 1.2, CID 4+0
+depends_on:30:34:0:18
+21:exp:72:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-192-CCM, 1.2, short tag
+depends_on:34:0:18
+21:exp:72:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-192-CCM, 1.2, short tag, CID 4+4
+depends_on:30:34:0:18
+21:exp:72:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-192-CCM, 1.2, short tag, CID 4+0
+depends_on:30:34:0:18
+21:exp:72:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CCM, 1.2
+depends_on:34:0:18
+21:exp:73:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CCM, 1.2, CID 4+4
+depends_on:30:34:0:18
+21:exp:73:exp:56:int:0:int:0:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CCM, 1.2, CID 4+0
+depends_on:30:34:0:18
+21:exp:73:exp:56:int:0:int:0:exp:2:int:4:int:0
+
+Record crypt, little space, CAMELLIA-256-CCM, 1.2, short tag
+depends_on:34:0:18
+21:exp:73:exp:56:int:0:int:1:exp:2:int:0:int:0
+
+Record crypt, little space, CAMELLIA-256-CCM, 1.2, short tag, CID 4+4
+depends_on:30:34:0:18
+21:exp:73:exp:56:int:0:int:1:exp:2:int:4:int:4
+
+Record crypt, little space, CAMELLIA-256-CCM, 1.2, short tag, CID 4+0
+depends_on:30:34:0:18
+21:exp:73:exp:56:int:0:int:1:exp:2:int:4:int:0
+
+Record crypt, little space, NULL cipher, 1.2, SHA-384
+depends_on:35:0:9
+21:exp:74:exp:53:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, SHA-384, EtM
+depends_on:35:0:9:31
+21:exp:74:exp:53:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, SHA-256
+depends_on:35:0:17
+21:exp:74:exp:54:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, SHA-256, EtM
+depends_on:35:0:17:31
+21:exp:74:exp:54:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, SHA-1
+depends_on:35:0:21
+21:exp:74:exp:55:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, SHA-1, EtM
+depends_on:35:0:21:31
+21:exp:74:exp:55:int:1:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, MD5
+depends_on:35:0:32
+21:exp:74:exp:56:int:0:int:0:exp:2:int:0:int:0
+
+Record crypt, little space, NULL cipher, 1.2, MD5, EtM
+depends_on:35:0:32:31
+21:exp:74:exp:56:int:1:int:0:exp:2:int:0:int:0
+
+SSL TLS 1.3 Key schedule: Secret evolution #1
+depends_on:17
+32:exp:76:hex:"":hex:"":hex:"33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a"
+
+SSL TLS 1.3 Key schedule: Secret evolution #2
+depends_on:17
+32:exp:76:hex:"33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a":hex:"df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624":hex:"fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a"
+
+SSL TLS 1.3 Key schedule: Secret evolution #3
+depends_on:17
+32:exp:76:hex:"fb9fc80689b3a5d02c33243bf69a1b1b20705588a794304a6e7120155edf149a":hex:"":hex:"7f2882bb9b9a46265941653e9c2f19067118151e21d12e57a7b6aca1f8150c8d"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #1
+depends_on:17
+22:exp:76:hex:"a2067265e7f0652a923d5d72ab0467c46132eeb968b6a32d311c805868548814":exp:77:hex:"":int:16:hex:"844780a7acad9f980fa25c114e43402a"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #2
+depends_on:17
+22:exp:76:hex:"a2067265e7f0652a923d5d72ab0467c46132eeb968b6a32d311c805868548814":exp:78:hex:"":int:12:hex:"4c042ddc120a38d1417fc815"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #3
+depends_on:17
+22:exp:76:hex:"ff0e5b965291c608c1e8cd267eefc0afcc5e98a2786373f0db47b04786d72aea":exp:77:hex:"":int:16:hex:"7154f314e6be7dc008df2c832baa1d39"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #4
+depends_on:17
+22:exp:76:hex:"ff0e5b965291c608c1e8cd267eefc0afcc5e98a2786373f0db47b04786d72aea":exp:78:hex:"":int:12:hex:"71abc2cae4c699d47c600268"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #5 (RFC 8448)
+depends_on:17
+22:exp:76:hex:"b67b7d690cc16c4e75e54213cb2d37b4e9c912bcded9105d42befd59d391ad38":exp:78:hex:"":int:12:hex:"5d313eb2671276ee13000b30"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #6 (RFC 8448)
+depends_on:17
+22:exp:76:hex:"b67b7d690cc16c4e75e54213cb2d37b4e9c912bcded9105d42befd59d391ad38":exp:77:hex:"":int:16:hex:"3fce516009c21727d0f2e4e86ee403bc"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #7 (RFC 8448)
+depends_on:17
+22:exp:76:hex:"b3eddb126e067f35a780b3abf45e2d8f3b1a950738f52e9600746a0e27a55a21":exp:78:hex:"":int:12:hex:"5bd3c71b836e0b76bb73265f"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #8 (RFC 8448)
+depends_on:17
+22:exp:76:hex:"b3eddb126e067f35a780b3abf45e2d8f3b1a950738f52e9600746a0e27a55a21":exp:77:hex:"":int:16:hex:"dbfaa693d1762c5b666af5d950258d01"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #9 (RFC 8448)
+depends_on:17
+22:exp:76:hex:"2faac08f851d35fea3604fcb4de82dc62c9b164a70974d0462e27f1ab278700f":exp:79:hex:"":int:32:hex:"5ace394c26980d581243f627d1150ae27e37fa52364e0a7f20ac686d09cd0e8e"
+
+SSL TLS 1.3 Key schedule: HKDF Expand Label #10 (RFC 8448)
+depends_on:17
+22:exp:76:hex:"7df235f2031d2a051287d02b0241b0bfdaf86cc856231f2d5aba46c434ec196c":exp:80:hex:"0000":int:32:hex:"4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3"
+
+SSL TLS 1.3 Key schedule: Traffic key generation #1
+depends_on:17
+23:exp:76:hex:"a2067265e7f0652a923d5d72ab0467c46132eeb968b6a32d311c805868548814":hex:"ff0e5b965291c608c1e8cd267eefc0afcc5e98a2786373f0db47b04786d72aea":int:12:int:16:hex:"844780a7acad9f980fa25c114e43402a":hex:"4c042ddc120a38d1417fc815":hex:"7154f314e6be7dc008df2c832baa1d39":hex:"71abc2cae4c699d47c600268"
+
+SSL TLS 1.3 Key schedule: Traffic key generation #2 (RFC 8448)
+depends_on:17
+23:exp:76:hex:"a2067265e7f0652a923d5d72ab0467c46132eeb968b6a32d311c805868548814":hex:"ff0e5b965291c608c1e8cd267eefc0afcc5e98a2786373f0db47b04786d72aea":int:12:int:16:hex:"844780a7acad9f980fa25c114e43402a":hex:"4c042ddc120a38d1417fc815":hex:"7154f314e6be7dc008df2c832baa1d39":hex:"71abc2cae4c699d47c600268"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "derived", "")
+depends_on:17
+24:exp:76:hex:"33ad0a1c607ec03b09e6cd9893680ce210adf300aa1f2660e1b22e10f170f92a":exp:81:hex:"":int:32:exp:82:hex:"6f2615a108c702c5678f54fc9dbab69716c076189c48250cebeac3576c3611ba"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "s ap traffic", hash) #1
+depends_on:17
+24:exp:76:hex:"7f2882bb9b9a46265941653e9c2f19067118151e21d12e57a7b6aca1f8150c8d":exp:83:hex:"22844b930e5e0a59a09d5ac35fc032fc91163b193874a265236e568077378d8b":int:32:exp:84:hex:"3fc35ea70693069a277956afa23b8f4543ce68ac595f2aace05cd7a1c92023d5"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "c e traffic", hash)
+depends_on:17
+24:exp:76:hex:"9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c":exp:85:hex:"08ad0fa05d7c7233b1775ba2ff9f4c5b8b59276b7f227f13a976245f5d960913":int:32:exp:84:hex:"3fbbe6a60deb66c30a32795aba0eff7eaa10105586e7be5c09678d63b6caab62"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "e exp master", hash)
+depends_on:17
+24:exp:76:hex:"9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c":exp:86:hex:"08ad0fa05d7c7233b1775ba2ff9f4c5b8b59276b7f227f13a976245f5d960913":int:32:exp:84:hex:"b2026866610937d7423e5be90862ccf24c0e6091186d34f812089ff5be2ef7df"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "c hs traffic", hash)
+depends_on:17
+24:exp:76:hex:"005cb112fd8eb4ccc623bb88a07c64b3ede1605363fc7d0df8c7ce4ff0fb4ae6":exp:87:hex:"f736cb34fe25e701551bee6fd24c1cc7102a7daf9405cb15d97aafe16f757d03":int:32:exp:84:hex:"2faac08f851d35fea3604fcb4de82dc62c9b164a70974d0462e27f1ab278700f"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "s hs traffic", hash)
+depends_on:17
+24:exp:76:hex:"005cb112fd8eb4ccc623bb88a07c64b3ede1605363fc7d0df8c7ce4ff0fb4ae6":exp:88:hex:"f736cb34fe25e701551bee6fd24c1cc7102a7daf9405cb15d97aafe16f757d03":int:32:exp:84:hex:"fe927ae271312e8bf0275b581c54eef020450dc4ecffaa05a1a35d27518e7803"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "c ap traffic", hash)
+depends_on:17
+24:exp:76:hex:"e2d32d4ed66dd37897a0e80c84107503ce58bf8aad4cb55a5002d77ecb890ece":exp:89:hex:"b0aeffc46a2cfe33114e6fd7d51f9f04b1ca3c497dab08934a774a9d9ad7dbf3":int:32:exp:84:hex:"2abbf2b8e381d23dbebe1dd2a7d16a8bf484cb4950d23fb7fb7fa8547062d9a1"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "s ap traffic", hash) #2
+depends_on:17
+24:exp:76:hex:"e2d32d4ed66dd37897a0e80c84107503ce58bf8aad4cb55a5002d77ecb890ece":exp:83:hex:"b0aeffc46a2cfe33114e6fd7d51f9f04b1ca3c497dab08934a774a9d9ad7dbf3":int:32:exp:84:hex:"cc21f1bf8feb7dd5fa505bd9c4b468a9984d554a993dc49e6d285598fb672691"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "exp master", hash)
+depends_on:17
+24:exp:76:hex:"e2d32d4ed66dd37897a0e80c84107503ce58bf8aad4cb55a5002d77ecb890ece":exp:90:hex:"b0aeffc46a2cfe33114e6fd7d51f9f04b1ca3c497dab08934a774a9d9ad7dbf3":int:32:exp:84:hex:"3fd93d4ffddc98e64b14dd107aedf8ee4add23f4510f58a4592d0b201bee56b4"
+
+SSL TLS 1.3 Key schedule: Derive-Secret( ., "res master", hash)
+depends_on:17
+24:exp:76:hex:"e2d32d4ed66dd37897a0e80c84107503ce58bf8aad4cb55a5002d77ecb890ece":exp:91:hex:"c3c122e0bd907a4a3ff6112d8fd53dbf89c773d9552e8b6b9d56d361b3a97bf6":int:32:exp:84:hex:"5e95bdf1f89005ea2e9aa0ba85e728e3c19c5fe0c699e3f5bee59faebd0b5406"
+
+SSL TLS 1.3 Exporter
+depends_on:17
+25:exp:76:hex:"3fd93d4ffddc98e64b14dd107aedf8ee4add23f4510f58a4592d0b201bee56b4":char*:"test":char*:"context value":int:32:hex:"83d0fac39f87c1b4fbcd261369f31149c535391a9199bd4c5daf89fe259c2e94"
+
+SSL TLS 1.3 Exporter, 0-byte label and context
+depends_on:9
+25:exp:92:hex:"9f355772f34017927ecc81d16e653c7408f945e7f62dc632d3f59e6310ef49401e62a2e3be886e3f930d4bf6300ce30a":char*:"":char*:"":int:20:hex:"18268580D7C6769194794A84B7A3EE35317DB88A"
+
+SSL TLS 1.3 Exporter, 249-byte label and 0-byte context
+depends_on:9
+25:exp:92:hex:"c453aeae318ebae00617c430a0066cf586593a4b0150219107420798933cf9e6e4434337cccc2cae5429dc4f77401e39":char*:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012345678":char*:"":int:20:hex:"259531766AAA10FBAB6BF2D11D23264B321743D9"
+
+SSL TLS 1.3 Key schedule: Early secrets derivation helper
+depends_on:17
+26:exp:76:hex:"9b2188e9b2fc6d64d71dc329900e20bb41915000f678aa839cbb797cb7d8332c":hex:"08ad0fa05d7c7233b1775ba2ff9f4c5b8b59276b7f227f13a976245f5d960913":hex:"3fbbe6a60deb66c30a32795aba0eff7eaa10105586e7be5c09678d63b6caab62":hex:"b2026866610937d7423e5be90862ccf24c0e6091186d34f812089ff5be2ef7df"
+
+SSL TLS 1.3 Key schedule: Handshake secrets derivation helper
+depends_on:17
+27:exp:76:hex:"005cb112fd8eb4ccc623bb88a07c64b3ede1605363fc7d0df8c7ce4ff0fb4ae6":hex:"f736cb34fe25e701551bee6fd24c1cc7102a7daf9405cb15d97aafe16f757d03":hex:"2faac08f851d35fea3604fcb4de82dc62c9b164a70974d0462e27f1ab278700f":hex:"fe927ae271312e8bf0275b581c54eef020450dc4ecffaa05a1a35d27518e7803"
+
+SSL TLS 1.3 Record Encryption, tls13.ulfheim.net Example #1
+depends_on:10:11:17
+31:exp:93:exp:0:int:0:int:1:hex:"0b6d22c8ff68097ea871c672073773bf":hex:"1b13dd9f8d8f17091d34b349":hex:"49134b95328f279f0183860589ac6707":hex:"bc4dd5f7b98acff85466261d":hex:"70696e67":hex:"c74061535eb12f5f25a781957874742ab7fb305dd5"
+
+SSL TLS 1.3 Record Encryption, tls13.ulfheim.net Example #2
+depends_on:10:11:17
+31:exp:93:exp:1:int:1:int:1:hex:"0b6d22c8ff68097ea871c672073773bf":hex:"1b13dd9f8d8f17091d34b349":hex:"49134b95328f279f0183860589ac6707":hex:"bc4dd5f7b98acff85466261d":hex:"706f6e67":hex:"370e5f168afa7fb16b663ecdfca3dbb81931a90ca7"
+
+SSL TLS 1.3 Record Encryption RFC 8448 Example #1
+depends_on:10:11:17
+31:exp:93:exp:0:int:0:int:1:hex:"9f02283b6c9c07efc26bb9f2ac92e356":hex:"cf782b88dd83549aadf1e984":hex:"17422dda596ed5d9acd890e3c63f5051":hex:"5b78923dee08579033e523d9":hex:"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031":hex:"a23f7054b62c94d0affafe8228ba55cbefacea42f914aa66bcab3f2b9819a8a5b46b395bd54a9a20441e2b62974e1f5a6292a2977014bd1e3deae63aeebb21694915e4"
+
+SSL TLS 1.3 Record Encryption RFC 8448 Example #2
+depends_on:10:11:17
+31:exp:93:exp:1:int:1:int:1:hex:"9f02283b6c9c07efc26bb9f2ac92e356":hex:"cf782b88dd83549aadf1e984":hex:"17422dda596ed5d9acd890e3c63f5051":hex:"5b78923dee08579033e523d9":hex:"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031":hex:"2e937e11ef4ac740e538ad36005fc4a46932fc3225d05f82aa1b36e30efaf97d90e6dffc602dcb501a59a8fcc49c4bf2e5f0a21c0047c2abf332540dd032e167c2955d"
+
+SSL TLS 1.3 Key schedule: Application secrets derivation helper
+depends_on:17
+28:exp:76:hex:"e2d32d4ed66dd37897a0e80c84107503ce58bf8aad4cb55a5002d77ecb890ece":hex:"b0aeffc46a2cfe33114e6fd7d51f9f04b1ca3c497dab08934a774a9d9ad7dbf3":hex:"2abbf2b8e381d23dbebe1dd2a7d16a8bf484cb4950d23fb7fb7fa8547062d9a1":hex:"cc21f1bf8feb7dd5fa505bd9c4b468a9984d554a993dc49e6d285598fb672691":hex:"3fd93d4ffddc98e64b14dd107aedf8ee4add23f4510f58a4592d0b201bee56b4"
+
+SSL TLS 1.3 Key schedule: Resumption secrets derivation helper
+depends_on:17
+29:exp:76:hex:"e2d32d4ed66dd37897a0e80c84107503ce58bf8aad4cb55a5002d77ecb890ece":hex:"c3c122e0bd907a4a3ff6112d8fd53dbf89c773d9552e8b6b9d56d361b3a97bf6":hex:"5e95bdf1f89005ea2e9aa0ba85e728e3c19c5fe0c699e3f5bee59faebd0b5406"
+
+SSL TLS 1.3 Key schedule: PSK binder
+depends_on:17:37
+30:exp:76:hex:"4ecd0eb6ec3b4d87f5d6028f922ca4c5851a277fd41311c9e62d2c9492e1c4f3":exp:94:hex:"63224b2e4573f2d3454ca84b9d009a04f6be9e05711a8396473aefa01e924a14":hex:"3add4fb2d8fdf822a0ca3cf7678ef5e88dae990141c5924d57bb6fa31b9e5f9d"
+
+SSL TLS_PRF MBEDTLS_SSL_TLS_PRF_NONE
+33:exp:95:hex:"":hex:"":char*:"test tls_prf label":hex:"":exp:96
+
+SSL TLS_PRF MBEDTLS_SSL_TLS_PRF_SHA384
+depends_on:9:0
+33:exp:97:hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":char*:"test tls_prf label":hex:"a4206a36eef93f496611c2b7806625c3":int:0
+
+SSL TLS_PRF MBEDTLS_SSL_TLS_PRF_SHA256
+depends_on:17:0
+33:exp:98:hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":char*:"test tls_prf label":hex:"7f9998393198a02c8d731ccc2ef90b2c":int:0
+
+SSL TLS_PRF MBEDTLS_SSL_TLS_PRF_SHA384 SHA-384 not enabled
+depends_on:38
+33:exp:97:hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":char*:"test tls_prf label":hex:"a4206a36eef93f496611c2b7806625c3":exp:96
+
+SSL TLS_PRF MBEDTLS_SSL_TLS_PRF_SHA256 SHA-256 not enabled
+depends_on:39
+33:exp:98:hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":hex:"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef":char*:"test tls_prf label":hex:"7f9998393198a02c8d731ccc2ef90b2c":exp:96
+
+Session serialization, save-load: no ticket, no cert
+depends_on:0
+34:int:0:char*:"":int:0:exp:2
+
+Session serialization, save-load: small ticket, no cert
+depends_on:28:27:0
+34:int:42:char*:"":int:0:exp:2
+
+Session serialization, save-load: large ticket, no cert
+depends_on:28:27:0
+34:int:1023:char*:"":int:0:exp:2
+
+Session serialization, save-load: no ticket, cert
+depends_on:40:41:42:19:17:43:0
+34:int:0:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, save-load: small ticket, cert
+depends_on:28:27:40:41:42:19:17:43:0
+34:int:42:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, save-load: large ticket, cert
+depends_on:28:27:40:41:42:19:17:43:0
+34:int:1023:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+TLS 1.3: CLI: Session serialization, save-load: no ticket
+depends_on:28:27:2
+34:int:0:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, save-load: small ticket
+depends_on:28:27:2
+34:int:42:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, save-load: large ticket
+depends_on:28:27:2
+34:int:1023:char*:"":exp:0:exp:20
+
+TLS 1.3: SRV: Session serialization, save-load: large ticket
+depends_on:28:29:2
+34:int:1023:char*:"":exp:1:exp:20
+
+Session serialization, load-save: no ticket, no cert
+depends_on:0
+35:int:0:char*:"":int:0:exp:2
+
+Session serialization, load-save: small ticket, no cert
+depends_on:28:27:0
+35:int:42:char*:"":int:0:exp:2
+
+Session serialization, load-save: large ticket, no cert
+depends_on:28:27:0
+35:int:1023:char*:"":int:0:exp:2
+
+Session serialization, load-save: no ticket, cert
+depends_on:40:41:42:19:17:43:0
+35:int:0:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, load-save: small ticket, cert
+depends_on:0:28:27:40:41:42:19:17:43
+35:int:42:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, load-save: large ticket, cert
+depends_on:0:28:27:40:41:42:19:17:43
+35:int:1023:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+TLS 1.3: CLI: Session serialization, load-save: no ticket
+depends_on:28:27:2
+35:int:0:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, load-save: small ticket
+depends_on:28:27:2
+35:int:42:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, load-save: large ticket
+depends_on:28:27:2
+35:int:1023:char*:"":exp:0:exp:20
+
+TLS 1.3: SRV: Session serialization, load-save
+depends_on:28:29:2
+35:int:0:char*:"":exp:1:exp:20
+
+Session serialization, save buffer size: no ticket, no cert
+depends_on:0
+36:int:0:char*:"":int:0:exp:2
+
+Session serialization, save buffer size: small ticket, no cert
+depends_on:28:27:0
+36:int:42:char*:"":int:0:exp:2
+
+Session serialization, save buffer size: large ticket, no cert
+depends_on:28:27:0
+36:int:1023:char*:"":int:0:exp:2
+
+Session serialization, save buffer size: no ticket, cert
+depends_on:40:41:42:19:17:43:0
+36:int:0:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, save buffer size: small ticket, cert
+depends_on:0:28:27:40:41:42:19:17:43
+36:int:42:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, save buffer size: large ticket, cert
+depends_on:0:28:27:40:41:42:19:17:43
+36:int:1023:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+TLS 1.3: CLI: Session serialization, save buffer size: no ticket
+depends_on:28:27:2
+36:int:0:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, save buffer size: small ticket
+depends_on:28:27:2
+36:int:42:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, save buffer size: large ticket
+depends_on:28:27:2
+36:int:1023:char*:"":exp:0:exp:20
+
+TLS 1.3: SRV: Session serialization, save buffer size
+depends_on:28:29:2
+36:int:0:char*:"":exp:1:exp:20
+
+Session serialization, load buffer size: no ticket, no cert
+depends_on:0
+37:int:0:char*:"":int:0:exp:2
+
+Session serialization, load buffer size: small ticket, no cert
+depends_on:0:28:27
+37:int:42:char*:"":int:0:exp:2
+
+Session serialization, load buffer size: large ticket, no cert
+depends_on:0:28:27
+37:int:1023:char*:"":int:0:exp:2
+
+Session serialization, load buffer size: no ticket, cert
+depends_on:0:40:41:42:19:17:43
+37:int:0:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, load buffer size: small ticket, cert
+depends_on:0:28:27:40:41:42:19:17:43
+37:int:42:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+Session serialization, load buffer size: large ticket, cert
+depends_on:0:28:27:40:41:42:19:17:43
+37:int:1023:char*:"../framework/data_files/server5.crt":int:0:exp:2
+
+TLS 1.3: CLI: Session serialization, load buffer size: no ticket
+depends_on:2:28:27
+37:int:0:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, load buffer size: small ticket
+depends_on:2:28:27
+37:int:42:char*:"":exp:0:exp:20
+
+TLS 1.3: CLI: Session serialization, load buffer size: large ticket
+depends_on:2:28:27
+37:int:1023:char*:"":exp:0:exp:20
+
+TLS 1.3: SRV: Session serialization, load buffer size
+depends_on:2:28:29
+37:int:0:char*:"":exp:1:exp:20
+
+Test configuration of EC groups through mbedtls_ssl_conf_groups()
+58
+
+Get supported group list: x25519, positive
+depends_on:37
+59:exp:99:int:1
+
+Get supported group list: x25519, negative
+depends_on:44
+59:exp:99:int:0
+
+Get supported group list: secp256r1, positive
+depends_on:19
+59:exp:100:int:1
+
+Get supported group list: secp256r1, negative
+depends_on:45
+59:exp:100:int:0
+
+Get supported group list: secp384r1, positive
+depends_on:13
+59:exp:101:int:1
+
+Get supported group list: secp384r1, negative
+depends_on:46
+59:exp:101:int:0
+
+Get supported group list: x448, positive
+depends_on:47
+59:exp:102:int:1
+
+Get supported group list: x448, negative
+depends_on:48
+59:exp:102:int:0
+
+Get supported group list: secp521r1, positive
+depends_on:49
+59:exp:103:int:1
+
+Get supported group list: secp521r1, negative
+depends_on:50
+59:exp:103:int:0
+
+Get supported group list: brainpool256r1, positive
+depends_on:51
+59:exp:104:int:1
+
+Get supported group list: brainpool256r1, negative
+depends_on:52
+59:exp:104:int:0
+
+Get supported group list: brainpool384r1, positive
+depends_on:53
+59:exp:105:int:1
+
+Get supported group list: brainpool384r1, negative
+depends_on:54
+59:exp:105:int:0
+
+Get supported group list: brainpool512r1, positive
+depends_on:55
+59:exp:106:int:1
+
+Get supported group list: brainpool512r1, negative
+depends_on:56
+59:exp:106:int:0
+
+Get supported group list: ffdhe2048, positive
+depends_on:57
+59:exp:107:int:1
+
+Get supported group list: ffdhe2048, negative
+depends_on:58
+59:exp:107:int:0
+
+Get supported group list: ffdhe3072, positive
+depends_on:59
+59:exp:108:int:1
+
+Get supported group list: ffdhe3072, negative
+depends_on:60
+59:exp:108:int:0
+
+Get supported group list: ffdhe4096, positive
+depends_on:61
+59:exp:109:int:1
+
+Get supported group list: ffdhe4096, negative
+depends_on:62
+59:exp:109:int:0
+
+Get supported group list: ffdhe6144, positive
+depends_on:63
+59:exp:110:int:1
+
+Get supported group list: ffdhe6144, negative
+depends_on:64
+59:exp:110:int:0
+
+Get supported group list: ffdhe8192, positive
+depends_on:65
+59:exp:111:int:1
+
+Get supported group list: ffdhe8192, negative
+depends_on:66
+59:exp:111:int:0
+
+TLS ID <-> group name: x25519
+depends_on:37
+60:exp:99:char*:"x25519"
+
+TLS ID <-> group name: secp256r1
+depends_on:19
+60:exp:100:char*:"secp256r1"
+
+TLS ID <-> group name: secp256k1
+depends_on:67
+60:exp:112:char*:"secp256k1"
+
+TLS ID <-> group name: secp384r1
+depends_on:13
+60:exp:101:char*:"secp384r1"
+
+TLS ID <-> group name: x448
+depends_on:47
+60:exp:102:char*:"x448"
+
+TLS ID <-> group name: secp521r1
+depends_on:49
+60:exp:103:char*:"secp521r1"
+
+TLS ID <-> group name: brainpoolP256r1
+depends_on:51
+60:exp:104:char*:"brainpoolP256r1"
+
+TLS ID <-> group name: brainpoolP384r1
+depends_on:53
+60:exp:105:char*:"brainpoolP384r1"
+
+TLS ID <-> group name: brainpoolP512r1
+depends_on:55
+60:exp:106:char*:"brainpoolP512r1"
+
+TLS ID <-> group name: ffdhe2048
+depends_on:57
+60:exp:107:char*:"ffdhe2048"
+
+TLS ID <-> group name: ffdhe3072
+depends_on:59
+60:exp:108:char*:"ffdhe3072"
+
+TLS ID <-> group name: ffdhe4096
+depends_on:61
+60:exp:109:char*:"ffdhe4096"
+
+TLS ID <-> group name: ffdhe6144
+depends_on:63
+60:exp:110:char*:"ffdhe6144"
+
+TLS ID <-> group name: ffdhe8192
+depends_on:65
+60:exp:111:char*:"ffdhe8192"
+
+Version config: valid client TLS 1.2 only
+depends_on:0
+57:exp:0:exp:113:exp:2:exp:2:int:0
+
+Version config: valid client DTLS 1.2 only
+depends_on:0
+57:exp:0:exp:114:exp:2:exp:2:int:0
+
+Version config: valid server TLS 1.2 only
+depends_on:0
+57:exp:1:exp:113:exp:2:exp:2:int:0
+
+Version config: valid server DTLS 1.2 only
+depends_on:0
+57:exp:1:exp:114:exp:2:exp:2:int:0
+
+Version config: invalid client TLS 1.2 only
+depends_on:68
+57:exp:0:exp:113:exp:2:exp:2:exp:115
+
+Version config: invalid client DTLS 1.2 only
+depends_on:68
+57:exp:0:exp:114:exp:2:exp:2:exp:115
+
+Version config: invalid server TLS 1.2 only
+depends_on:68
+57:exp:1:exp:113:exp:2:exp:2:exp:115
+
+Version config: invalid server DTLS 1.2 only
+depends_on:68
+57:exp:1:exp:114:exp:2:exp:2:exp:115
+
+Version config: valid client TLS 1.3 only
+depends_on:2
+57:exp:0:exp:113:exp:20:exp:20:int:0
+
+Version config: unsupported client DTLS 1.3 only
+depends_on:2
+57:exp:0:exp:114:exp:20:exp:20:exp:96
+
+Version config: valid server TLS 1.3 only
+depends_on:2
+57:exp:1:exp:113:exp:20:exp:20:int:0
+
+Version config: unsupported server DTLS 1.3 only
+depends_on:2
+57:exp:1:exp:114:exp:20:exp:20:exp:96
+
+Version config: invalid client TLS 1.3 only
+depends_on:24
+57:exp:0:exp:113:exp:20:exp:20:exp:115
+
+Version config: invalid client DTLS 1.3 only
+depends_on:24
+57:exp:0:exp:114:exp:20:exp:20:exp:115
+
+Version config: invalid server TLS 1.3 only
+depends_on:24
+57:exp:1:exp:113:exp:20:exp:20:exp:115
+
+Version config: invalid server DTLS 1.3 only
+depends_on:24
+57:exp:1:exp:114:exp:20:exp:20:exp:115
+
+Version config: valid client hybrid TLS 1.2/3
+depends_on:0:2
+57:exp:0:exp:113:exp:2:exp:20:int:0
+
+Version config: unsupported client hybrid DTLS 1.2/3
+depends_on:0:2
+57:exp:0:exp:114:exp:2:exp:20:exp:96
+
+Version config: valid server hybrid TLS 1.2/3
+depends_on:0:2
+57:exp:1:exp:113:exp:2:exp:20:int:0
+
+Version config: unsupported server hybrid DTLS 1.2/3
+depends_on:0:2
+57:exp:1:exp:114:exp:2:exp:20:exp:96
+
+Version config: valid client hybrid TLS 1.2/3, no TLS 1.2
+depends_on:68
+57:exp:0:exp:113:exp:2:exp:20:exp:115
+
+Version config: unsupported client hybrid DTLS 1.2/3, no TLS 1.2
+depends_on:68
+57:exp:0:exp:114:exp:2:exp:20:exp:115
+
+Version config: valid server hybrid TLS 1.2/3, no TLS 1.2
+depends_on:68
+57:exp:1:exp:113:exp:2:exp:20:exp:115
+
+Version config: unsupported server hybrid DTLS 1.2/3, no TLS 1.2
+depends_on:68
+57:exp:1:exp:114:exp:2:exp:20:exp:115
+
+Version config: valid client hybrid TLS 1.2/3, no TLS 1.3
+depends_on:24
+57:exp:0:exp:113:exp:2:exp:20:exp:115
+
+Version config: unsupported client hybrid DTLS 1.2/3, no TLS 1.3
+depends_on:24
+57:exp:0:exp:114:exp:2:exp:20:exp:115
+
+Version config: valid server hybrid TLS 1.2/3, no TLS 1.3
+depends_on:24
+57:exp:1:exp:113:exp:2:exp:20:exp:115
+
+Version config: unsupported server hybrid DTLS 1.2/3, no TLS 1.3
+depends_on:24
+57:exp:1:exp:114:exp:2:exp:20:exp:115
+
+Version config: invalid minimum version
+57:exp:0:exp:113:int:770:exp:2:exp:115
+
+Version config: invalid maximum version
+57:exp:0:exp:113:exp:20:int:773:exp:115
+
+Test accessor into timing_delay_context
+63
+
+Sanity test cid functions
+64
+
+Raw key agreement: nominal
+depends_on:17:20
+65:int:0
+
+Raw key agreement: bad server key
+depends_on:17:20
+65:int:1
+
+Force a bad session id length
+61
+
+Cookie parsing: nominal run
+62:hex:"16fefd0000000000000000002F010000de000000000000011efefd7b7272727272727272727272727272727272727272727272727272727272727d00200000000000000000000000000000000000000000000000000000000000000000":exp:116
+
+Cookie parsing: cookie_len overflow
+62:hex:"16fefd000000000000000000ea010000de000000000000011efefd7b7272727272727272727272727272727272727272727272727272727272727db97b7373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737db963":exp:117
+
+Cookie parsing: non-zero fragment offset
+62:hex:"16fefd00000000000000000032010000de000072000000011efefd7b7272727272727272727272727272727272727272727272727272727272727d01730143":exp:117
+
+Cookie parsing: sid_len overflow
+62:hex:"16fefd00000000000000000032010000de000000000000011efefd7b7272727272727272727272727272727272727272727272727272727272727dFF730143":exp:117
+
+Cookie parsing: record too short
+62:hex:"16fefd0000000000000000002f010000de000000000000011efefd7b7272727272727272727272727272727272727272727272727272727272727dFF":exp:117
+
+Cookie parsing: one byte overread
+62:hex:"16fefd0000000000000000002F010000de000000000000011efefd7b7272727272727272727272727272727272727272727272727272727272727d0001":exp:117
+
+TLS 1.3 srv Certificate msg - wrong vector lengths
+66
+
+EC-JPAKE set password
+depends_on:69
+67:int:0
+
+EC-JPAKE set opaque password
+depends_on:69
+67:int:1
+
+Test Elliptic curves' info parsing
+68
+
+TLS 1.3 resume session with ticket
+69
+
+TLS 1.3 read early data, early data accepted
+70:exp:118
+
+TLS 1.3 read early data, no early data indication
+70:exp:119
+
+TLS 1.3 read early data, server rejects early data
+70:exp:120
+
+TLS 1.3 read early data, discard after HRR
+70:exp:121
+
+TLS 1.3 cli, early data, same ALPN
+depends_on:70
+70:exp:122
+
+TLS 1.3 cli, early data, different ALPN
+depends_on:70
+70:exp:123
+
+TLS 1.3 cli, early data, no initial ALPN
+depends_on:70
+70:exp:124
+
+TLS 1.3 cli, early data, no later ALPN
+depends_on:70
+70:exp:125
+
+TLS 1.3 cli, early data state, early data accepted
+71:exp:118
+
+TLS 1.3 cli, early data state, no early data indication
+71:exp:119
+
+TLS 1.3 cli, early data state, server rejects early data
+71:exp:120
+
+TLS 1.3 cli, early data state, hello retry request
+71:exp:121
+
+TLS 1.3 write early data, early data accepted
+72:exp:118
+
+TLS 1.3 write early data, no early data indication
+72:exp:119
+
+TLS 1.3 write early data, server rejects early data
+72:exp:120
+
+TLS 1.3 write early data, hello retry request
+72:exp:121
+
+TLS 1.3 cli, maximum early data size, default size
+73:int:-1
+
+TLS 1.3 cli, maximum early data size, zero
+73:int:0
+
+TLS 1.3 cli, maximum early data size, very small but not 0
+73:int:3
+
+TLS 1.3 cli, maximum early data size, 93
+73:int:93
+
+TLS 1.3 srv, max early data size, dflt, wsz=96
+74:exp:118:int:-1:int:96
+
+TLS 1.3 srv, max early data size, dflt, wsz=128
+74:exp:118:int:-1:int:128
+
+TLS 1.3 srv, max early data size, 3, wsz=2
+74:exp:118:int:3:int:2
+
+TLS 1.3 srv, max early data size, 3, wsz=3
+74:exp:118:int:3:int:3
+
+TLS 1.3 srv, max early data size, 98, wsz=23
+74:exp:118:int:98:int:23
+
+TLS 1.3 srv, max early data size, 98, wsz=49
+74:exp:118:int:98:int:49
+
+TLS 1.3 srv, max early data size, server rejects, dflt, wsz=128
+74:exp:120:int:-1:int:128
+
+TLS 1.3 srv, max early data size, server rejects, 3, wsz=3
+74:exp:120:int:3:int:3
+
+TLS 1.3 srv, max early data size, server rejects, 98, wsz=49
+74:exp:120:int:98:int:49
+
+TLS 1.3 srv, max early data size, HRR, dflt, wsz=128
+74:exp:121:int:-1:int:128
+
+TLS 1.3 srv, max early data size, HRR, 3, wsz=3
+74:exp:121:int:3:int:3
+
+TLS 1.3 srv, max early data size, HRR, 98, wsz=49
+74:exp:121:int:97:int:0
+
+TLS 1.2 Keying Material Exporter: Consistent results, no context
+depends_on:0:1
+78:exp:2:int:24:int:0
+
+TLS 1.2 Keying Material Exporter: Consistent results, with context
+depends_on:0:1
+78:exp:2:int:24:int:1
+
+TLS 1.2 Keying Material Exporter: Consistent results, large keys
+depends_on:0:1
+78:exp:2:exp:126:int:0
+
+TLS 1.2 Keying Material Exporter: Uses label
+depends_on:0:1
+79:exp:2
+
+TLS 1.2 Keying Material Exporter: Uses context
+depends_on:0:1
+80:exp:2
+
+TLS 1.2 Keying Material Exporter: Context too long
+depends_on:0:1
+82:exp:2:int:24:int:251:exp:127
+
+TLS 1.2 Keying Material Exporter: Handshake not done
+depends_on:0:1
+83:exp:2:int:1:exp:6
+
+TLS 1.3 Keying Material Exporter: Consistent results, no context
+depends_on:2:3:4:5:6
+78:exp:20:int:24:int:0
+
+TLS 1.3 Keying Material Exporter: Consistent results, with context
+depends_on:2:3:4:5:6
+78:exp:20:int:24:int:1
+
+TLS 1.3 Keying Material Exporter: Consistent results, large keys
+depends_on:2:3:4:5:6
+78:exp:20:exp:126:int:0
+
+TLS 1.3 Keying Material Exporter: Uses label
+depends_on:2:3:4:5:6
+79:exp:20
+
+TLS 1.3 Keying Material Exporter: Uses context
+depends_on:2:3:4:5:6
+80:exp:20
+
+TLS 1.3 Keying Material Exporter: Uses length
+depends_on:2:3:4:5:6
+81
+
+TLS 1.3 Keying Material Exporter: Exported key too long
+depends_on:2:3:4:5:6
+82:exp:20:exp:128:int:20:int:20
+
+TLS 1.3 Keying Material Exporter: Label too long
+depends_on:2:3:4:5:6
+82:exp:20:int:24:int:250:int:10
+
+TLS 1.3 Keying Material Exporter: Handshake not done
+depends_on:2:3:4:5:6
+83:exp:20:int:1:exp:6
+
+TLS fatal alert getter
+84
+
+Default verify_result before doing a handshake
+85
+
+TLS 1.3 - HRR then TLS 1.2 second ClientHello
+86
+
+Baseline for: Server using sig_alg not offered by the client - RSA with SHA256
+depends_on:1:17
+77:exp:129:exp:130:int:0
+
+Negative Test: Server using sig_alg not offered by the client - RSA with SHA256
+depends_on:1:17
+77:exp:129:exp:130:exp:131
+
+Baseline for: Server using sig_alg not offered by the client - ECDSA with SHA512
+depends_on:71:72:73
+77:exp:132:exp:133:int:0
+
+Negative Test: Server using sig_alg not offered by the client - ECDSA with SHA512
+depends_on:71:72:73
+77:exp:132:exp:133:exp:131
+

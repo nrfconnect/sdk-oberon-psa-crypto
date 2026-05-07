@@ -18,6 +18,18 @@
 extern "C" {
 #endif
 
+
+/**
+ * The major version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_MAC_VERSION_MAJOR 0
+
+/**
+ * The minor version of this implementation of the PSA Crypto Driver Interface
+ */
+#define PSA_CRYPTO_DRIVER_INTERFACE_MAC_VERSION_MINOR 0
+
+
 typedef enum {
     OBERON_HMAC_ALG = 1,
     OBERON_CMAC_ALG = 2,

@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_CIPHER_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -22,7 +26,9 @@
 #if defined(PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20) || defined(PSA_NEED_OBERON_STREAM_CIPHER_XCHACHA20)
 #include "ocrypto_chacha20.h"
 #endif
+#include "ocrypto_version.h"
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 #ifdef PSA_NEED_OBERON_CCM_STAR_NO_TAG_AES
 static void oberon_aes_ccm_star_set_iv(
@@ -45,6 +51,8 @@ static psa_status_t oberon_cipher_setup(
     const uint8_t *key, size_t key_length,
     psa_algorithm_t alg, uint8_t decrypt)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "Cipher Oberon driver: ocrypto version incompatible");
 #ifdef PSA_NEED_OBERON_STREAM_CIPHER_CHACHA20
     _Static_assert(sizeof operation->ctx >= sizeof(ocrypto_chacha20_ctx), "oberon_cipher_operation_t.ctx too small");
     if (alg == PSA_ALG_STREAM_CIPHER && psa_get_key_type(attributes) == PSA_KEY_TYPE_CHACHA20) {
@@ -330,6 +338,8 @@ psa_status_t oberon_cipher_encrypt(
     const uint8_t *input, size_t input_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "Cipher Oberon driver: ocrypto version incompatible");
     ocrypto_context ctx;
     size_t out_len;
 
@@ -434,6 +444,8 @@ psa_status_t oberon_cipher_decrypt(
     const uint8_t *input, size_t input_length,
     uint8_t *output, size_t output_size, size_t *output_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "Cipher Oberon driver: ocrypto version incompatible");
     ocrypto_context ctx;
     psa_status_t status;
     size_t len;

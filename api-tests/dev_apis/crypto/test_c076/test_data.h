@@ -28,8 +28,8 @@ typedef struct {
     psa_status_t            expected_status;
 } test_data;
 
-#if (defined(ARCH_TEST_ECC_CURVE_SECP256R1) && (defined(ARCH_TEST_SHA256)))
 static const test_data check1[] = {
+#if (defined(ARCH_TEST_ECC_CURVE_SECP256R1) && (defined(ARCH_TEST_SHA256)))
 #ifdef ARCH_TEST_JPAKE
 {
   .test_desc        = "Test psa_pake_abort - JPAKE -SHA256\n",
@@ -97,5 +97,5 @@ static const test_data check1[] = {
 },
 #endif
 #endif
-};
 #endif
+};

@@ -6,7 +6,7 @@ is run for every release of _ocrypto_, with test vectors from the official
 standards, test vectors for border cases, negative tests, and random tests.
 
 For testing _Oberon PSA Crypto_ compatibility using the _ocrypto_ implementation,
-_Oberon microsystems_ uses the _PSA Certified APIs Architecture Test Suite_.
+_Oberon microsystems_ uses the _PSA API Test Suite_.
 
 In addition, _Oberon microsystems_ also runs these PSA-related _Mbed TLS_ tests:
 

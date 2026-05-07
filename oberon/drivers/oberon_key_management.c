@@ -8,6 +8,10 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_KEY_MANAGEMENT_VERSION_NUMBER 1.6.0
+ */
+
 #include "psa/crypto.h"
 #include "oberon_key_management.h"
 #include "oberon_ec_keys.h"

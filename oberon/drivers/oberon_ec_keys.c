@@ -8,11 +8,16 @@
 //
 // This file implements functions from the Arm PSA Crypto Driver API.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_EC_KEYS_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
 #include "oberon_ec_keys.h"
 #include "oberon_helpers.h"
+#include "ocrypto_version.h"
 
 #if defined(PSA_NEED_OBERON_KEY_TYPE_ECC_PUBLIC_KEY_SECP_R1_224) || \
     defined(PSA_NEED_OBERON_KEY_TYPE_ECC_KEY_PAIR_EXPORT_SECP_R1_224) || \
@@ -74,12 +79,15 @@
 #include "ocrypto_ed448.h"
 #endif
 
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 psa_status_t oberon_export_ec_public_key(
     const psa_key_attributes_t *attributes,
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EC Keys Oberon driver: ocrypto version incompatible");
     int res = 1;
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -226,6 +234,8 @@ psa_status_t oberon_import_ec_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EC Keys Oberon driver: ocrypto version incompatible");
     int res = 1;
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
@@ -451,6 +461,8 @@ psa_status_t oberon_generate_ec_key(
     const psa_key_attributes_t *attributes,
     uint8_t *key, size_t key_size, size_t *key_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EC Keys Oberon driver: ocrypto version incompatible");
     int res = 1;
     psa_status_t status;
     size_t bits = psa_get_key_bits(attributes);
@@ -564,6 +576,8 @@ psa_status_t oberon_derive_ec_key(
     const uint8_t *input, size_t input_length,
     uint8_t *key, size_t key_size, size_t *key_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "EC Keys Oberon driver: ocrypto version incompatible");
     int res = 1;
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);

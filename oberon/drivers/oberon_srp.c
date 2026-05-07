@@ -10,6 +10,10 @@
 // Different from the draft spec, the setup function has parameters, in order to
 // enable an implementation without memory allocation in the driver.
 
+/*
+ * OBERON_PSA_CRYPTO_DRIVER_SRP_VERSION_NUMBER 1.6.0
+ */
+
 #include <string.h>
 
 #include "psa/crypto.h"
@@ -18,6 +22,9 @@
 #include "psa_crypto_driver_wrappers.h"
 #ifdef PSA_NEED_OBERON_SRP_6
 #include "ocrypto_srp.h"
+#include "ocrypto_version.h"
+
+#define MIN_REQUIRED_OCRYPTO_VERSION  0x03090500
 
 #define SRP_FIELD_BITS  3072
 #define SRP_FIELD_SIZE  PSA_BITS_TO_BYTES(SRP_FIELD_BITS)
@@ -267,6 +274,8 @@ psa_status_t oberon_srp_setup(
     const uint8_t *password, size_t password_length,
     const psa_pake_cipher_suite_t *cipher_suite)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "SRP Oberon driver: ocrypto version incompatible");
     (void)attributes;
 
     if (psa_pake_cs_get_primitive(cipher_suite) !=
@@ -393,6 +402,8 @@ psa_status_t oberon_import_srp_key(
     uint8_t *key, size_t key_size, size_t *key_length,
     size_t *key_bits)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "SRP Oberon driver: ocrypto version incompatible");
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
 
@@ -431,6 +442,8 @@ psa_status_t oberon_export_srp_public_key(
     const uint8_t *key, size_t key_length,
     uint8_t *data, size_t data_size, size_t *data_length)
 {
+    _Static_assert(OCRYPTO_VERSION_NUMBER >= MIN_REQUIRED_OCRYPTO_VERSION, 
+        "SRP Oberon driver: ocrypto version incompatible");
     size_t bits = psa_get_key_bits(attributes);
     psa_key_type_t type = psa_get_key_type(attributes);
 

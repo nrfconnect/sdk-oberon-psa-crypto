@@ -40,7 +40,10 @@ int32_t pal_crypto_function(int type, va_list valist)
     size_t                                    input_length, input_length1, bits;
     uint8_t                                  *output;
     size_t                                    output_size;
-    size_t                                    output_length, *p_output_length;
+#ifdef ARCH_TEST_KDF
+    size_t                                    output_length;
+#endif
+    size_t                                   *p_output_length;
     size_t                                   *p_bits;
     psa_key_id_t                              key, id;
     psa_cipher_operation_t                   *cipher_operation, cipher_operation_temp;
@@ -56,7 +59,10 @@ int32_t pal_crypto_function(int type, va_list valist)
     psa_hash_operation_t                     *hash_operation, *hash_target_operation;
     psa_hash_operation_t                      hash_operation_temp;
     const psa_hash_operation_t               *hash_source_operation;
-    psa_key_derivation_operation_t           *derivation_operation, derivation_operation_temp;
+    psa_key_derivation_operation_t           *derivation_operation;
+#ifdef ARCH_TEST_KDF
+    psa_key_derivation_operation_t           derivation_operation_temp;
+#endif
     const psa_key_derivation_operation_t     *c_derivation_operation;
     psa_key_derivation_step_t                 step;
     psa_mac_operation_t                      *mac_operation, mac_operation_temp;
@@ -82,7 +88,9 @@ int32_t pal_crypto_function(int type, va_list valist)
     size_t                                    pake_op_size, ip_length;
     size_t                                   *op_length;
     const psa_key_attributes_t               *pake_key_attr;
+#ifdef ARCH_TEST_KDF
     const uint8_t                            *expected_output;
+#endif
     psa_key_id_t                             *derv_key;
 
     switch (type)
@@ -638,6 +646,7 @@ int32_t pal_crypto_function(int type, va_list valist)
 			return PAL_STATUS_UNSUPPORTED_FUNC;
 #endif
             break;
+#ifdef ARCH_TEST_KDF
 		case PAL_CRYPTO_KEY_DERIVATION_INPUT_KEY:
 			derivation_operation     = va_arg(valist, psa_key_derivation_operation_t *);
 			step                     = (psa_key_derivation_step_t)va_arg(valist, int);
@@ -703,6 +712,9 @@ int32_t pal_crypto_function(int type, va_list valist)
 			return psa_key_derivation_setup(derivation_operation,
 											alg);
 			break;
+#else
+			return PAL_STATUS_UNSUPPORTED_FUNC;
+#endif
 		case PAL_CRYPTO_MAC_ABORT:
 			mac_operation            = va_arg(valist, psa_mac_operation_t *);
 			return psa_mac_abort(mac_operation);

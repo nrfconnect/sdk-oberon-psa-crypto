@@ -11,7 +11,7 @@
  * NOTICE: This file has been modified by Oberon microsystems AG.
  */
 
-#include "common.h"
+#include "tf_psa_crypto_common.h"
 #include "psa/crypto.h"
 #include "psa_crypto_core.h"
 #include "psa_crypto_driver_wrappers.h"
@@ -182,7 +182,7 @@ psa_status_t psa_driver_wrapper_verify_message_with_context(
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
         break;
 
-        /* Add cases for opaque drivers here */
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_signature_verify_message_with_context(
@@ -228,7 +228,7 @@ psa_status_t psa_driver_wrapper_sign_hash_with_context(
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
         return PSA_ERROR_NOT_SUPPORTED;
 
-        /* Add cases for opaque drivers here */
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_signature_sign_hash_with_context(
@@ -275,7 +275,7 @@ psa_status_t psa_driver_wrapper_verify_hash_with_context(
 #endif /* PSA_NEED_OBERON_ASYMMETRIC_SIGNATURE_DRIVER */
         return PSA_ERROR_NOT_SUPPORTED;
 
-        /* Add cases for opaque driver here */
+    /* Add cases for opaque driver here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_signature_verify_hash_with_context(
@@ -321,6 +321,7 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size_from_key_data(
 
     *key_buffer_size = 0;
     switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         *key_buffer_size = demo_opaque_size_function(
@@ -360,6 +361,7 @@ psa_status_t psa_driver_wrapper_get_key_buffer_size(
 
     *key_buffer_size = 0;
     switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         *key_buffer_size = demo_opaque_size_function(
@@ -390,7 +392,7 @@ psa_status_t psa_driver_wrapper_generate_key(
 #endif /* PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER */
         break;
 
-        /* Add cases for opaque drivers here */
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_generate_key(
@@ -428,7 +430,7 @@ psa_status_t psa_driver_wrapper_import_key(
 #endif /* PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER */
         break;
 
-        /* Add cases for opaque drivers here */
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_import_key(
@@ -457,11 +459,12 @@ psa_status_t psa_driver_wrapper_export_key(
 {
     switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
     case PSA_KEY_LOCATION_LOCAL_STORAGE:
+    /* Add cases for transparent drivers here */
         return psa_export_key_internal(
             attributes, key_buffer, key_buffer_size,
             data, data_size, data_length);
 
-        /* Add cases for opaque drivers here */
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_export_key(
@@ -499,7 +502,7 @@ psa_status_t psa_driver_wrapper_export_public_key(
 #endif /* PSA_NEED_OBERON_KEY_MANAGEMENT_DRIVER */
         break;
 
-        /* Add cases for opaque drivers here */
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_export_public_key(
@@ -548,6 +551,7 @@ psa_status_t psa_driver_wrapper_copy_key(
     size_t *target_key_buffer_length)
 {
     switch (PSA_KEY_LIFETIME_GET_LOCATION(attributes->lifetime)) {
+      /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OBERON_DEMO_DRIVER_LOCATION:
         return demo_opaque_copy_key(
@@ -817,7 +821,7 @@ psa_status_t psa_driver_wrapper_cipher_set_iv(
     const uint8_t *iv, size_t iv_length)
 {
     switch (operation->id) {
-
+        /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     case HARDWARE_DEMO_DRIVER_ID:
         return demo_hardware_cipher_set_iv(
@@ -832,6 +836,7 @@ psa_status_t psa_driver_wrapper_cipher_set_iv(
             iv, iv_length);
 #endif /* PSA_NEED_OBERON_CIPHER_DRIVER */
 
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OPAQUE_DEMO_DRIVER_ID:
         return demo_opaque_cipher_set_iv(
@@ -853,7 +858,7 @@ psa_status_t psa_driver_wrapper_cipher_update(
 {
     switch (operation->id) {
 
-
+    /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     case HARDWARE_DEMO_DRIVER_ID:
         return demo_hardware_cipher_update(
@@ -870,6 +875,7 @@ psa_status_t psa_driver_wrapper_cipher_update(
             output, output_size, output_length);
 #endif /* PSA_NEED_OBERON_CIPHER_DRIVER */
 
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OPAQUE_DEMO_DRIVER_ID:
         return demo_opaque_cipher_update(
@@ -896,7 +902,7 @@ psa_status_t psa_driver_wrapper_cipher_finish(
 {
     switch (operation->id) {
 
-
+    /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     case HARDWARE_DEMO_DRIVER_ID:
         return demo_hardware_cipher_finish(
@@ -931,7 +937,7 @@ psa_status_t psa_driver_wrapper_cipher_abort(
 {
     switch (operation->id) {
 
-
+    /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     case HARDWARE_DEMO_DRIVER_ID:
         return demo_hardware_cipher_abort(&operation->ctx.oberon_hw_cipher_ctx);
@@ -942,6 +948,7 @@ psa_status_t psa_driver_wrapper_cipher_abort(
         return oberon_cipher_abort(&operation->ctx.oberon_cipher_ctx);
 #endif /* PSA_NEED_OBERON_CIPHER_DRIVER */
 
+    /* Add cases for opaque drivers here */
 #ifdef PSA_NEED_OPAQUE_DEMO_DRIVER
     case OPAQUE_DEMO_DRIVER_ID:
         return demo_opaque_cipher_abort(&operation->ctx.opaque_cipher_ctx);
@@ -962,6 +969,7 @@ psa_status_t psa_driver_wrapper_hash_compute(
 {
     psa_status_t status;
 
+    /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     status = demo_hardware_hash_compute(
         alg, input, input_length, hash, hash_size, hash_length);
@@ -988,6 +996,7 @@ psa_status_t psa_driver_wrapper_hash_setup(
 {
     psa_status_t status;
 
+    /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     status = demo_hardware_hash_setup(
         &operation->ctx.oberon_hw_hash_ctx, alg);
@@ -1013,6 +1022,7 @@ psa_status_t psa_driver_wrapper_hash_clone(
 {
     switch (source_operation->id) {
 
+    /* Add cases for transparent drivers here */
 #ifdef PSA_NEED_HARDWARE_DEMO_DRIVER
     case HARDWARE_DEMO_DRIVER_ID:
         target_operation->id = HARDWARE_DEMO_DRIVER_ID;
@@ -1409,6 +1419,8 @@ psa_status_t psa_driver_wrapper_aead_set_nonce(
             nonce, nonce_length);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
 
+        /* Add cases for opaque drivers here */
+
     default:
         (void)nonce;
         (void)nonce_length;
@@ -1431,6 +1443,8 @@ psa_status_t psa_driver_wrapper_aead_set_lengths(
             ad_length, plaintext_length);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
 
+        /* Add cases for opaque drivers here */
+
     default:
         (void)ad_length;
         (void)plaintext_length;
@@ -1451,6 +1465,8 @@ psa_status_t psa_driver_wrapper_aead_update_ad(
             &operation->ctx.oberon_aead_ctx,
             input, input_length);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
+
+        /* Add cases for opaque drivers here */
 
     default:
         (void)input;
@@ -1474,6 +1490,8 @@ psa_status_t psa_driver_wrapper_aead_update(
             input, input_length,
             output, output_size, output_length);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
+
+        /* Add cases for opaque drivers here */
 
     default:
         (void)input;
@@ -1500,6 +1518,8 @@ psa_status_t psa_driver_wrapper_aead_finish(
             ciphertext, ciphertext_size, ciphertext_length,
             tag, tag_size, tag_length);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
+
+        /* Add cases for opaque drivers here */
 
     default:
         (void)ciphertext;
@@ -1528,6 +1548,8 @@ psa_status_t psa_driver_wrapper_aead_verify(
             tag, tag_length);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
 
+        /* Add cases for opaque drivers here */
+
     default:
         (void)plaintext;
         (void)plaintext_size;
@@ -1548,6 +1570,8 @@ psa_status_t psa_driver_wrapper_aead_abort(
     case OBERON_DRIVER_ID:
         return oberon_aead_abort(&operation->ctx.oberon_aead_ctx);
 #endif /* PSA_NEED_OBERON_AEAD_DRIVER */
+
+        /* Add cases for opaque drivers here */
 
     default:
         return PSA_SUCCESS;
@@ -2381,6 +2405,53 @@ psa_status_t psa_driver_wrapper_get_random(
     (void)context;
     (void)output;
     (void)output_size;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_random_reseed(
+    psa_driver_random_context_t *context,
+    const uint8_t *perso, size_t perso_size)
+{
+#ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
+    return oberon_ctr_drbg_random_reseed(&context->oberon_ctr_drbg_ctx, perso, perso_size);
+#endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */
+#ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
+    return oberon_hmac_drbg_random_reseed(&context->oberon_hmac_drbg_ctx, perso, perso_size);
+#endif /* PSA_NEED_OBERON_HMAC_DRBG_DRIVER */
+
+    (void)context;
+    (void)perso;
+    (void)perso_size;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_random_deplete(
+    psa_driver_random_context_t *context)
+{
+#ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
+    return oberon_ctr_drbg_random_deplete(&context->oberon_ctr_drbg_ctx);
+#endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */
+#ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
+    return oberon_hmac_drbg_random_deplete(&context->oberon_hmac_drbg_ctx);
+#endif /* PSA_NEED_OBERON_HMAC_DRBG_DRIVER */
+
+    (void)context;
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_driver_wrapper_random_set_prediction_resistance(
+    psa_driver_random_context_t *context,
+    unsigned enabled)
+{
+#ifdef PSA_NEED_OBERON_CTR_DRBG_DRIVER
+    return oberon_ctr_drbg_random_set_prediction_resistance(&context->oberon_ctr_drbg_ctx, enabled);
+#endif /* PSA_NEED_OBERON_CTR_DRBG_DRIVER */
+#ifdef PSA_NEED_OBERON_HMAC_DRBG_DRIVER
+    return oberon_hmac_drbg_random_set_prediction_resistance(&context->oberon_hmac_drbg_ctx, enabled);
+#endif /* PSA_NEED_OBERON_HMAC_DRBG_DRIVER */
+
+    (void)context;
+    (void)enabled;
     return PSA_ERROR_NOT_SUPPORTED;
 }
 

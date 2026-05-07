@@ -7,7 +7,7 @@ set(OBERON_SOURCES
         demo_hardware.h
         demo_opaque.c
         demo_opaque.h
-        )
+)
 
 target_sources(${PROJECT_NAME} PRIVATE ${OBERON_SOURCES})
 
