@@ -15,11 +15,6 @@
 #ifndef TF_PSA_CRYPTO_TF_PSA_CRYPTO_PLATFORM_REQUIREMENTS_H
 #define TF_PSA_CRYPTO_TF_PSA_CRYPTO_PLATFORM_REQUIREMENTS_H
 
-#ifndef __STDC_WANT_LIB_EXT1__
-/* Ask for the C11 gmtime_s() and memset_s() if available */
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
-
 #if !defined(_POSIX_C_SOURCE)
 /* For standards-compliant access to
  * clock_gettime(), gmtime_r(), ...
