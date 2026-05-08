@@ -34,6 +34,9 @@
 #include "mbedtls/threading.h"
 #include "threading_internal.h"
 
+#if !defined(MBEDTLS_PSA_STATIC_KEY_SLOTS)
+#include "mbedtls/platform.h"
+#endif
 
 #if defined(PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER)
 #include "tfm_builtin_key_loader.h"
