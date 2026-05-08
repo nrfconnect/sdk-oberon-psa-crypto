@@ -6666,6 +6666,27 @@ psa_status_t psa_crypto_init(void)
         return PSA_SUCCESS;
     }
 
+    /* Init key slots */
+
+#if defined(MBEDTLS_THREADING_C)
+    PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex));
+#endif /* defined(MBEDTLS_THREADING_C) */
+
+    if (!(global_data.initialized & PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED)) {
+        status = psa_initialize_key_slots();
+
+        /* Need to wipe keys even if initialization fails. */
+        global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED;
+    }
+
+#if defined(MBEDTLS_THREADING_C)
+    PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
+        &mbedtls_threading_psa_globaldata_mutex));
+#endif /* defined(MBEDTLS_THREADING_C) */
+
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
     /* Init drivers */
 
 #if defined(MBEDTLS_THREADING_C)
@@ -6678,28 +6699,6 @@ psa_status_t psa_crypto_init(void)
 
         /* Drivers need shutdown regardless of startup errors. */
         global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_DRIVER_WRAPPERS_INITIALIZED;
-    }
-
-#if defined(MBEDTLS_THREADING_C)
-    PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_unlock(
-        &mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
-
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-    /* Init key slots */
-
-#if defined(MBEDTLS_THREADING_C)
-    PSA_THREADING_CHK_GOTO_EXIT(mbedtls_mutex_lock(&mbedtls_threading_psa_globaldata_mutex));
-#endif /* defined(MBEDTLS_THREADING_C) */
-
-    if (!(global_data.initialized & PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED)) {
-        status = psa_initialize_key_slots();
-
-        /* Need to wipe keys even if initialization fails. */
-        global_data.initialized |= PSA_CRYPTO_SUBSYSTEM_KEY_SLOTS_INITIALIZED;
     }
 
 #if defined(MBEDTLS_THREADING_C)
