@@ -60,12 +60,16 @@ typedef struct {
     size_t          maximum_header_count;
 #endif
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_threading_mutex_t   mutex;
+    mbedtls_threading_mutex_t   *mutex;
 #endif
 }
 buffer_alloc_ctx;
 
 static buffer_alloc_ctx heap;
+
+#if defined(MBEDTLS_THREADING_C)
+extern mbedtls_threading_mutex_t mbedtls_threading_heap_mutex;
+#endif
 
 #if defined(MBEDTLS_MEMORY_DEBUG)
 static void debug_header(memory_header *hdr)
@@ -541,11 +545,11 @@ void mbedtls_memory_buffer_alloc_cur_get(size_t *cur_used, size_t *cur_blocks)
 static void *buffer_alloc_calloc_mutexed(size_t n, size_t size)
 {
     void *buf;
-    if (mbedtls_mutex_lock(&heap.mutex) != 0) {
+    if (mbedtls_mutex_lock(heap.mutex) != 0) {
         return NULL;
     }
     buf = buffer_alloc_calloc(n, size);
-    if (mbedtls_mutex_unlock(&heap.mutex)) {
+    if (mbedtls_mutex_unlock(heap.mutex)) {
         return NULL;
     }
     return buf;
@@ -555,11 +559,11 @@ static void buffer_alloc_free_mutexed(void *ptr)
 {
     /* We have no good option here, but corrupting the heap seems
      * worse than losing memory. */
-    if (mbedtls_mutex_lock(&heap.mutex)) {
+    if (mbedtls_mutex_lock(heap.mutex)) {
         return;
     }
     buffer_alloc_free(ptr);
-    (void) mbedtls_mutex_unlock(&heap.mutex);
+    (void) mbedtls_mutex_unlock(heap.mutex);
 }
 #endif /* MBEDTLS_THREADING_C */
 
@@ -568,7 +572,9 @@ void mbedtls_memory_buffer_alloc_init(unsigned char *buf, size_t len)
     memset(&heap, 0, sizeof(buffer_alloc_ctx));
 
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_init(&heap.mutex);
+    heap.mutex = &mbedtls_threading_heap_mutex;
+
+    mbedtls_mutex_init(heap.mutex);
     mbedtls_platform_set_calloc_free(buffer_alloc_calloc_mutexed,
                                      buffer_alloc_free_mutexed);
 #else
@@ -602,7 +608,7 @@ void mbedtls_memory_buffer_alloc_init(unsigned char *buf, size_t len)
 void mbedtls_memory_buffer_alloc_free(void)
 {
 #if defined(MBEDTLS_THREADING_C)
-    mbedtls_mutex_free(&heap.mutex);
+    mbedtls_mutex_free(heap.mutex);
 #endif
     mbedtls_platform_zeroize(&heap, sizeof(buffer_alloc_ctx));
 }
