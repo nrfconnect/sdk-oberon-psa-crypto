@@ -65,12 +65,21 @@ extern "C" {
 #if !defined(MBEDTLS_PLATFORM_STD_FPRINTF)
 #define MBEDTLS_PLATFORM_STD_FPRINTF fprintf /**< The default \c fprintf function to use. */
 #endif
-#if !defined(MBEDTLS_PLATFORM_STD_CALLOC)
-#define MBEDTLS_PLATFORM_STD_CALLOC   calloc /**< The default \c calloc function to use. */
-#endif
-#if !defined(MBEDTLS_PLATFORM_STD_FREE)
-#define MBEDTLS_PLATFORM_STD_FREE       free /**< The default \c free function to use. */
-#endif
+
+/* We intentionally don't set MBEDTLS_PLATFORM_STD_CALLOC to 'calloc' and
+ * MBEDTLS_PLATFORM_STD_FREE to 'free' here.
+ * This would pull in stdlib heap usage such as the function `_sbrk'.
+ * When these are undefined platform.c will define empty stub functions
+ * which are replaced at initialization by mbedtls_memory_buffer_alloc_init()
+ * calling mbedtls_platform_set_calloc_free() to set alternative heap functions.
+ */
+// #if !defined(MBEDTLS_PLATFORM_STD_CALLOC)
+// #define MBEDTLS_PLATFORM_STD_CALLOC   calloc /**< The default \c calloc function to use. */
+// #endif
+// #if !defined(MBEDTLS_PLATFORM_STD_FREE)
+// #define MBEDTLS_PLATFORM_STD_FREE       free /**< The default \c free function to use. */
+// #endif
+
 #if !defined(MBEDTLS_PLATFORM_STD_SETBUF)
 #define MBEDTLS_PLATFORM_STD_SETBUF   setbuf /**< The default \c setbuf function to use. */
 #endif
