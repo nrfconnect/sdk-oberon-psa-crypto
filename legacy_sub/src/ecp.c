@@ -281,7 +281,9 @@ int mbedtls_ecp_check_budget(const mbedtls_ecp_group *grp,
 
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 
-#if defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_ECP_C) && \
+    (defined(MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED) || \
+     defined(MBEDTLS_ECP_MONTGOMERY_ENABLED))
 static void mpi_init_many(mbedtls_mpi *arr, size_t size)
 {
     while (size--) {
@@ -295,7 +297,7 @@ static void mpi_free_many(mbedtls_mpi *arr, size_t size)
         mbedtls_mpi_free(arr++);
     }
 }
-#endif /* MBEDTLS_ECP_C */
+#endif
 
 /*
  * List of supported curves:
@@ -708,6 +710,7 @@ int mbedtls_ecp_point_write_binary(const mbedtls_ecp_group *grp,
     }
 #endif
 
+    (void)&&cleanup;
 cleanup:
     return ret;
 }
@@ -787,6 +790,7 @@ int mbedtls_ecp_point_read_binary(const mbedtls_ecp_group *grp,
     }
 #endif
 
+    (void)&&cleanup;
 cleanup:
     return ret;
 }
