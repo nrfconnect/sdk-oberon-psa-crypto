@@ -2301,6 +2301,18 @@
  */
 #define PSA_ALG_SP800_108_COUNTER_CMAC          ((psa_algorithm_t) 0x08000800)
 
+/** Whether the specified algorithm is a key derivation algorithm constructed
+ * using #PSA_ALG_SP800_108_COUNTER_CMAC.
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a key derivation algorithm constructed using #PSA_ALG_SP800_108_COUNTER_CMAC(),
+ *         0 otherwise. This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_SP800_108_COUNTER_CMAC(alg)                         \
+    ((alg) == PSA_ALG_SP800_108_COUNTER_CMAC)
+
 #define PSA_ALG_SRP_PASSWORD_HASH_BASE          ((psa_algorithm_t) 0x08800300)
 /** The SRP password to password-hash KDF.
  * It takes the password p, the salt s, and the user id u.
