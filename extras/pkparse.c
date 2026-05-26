@@ -935,7 +935,9 @@ int mbedtls_pk_parse_key(mbedtls_pk_context *pk,
                          const unsigned char *pwd, size_t pwdlen)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+#if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) || defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
     const mbedtls_pk_info_t *pk_info;
+#endif
 #if defined(MBEDTLS_PEM_PARSE_C)
     size_t len;
     mbedtls_pem_context pem;
