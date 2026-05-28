@@ -541,6 +541,11 @@ static int psa_key_algorithm_permits(psa_key_type_t key_type,
                    requested_output_length;
         }
     }
+
+    if (policy_alg == PSA_ALG_CMAC && requested_alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
+        return 1;
+    }
+
     /* If policy_alg is a generic key agreement operation, then using it for
      * a key derivation with that key agreement should also be allowed. This
      * behaviour is expected to be defined in a future specification version. */
