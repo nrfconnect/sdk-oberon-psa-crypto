@@ -11,7 +11,7 @@ Some Oberon crypto software drivers require _ocrypto_ version 4.0.0 or later.
 - [PSA Crypto API 1.4 Final 1 PQC Extension](https://arm-software.github.io/psa-api/crypto/1.4/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.4_PQC_Extension.1.pdf)
 - [PSA Crypto Driver Interface 1.0 alpha 1](https://arm-software.github.io/psa-api/crypto-driver/1.0/111106-PSA_Certified_Crypto_Driver_Interface-1.0-alp.1.pdf)
   - Compatible to this version of the new draft standard.
-    For KDF, PAKE and RNG the sandbox is ahead.
+    For KDF, PAKE and RNG this repo is ahead.
 - [PSA API Test Suite v1.9](https://github.com/ARM-software/psa-arch-tests/releases/tag/v25.08_API1.9_ADAC_1.0.2)
 
 For information on the actually implemented cryptographic features in this release, see
