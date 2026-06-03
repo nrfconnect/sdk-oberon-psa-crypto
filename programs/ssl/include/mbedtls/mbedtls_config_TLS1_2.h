@@ -22,8 +22,6 @@
  * of this PSA Crypto implementation.
  */
 
-#define MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY 1  /* !!OM */
-
 /**
  * This is an optional version symbol that enables compatibility handling of
  * config files.
@@ -1005,7 +1003,7 @@
  *   time when the ticket was created by the server.
  *
  * The ages might be different due to the client and server clocks not running
- * at the same pace. The typical accuracy of an RTC crystal is ±100 to ±20 parts
+ * at the same pace. The typical accuracy of an RTC crystal is +/-100 to +/-20 parts
  * per million (360 to 72 milliseconds per hour). Default tolerance window is
  * 6s, thus in the worst case clients and servers must sync up their system time
  * every 6000/360/2~=8 hours.

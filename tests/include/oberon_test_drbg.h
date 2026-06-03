@@ -6,7 +6,7 @@
  */
 
 //
-// This file is based on the Arm PSA Crypto Driver API.
+// This file is based on the Arm PSA Crypto Driver Interface.
 
 #ifndef OBERON_TEST_DRBG_H
 #define OBERON_TEST_DRBG_H

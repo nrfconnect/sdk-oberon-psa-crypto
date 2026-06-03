@@ -38,6 +38,8 @@ _TF-PSA-Crypto_ is licensed under both an `Apache-2.0` and a `GPL-2.0-or-later`
 license:
 [TF-PSA-Crypto Licenses](https://github.com/Mbed-TLS/TF-PSA-Crypto?tab=License-1-ov-file).
 
+These files are re-licensed under an `Apache-2.0` license.
+
 Some files that originate from _TF-PSA-Crypto_ have been modified by Oberon
 microsystems AG. They contain the following notice:
 
@@ -66,8 +68,8 @@ require a separate license.
 
 *Note: You don't need _ocrypto_ if you provide your own drivers (e.g., _hardware
 drivers_) that come with their own implementations of crypto primitives. You can
-still use the Apache 2 / GPL-2 licensed files (i.e., the _crypto core_ and the
-_driver wrappers_ in this repo) without requiring any additional license from
+still use the Apache-2.0/GPL-2.0 licensed files (i.e., the _crypto core_ and the
+_dispatch logic_ in this repo) without requiring any additional license from
 _Oberon microsystems_.*
 
 ## Outgoing Licenses

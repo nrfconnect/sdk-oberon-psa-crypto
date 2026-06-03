@@ -4,8 +4,8 @@ a selection of common cryptographic functions.
 
 Note: The `cycle_test.c` program depends on a function `cpucycles()` that 
 returns the processor cycles executed. This function is declared in 
-`test_cycles.h`. Example implementations for Cortex-M0 and Cortex-M4F can be
-found in `Retarget.c` located in directories M0 and M4F.
+`test_cycles.h`. Example implementations for Cortex-M can be found at the end 
+of file `retarget.c`.
 
 **Warning:** The `retarget.c` implementation used from _CMake_ is only a stub. 
 Cycle tests build with the provided `CMakeLists.txt` will run but print out 
@@ -22,13 +22,14 @@ To build cycle tests for a specific platform, please
 uint64_t cpucycles(void){ ... }
 ```
 
-2. change `CMakeLists.txt` to use optimized crypto code of your platform 
+2. make sure your build script uses optimized crypto code of your platform 
    located in the _src/platforms_ directory of _ocrypto_, instead of the generic
    platform code used by default.
 
 ## Build with CMake
 Cycle tests can be built and tested on a host with CMake (_MacOS/clang_
-or _Windows/MSVC_). 
+or _Windows/MSVC_). However, to get meaningful values, it should be built and
+run on a platform where _ocrypto_ provides optimized code.
 
 ### Prerequisites
 _CMake_ version 3.13 or newer.

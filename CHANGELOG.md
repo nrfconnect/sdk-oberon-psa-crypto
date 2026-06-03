@@ -1,5 +1,59 @@
 # Oberon PSA Crypto change log
 
+## Oberon PSA Crypto 2.1.0
+<https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v2.1.0>
+2026-06-03 (e075c12)
+
+Some Oberon crypto software drivers require _ocrypto_ version 4.0.0 or later.
+
+### Compatibility
+- [PSA Certified Crypto API 1.4.1](https://arm-software.github.io/psa-api/crypto/1.4/IHI0086-PSA_Certified_Crypto_API-1.4.1.pdf)
+- [PSA Crypto API 1.4 Final 1 PQC Extension](https://arm-software.github.io/psa-api/crypto/1.4/ext-pqc/AES0119-PSA_Certified_Crypto_API-1.4_PQC_Extension.1.pdf)
+- [PSA Crypto Driver Interface 1.0 alpha 1](https://arm-software.github.io/psa-api/crypto-driver/1.0/111106-PSA_Certified_Crypto_Driver_Interface-1.0-alp.1.pdf)
+  - Compatible to this version of the new draft standard.
+    For KDF, PAKE and RNG the sandbox is ahead.
+- [PSA API Test Suite v1.9](https://github.com/ARM-software/psa-arch-tests/releases/tag/v25.08_API1.9_ADAC_1.0.2)
+
+For information on the actually implemented cryptographic features in this release, see
+[Appendix A: Supported Crypto Features](docs/Appendix_A_Supported_Crypto_Features.md).
+
+### New Features
+- Support for the new Oberon sandbox, e.g., Acme example drivers
+  (see <https://github.com/ARM-software/psa-api/tree/sandbox/oberon)>).
+
+### Improvements
+- Align former content of directory `oberon` with a more generic directory structure.
+  - Move directories and rename files:
+    - `oberon/docs` —> `docs`
+    - `oberon/drivers` —> `drivers/oberon`
+    - `oberon/platforms` —> `targets/acme`
+    - inside `targets/acme` —> `demo`:
+      - `example_config` —> `config_examples`
+      - `library` —> `dispatch`
+      - `include/psa` —> `dispatch/psa`
+  - Add migration notes in file `docs/Appendix_H_Directory_Structure_Migration.md`.
+  - Move Oberon PSA Crypto version numbers to new `oberon-psa-crypto/build_info.h`.
+- Implement Oberon's proposed changes to the PSA Crypto Driver Interface for KDF.
+  This enables driver selection for KDF, including both transparent and opaque
+  drivers. It affects implementation of the PSA Core, the dispatch logic
+  examples, and the Oberon drivers.
+  - Add `attributes` parameter to `psa_driver_wrapper_key_derivation_setup()`.
+  - Add buffering of KDF parameters before key to Oberon PSA Crypto core.
+  - Add functions needed for opaque drivers, e.g., `destroy_key`,
+  - Extend opaque driver example with key store and KDF.
+  - Extend Mbed TLS KDF tests for opaque KDF drivers.
+  - Add opaque-only KDF functions to driver wrapper header file.
+  - Add `driver_wrapper_destroy_key()`.
+  - Call `psa_driver_wrapper_get_key_buffer_size()` for opaque drivers to get
+    key slot space.
+  - Improve key size (`attributes.bits`) calculation for opaque drivers.
+  - Add a new `bits` out-parameter in `driver_unwrap_key()`.
+  - Add a fallback helper for keys that are in another driver.
+  - Extend the demo opaque driver.
+  - Add tests for opaque drivers.
+
+--------------------------------------------------------------------------------
+
 ## Oberon PSA Crypto 2.0.0
 <https://github.com/oberon-microsystems/oberon-psa-crypto-nrf/releases/tag/v2.0.0>
 2026-05-07 (cc55401)

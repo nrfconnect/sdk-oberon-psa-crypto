@@ -14,6 +14,8 @@
 #ifndef TF_PSA_CRYPTO_BUILD_INFO_H
 #define TF_PSA_CRYPTO_BUILD_INFO_H
 
+#include "oberon-psa-crypto/build_info.h"
+
 /*
  * Version macros are defined in build_info.h rather than in version.h so that
  * the user config files have access to them. That way, for example, users who
@@ -24,30 +26,8 @@
 
 /*
  * This set of compile-time defines can be used to determine the version number
- * of Oberon PSA Crypto.
- */
-
-/**
- * The version number x.y.z is split into three parts.
- * Major, Minor, Patch
- */
-#define OBERON_PSA_CRYPTO_VERSION_MAJOR  2
-#define OBERON_PSA_CRYPTO_VERSION_MINOR  0
-#define OBERON_PSA_CRYPTO_VERSION_PATCH  0
-
-/**
- * The single version number has the following structure:
- *    MMNNPP00
- *    Major version | Minor version | Patch version
- */
-#define OBERON_PSA_CRYPTO_VERSION_NUMBER      ((OBERON_PSA_CRYPTO_VERSION_MAJOR << 24) | \
-                                               (OBERON_PSA_CRYPTO_VERSION_MINOR << 16) | \
-                                               (OBERON_PSA_CRYPTO_VERSION_PATCH <<  8))
-
- /*
- * This set of compile-time defines can be used to determine the version number
- * of the TF-PSA-Crypto library, Oberon PSA Crypto was aligned to be compatible
- * with. 
+ * of the TF-PSA-Crypto library to which Oberon PSA Crypto was aligned to be 
+ * compatible with. 
  */
 
 /**

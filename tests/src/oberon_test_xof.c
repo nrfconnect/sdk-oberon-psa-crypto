@@ -6,7 +6,7 @@
  */
 
 //
-// This file implements functions from the Arm PSA Crypto Driver API.
+// This file implements functions from the Arm PSA Crypto Driver Interface.
 
 #include <string.h>
 

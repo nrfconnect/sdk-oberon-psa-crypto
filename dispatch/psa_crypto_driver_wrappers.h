@@ -140,6 +140,11 @@ psa_status_t psa_driver_wrapper_derive_key(
     const uint8_t *input, size_t input_length,
     uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length);
 
+psa_status_t psa_driver_wrapper_destroy_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer,
+    size_t key_buffer_size);
+
 /*
  * Cipher functions
  */
@@ -420,11 +425,24 @@ psa_status_t psa_driver_wrapper_key_agreement(
     size_t shared_secret_size,
     size_t *shared_secret_length);
 
+psa_status_t psa_driver_wrapper_key_agreement_to_key(
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key_buffer,
+    size_t key_buffer_size,
+    psa_algorithm_t alg,
+    const uint8_t *peer_key,
+    size_t peer_key_length,
+    const psa_key_attributes_t *shared_secret_attributes,
+    uint8_t *shared_secret,
+    size_t shared_secret_size,
+    size_t *shared_secret_length);
+
 /*
  * KDF functions
  */
 psa_status_t psa_driver_wrapper_key_derivation_setup(
     psa_key_derivation_operation_t *operation,
+    const psa_key_attributes_t *key_attributes,
     psa_algorithm_t alg);
 
 psa_status_t psa_driver_wrapper_key_derivation_set_capacity(
@@ -436,6 +454,12 @@ psa_status_t psa_driver_wrapper_key_derivation_input_bytes(
     psa_key_derivation_step_t step,
     const uint8_t *data, size_t data_length);
 
+psa_status_t psa_driver_wrapper_key_derivation_input_key(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    const psa_key_attributes_t *key_attributes,
+    const uint8_t *key, size_t key_length);
+    
 psa_status_t psa_driver_wrapper_key_derivation_input_integer(
     psa_key_derivation_operation_t *operation,
     psa_key_derivation_step_t step,
@@ -444,6 +468,16 @@ psa_status_t psa_driver_wrapper_key_derivation_input_integer(
 psa_status_t psa_driver_wrapper_key_derivation_output_bytes(
     psa_key_derivation_operation_t *operation,
     uint8_t *output, size_t output_length);
+
+psa_status_t psa_driver_wrapper_key_derivation_output_key(
+    psa_key_derivation_operation_t *operation,
+    const psa_key_attributes_t *key_attributes,
+    uint8_t *key, size_t key_size, size_t *key_length);
+
+psa_status_t psa_driver_wrapper_key_derivation_verify_key(
+    psa_key_derivation_operation_t *operation,
+    const psa_key_attributes_t *key_attributes,
+    const uint8_t *key, size_t key_length);
 
 psa_status_t psa_driver_wrapper_key_derivation_abort(
     psa_key_derivation_operation_t *operation);
@@ -530,7 +564,7 @@ psa_status_t psa_driver_wrapper_unwrap_key(
     const uint8_t *wrapping_key_data, size_t wrapping_key_size,
     psa_algorithm_t alg,
     const uint8_t *data, size_t data_length,
-    uint8_t *key, size_t key_size, size_t *key_length);
+    uint8_t *key, size_t key_size, size_t *key_length, size_t *bits);
 
 /*
  * Random

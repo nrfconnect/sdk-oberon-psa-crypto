@@ -8,7 +8,7 @@ It does not implement a TLS protocol stack.
 Any TLS implementation that builds on top of the _PSA Certified Crypto API_ can
 be used with _Oberon PSA Crypto_.
 
-As a proof of concept (PoC), the `programs/ssl` directory of _Oberon PSA Crypto_
+As a proof of concept, the `programs/ssl` directory of _Oberon PSA Crypto_
 contains a CMake build file for the _Mbed TLS_ `ssl_server2` and `ssl_client2`
 program examples and the SSL test suite from _Mbed TLS_.
 
@@ -126,31 +126,31 @@ steps:
     * oberon-psa-crypto/`platform`
     * oberon-psa-crypto/`utilities`
     * oberon-psa-crypto/`extras`
-    * oberon-psa-crypto/`oberon/drivers`
+    * oberon-psa-crypto/`drivers/oberon`
     * oberon-psa-crypto/`oberon/platform/demo/drivers`
-    * oberon-psa-crypto/`oberon/platform/demo/include`
-    * oberon-psa-crypto/`oberon/platform/demo/library`
+    * oberon-psa-crypto/`oberon/platform/demo/dispatch`
+    * oberon-psa-crypto/`oberon/platform/demo/dispatch`
 4. Add the _ocrypto_ include paths, e.g., for the `Generic` platform:
     * ocrypto/`include`
     * ocrypto/`src`
     * ocrypto/`src/platforms/Generic`
 5. Add an entropy driver to your build, for testing demo driver can be used:
-    * oberon-psa-crypto/`oberon/platforms/demo/drivers/demo_entropy.c`
+    * oberon-psa-crypto/`targets/acme/demo/drivers/demo_entropy.c`
 6. Add _Oberon PSA Crypto_ sources to your build:
-    * oberon-psa-crypto/`oberon/drivers/oberon_*.c`
+    * oberon-psa-crypto/`drivers/oberon/oberon_*.c`
 7. Add _ocrypto_ sources to your build:
     * ocrypto/`src/ocrypto_*`
 8. Add _ocrypto_ platform sources, e.g., for the `Generic` platform:
     * ocrypto/`src/platforms/Generic/ocrypto_*`
 9. Adapt _system crypto configuration_ (reuse of _Oberon PSA Crypto_
-   configuration from `oberon/platforms/demo` directory recommended; 
+   configuration from `targets/acme/demo` directory recommended; 
    make sure to define `PSA_USE_XXX` directives for e.g. DRBG and entropy
    driver and key size specific `PSA_WANT_XXX` directives for required
    crypto features)
     * mbedtls/`include/mbedtls/mbedtls_config.h`, e.g., adapt oberon-psa-crypto/`programs/ssl/include/mbedtls/mbedtls_config_TLS1_2+3.h`
-    * oberon-psa-crypto/`oberon/demo/include/psa/crypto_config.h`
-    * oberon-psa-crypto/`oberon/demo/include/psa/crypto_driver_contexts_*.h`
-    * oberon-psa-crypto/`oberon/demo/library/psa_crypto_driver_wrappers.c`
+    * oberon-psa-crypto/`oberon/demo/dispatch/psa/crypto_config.h`
+    * oberon-psa-crypto/`oberon/demo/dispatch/psa/crypto_driver_contexts_*.h`
+    * oberon-psa-crypto/`oberon/demo/dispatch/psa_crypto_driver_wrappers.c`
 
 Build and you now have a TLS project with _Oberon PSA Crypto_ inside!
 

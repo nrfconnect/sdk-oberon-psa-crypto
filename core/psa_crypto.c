@@ -874,9 +874,16 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
         if (overall_status == PSA_SUCCESS) {
             overall_status = status;
         }
-
     }
 #endif /* defined(MBEDTLS_PSA_CRYPTO_STORAGE_C) */
+
+    if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
+        /* Destroy the key if it is stored in an opaque driver */
+        status = psa_driver_wrapper_destroy_key(&slot->attr, slot->key.data, slot->key.bytes);
+        if (overall_status == PSA_SUCCESS) {
+            overall_status = status;
+        }
+    }
 
 exit:
     /* Unregister from reading the slot. If we are the last active reader
@@ -2795,6 +2802,7 @@ psa_status_t psa_encapsulate(mbedtls_svc_key_id_t key,
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot = NULL, *new_slot = NULL;
     size_t storage_size;
+    size_t bits;
 
     *ciphertext_length = 0;
 
@@ -2817,7 +2825,11 @@ psa_status_t psa_encapsulate(mbedtls_svc_key_id_t key,
     if (status != PSA_SUCCESS) goto exit;
 
     storage_size = PSA_KEY_ENCAPSULATE_OUTPUT_SIZE(slot->attr.type, slot->attr.bits);
-
+    bits = PSA_BYTES_TO_BITS(storage_size);
+    if (psa_key_lifetime_is_external(attributes->lifetime)) {
+        status = psa_driver_wrapper_get_key_buffer_size(attributes, &storage_size);
+        if (status != PSA_SUCCESS) goto exit;
+    }
     status = psa_allocate_buffer_to_slot(new_slot, storage_size);
     if (status != PSA_SUCCESS) goto exit;
 
@@ -2834,8 +2846,8 @@ psa_status_t psa_encapsulate(mbedtls_svc_key_id_t key,
     if (status != PSA_SUCCESS) goto exit;
 
     if (new_slot->attr.bits == 0) {
-        new_slot->attr.bits = (psa_key_bits_t)PSA_BYTES_TO_BITS(new_slot->key.bytes);
-    } else if (new_slot->attr.bits != PSA_BYTES_TO_BITS(new_slot->key.bytes)) {
+        new_slot->attr.bits = (psa_key_bits_t) bits;
+    } else if (bits != new_slot->attr.bits) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }
@@ -2864,6 +2876,7 @@ psa_status_t psa_decapsulate(mbedtls_svc_key_id_t key,
     psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     psa_key_slot_t *slot = NULL, *new_slot = NULL;
     size_t storage_size;
+    size_t bits;
 
     if (!PSA_ALG_IS_KEY_ENCAPSULATION(alg)) {
         return PSA_ERROR_INVALID_ARGUMENT;
@@ -2883,7 +2896,11 @@ psa_status_t psa_decapsulate(mbedtls_svc_key_id_t key,
     if (status != PSA_SUCCESS) goto exit;
 
     storage_size = PSA_KEY_ENCAPSULATE_OUTPUT_SIZE(slot->attr.type, slot->attr.bits);
-
+    bits = PSA_BYTES_TO_BITS(storage_size);
+    if (psa_key_lifetime_is_external(attributes->lifetime)) {
+        status = psa_driver_wrapper_get_key_buffer_size(attributes, &storage_size);
+        if (status != PSA_SUCCESS) goto exit;
+    }
     status = psa_allocate_buffer_to_slot(new_slot, storage_size);
     if (status != PSA_SUCCESS) goto exit;
 
@@ -2899,8 +2916,8 @@ psa_status_t psa_decapsulate(mbedtls_svc_key_id_t key,
     if (status != PSA_SUCCESS) goto exit;
 
     if (new_slot->attr.bits == 0) {
-        new_slot->attr.bits = (psa_key_bits_t)PSA_BYTES_TO_BITS(new_slot->key.bytes);
-    } else if (new_slot->attr.bits != PSA_BYTES_TO_BITS(new_slot->key.bytes)) {
+        new_slot->attr.bits = (psa_key_bits_t) bits;
+    } else if (bits != new_slot->attr.bits) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }
@@ -4076,17 +4093,204 @@ psa_status_t psa_aead_abort(psa_aead_operation_t *operation)
 }
 
 /****************************************************************/
-/* Key derivation: output generation */
+/* Key derivation */
 /****************************************************************/
 
-psa_status_t psa_key_derivation_abort(psa_key_derivation_operation_t *operation)
+/* Key derivation input buffering */
+
+#define KEY_DERIVATION_BUFFER_TYPE_INTEGER 1
+#define KEY_DERIVATION_BUFFER_TYPE_BYTES   2
+#define KEY_DERIVATION_BUFFER_TYPE_KEY     3
+
+static psa_status_t psa_key_derivation_insert_input(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    psa_key_attributes_t *attributes,
+    const uint8_t *data, size_t data_length)
 {
-    psa_status_t status = PSA_SUCCESS;
-    if (operation->alg != 0) {
-        status = psa_driver_wrapper_key_derivation_abort(operation);
+    uint16_t type = KEY_DERIVATION_BUFFER_TYPE_BYTES;
+    uint32_t len = operation->input_len;
+    uint32_t idx = len / 4;
+
+    len += 4 + data_length;
+    if (attributes->type != PSA_KEY_TYPE_NONE) {
+        len += sizeof *attributes;
+        type = KEY_DERIVATION_BUFFER_TYPE_KEY;
     }
-    mbedtls_platform_zeroize(operation, sizeof(*operation));
-    return status;
+    if (data_length > 0xFFFF || len > sizeof operation->input) return PSA_ERROR_INSUFFICIENT_MEMORY;
+
+    operation->input[idx++] = type << 28 | step << 16 | data_length;
+    memcpy(&operation->input[idx], data, data_length);
+    idx += (data_length + 3) / 4;
+    if (type == KEY_DERIVATION_BUFFER_TYPE_KEY) {
+        memcpy(&operation->input[idx], attributes, sizeof *attributes);
+        idx += sizeof *attributes / 4;
+    }
+    operation->input_len = idx * 4;
+    (void)attributes;
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_key_derivation_insert_integer(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    uint64_t value)
+{
+    uint32_t len = operation->input_len;
+    uint32_t idx = len / 4;
+
+    if (len + 12 > sizeof operation->input) return PSA_ERROR_INSUFFICIENT_MEMORY;
+
+    operation->input[idx] = KEY_DERIVATION_BUFFER_TYPE_INTEGER << 28 | step << 16 | 8;
+    operation->input[idx + 1] = (uint32_t)value;
+    operation->input[idx + 2] = (uint32_t)(value >> 32);
+    operation->input_len = len + 12;
+    return PSA_SUCCESS;
+}
+
+static psa_status_t psa_key_derivation_apply_inputs(psa_key_derivation_operation_t *operation)
+{
+    uint32_t idx = 0;
+    uint32_t end;
+    uint16_t type;
+    uint32_t size, len;
+    psa_key_derivation_step_t step;
+    psa_status_t status;
+
+    while (idx * 4 < operation->input_len) {
+        size = operation->input[idx++];
+        step = (psa_key_derivation_step_t)((size >> 16) & 0xFFF);
+        type = size >> 28;
+        len = size & 0xFFFF;
+        end = idx + (len + 3) / 4;
+
+        status = PSA_ERROR_GENERIC_ERROR;
+        switch (type) {
+        case KEY_DERIVATION_BUFFER_TYPE_INTEGER:
+            status = psa_driver_wrapper_key_derivation_input_integer(
+                operation, step, operation->input[idx] | (uint64_t)operation->input[idx + 1] << 32);
+            break;
+        case KEY_DERIVATION_BUFFER_TYPE_BYTES:
+            status = psa_driver_wrapper_key_derivation_input_bytes(
+                operation, step, (uint8_t *)&operation->input[idx], len);
+            break;
+        case KEY_DERIVATION_BUFFER_TYPE_KEY:
+            status = psa_driver_wrapper_key_derivation_input_key(
+                operation, step,
+                (psa_key_attributes_t *)&operation->input[end],
+                (uint8_t *)&operation->input[idx], len);
+            end += sizeof(psa_key_attributes_t) / 4;
+            break;
+        }
+        if (status != PSA_SUCCESS) return status;
+        idx = end;
+    }
+    return PSA_SUCCESS;
+}
+
+
+psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation, psa_algorithm_t alg)
+{
+    psa_algorithm_t kdf_alg = alg;
+
+    if (operation->alg != 0) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    if (PSA_ALG_IS_RAW_KEY_AGREEMENT(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    } else if (PSA_ALG_IS_KEY_AGREEMENT(alg)) {
+        kdf_alg = PSA_ALG_KEY_AGREEMENT_GET_KDF(alg);
+    } else if (!PSA_ALG_IS_KEY_DERIVATION(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
+    /* Make sure the driver-dependent part of the operation is zeroed.
+     * This is a guarantee we make to drivers. Initializing the operation
+     * does not necessarily take care of it, since the context is a
+     * union and initializing a union does not necessarily initialize
+     * all of its members. */
+    memset(&operation->ctx, 0, sizeof(operation->ctx));
+
+#ifdef PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128
+    if (alg == PSA_ALG_PBKDF2_AES_CMAC_PRF_128) {
+        // ok
+    } else
+#endif /* PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128 */
+#ifdef PSA_NEED_OBERON_SP800_108_COUNTER_CMAC
+    if (alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
+        // ok
+    } else
+#endif /* PSA_NEED_OBERON_SP800_108_COUNTER_CMAC */
+#if defined(PSA_WANT_ALG_TLS12_PRF) || defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+    if (PSA_ALG_IS_TLS12_PRF(kdf_alg) || PSA_ALG_IS_TLS12_PSK_TO_MS(kdf_alg)) {
+        psa_algorithm_t hash_alg = PSA_ALG_HKDF_GET_HASH(kdf_alg);
+        if (hash_alg != PSA_ALG_SHA_256 && hash_alg != PSA_ALG_SHA_384) return PSA_ERROR_NOT_SUPPORTED;
+    } else
+#endif
+    {
+        // all others need a hash
+        if (PSA_HASH_LENGTH(kdf_alg) == 0) return PSA_ERROR_NOT_SUPPORTED;
+    }
+
+    operation->alg = alg;
+#if defined(PSA_WANT_ALG_HKDF) || defined(PSA_WANT_ALG_HKDF_EXPAND)
+    if (PSA_ALG_IS_HKDF(kdf_alg) || PSA_ALG_IS_HKDF_EXPAND(kdf_alg)) {
+        operation->capacity = 255 * PSA_HASH_LENGTH(kdf_alg);
+    } else
+#endif
+#if defined(PSA_WANT_ALG_HKDF_EXTRACT) || defined(PSA_WANT_ALG_SRP_PASSWORD_HASH)
+    if (PSA_ALG_IS_HKDF_EXTRACT(kdf_alg) || PSA_ALG_IS_SRP_PASSWORD_HASH(kdf_alg)) {
+        operation->capacity = PSA_HASH_LENGTH(kdf_alg);
+    } else
+#endif
+#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
+    if (kdf_alg == PSA_ALG_TLS12_ECJPAKE_TO_PMS) {
+        operation->capacity = PSA_TLS12_ECJPAKE_TO_PMS_DATA_SIZE;
+    } else
+#endif
+#if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC) || defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC)
+    if (PSA_ALG_IS_SP800_108_COUNTER_HMAC(kdf_alg) || kdf_alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
+        operation->capacity = 0x1fffffff;
+    } else
+#endif
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
+    if (PSA_ALG_IS_TLS12_PSK_TO_MS(kdf_alg)) {
+        operation->capacity = 48U;
+    } else
+#endif
+#if (SIZE_MAX > UINT32_MAX) && defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
+    if (kdf_alg == PSA_ALG_PBKDF2_AES_CMAC_PRF_128) {
+        operation->capacity = UINT32_MAX * (size_t)PSA_BLOCK_CIPHER_BLOCK_LENGTH(PSA_KEY_TYPE_AES);
+    } else
+#endif
+#if (SIZE_MAX > UINT32_MAX) && defined(PSA_WANT_ALG_PBKDF2_HMAC)
+    if (PSA_ALG_IS_PBKDF2_HMAC(kdf_alg)) {
+        operation->capacity = UINT32_MAX * (size_t)PSA_HASH_LENGTH(kdf_alg);
+    } else
+#endif
+    {
+        operation->capacity = PSA_KEY_DERIVATION_UNLIMITED_CAPACITY;
+    }
+
+    return PSA_SUCCESS;
+}
+
+psa_status_t psa_key_derivation_set_capacity(psa_key_derivation_operation_t *operation,
+                                             size_t capacity)
+{
+    if (operation->alg == 0) {
+        return PSA_ERROR_BAD_STATE;
+    }
+    if (capacity > operation->capacity) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    operation->capacity = capacity;
+    operation->capacity_set = 1;
+    if (operation->setup) {
+        return psa_driver_wrapper_key_derivation_set_capacity(operation, capacity);
+    }
+    return PSA_SUCCESS;
 }
 
 psa_status_t psa_key_derivation_get_capacity(const psa_key_derivation_operation_t *operation,
@@ -4101,17 +4305,68 @@ psa_status_t psa_key_derivation_get_capacity(const psa_key_derivation_operation_
     return PSA_SUCCESS;
 }
 
-psa_status_t psa_key_derivation_set_capacity(psa_key_derivation_operation_t *operation,
-                                             size_t capacity)
+/** Check whether the given key type is acceptable for the given
+ * input step of a key derivation.
+ *
+ * Secret inputs must have the type #PSA_KEY_TYPE_DERIVE.
+ * Non-secret inputs must have the type #PSA_KEY_TYPE_RAW_DATA.
+ * Both secret and non-secret inputs can alternatively have the type
+ * #PSA_KEY_TYPE_NONE, which is never the type of a key object, meaning
+ * that the input was passed as a buffer rather than via a key object.
+ */
+static int psa_key_derivation_check_input_type(
+    psa_key_derivation_step_t step,
+    psa_key_type_t key_type)
 {
-    if (operation->alg == 0) {
-        return PSA_ERROR_BAD_STATE;
+    switch (step) {
+    case PSA_KEY_DERIVATION_INPUT_PASSWORD:
+        if (key_type == PSA_KEY_TYPE_PASSWORD) {
+            return PSA_SUCCESS;
+        }
+        // fall through
+    case PSA_KEY_DERIVATION_INPUT_SECRET:
+    case PSA_KEY_DERIVATION_INPUT_OTHER_SECRET:
+        if (key_type == PSA_KEY_TYPE_DERIVE) {
+            return PSA_SUCCESS;
+        }
+        if (key_type == PSA_KEY_TYPE_NONE) {
+            return PSA_SUCCESS;
+        }
+        break;
+    case PSA_KEY_DERIVATION_INPUT_SALT:
+        if (key_type == PSA_KEY_TYPE_PEPPER) {
+            return PSA_SUCCESS;
+        }
+        // fall through
+    case PSA_KEY_DERIVATION_INPUT_LABEL:
+    case PSA_KEY_DERIVATION_INPUT_INFO:
+    case PSA_KEY_DERIVATION_INPUT_SEED:
+    case PSA_KEY_DERIVATION_INPUT_COST:
+    case PSA_KEY_DERIVATION_INPUT_CONTEXT:
+        if (key_type == PSA_KEY_TYPE_RAW_DATA) {
+            return PSA_SUCCESS;
+        }
+        if (key_type == PSA_KEY_TYPE_NONE) {
+            return PSA_SUCCESS;
+        }
+        break;
     }
-    if (capacity > operation->capacity) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    }
-    operation->capacity = capacity;
-    return psa_driver_wrapper_key_derivation_set_capacity(operation, capacity);
+    return PSA_ERROR_INVALID_ARGUMENT;
+}
+
+psa_status_t psa_derivation_input_copy_builtin(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key, size_t key_length)
+{
+    uint8_t buffer[400];
+    psa_status_t status;
+    size_t length;
+
+    status = psa_driver_wrapper_export_key(attributes, key, key_length, buffer, sizeof buffer, &length);
+    if (status != PSA_SUCCESS) return status;
+    return psa_driver_wrapper_key_derivation_input_bytes(operation, step, buffer, length);
 }
 
 #define PSA_KEY_DERIVATION_OUTPUT -1  // used as step below
@@ -4201,8 +4456,8 @@ static psa_status_t psa_key_derivation_check_state(
             break;
         case PSA_KEY_DERIVATION_INPUT_OTHER_SECRET:
             if (PSA_ALG_IS_TLS12_PRF(alg)) return PSA_ERROR_INVALID_ARGUMENT;
-            if (!operation->seed_set || operation->secret_set || operation->passw_set) return PSA_ERROR_BAD_STATE;
-            operation->passw_set = 1;
+            if (!operation->seed_set || operation->secret_set || operation->other_set) return PSA_ERROR_BAD_STATE;
+            operation->other_set = 1;
             break;
         case PSA_KEY_DERIVATION_INPUT_SECRET:
             if (!operation->seed_set || operation->secret_set) return PSA_ERROR_BAD_STATE;
@@ -4358,6 +4613,175 @@ static psa_status_t psa_key_derivation_check_state(
     return PSA_SUCCESS;
 }
 
+static psa_status_t psa_key_derivation_input_internal(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    psa_key_attributes_t *attributes,
+    const uint8_t *data,
+    size_t data_length)
+{
+    psa_key_type_t key_type = attributes->type;
+    psa_status_t status;
+    psa_algorithm_t alg;
+
+    status = psa_key_derivation_check_state(operation, step);
+    if (status != PSA_SUCCESS) goto exit;
+
+    if (operation->alg == PSA_ALG_SP800_108_COUNTER_CMAC &&
+        step == PSA_KEY_DERIVATION_INPUT_SECRET) {
+        // key must be a block-cipher key
+        // psa_key_derivation_input_bytes (key_type == PSA_KEY_TYPE_NONE) is not allowed
+        if ((key_type & ~0xFF) != PSA_KEY_TYPE_AES) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+    } else if (PSA_ALG_IS_SP800_108_COUNTER_HMAC(operation->alg) &&
+        step == PSA_KEY_DERIVATION_INPUT_SECRET &&
+        key_type == PSA_KEY_TYPE_HMAC) {
+        // ok
+    } else {
+        status = psa_key_derivation_check_input_type(step, key_type);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+    }
+
+    if (!operation->setup) {
+        if (step == PSA_KEY_DERIVATION_INPUT_SECRET ||
+            (step == PSA_KEY_DERIVATION_INPUT_OTHER_SECRET && key_type != PSA_KEY_TYPE_NONE) ||
+            step == PSA_KEY_DERIVATION_INPUT_PASSWORD) {
+            // first setup driver
+            alg = operation->alg;
+            if (PSA_ALG_IS_KEY_AGREEMENT(alg)) alg = PSA_ALG_KEY_AGREEMENT_GET_KDF(alg);
+            status = psa_driver_wrapper_key_derivation_setup(operation, attributes, alg);
+            if (status) return status;
+            operation->setup = 1;
+            if (operation->capacity_set) {
+                status = psa_driver_wrapper_key_derivation_set_capacity(operation, operation->capacity);
+                if (status) return status;
+            }
+            // deliver stored inputs
+            status = psa_key_derivation_apply_inputs(operation);
+            if (status) return status;
+        } else {
+            // inputs provided before the secret must be buffered
+            status = psa_key_derivation_insert_input(operation, step, attributes, data, data_length);
+            if (status != PSA_SUCCESS) goto exit;
+            return PSA_SUCCESS;
+        }
+    }
+    // if the driver is ready, deliver the secret
+    if (key_type != PSA_KEY_TYPE_NONE) {
+        status = psa_driver_wrapper_key_derivation_input_key(operation, step, attributes, data, data_length);
+    } else {
+        status = psa_driver_wrapper_key_derivation_input_bytes(operation, step, data, data_length);
+    }
+    if (status != PSA_SUCCESS) goto exit;
+
+    return PSA_SUCCESS;
+
+exit:
+    psa_key_derivation_abort(operation);
+    return status;
+}
+
+psa_status_t psa_key_derivation_input_bytes(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    const uint8_t *data,
+    size_t data_length)
+{
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    return psa_key_derivation_input_internal(operation, step,
+        &attributes, data, data_length);
+}
+
+psa_status_t psa_key_derivation_input_integer(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    uint64_t value)
+{
+    psa_status_t status;
+
+    if (step != PSA_KEY_DERIVATION_INPUT_COST) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    status = psa_key_derivation_check_state(operation, step);
+    if (status != PSA_SUCCESS) goto exit;
+
+    status = psa_key_derivation_check_input_type(step, PSA_KEY_TYPE_NONE);
+    if (status != PSA_SUCCESS) goto exit;
+
+    if (PSA_ALG_IS_PBKDF2(operation->alg)) {
+        if (value == 0) {
+            status = PSA_ERROR_INVALID_ARGUMENT;
+            goto exit;
+        }
+        if (value > PSA_VENDOR_PBKDF2_MAX_ITERATIONS) {
+            status = PSA_ERROR_NOT_SUPPORTED;
+            goto exit;
+        }
+    }
+
+    // store cost because driver is not yet setup
+    status = psa_key_derivation_insert_integer(operation, step, value);
+    if (status != PSA_SUCCESS) goto exit;
+
+    return PSA_SUCCESS;
+
+exit:
+    psa_key_derivation_abort(operation);
+    return status;
+}
+
+psa_status_t psa_key_derivation_input_key(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    mbedtls_svc_key_id_t key)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_key_slot_t *slot = NULL;
+
+    status = psa_get_and_lock_key_slot_with_policy(
+        key, &slot, 0, operation->alg);
+    if (status != PSA_SUCCESS) goto exit;
+
+    /* check usage, PSA_KEY_USAGE_DERIVE or PSA_KEY_USAGE_VERIFY_DERIVATION */
+    if ((slot->attr.policy.usage & PSA_KEY_USAGE_DERIVE) == 0) {
+        operation->no_output = 1;
+        if ((slot->attr.policy.usage & PSA_KEY_USAGE_VERIFY_DERIVATION) == 0) {
+            status = PSA_ERROR_NOT_PERMITTED;
+            goto exit;
+        }
+    }
+
+    /* Passing a key object as a SECRET or PASSWORD input unlocks the
+     * permission to output to a key object. */
+    if (step == PSA_KEY_DERIVATION_INPUT_SECRET ||
+        step == PSA_KEY_DERIVATION_INPUT_PASSWORD) {
+        operation->can_output_key = 1;
+    }
+
+    status = psa_key_derivation_input_internal(operation,
+                                               step, &slot->attr,
+                                               slot->key.data,
+                                               slot->key.bytes);
+
+exit:
+    unlock_status = psa_unregister_read_under_mutex(slot);
+
+    if (status == PSA_SUCCESS) {
+        status = unlock_status;
+    } else {
+        psa_key_derivation_abort(operation);
+    }
+
+    return status;
+}
+
 static psa_status_t psa_key_derivation_output_bytes_internal(
     psa_key_derivation_operation_t *operation,
     uint8_t *output,
@@ -4428,8 +4852,8 @@ static psa_status_t psa_wpa3_sae_pt_check_hash(psa_algorithm_t alg, psa_key_type
 #endif
 
 static psa_status_t psa_generate_derived_key_internal(
+    const psa_key_attributes_t *attributes,
     psa_key_slot_t *slot,
-    size_t bits,
     psa_key_derivation_operation_t *operation)
 {
 #ifdef MBEDTLS_PSA_STATIC_KEY_SLOTS
@@ -4437,6 +4861,7 @@ static psa_status_t psa_generate_derived_key_internal(
 #else
     uint8_t *data = NULL;
 #endif
+    size_t bits = attributes->bits;
     size_t bytes = PSA_BITS_TO_BYTES(bits);
     size_t storage_size = bytes;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
@@ -4447,12 +4872,27 @@ static psa_status_t psa_generate_derived_key_internal(
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
+    if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
+        status = psa_driver_wrapper_get_key_buffer_size(&slot->attr, &storage_size);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+
+        status = psa_allocate_buffer_to_slot(slot, storage_size);
+        if (status != PSA_SUCCESS) {
+            goto exit;
+        }
+
+        return psa_driver_wrapper_key_derivation_output_key(
+            operation, attributes, slot->key.data, slot->key.bytes, &slot->key.bytes);
+    }
+
     if (key_type_is_raw_bytes(type)) {
         if (bits % 8 != 0) return PSA_ERROR_INVALID_ARGUMENT;
 #ifdef PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE
     } else if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(type)) {
         if (type == PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_TWISTED_EDWARDS)) {
-            bytes = PSA_BITS_TO_BYTES(bits + 1); // ED needs an extra bit
+            storage_size = bytes = PSA_BITS_TO_BYTES(bits + 1); // ED needs an extra bit
         }
         calculate_key = 1;
 #endif /* PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE */
@@ -4498,15 +4938,8 @@ static psa_status_t psa_generate_derived_key_internal(
         return PSA_ERROR_INSUFFICIENT_MEMORY;
     }
 #endif
-    slot->attr.bits = (psa_key_bits_t) bits;
+    slot->attr.bits = (psa_key_bits_t)bits;
 
-    if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
-        status = psa_driver_wrapper_get_key_buffer_size(&slot->attr,
-                                                        &storage_size);
-        if (status != PSA_SUCCESS) {
-            goto exit;
-        }
-    }
     status = psa_allocate_buffer_to_slot(slot, storage_size);
     if (status != PSA_SUCCESS) {
         goto exit;
@@ -4572,9 +5005,7 @@ psa_status_t psa_key_derivation_output_key(const psa_key_attributes_t *attribute
 
     status = psa_start_key_creation(attributes, &slot);
     if (status == PSA_SUCCESS) {
-        status = psa_generate_derived_key_internal(slot,
-                                                   attributes->bits,
-                                                   operation);
+        status = psa_generate_derived_key_internal(attributes, slot, operation);
     }
     if (status == PSA_SUCCESS) {
         status = psa_finish_key_creation(slot, key);
@@ -4633,8 +5064,13 @@ psa_status_t psa_key_derivation_verify_key(
         goto exit;
     }
 
-    status = psa_key_derivation_verify_bytes(
-        operation, slot->key.data, slot->key.bytes);
+    if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
+        status = psa_driver_wrapper_key_derivation_verify_key(
+            operation, &slot->attr, slot->key.data, slot->key.bytes);
+    } else {
+        status = psa_key_derivation_verify_bytes(
+            operation, slot->key.data, slot->key.bytes);
+    }
 
     unlock_status = psa_unregister_read_under_mutex(slot);
     return (status == PSA_SUCCESS) ? unlock_status : status;
@@ -4645,270 +5081,20 @@ exit:
     return status;
 }
 
-
-/****************************************************************/
-/* Key derivation */
-/****************************************************************/
-
-psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation, psa_algorithm_t alg)
+psa_status_t psa_key_derivation_abort(psa_key_derivation_operation_t *operation)
 {
-    psa_status_t status;
-    psa_algorithm_t kdf_alg = alg;
-
-    if (operation->alg != 0) {
-        return PSA_ERROR_BAD_STATE;
+    psa_status_t status = PSA_SUCCESS;
+    if (operation->setup) {
+        status = psa_driver_wrapper_key_derivation_abort(operation);
     }
-
-    if (PSA_ALG_IS_RAW_KEY_AGREEMENT(alg)) {
-        return PSA_ERROR_INVALID_ARGUMENT;
-    } else if (PSA_ALG_IS_KEY_AGREEMENT(alg)) {
-        kdf_alg = PSA_ALG_KEY_AGREEMENT_GET_KDF(alg);
-    } else if (!PSA_ALG_IS_KEY_DERIVATION(alg)) {
-        return PSA_ERROR_INVALID_ARGUMENT;
+    if (operation->temp_key) {
+        // destroy temporary key
+        psa_driver_wrapper_destroy_key(
+            (psa_key_attributes_t*)operation->input,                   // attributes
+            (uint8_t*)operation->input + sizeof(psa_key_attributes_t), // key data
+            operation->input_len);                                     // key length
     }
-
-    /* Make sure the driver-dependent part of the operation is zeroed.
-     * This is a guarantee we make to drivers. Initializing the operation
-     * does not necessarily take care of it, since the context is a
-     * union and initializing a union does not necessarily initialize
-     * all of its members. */
-    memset(&operation->ctx, 0, sizeof(operation->ctx));
-
-#if defined(PSA_WANT_ALG_TLS12_PRF) || defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
-    if (PSA_ALG_IS_TLS12_PRF(kdf_alg) || PSA_ALG_IS_TLS12_PSK_TO_MS(kdf_alg)) {
-        psa_algorithm_t hash_alg = PSA_ALG_HKDF_GET_HASH(kdf_alg);
-        if (hash_alg != PSA_ALG_SHA_256 && hash_alg != PSA_ALG_SHA_384) return PSA_ERROR_NOT_SUPPORTED;
-    }
-#endif
-
-    status = psa_driver_wrapper_key_derivation_setup(operation, kdf_alg);
-    if (status) return status;
-
-    operation->alg = alg;
-#if defined(PSA_WANT_ALG_HKDF) || defined(PSA_WANT_ALG_HKDF_EXPAND)
-    if (PSA_ALG_IS_HKDF(kdf_alg) || PSA_ALG_IS_HKDF_EXPAND(kdf_alg)) {
-        operation->capacity = 255 * PSA_HASH_LENGTH(kdf_alg);
-    } else
-#endif
-#if defined(PSA_WANT_ALG_HKDF_EXTRACT) || defined(PSA_WANT_ALG_SRP_PASSWORD_HASH)
-    if (PSA_ALG_IS_HKDF_EXTRACT(kdf_alg) || PSA_ALG_IS_SRP_PASSWORD_HASH(kdf_alg)) {
-        operation->capacity = PSA_HASH_LENGTH(kdf_alg);
-    } else
-#endif
-#if defined(PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS)
-    if (kdf_alg == PSA_ALG_TLS12_ECJPAKE_TO_PMS) {
-        operation->capacity = PSA_TLS12_ECJPAKE_TO_PMS_DATA_SIZE;
-    } else
-#endif
-#if defined(PSA_WANT_ALG_SP800_108_COUNTER_HMAC) || defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC)
-    if (PSA_ALG_IS_SP800_108_COUNTER_HMAC(kdf_alg) || kdf_alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
-        operation->capacity = 0x1fffffff;
-    } else
-#endif
-#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
-    if (PSA_ALG_IS_TLS12_PSK_TO_MS(kdf_alg)) {
-        operation->capacity = 48U;
-    } else
-#endif
-#if (SIZE_MAX > UINT32_MAX) && defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
-    if (kdf_alg == PSA_ALG_PBKDF2_AES_CMAC_PRF_128) {
-        operation->capacity = UINT32_MAX * (size_t)PSA_BLOCK_CIPHER_BLOCK_LENGTH(PSA_KEY_TYPE_AES);
-    } else
-#endif
-#if (SIZE_MAX > UINT32_MAX) && defined(PSA_WANT_ALG_PBKDF2_HMAC)
-    if (PSA_ALG_IS_PBKDF2_HMAC(kdf_alg)) {
-        operation->capacity = UINT32_MAX * (size_t)PSA_HASH_LENGTH(kdf_alg);
-    } else
-#endif
-    {
-        operation->capacity = PSA_KEY_DERIVATION_UNLIMITED_CAPACITY;
-    }
-
-    return PSA_SUCCESS;
-}
-
-/** Check whether the given key type is acceptable for the given
- * input step of a key derivation.
- *
- * Secret inputs must have the type #PSA_KEY_TYPE_DERIVE.
- * Non-secret inputs must have the type #PSA_KEY_TYPE_RAW_DATA.
- * Both secret and non-secret inputs can alternatively have the type
- * #PSA_KEY_TYPE_NONE, which is never the type of a key object, meaning
- * that the input was passed as a buffer rather than via a key object.
- */
-static int psa_key_derivation_check_input_type(
-    psa_key_derivation_step_t step,
-    psa_key_type_t key_type)
-{
-    switch (step) {
-        case PSA_KEY_DERIVATION_INPUT_PASSWORD:
-            if (key_type == PSA_KEY_TYPE_PASSWORD) {
-                return PSA_SUCCESS;
-            }
-            // fall through
-        case PSA_KEY_DERIVATION_INPUT_SECRET:
-        case PSA_KEY_DERIVATION_INPUT_OTHER_SECRET:
-            if (key_type == PSA_KEY_TYPE_DERIVE) {
-                return PSA_SUCCESS;
-            }
-            if (key_type == PSA_KEY_TYPE_NONE) {
-                return PSA_SUCCESS;
-            }
-            break;
-        case PSA_KEY_DERIVATION_INPUT_SALT:
-            if (key_type == PSA_KEY_TYPE_PEPPER) {
-                return PSA_SUCCESS;
-            }
-            // fall through
-        case PSA_KEY_DERIVATION_INPUT_LABEL:
-        case PSA_KEY_DERIVATION_INPUT_INFO:
-        case PSA_KEY_DERIVATION_INPUT_SEED:
-        case PSA_KEY_DERIVATION_INPUT_COST:
-        case PSA_KEY_DERIVATION_INPUT_CONTEXT:
-            if (key_type == PSA_KEY_TYPE_RAW_DATA) {
-                return PSA_SUCCESS;
-            }
-            if (key_type == PSA_KEY_TYPE_NONE) {
-                return PSA_SUCCESS;
-            }
-            break;
-    }
-    return PSA_ERROR_INVALID_ARGUMENT;
-}
-
-static psa_status_t psa_key_derivation_input_internal(
-    psa_key_derivation_operation_t *operation,
-    psa_key_derivation_step_t step,
-    psa_key_type_t key_type,
-    const uint8_t *data,
-    size_t data_length)
-{
-    psa_status_t status;
-    status = psa_key_derivation_check_state(operation, step);
-    if (status != PSA_SUCCESS) goto exit;
-
-    if (operation->alg == PSA_ALG_SP800_108_COUNTER_CMAC &&
-        step == PSA_KEY_DERIVATION_INPUT_SECRET) {
-        // key must be a block-cipher key
-        // psa_key_derivation_input_bytes (key_type == PSA_KEY_TYPE_NONE) is not allowed
-        if ((key_type & ~0xFF) != PSA_KEY_TYPE_AES) {
-            status = PSA_ERROR_INVALID_ARGUMENT;
-            goto exit;
-        }
-    } else if (PSA_ALG_IS_SP800_108_COUNTER_HMAC(operation->alg) &&
-        step == PSA_KEY_DERIVATION_INPUT_SECRET &&
-        key_type == PSA_KEY_TYPE_HMAC) {
-        // ok
-    } else {
-        status = psa_key_derivation_check_input_type(step, key_type);
-        if (status != PSA_SUCCESS) {
-            goto exit;
-        }
-    }
-
-    status = psa_driver_wrapper_key_derivation_input_bytes(operation, step, data, data_length);
-    if (status != PSA_SUCCESS) goto exit;
-
-    return PSA_SUCCESS;
-
-exit:
-    psa_key_derivation_abort(operation);
-    return status;
-}
-
-psa_status_t psa_key_derivation_input_bytes(
-    psa_key_derivation_operation_t *operation,
-    psa_key_derivation_step_t step,
-    const uint8_t *data,
-    size_t data_length)
-{
-    return psa_key_derivation_input_internal(operation, step,
-                                             PSA_KEY_TYPE_NONE,
-                                             data, data_length);
-}
-
-psa_status_t psa_key_derivation_input_integer(
-    psa_key_derivation_operation_t *operation,
-    psa_key_derivation_step_t step,
-    uint64_t value)
-{
-    psa_status_t status;
-
-    if (step != PSA_KEY_DERIVATION_INPUT_COST) {
-        status = PSA_ERROR_INVALID_ARGUMENT;
-        goto exit;
-    }
-
-    status = psa_key_derivation_check_state(operation, step);
-    if (status != PSA_SUCCESS) goto exit;
-
-    status = psa_key_derivation_check_input_type(step, PSA_KEY_TYPE_NONE);
-    if (status != PSA_SUCCESS) goto exit;
-
-    if (PSA_ALG_IS_PBKDF2(operation->alg)) {
-        if (value == 0) {
-            status = PSA_ERROR_INVALID_ARGUMENT;
-            goto exit;
-        }
-        if (value > PSA_VENDOR_PBKDF2_MAX_ITERATIONS) {
-            status = PSA_ERROR_NOT_SUPPORTED;
-            goto exit;
-        }
-    }
-
-    status = psa_driver_wrapper_key_derivation_input_integer(operation, step, value);
-    if (status != PSA_SUCCESS) goto exit;
-
-    return PSA_SUCCESS;
-
-exit:
-    psa_key_derivation_abort(operation);
-    return status;
-}
-
-psa_status_t psa_key_derivation_input_key(
-    psa_key_derivation_operation_t *operation,
-    psa_key_derivation_step_t step,
-    mbedtls_svc_key_id_t key)
-{
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
-    psa_key_slot_t *slot = NULL;
-
-    status = psa_get_and_lock_key_slot_with_policy(
-        key, &slot, 0, operation->alg);
-    if (status != PSA_SUCCESS) goto exit;
-
-    /* check usage, PSA_KEY_USAGE_DERIVE or PSA_KEY_USAGE_VERIFY_DERIVATION */
-    if ((slot->attr.policy.usage & PSA_KEY_USAGE_DERIVE) == 0) {
-        operation->no_output = 1;
-        if ((slot->attr.policy.usage & PSA_KEY_USAGE_VERIFY_DERIVATION) == 0) {
-            status = PSA_ERROR_NOT_PERMITTED;
-            goto exit;
-        }
-    }
-
-    /* Passing a key object as a SECRET or PASSWORD input unlocks the
-     * permission to output to a key object. */
-    if (step == PSA_KEY_DERIVATION_INPUT_SECRET ||
-        step == PSA_KEY_DERIVATION_INPUT_PASSWORD) {
-        operation->can_output_key = 1;
-    }
-
-    status = psa_key_derivation_input_internal(operation,
-                                               step, slot->attr.type,
-                                               slot->key.data,
-                                               slot->key.bytes);
-
-exit:
-    unlock_status = psa_unregister_read_under_mutex(slot);
-
-    if (status == PSA_SUCCESS) {
-        status = unlock_status;
-    } else {
-        psa_key_derivation_abort(operation);
-    }
-
+    mbedtls_platform_zeroize(operation, sizeof(*operation));
     return status;
 }
 
@@ -4935,22 +5121,45 @@ static psa_status_t psa_key_agreement_internal(psa_key_derivation_operation_t *o
 
     /* Step 1: run the secret agreement algorithm to generate the shared
      * secret. */
-    status = psa_driver_wrapper_key_agreement(
+    psa_key_attributes_t shared_secret_attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&shared_secret_attributes, PSA_ALG_KEY_AGREEMENT_GET_KDF(operation->alg));
+    psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_lifetime(&shared_secret_attributes,
+        PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(PSA_KEY_PERSISTENCE_VOLATILE,
+            PSA_KEY_LIFETIME_GET_LOCATION(psa_get_key_lifetime(&private_key->attr))));
+    status = psa_driver_wrapper_key_agreement_to_key(
         &private_key->attr, private_key->key.data, private_key->key.bytes,
         ka_alg,
         peer_key, peer_key_length,
+        &shared_secret_attributes,
         shared_secret, sizeof(shared_secret), &shared_secret_length);
     if (status != PSA_SUCCESS) {
         goto exit;
     }
-
     /* Step 2: set up the key derivation to generate key material from
      * the shared secret. A shared secret is permitted wherever a key
      * of type DERIVE is permitted. */
     status = psa_key_derivation_input_internal(operation, step,
-                                               PSA_KEY_TYPE_DERIVE,
+                                               &shared_secret_attributes,
                                                shared_secret,
                                                shared_secret_length);
+
+    /* Step 3: the temporary key must be destroyed at the end of the operation */
+    if (step != PSA_KEY_DERIVATION_INPUT_SECRET && step != PSA_KEY_DERIVATION_INPUT_OTHER_SECRET) {
+        // the usage of psa_key_agreement_key_derivation() is restricted to avoid hard to handle edge cases
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+    if (shared_secret_length + sizeof shared_secret_attributes > sizeof operation->input) {
+        status = PSA_ERROR_INSUFFICIENT_STORAGE;
+        goto exit;
+    }
+    memcpy(operation->input, &shared_secret_attributes, sizeof(psa_key_attributes_t));
+    memcpy((uint8_t*)operation->input + sizeof(psa_key_attributes_t), shared_secret, shared_secret_length);
+    operation->input_len = (uint16_t)shared_secret_length;
+    operation->temp_key = 1;
+
 exit:
     mbedtls_platform_zeroize(shared_secret, shared_secret_length);
     return status;
@@ -5045,10 +5254,12 @@ psa_status_t psa_key_agreement(mbedtls_svc_key_id_t private_key,
     const psa_key_attributes_t *attributes,
     mbedtls_svc_key_id_t *key)
 {
-    psa_status_t status;
-    uint8_t shared_secret[PSA_RAW_KEY_AGREEMENT_OUTPUT_MAX_SIZE];
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
     size_t shared_secret_len;
     psa_key_type_t key_type;
+    psa_key_slot_t *slot = NULL, *new_slot = NULL;
+    size_t bits;
 
     *key = MBEDTLS_SVC_KEY_ID_INIT;
 
@@ -5058,13 +5269,55 @@ psa_status_t psa_key_agreement(mbedtls_svc_key_id_t private_key,
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
-    status = psa_raw_key_agreement(alg, private_key, peer_key, peer_key_length,
-        shared_secret, sizeof(shared_secret), &shared_secret_len);
+    if (!PSA_ALG_IS_STANDALONE_KEY_AGREEMENT(alg)) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+    status = psa_get_and_lock_key_slot_with_policy(
+        private_key, &slot, PSA_KEY_USAGE_DERIVE, alg);
     if (status != PSA_SUCCESS) {
-        return status;
+        goto exit;
     }
 
-    return psa_import_key(attributes, shared_secret, shared_secret_len, key);
+    status = psa_start_key_creation(attributes, &new_slot);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    shared_secret_len = PSA_RAW_KEY_AGREEMENT_OUTPUT_SIZE(slot->attr.type, slot->attr.bits);
+    bits = PSA_BYTES_TO_BITS(shared_secret_len);
+    if (psa_key_lifetime_is_external(attributes->lifetime)) {
+        status = psa_driver_wrapper_get_key_buffer_size(attributes, &shared_secret_len);
+        if (status != PSA_SUCCESS) goto exit;
+    }
+    status = psa_allocate_buffer_to_slot(new_slot, shared_secret_len);
+    if (status != PSA_SUCCESS) goto exit;
+
+    status = psa_driver_wrapper_key_agreement_to_key(
+        &slot->attr, slot->key.data, slot->key.bytes,
+        alg,
+        peer_key, peer_key_length,
+        attributes,
+        new_slot->key.data, new_slot->key.bytes, &new_slot->key.bytes);
+    if (status != PSA_SUCCESS) goto exit;
+
+    if (new_slot->attr.bits == 0) {
+        new_slot->attr.bits = (psa_key_bits_t) bits;
+    } else if (bits != new_slot->attr.bits) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    status = psa_finish_key_creation(new_slot, key);
+exit:
+    unlock_status = psa_unregister_read_under_mutex(slot);
+    if (status == PSA_SUCCESS) {
+        status = unlock_status;
+    }
+    if (status != PSA_SUCCESS) {
+        psa_fail_key_creation(new_slot);
+        *key = MBEDTLS_SVC_KEY_ID_INIT;
+    }
+    return status;
 }
 
 
@@ -5725,6 +5978,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
     psa_key_slot_t *slot = NULL;
     psa_key_type_t type;
     size_t storage_size;
+    size_t bits;
 
     if (operation->alg == 0 || operation->done == 0) {
         return PSA_ERROR_BAD_STATE;
@@ -5754,6 +6008,7 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
     if (status != PSA_SUCCESS) goto exit;
 
     storage_size = operation->secret_size;
+    bits = PSA_BYTES_TO_BITS(storage_size);
     if (psa_key_lifetime_is_external(attributes->lifetime)) {
         status = psa_driver_wrapper_get_key_buffer_size(attributes, &storage_size);
         if (status != PSA_SUCCESS) goto exit;
@@ -5767,8 +6022,8 @@ psa_status_t psa_pake_get_shared_key(psa_pake_operation_t *operation,
     if (status != PSA_SUCCESS) goto exit;
 
     if (slot->attr.bits == 0) {
-        slot->attr.bits = (psa_key_bits_t)PSA_BYTES_TO_BITS(slot->key.bytes);
-    } else if (slot->attr.bits != PSA_BYTES_TO_BITS(slot->key.bytes)) {
+        slot->attr.bits = (psa_key_bits_t) bits;
+    } else if (bits != slot->attr.bits) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }
@@ -5868,6 +6123,7 @@ psa_status_t psa_unwrap_key(
     size_t storage_size;
     psa_key_slot_t *w_slot = NULL;
     psa_key_slot_t *k_slot = NULL;
+    size_t bits;
 
     if (!PSA_ALG_IS_KEY_WRAP(alg)) {
         status = PSA_ERROR_INVALID_ARGUMENT;
@@ -5897,6 +6153,10 @@ psa_status_t psa_unwrap_key(
         break;
     }
 
+    if (psa_key_lifetime_is_external(attributes->lifetime)) {
+        status = psa_driver_wrapper_get_key_buffer_size(attributes, &storage_size);
+        if (status != PSA_SUCCESS) goto exit;
+    }
     status = psa_allocate_buffer_to_slot(k_slot, storage_size);
     if (status != PSA_SUCCESS) goto exit;
 
@@ -5905,12 +6165,13 @@ psa_status_t psa_unwrap_key(
         &w_slot->attr, w_slot->key.data, w_slot->key.bytes,
         alg,
         data, data_length,
-        k_slot->key.data, k_slot->key.bytes, &k_slot->key.bytes);
+        k_slot->key.data, k_slot->key.bytes,
+        &k_slot->key.bytes, &bits);
     if (status != PSA_SUCCESS) goto exit;
 
     if (k_slot->attr.bits == 0) {
-        k_slot->attr.bits = (psa_key_bits_t)PSA_BYTES_TO_BITS(k_slot->key.bytes);
-    } else if (k_slot->attr.bits != PSA_BYTES_TO_BITS(k_slot->key.bytes)) {
+        k_slot->attr.bits = (psa_key_bits_t)bits;
+    } else if (bits != k_slot->attr.bits) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
     }

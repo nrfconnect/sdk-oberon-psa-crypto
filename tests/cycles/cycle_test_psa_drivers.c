@@ -427,8 +427,12 @@ int main(void)
 
     printf("HKDF-SHA-256:                        ");
 #if defined(PSA_WANT_ALG_HKDF)
+    psa_set_key_type(&attr, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_bits(&attr, 256);
+    psa_set_key_algorithm(&attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
     t0 = cpucycles();
-    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, &attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
     if (status) goto error;
     status = psa_driver_wrapper_key_derivation_input_bytes(&kdf_op, PSA_KEY_DERIVATION_INPUT_SALT, (uint8_t*)"Salt", 4);
     if (status) goto error;
@@ -448,8 +452,11 @@ int main(void)
 
     printf("PBKDF2-SHA-256 (100 iterations):     ");
 #if defined(PSA_WANT_ALG_PBKDF2_HMAC)
+    psa_set_key_type(&attr, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_algorithm(&attr, PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256));
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
     t0 = cpucycles();
-    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256));
+    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, &attr, PSA_ALG_PBKDF2_HMAC(PSA_ALG_SHA_256));
     if (status) goto error;
     status = psa_driver_wrapper_key_derivation_input_integer(&kdf_op, PSA_KEY_DERIVATION_INPUT_COST, 100);
     if (status) goto error;
@@ -469,8 +476,11 @@ int main(void)
 
     printf("PBKDF2-CMAC-PRF128 (100 iterations): ");
 #if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
+    psa_set_key_type(&attr, PSA_KEY_TYPE_DERIVE);
+    psa_set_key_algorithm(&attr, PSA_ALG_PBKDF2_AES_CMAC_PRF_128);
+    psa_set_key_usage_flags(&attr, PSA_KEY_USAGE_DERIVE);
     t0 = cpucycles();
-    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, PSA_ALG_PBKDF2_AES_CMAC_PRF_128);
+    status = psa_driver_wrapper_key_derivation_setup(&kdf_op, &attr, PSA_ALG_PBKDF2_AES_CMAC_PRF_128);
     if (status) goto error;
     status = psa_driver_wrapper_key_derivation_input_integer(&kdf_op, PSA_KEY_DERIVATION_INPUT_COST, 100);
     if (status) goto error;

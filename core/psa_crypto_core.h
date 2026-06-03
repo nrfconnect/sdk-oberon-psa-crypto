@@ -441,6 +441,38 @@ psa_status_t psa_verify_message_with_context_builtin(
     const uint8_t *context, size_t context_length,
     const uint8_t *signature, size_t signature_length);
 
+/** Copy a key derivation key input from another driver.
+ *
+ * \note This function will call psa_driver_wrapper_export_key() and 
+ *       psa_driver_wrapper_key_derivation_input_bytes() to use a key in another
+ *       driver as input in a key derivation operation.
+ *
+ * \param[in]  operation  The operation object of the active key derivation.
+ * \param[in]  step       The key derivation step to use for the input..
+ * \param[in]  attributes The attributes of the input key.
+ * \param[in]  key        The key data.
+ * \param[in]  key_length The key length.
+ *
+ * \retval #PSA_SUCCESS
+ *         Success.
+ * \retval #PSA_ERROR_NOT_PERMITTED
+ *         The key does not have the #PSA_KEY_USAGE_EXPORT flag.
+ * \retval #PSA_ERROR_NOT_SUPPORTED \emptydescription
+ * \retval #PSA_ERROR_INVALID_ARGUMENT
+ *         \c step is not compatible with the operation's algorithm, or
+ *         \c step does not allow direct inputs.
+ * \retval #PSA_ERROR_COMMUNICATION_FAILURE \emptydescription
+ * \retval #PSA_ERROR_HARDWARE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_CORRUPTION_DETECTED \emptydescription
+ * \retval #PSA_ERROR_STORAGE_FAILURE \emptydescription
+ * \retval #PSA_ERROR_INSUFFICIENT_MEMORY \emptydescription
+ */
+psa_status_t psa_derivation_input_copy_builtin(
+    psa_key_derivation_operation_t *operation,
+    psa_key_derivation_step_t step,
+    const psa_key_attributes_t *attributes,
+    const uint8_t *key, size_t key_length);
+
 /**
  * \brief Validate the key bit size for unstructured keys.
  *

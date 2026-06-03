@@ -41,7 +41,7 @@ build_Test/
 
 # Generated documentation:
 /apidoc
-/docs
+/docs/html
 
 # PSA Crypto compliance test repo, cloned by test_psa_compliance.py
 #/psa-arch-tests # !!OM
@@ -85,5 +85,5 @@ tests/*/Test/RTE/*
 */*/Output/Debug/*
 RTE_Components.h
 
-# TF-PSA-Crypto transformation
-tfpsa/
+# sandbox
+sandbox_test

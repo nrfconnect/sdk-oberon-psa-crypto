@@ -741,8 +741,8 @@
  *          library/pk.c
  *          library/pkcs5.c
  *          library/pkcs12.c
- *          library/psa_crypto_ecp.c
- *          library/psa_crypto_rsa.c
+ *          dispatch/psa_crypto_ecp.c
+ *          dispatch/psa_crypto_rsa.c
  *          library/rsa.c
  *          library/ssl_cookie.c
  *          library/ssl_msg.c
@@ -775,7 +775,7 @@
  * Enable the generic public (asymmetric) key layer.
  *
  * Module:  library/pk.c
- * Caller:  library/psa_crypto_rsa.c
+ * Caller:  dispatch/psa_crypto_rsa.c
  *          library/ssl_tls.c
  *          library/ssl*_client.c
  *          library/ssl*_server.c
@@ -1137,7 +1137,7 @@
  *
  * Enable the Platform Security Architecture cryptography API.
  *
- * Module:  library/psa_crypto.c
+ * Module:  dispatch/psa_crypto.c
  *
  * Requires: either MBEDTLS_CTR_DRBG_C and MBEDTLS_ENTROPY_C,
  *           or MBEDTLS_HMAC_DRBG_C and MBEDTLS_ENTROPY_C,
@@ -1265,7 +1265,7 @@
  * `psa/crypto_platform.h`, in which case it can skip or replace the
  * inclusion of `"crypto_spe.h"`.
  *
- * Module:  library/psa_crypto.c
+ * Module:  dispatch/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  *
  */
@@ -1276,7 +1276,7 @@
  *
  * Enable the Platform Security Architecture persistent key storage.
  *
- * Module:  library/psa_crypto_storage.c
+ * Module:  dispatch/psa_crypto_storage.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C,
  *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
@@ -1303,7 +1303,7 @@
  * Enable the emulation of the Platform Security Architecture
  * Internal Trusted Storage (PSA ITS) over files.
  *
- * Module:  library/psa_its_file.c
+ * Module:  dispatch/psa_its_file.c
  *
  * Requires: MBEDTLS_FS_IO
  */
@@ -1321,7 +1321,7 @@
  *
  * This option has no effect when #MBEDTLS_PSA_CRYPTO_C is disabled.
  *
- * Module:  library/psa_crypto.c
+ * Module:  dispatch/psa_crypto.c
  * Requires: MBEDTLS_PSA_CRYPTO_C
  */
 #define MBEDTLS_PSA_KEY_STORE_DYNAMIC
@@ -2105,8 +2105,8 @@
  *          library/nist_kw.c
  *          library/pkcs12.c
  *          library/pkcs5.c
- *          library/psa_crypto_aead.c
- *          library/psa_crypto_mac.c
+ *          dispatch/psa_crypto_aead.c
+ *          dispatch/psa_crypto_mac.c
  *          library/ssl_ciphersuites.c
  *          library/ssl_msg.c
  * Auto-enabled by: MBEDTLS_PSA_CRYPTO_C depending on which ciphers are enabled
@@ -2252,7 +2252,7 @@
  * Enable the elliptic curve Diffie-Hellman library.
  *
  * Module:  library/ecdh.c
- * Caller:  library/psa_crypto.c
+ * Caller:  dispatch/psa_crypto.c
  *          library/ssl_tls.c
  *          library/ssl*_client.c
  *          library/ssl*_server.c
@@ -2476,7 +2476,7 @@
  * \warning    This feature is not thread-safe, and should not be used in a
  *             multi-threaded environment.
  *
- * Module:  library/psa_crypto_se.c
+ * Module:  dispatch/psa_crypto_se.c
  *
  * Requires: MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_STORAGE_C
  *
@@ -2502,7 +2502,7 @@
  * Module:  library/rsa.c
  *          library/rsa_alt_helpers.c
  * Caller:  library/pk.c
- *          library/psa_crypto.c
+ *          dispatch/psa_crypto.c
  *          library/ssl_tls.c
  *          library/ssl*_client.c
  *          library/ssl*_server.c
@@ -2521,7 +2521,7 @@
  *
  * Module:  library/sha1.c
  * Caller:  library/md.c
- *          library/psa_crypto_hash.c
+ *          dispatch/psa_crypto_hash.c
  *
  * This module is required for TLS 1.2 depending on the handshake parameters,
  * and for SHA1-signed certificates.
@@ -2570,7 +2570,7 @@
  *
  * Module:  library/sha512.c
  * Caller:  library/md.c
- *          library/psa_crypto_hash.c
+ *          dispatch/psa_crypto_hash.c
  *          library/ssl_tls.c
  *          library/ssl*_client.c
  *          library/ssl*_server.c

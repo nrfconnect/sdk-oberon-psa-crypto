@@ -13,7 +13,7 @@ endif()
 if(DEFINED OCRYPTO_ROOT)
     get_filename_component(OCRYPTO_ROOT "${OCRYPTO_ROOT}" REALPATH)
 else()
-    set(OCRYPTO_ROOT ${OBERON_PSA_DIR}/oberon/drivers/ocrypto)
+    set(OCRYPTO_ROOT ${OBERON_PSA_DIR}/drivers/oberon/ocrypto)
 endif()
 if(NOT EXISTS "${OCRYPTO_ROOT}/include/ocrypto_types_p256.h")
     message(FATAL_ERROR
@@ -45,7 +45,7 @@ target_include_directories(ocrypto PRIVATE
 add_library(${PROJECT_NAME} OBJECT)
 
 # define sources used from Mbed TLS, modified and unmodified
-set(OBERON_MBED_SOURCES
+set(OBERON_TF_PSA_CRYPTO_SOURCES
         ${OBERON_PSA_DIR}/core/check_crypto_config.h
         ${OBERON_PSA_DIR}/core/tf_psa_crypto_common.h
         ${OBERON_PSA_DIR}/core/psa_crypto.c
@@ -63,90 +63,90 @@ set(OBERON_MBED_SOURCES
         ${OBERON_PSA_DIR}/platform/platform_util.c              # modified
         ${OBERON_PSA_DIR}/platform/threading.c
         ${OBERON_PSA_DIR}/utilities/constant_time.c
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/library/psa_crypto_driver_wrappers.c # platform-specific
+        ${OBERON_PSA_DIR}/targets/acme/demo/dispatch/psa_crypto_driver_wrappers.c # platform-specific
 )
 
 # Oberon drivers
-set(OBERON_SOURCES
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_aead.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_aead.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_asymmetric_encrypt.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_asymmetric_encrypt.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_asymmetric_signature.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_asymmetric_signature.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_cipher.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_cipher.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_config.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ctr_drbg.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ctr_drbg.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdh.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdh.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdsa.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ecdsa.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_eddsa.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_eddsa.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ec_keys.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ec_keys.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_hash.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_hash.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_helpers.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_helpers.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_hmac_drbg.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_hmac_drbg.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_jpake.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_jpake.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_agreement.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_agreement.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_derivation.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_derivation.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_encapsulation.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_encapsulation.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_management.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_management.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_wrap.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_key_wrap.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_lms.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_lms.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_mac.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_mac.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ml_dsa.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ml_dsa.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ml_kem.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_ml_kem.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_pake.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_pake.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_rsa.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_rsa.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_spake2p.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_spake2p.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_srp.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_srp.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_wpa3_sae.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xmss.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xmss.h
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xof.c
-        ${OBERON_PSA_DIR}/oberon/drivers/oberon_xof.h
+set(DRIVER_SOURCES
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_aead.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_aead.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_asymmetric_encrypt.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_asymmetric_encrypt.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_asymmetric_signature.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_asymmetric_signature.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_cipher.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_cipher.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_driver_config.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ctr_drbg.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ctr_drbg.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ecdh.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ecdh.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ecdsa.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ecdsa.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_eddsa.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_eddsa.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ec_keys.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ec_keys.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_hash.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_hash.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_helpers.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_helpers.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_hmac_drbg.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_hmac_drbg.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_jpake.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_jpake.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_agreement.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_agreement.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_derivation.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_derivation.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_encapsulation.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_encapsulation.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_management.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_management.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_wrap.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_key_wrap.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_lms.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_lms.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_mac.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_mac.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ml_dsa.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ml_dsa.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ml_kem.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_ml_kem.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_pake.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_pake.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_rsa.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_rsa.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_spake2p.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_spake2p.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_srp.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_srp.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_wpa3_sae.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_wpa3_sae.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_xmss.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_xmss.h
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_xof.c
+        ${OBERON_PSA_DIR}/drivers/oberon/oberon_xof.h
 )
 
 # Demo drivers
 set(OBERON_DEMO_SOURCES
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers/demo_entropy.c
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers/demo_entropy.h
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers/demo_hardware.c
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers/demo_hardware.h
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers/demo_opaque.c
-        ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers/demo_opaque.h
+        ${OBERON_PSA_DIR}/targets/acme/demo/drivers/demo_entropy.c
+        ${OBERON_PSA_DIR}/targets/acme/demo/drivers/demo_entropy.h
+        ${OBERON_PSA_DIR}/targets/acme/demo/drivers/demo_hardware.c
+        ${OBERON_PSA_DIR}/targets/acme/demo/drivers/demo_hardware.h
+        ${OBERON_PSA_DIR}/targets/acme/demo/drivers/demo_opaque.c
+        ${OBERON_PSA_DIR}/targets/acme/demo/drivers/demo_opaque.h
 )
 
 
-target_sources(${PROJECT_NAME} PRIVATE ${OBERON_MBED_SOURCES})
-target_sources(${PROJECT_NAME} PRIVATE ${OBERON_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${OBERON_TF_PSA_CRYPTO_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE ${DRIVER_SOURCES})
 target_sources(${PROJECT_NAME} PRIVATE ${OBERON_DEMO_SOURCES})
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/platforms/demo/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/targets/acme/demo/dispatch)
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/core)
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/dispatch)
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/platform)
@@ -154,8 +154,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/utilities)
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/legacy_sub/src)
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/legacy_sub/include)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/drivers)
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/platforms/demo/drivers)
+target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/drivers/oberon)
+target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/targets/acme/demo/drivers)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${OCRYPTO_ROOT}/include>
@@ -181,11 +181,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # add platform drivers
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/dispatch)
-target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/oberon/platforms/demo/drivers")
-target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/oberon/platforms/demo/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/targets/acme/demo/drivers")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/targets/acme/demo/dispatch")
 
 # add Oberon drivers
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/drivers)
+target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/drivers/oberon)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
 target_link_libraries(${PROJECT_NAME} PRIVATE oberon-psa-crypto-lib)
@@ -206,11 +206,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/core)
 
 # add platform drivers
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/dispatch)
-target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/oberon/platforms/demo/drivers")
-target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/oberon/platforms/demo/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/targets/acme/demo/drivers")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/targets/acme/demo/dispatch")
 
 # add Oberon drivers
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/drivers)
+target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/drivers/oberon)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
 target_link_libraries(${PROJECT_NAME} PRIVATE oberon-psa-crypto-lib)
@@ -236,7 +236,7 @@ if(DEFINED TF_PSA_CRYPTO_ROOT)
 
     # add TF-PSA-Crypto
     target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/include)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/legacy_sub/include)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/include)
 
     # Option 1:
     #set(TF_PSA_CRYPTO_TARGET_PREFIX subproject_test_)
@@ -250,70 +250,75 @@ if(DEFINED TF_PSA_CRYPTO_ROOT)
         ${TF_PSA_CRYPTO_ROOT}/core/psa_crypto_slot_management.c
         ${TF_PSA_CRYPTO_ROOT}/core/psa_crypto_storage.c
         ${TF_PSA_CRYPTO_ROOT}/core/psa_its_file.c
+        ${TF_PSA_CRYPTO_ROOT}/core/psa_util.c
+    )
+
+    set(TF_Platform_Sources
+        ${TF_PSA_CRYPTO_ROOT}/platform/platform.c
+        ${TF_PSA_CRYPTO_ROOT}/platform/platform_util.c
+        ${TF_PSA_CRYPTO_ROOT}/platform/threading.c
+    )
+    set(TF_Extra_Sources
+        ${TF_PSA_CRYPTO_ROOT}/extras/md.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/nist_kw.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/pk.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/pk_ecc.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/pk_rsa.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/pk_wrap.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/pkparse.c
+        ${TF_PSA_CRYPTO_ROOT}/extras/pkwrite.c
+    )
+    set(TF_Utilities_Sources
+        # ${TF_PSA_CRYPTO_ROOT}/xxx.h
     )
 
     set(TF_Driver_Sources
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/aes.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/aesce.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/aesni.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/aria.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/bignum.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/bignum_core.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/bignum_mod.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/bignum_mod_raw.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/block_cipher.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/camellia.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ccm.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/chacha20.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/chachapoly.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/cipher.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/cipher_wrap.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/cmac.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ctr_drbg.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/des.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ecdh.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ecdsa.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ecjpake.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ecp.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ecp_curves.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ecp_curves_new.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/entropy.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/entropy_poll.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/gcm.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/hkdf.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/hmac_drbg.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/lmots.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/lms.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/md.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/md5.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/memory_buffer_alloc.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/nist_kw.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/pk.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/pk_ecc.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/pk_wrap.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/pkcs12.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/pkparse.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/pkwrite.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/platform.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/platform_util.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/poly1305.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_aead.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_cipher.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_ecp.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_ffdh.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_hash.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_mac.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_pake.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_crypto_rsa.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/psa_util.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/ripemd160.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/rsa.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/rsa_alt_helpers.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/sha1.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/sha256.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/sha3.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/sha512.c
-        ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src/threading.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/aes.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/aesce.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/aesni.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/aria.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/bignum.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/bignum_core.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/bignum_mod.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/bignum_mod_raw.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/block_cipher.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/camellia.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ccm.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/chacha20.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/chachapoly.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/cipher.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/cipher_wrap.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/cmac.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ctr_drbg.c
+        # ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/des.c
+        # ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ecdh.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ecdsa.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ecjpake.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ecp.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ecp_curves.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ecp_curves_new.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/entropy.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/entropy_poll.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/gcm.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/hmac_drbg.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/md5.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/poly1305.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_aead.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_cipher.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_ecp.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_ffdh.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_hash.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_mac.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_pake.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_crypto_rsa.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/psa_util_internal.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/ripemd160.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/rsa.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/rsa_alt_helpers.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/sha1.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/sha256.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/sha3.c
+        ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src/sha512.c
         ${TF_PSA_CRYPTO_ROOT}/drivers/p256-m/p256-m/p256-m.c
         ${TF_PSA_CRYPTO_ROOT}/utilities/asn1parse.c
         ${TF_PSA_CRYPTO_ROOT}/utilities/asn1write.c
@@ -326,12 +331,20 @@ if(DEFINED TF_PSA_CRYPTO_ROOT)
 
     target_sources(${PROJECT_NAME} PRIVATE 
         ${TF_Core_Sources} 
+        ${TF_Platform_Sources}
+        ${TF_Extra_Sources}
+        ${TF_Utilities_Sources}
         ${TF_Driver_Sources}
         ${OBERON_PSA_DIR}/tests/cycles/tf-psa-crypto/psa_crypto_driver_wrappers_no_static.c
     )
+
     target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/tests/cycles/tf-psa-crypto)
     target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/core)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/legacy_sub/src)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/dispatch)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/platform)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/extras)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/utilities)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_ROOT}/drivers/builtin/src)
 
     add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
     set_property(TEST ${PROJECT_NAME} PROPERTY LABELS ${PROJECT_NAME})
@@ -357,13 +370,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/library)
 
 # add platform drivers
-target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/oberon/platforms/demo/drivers")
-target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/oberon/platforms/demo/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/targets/acme/demo/drivers")
+target_include_directories(${PROJECT_NAME} PRIVATE "${OBERON_PSA_DIR}/targets/acme/demo/dispatch")
 
 # add Oberon drivers
-target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/drivers)
+target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/drivers/oberon)
 
-# target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
 target_link_libraries(${PROJECT_NAME} PRIVATE oberon-psa-crypto-lib)
 
 add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
@@ -407,7 +419,7 @@ if(DEFINED TINYCRYPT_ROOT)
     target_include_directories(${PROJECT_NAME} PRIVATE ${TINYCRYPT_ROOT}/lib/include)
     target_include_directories(${PROJECT_NAME} PUBLIC ${TINYCRYPT_SHA512_ROOT}/lib/include)
 
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/oberon/platforms/demo/include)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/targets/acme/demo/dispatch)
     target_include_directories(${PROJECT_NAME} PRIVATE ${OBERON_PSA_DIR}/include)
 
     add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

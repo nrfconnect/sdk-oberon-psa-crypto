@@ -1,6 +1,6 @@
 /*
  *  Copyright Oberon microsystems AG, Switzerland
- *  SPDX-License-Identifier: Apache-2.0
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use this file except in compliance with the License.
@@ -25,6 +25,17 @@
 #include <test/helpers.h>
 #include <test/macros.h>
 #include <string.h>
+
+#define OBERON_DEMO_DRIVER_LOCATION 0x7fffff
+#define OBERON_DEMO_DRIVER_LIFETIME \
+        (PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( \
+         PSA_KEY_PERSISTENCE_VOLATILE, OBERON_DEMO_DRIVER_LOCATION))
+#ifdef PSA_USE_DEMO_OPAQUE_DRIVER
+#define SET_KEY_LOCATION(attr) \
+        psa_set_key_lifetime(attr, OBERON_DEMO_DRIVER_LIFETIME);
+#else
+#define SET_KEY_LOCATION(attr)
+#endif
 
 #if defined(PSA_WANT_ALG_PBKDF2_HMAC)
 static const uint8_t PBKDF2_SHA1_K1[] = {
@@ -78,17 +89,20 @@ static int test_pbkdf2(psa_algorithm_t alg, uint32_t it,
     psa_set_key_usage_flags(&pw_attr, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&pw_attr, alg);
     psa_set_key_type(&pw_attr, PSA_KEY_TYPE_PASSWORD);  // or PSA_KEY_TYPE_DERIVE
+    SET_KEY_LOCATION(&pw_attr);
     TEST_ASSERT(psa_import_key(&pw_attr, pw, pw_len, &pw_key) == PSA_SUCCESS);
 
     psa_set_key_usage_flags(&salt_attr, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&salt_attr, alg);
     psa_set_key_type(&salt_attr, PSA_KEY_TYPE_PEPPER);  // or PSA_KEY_TYPE_RAW_DATA
+    SET_KEY_LOCATION(&salt_attr);
     TEST_ASSERT(psa_import_key(&salt_attr, salt, salt_len, &salt_key) == PSA_SUCCESS);
 
     psa_set_key_usage_flags(&out_attr, PSA_KEY_USAGE_EXPORT);
     psa_set_key_algorithm(&out_attr, alg);
     psa_set_key_type(&out_attr, PSA_KEY_TYPE_PASSWORD_HASH);
     psa_set_key_bits(&out_attr, PSA_BYTES_TO_BITS(ref_len));
+    SET_KEY_LOCATION(&out_attr);
 
     TEST_ASSERT(psa_key_derivation_setup(&op, alg) == PSA_SUCCESS);
     TEST_ASSERT(psa_key_derivation_input_integer(&op, PSA_KEY_DERIVATION_INPUT_COST, it) == PSA_SUCCESS);
@@ -269,12 +283,14 @@ static int test_sp800_108_counter(psa_algorithm_t alg,
     } else {
         psa_set_key_type(&key_attr, PSA_KEY_TYPE_DERIVE);
     }
+    SET_KEY_LOCATION(&key_attr);
     TEST_ASSERT(psa_import_key(&key_attr, key, key_len, &key_id) == PSA_SUCCESS);
 
     if (label) {
         psa_set_key_usage_flags(&label_attr, PSA_KEY_USAGE_DERIVE);
         psa_set_key_algorithm(&label_attr, alg);
         psa_set_key_type(&label_attr, PSA_KEY_TYPE_RAW_DATA);  // or PSA_KEY_TYPE_RAW_DATA
+        SET_KEY_LOCATION(&label_attr);
         TEST_ASSERT(psa_import_key(&label_attr, label, label_len, &label_key) == PSA_SUCCESS);
     }
 
@@ -282,6 +298,7 @@ static int test_sp800_108_counter(psa_algorithm_t alg,
     psa_set_key_algorithm(&out_attr, alg);
     psa_set_key_type(&out_attr, PSA_KEY_TYPE_PASSWORD_HASH);
     psa_set_key_bits(&out_attr, PSA_BYTES_TO_BITS(ref_len));
+    SET_KEY_LOCATION(&out_attr);
 
     if (alg != PSA_ALG_SP800_108_COUNTER_CMAC) {
         TEST_ASSERT(psa_key_derivation_setup(&op, alg) == PSA_SUCCESS);
@@ -380,6 +397,7 @@ static int test_srp_password_hash_kdf(psa_algorithm_t hash_alg, const char *pass
     psa_set_key_algorithm(&attributes, PSA_ALG_SRP_PASSWORD_HASH(hash_alg));
     psa_set_key_bits(&attributes, PSA_BYTES_TO_BITS(strlen(password)));
     psa_set_key_type(&attributes, PSA_KEY_TYPE_PASSWORD);
+    SET_KEY_LOCATION(&attributes);
     TEST_ASSERT(psa_import_key(&attributes, (const uint8_t*)password, strlen(password), &pkey) == PSA_SUCCESS);
 
     TEST_ASSERT(psa_key_derivation_setup(&kdf, PSA_ALG_SRP_PASSWORD_HASH(hash_alg)) == PSA_SUCCESS);
@@ -391,6 +409,7 @@ static int test_srp_password_hash_kdf(psa_algorithm_t hash_alg, const char *pass
     psa_set_key_algorithm(&attributes, PSA_ALG_SRP_6(hash_alg));
     psa_set_key_bits(&attributes, 3072);
     psa_set_key_type(&attributes, PSA_KEY_TYPE_SRP_KEY_PAIR(PSA_DH_FAMILY_RFC3526));
+    SET_KEY_LOCATION(&attributes);
     TEST_ASSERT(psa_key_derivation_output_key(&attributes, &kdf, &skey) == PSA_SUCCESS);
 
     TEST_ASSERT(psa_export_key(skey, data1, sizeof data1, &length) == PSA_SUCCESS);
@@ -427,13 +446,11 @@ static int test_key_derivation_verify(
     uint8_t ref_data[32];
     uint8_t out_data[32];
 
-    if (verify) {
-        TEST_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_INFO, key_data, sizeof key_data) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_output_bytes(&op, ref_data, sizeof ref_data) == PSA_SUCCESS);
-        TEST_ASSERT(psa_key_derivation_abort(&op) == PSA_SUCCESS);
-    }
+    TEST_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_INFO, key_data, sizeof key_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_output_bytes(&op, ref_data, sizeof ref_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_abort(&op) == PSA_SUCCESS);
 
     TEST_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_HKDF(PSA_ALG_SHA_256)) == PSA_SUCCESS);
 
@@ -441,6 +458,7 @@ static int test_key_derivation_verify(
         psa_set_key_usage_flags(&key_attr, key_usage);
         psa_set_key_algorithm(&key_attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
         psa_set_key_type(&key_attr, PSA_KEY_TYPE_DERIVE);
+        SET_KEY_LOCATION(&key_attr);
         TEST_ASSERT(psa_import_key(&key_attr, key_data, sizeof key_data, &key_id) == PSA_SUCCESS);
         if ((key_usage & (PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_VERIFY_DERIVATION)) == 0) {
             TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_id) == expected);
@@ -456,6 +474,7 @@ static int test_key_derivation_verify(
         psa_set_key_usage_flags(&info_attr, info_usage);
         psa_set_key_algorithm(&info_attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
         psa_set_key_type(&info_attr, PSA_KEY_TYPE_RAW_DATA);
+        SET_KEY_LOCATION(&info_attr);
         TEST_ASSERT(psa_import_key(&info_attr, key_data, sizeof key_data, &info_key) == PSA_SUCCESS);
         if ((info_usage & (PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_VERIFY_DERIVATION)) == 0) {
             TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_INFO, info_key) == expected);
@@ -468,21 +487,30 @@ static int test_key_derivation_verify(
     }
 
     if (out_usage) {
-        psa_set_key_usage_flags(&out_attr, out_usage);
+        psa_set_key_usage_flags(&out_attr, out_usage | PSA_KEY_USAGE_EXPORT);
         psa_set_key_algorithm(&out_attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
         psa_set_key_type(&out_attr, PSA_KEY_TYPE_PASSWORD_HASH);
+        SET_KEY_LOCATION(&out_attr);
         if (verify) {
             TEST_ASSERT(psa_import_key(&out_attr, ref_data, sizeof ref_data, &out_key) == PSA_SUCCESS);
             TEST_ASSERT(psa_key_derivation_verify_key(&op, out_key) == expected);
         } else {
             psa_set_key_bits(&out_attr, PSA_BYTES_TO_BITS(sizeof out_data));
             TEST_ASSERT(psa_key_derivation_output_key(&out_attr, &op, &out_key) == expected);
+            if (expected == PSA_SUCCESS) {
+                size_t length;
+                TEST_ASSERT(psa_export_key(out_key, out_data, sizeof out_data, &length) == PSA_SUCCESS);
+                ASSERT_COMPARE(out_data, length, ref_data, sizeof ref_data);
+            }
         }
     } else {
         if (verify) {
             TEST_ASSERT(psa_key_derivation_verify_bytes(&op, ref_data, sizeof ref_data) == expected);
         } else {
             TEST_ASSERT(psa_key_derivation_output_bytes(&op, out_data, sizeof out_data) == expected);
+            if (expected == PSA_SUCCESS) {
+                ASSERT_COMPARE(out_data, sizeof out_data, ref_data, sizeof ref_data);
+            }
         }
     }
 
@@ -497,6 +525,101 @@ exit:
     return res;
 }
 #endif // PSA_WANT_ALG_HKDF
+
+// Tests for PSA_KEY_DERIVATION_INPUT_SECRET /& PSA_KEY_DERIVATION_INPUT_OTHER_SECRET
+#ifdef PSA_WANT_ALG_TLS12_PSK_TO_MS
+static int test_key_derivation_other_secret(
+    psa_key_usage_t key_usage, psa_key_usage_t other_usage, psa_key_usage_t out_usage,
+    psa_status_t expected)
+{
+    psa_key_derivation_operation_t op = PSA_KEY_DERIVATION_OPERATION_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t key_id = 0;
+    psa_key_attributes_t other_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t other_key = 0;
+    psa_key_attributes_t out_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_id_t out_key = 0;
+    int res = 0;
+
+    uint8_t key_data[32] = {1,2,3};
+    uint8_t ref_data[32];
+    uint8_t out_data[32];
+
+    TEST_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SEED, key_data, sizeof key_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_OTHER_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_LABEL, key_data, sizeof key_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_output_bytes(&op, ref_data, sizeof ref_data) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_abort(&op) == PSA_SUCCESS);
+
+    TEST_ASSERT(psa_key_derivation_setup(&op, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256)) == PSA_SUCCESS);
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SEED, key_data, sizeof key_data) == PSA_SUCCESS);
+
+    if (other_usage) {
+        psa_set_key_usage_flags(&other_attr, other_usage);
+        psa_set_key_algorithm(&other_attr, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
+        psa_set_key_type(&other_attr, PSA_KEY_TYPE_DERIVE);
+        SET_KEY_LOCATION(&other_attr);
+        TEST_ASSERT(psa_import_key(&other_attr, key_data, sizeof key_data, &other_key) == PSA_SUCCESS);
+        if ((other_usage & PSA_KEY_USAGE_DERIVE) == 0) {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_OTHER_SECRET, other_key) == expected);
+            res = 1; goto exit;
+        } else {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_OTHER_SECRET, other_key) == PSA_SUCCESS);
+        }
+    } else {
+        TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_OTHER_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
+    }
+
+    if (key_usage) {
+        psa_set_key_usage_flags(&key_attr, key_usage);
+        psa_set_key_algorithm(&key_attr, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
+        psa_set_key_type(&key_attr, PSA_KEY_TYPE_DERIVE);
+        SET_KEY_LOCATION(&key_attr);
+        TEST_ASSERT(psa_import_key(&key_attr, key_data, sizeof key_data, &key_id) == PSA_SUCCESS);
+        if ((key_usage & PSA_KEY_USAGE_DERIVE) == 0) {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_id) == expected);
+            res = 1; goto exit;
+        } else {
+            TEST_ASSERT(psa_key_derivation_input_key(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_id) == PSA_SUCCESS);
+        }
+    } else {
+        TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_SECRET, key_data, sizeof key_data) == PSA_SUCCESS);
+    }
+
+    TEST_ASSERT(psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_LABEL, key_data, sizeof key_data) == PSA_SUCCESS);
+
+    if (out_usage) {
+        psa_set_key_usage_flags(&out_attr, out_usage | PSA_KEY_USAGE_EXPORT);
+        psa_set_key_algorithm(&out_attr, PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256));
+        psa_set_key_type(&out_attr, PSA_KEY_TYPE_PASSWORD_HASH);
+        SET_KEY_LOCATION(&out_attr);
+        psa_set_key_bits(&out_attr, PSA_BYTES_TO_BITS(sizeof out_data));
+        TEST_ASSERT(psa_key_derivation_output_key(&out_attr, &op, &out_key) == expected);
+        if (expected == PSA_SUCCESS) {
+            size_t length;
+            TEST_ASSERT(psa_export_key(out_key, out_data, sizeof out_data, &length) == PSA_SUCCESS);
+            ASSERT_COMPARE(out_data, length, ref_data, sizeof ref_data);
+        }
+    } else {
+        TEST_ASSERT(psa_key_derivation_output_bytes(&op, out_data, sizeof out_data) == expected);
+        if (expected == PSA_SUCCESS) {
+            ASSERT_COMPARE(out_data, sizeof out_data, ref_data, sizeof ref_data);
+        }
+    }
+
+    TEST_ASSERT(psa_key_derivation_abort(&op) == PSA_SUCCESS);
+
+    res = 1;
+exit:
+    TEST_ASSERT(psa_destroy_key(key_id) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(other_key) == PSA_SUCCESS);
+    TEST_ASSERT(psa_destroy_key(out_key) == PSA_SUCCESS);
+
+    return res;
+}
+#endif // PSA_WANT_ALG_TLS12_PSK_TO_MS
 
 
 #ifdef PSA_WANT_KEY_TYPE_XCHACHA20
@@ -1162,16 +1285,35 @@ int main(void)
     // verify_key
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
-    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
-    TEST_ASSERT(test_key_derivation_verify(0,                               0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_DERIVE,            1, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_DERIVE,            0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
-    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
     TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_EXPORT,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_EXPORT,            0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_ERROR_NOT_PERMITTED));
     TEST_ASSERT(test_key_derivation_verify(PSA_KEY_USAGE_VERIFY_DERIVATION, 0,                               PSA_KEY_USAGE_EXPORT,            1, PSA_ERROR_NOT_PERMITTED));
+#ifndef PSA_USE_DEMO_OPAQUE_DRIVER
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               0,                               PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_verify(0,                               PSA_KEY_USAGE_DERIVE,            PSA_KEY_USAGE_VERIFY_DERIVATION, 1, PSA_SUCCESS));
+#endif
 #endif // PSA_WANT_ALG_HKDF
+
+#ifdef PSA_WANT_ALG_TLS12_PSK_TO_MS
+    // output_bytes
+    TEST_ASSERT(test_key_derivation_other_secret(PSA_KEY_USAGE_DERIVE, PSA_KEY_USAGE_DERIVE, 0,                    PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_other_secret(PSA_KEY_USAGE_DERIVE, 0,                    0,                    PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_other_secret(0,                    PSA_KEY_USAGE_DERIVE, 0,                    PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_other_secret(0,                    0,                    0,                    PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_other_secret(0,                    PSA_KEY_USAGE_EXPORT, 0,                    PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_other_secret(PSA_KEY_USAGE_EXPORT, 0,                    0,                    PSA_ERROR_NOT_PERMITTED));
+    // output_key
+    TEST_ASSERT(test_key_derivation_other_secret(PSA_KEY_USAGE_DERIVE, PSA_KEY_USAGE_DERIVE, PSA_KEY_USAGE_DERIVE, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_other_secret(PSA_KEY_USAGE_DERIVE, 0,                    PSA_KEY_USAGE_DERIVE, PSA_SUCCESS));
+    TEST_ASSERT(test_key_derivation_other_secret(0,                    PSA_KEY_USAGE_DERIVE, PSA_KEY_USAGE_DERIVE, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_other_secret(0,                    0,                    PSA_KEY_USAGE_DERIVE, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_other_secret(0,                    PSA_KEY_USAGE_EXPORT, PSA_KEY_USAGE_DERIVE, PSA_ERROR_NOT_PERMITTED));
+    TEST_ASSERT(test_key_derivation_other_secret(PSA_KEY_USAGE_EXPORT, 0,                    PSA_KEY_USAGE_DERIVE, PSA_ERROR_NOT_PERMITTED));
+#endif // PSA_WANT_ALG_TLS12_PSK_TO_MS
 
 #ifdef PSA_WANT_KEY_TYPE_XCHACHA20
     TEST_ASSERT(test_xchacha20());
@@ -1236,6 +1378,8 @@ int main(void)
     TEST_ASSERT(test_cipher_buffer_overlap(PSA_KEY_TYPE_XCHACHA20, PSA_ALG_STREAM_CIPHER));
 #endif
 #endif
+
+    mbedtls_psa_crypto_free();
 
     return 0;
 exit:

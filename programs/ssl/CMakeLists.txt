@@ -133,22 +133,22 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
 
     # Oberon PSA Crypto demo drivers
     target_sources(${PROJECT_NAME} PRIVATE
-        ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/library/psa_crypto_driver_wrappers.c
-        ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers/demo_entropy.c
-        ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers/demo_hardware.c
-        ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers/demo_opaque.c
+        ${CMAKE_SOURCE_DIR}/targets/acme/demo/dispatch/psa_crypto_driver_wrappers.c
+        ${CMAKE_SOURCE_DIR}/targets/acme/demo/drivers/demo_entropy.c
+        ${CMAKE_SOURCE_DIR}/targets/acme/demo/drivers/demo_hardware.c
+        ${CMAKE_SOURCE_DIR}/targets/acme/demo/drivers/demo_opaque.c
     )
-    add_subdirectory(${CMAKE_SOURCE_DIR}/oberon/drivers ${TEST_CONFIG}/drivers)
-    target_sources(${PROJECT_NAME} PRIVATE ${MBED_SOURCES})
+    add_subdirectory(${CMAKE_SOURCE_DIR}/drivers/oberon ${TEST_CONFIG}/drivers)
+    target_sources(${PROJECT_NAME} PRIVATE ${TF_PSA_CRYPTO_SOURCES})
 
-    # add TLS specific include for build_info.h # weg ???
+    # add TLS specific include for generated test/test_certs.h
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)
 
     # add TLS specific includes to use different configuration
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
 
     # add demo platform includes
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/include)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/targets/acme/demo/dispatch)
 
     # add common includes
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/core)
@@ -157,13 +157,12 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/utilities)
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/extras)
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/src)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/drivers/oberon)
 
     # add platform specific sources and includes before mbed includes
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/targets/acme/demo/drivers)
 
     # add mbed includes
-    target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/include)
     target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)
@@ -190,33 +189,32 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}"
             RUNTIME_OUTPUT_NAME "${exe}")
 
-        # add TLS specific include for build_info.h
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)
-
         # add libs
         target_link_libraries(${PROJECT_NAME} PUBLIC oberon-psa-crypto-ssl-${TEST_CONFIG})
         target_link_libraries(${PROJECT_NAME} PRIVATE ocrypto)
+
+        # add TLS specific include for generated test/test_certs.h
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)
 
         # add TLS specific includes to use different configuration
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
 
         # add demo platform includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/include)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/targets/acme/demo/dispatch)
 
         # add common includes
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/core)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/src)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/dispatch)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/drivers/oberon)
+        # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/dispatch)
+        # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/utilities)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/extras)
 
         # add platform specific sources and includes before mbed includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/targets/acme/demo/drivers)
 
         # add mbed includes
-        target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/include)
         target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)
@@ -273,29 +271,28 @@ foreach(MBEDTLS_CONFIG_H ${config_files})
                 ${MBEDTLS_ROOT}/tests/src/test_helpers/ssl_helpers.c
             )
 
-            # add TLS specific include for build_info.h
+            # add TLS specific include for generated test/test_certs.h
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)
 
             # add TLS specific includes to use different configuration
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${TEST_CONFIG}/include)
 
             # add demo platform includes
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/include)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/targets/acme/demo/dispatch)
 
             # add common includes
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/core)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/src)
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/drivers)
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/dispatch)
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/drivers/oberon)
+            # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/dispatch)
+            # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/utilities)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/extras)
 
             # add platform specific sources and includes before mbed includes
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/oberon/platforms/demo/drivers)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/targets/acme/demo/drivers)
 
             # add mbed includes
-            target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/tests/include)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/legacy_sub/include)
             target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/programs/ssl/include)

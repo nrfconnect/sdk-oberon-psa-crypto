@@ -43,6 +43,8 @@
 #define MBEDTLS_TEST_DEPRECATED
 #endif
 
+#define MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY 1  /* !!OM */
+
 /*----------------------------------------------------------------------------*/
 /* Common helper code */
 
@@ -194,6 +196,15 @@ static int restore_output(FILE *out_stream, int dup_fd)
 #define TEST_DRIVER_LOCATION PSA_CRYPTO_TEST_DRIVER_LOCATION
 #else
 #define TEST_DRIVER_LOCATION 0x7fffff
+#define TEST_DRIVER_LIFETIME \
+        (PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( \
+         PSA_KEY_PERSISTENCE_VOLATILE, TEST_DRIVER_LOCATION))
+#ifdef PSA_USE_DEMO_OPAQUE_DRIVER /* !!OM */
+#define SET_KEY_LOCATION(attr) \
+        psa_set_key_lifetime(attr, TEST_DRIVER_LIFETIME);
+#else
+#define SET_KEY_LOCATION(attr)
+#endif
 #endif
 
 #if defined(MBEDTLS_THREADING_PTHREAD)
@@ -2930,6 +2941,7 @@ static void test_derive_key_policy(int policy_usage,
     psa_set_key_usage_flags(&attributes, policy_usage);
     psa_set_key_algorithm(&attributes, policy_alg);
     psa_set_key_type(&attributes, key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
 
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
@@ -2987,6 +2999,7 @@ static void test_agreement_key_policy(int policy_usage,
     psa_set_key_usage_flags(&attributes, policy_usage);
     psa_set_key_algorithm(&attributes, policy_alg);
     psa_set_key_type(&attributes, key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
 
     PSA_ASSERT(psa_import_key(&attributes, key_data->x, key_data->len,
                               &key));
@@ -10000,6 +10013,7 @@ static void test_derive_input(int alg_arg,
 
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
 
     if (alg != PSA_ALG_NONE) {
         PSA_ASSERT(psa_key_derivation_setup(&operation, alg));
@@ -10046,6 +10060,7 @@ static void test_derive_input(int alg_arg,
         psa_reset_key_attributes(&attributes);
         psa_set_key_type(&attributes, output_key_type);
         psa_set_key_bits(&attributes, 8);
+        SET_KEY_LOCATION(&attributes); /* !!OM */
         actual_output_status =
             psa_key_derivation_output_key(&attributes, &operation,
                                           &output_key);
@@ -10121,6 +10136,7 @@ static void test_derive_over_capacity(int alg_arg)
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
 
     PSA_ASSERT(psa_import_key(&attributes,
                               key_data, sizeof(key_data),
@@ -10274,6 +10290,7 @@ static void test_derive_output(int alg_arg,
                         psa_set_key_usage_flags(&attributes1, PSA_KEY_USAGE_DERIVE);
                         psa_set_key_algorithm(&attributes1, alg);
                         psa_set_key_type(&attributes1, PSA_KEY_TYPE_DERIVE);
+                        SET_KEY_LOCATION(&attributes1); /* !!OM */
 
                         PSA_ASSERT(psa_import_key(&attributes1,
                                                   inputs[i]->x, inputs[i]->len,
@@ -10313,6 +10330,7 @@ static void test_derive_output(int alg_arg,
                         psa_set_key_usage_flags(&attributes2, PSA_KEY_USAGE_DERIVE);
                         psa_set_key_algorithm(&attributes2, alg);
                         psa_set_key_type(&attributes2, PSA_KEY_TYPE_DERIVE);
+                        SET_KEY_LOCATION(&attributes2); /* !!OM */
 
                         // other secret of type RAW_DATA passed with input_key
                         if (other_key_input_type == 11) {
@@ -10333,6 +10351,7 @@ static void test_derive_output(int alg_arg,
                         psa_set_key_algorithm(&attributes3, alg);
                         psa_set_key_type(&attributes3,
                                          PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1));
+                        SET_KEY_LOCATION(&attributes3); /* !!OM */
 
                         PSA_ASSERT(psa_import_key(&attributes3,
                                                   inputs[i]->x, inputs[i]->len,
@@ -10383,6 +10402,7 @@ static void test_derive_output(int alg_arg,
         psa_set_key_algorithm(&attributes4, alg);
         psa_set_key_type(&attributes4, PSA_KEY_TYPE_DERIVE);
         psa_set_key_bits(&attributes4, PSA_BYTES_TO_BITS(requested_capacity));
+        SET_KEY_LOCATION(&attributes4); /* !!OM */
 
         TEST_EQUAL(psa_key_derivation_output_key(&attributes4, &operation,
                                                  &derived_key), expected_status);
@@ -10968,6 +10988,7 @@ static void test_key_agreement_setup(int alg_arg,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, our_key_alg);
     psa_set_key_type(&attributes, our_key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
     PSA_ASSERT(psa_import_key(&attributes,
                               our_key_data->x, our_key_data->len,
                               &our_key));
@@ -11017,6 +11038,7 @@ static void test_key_agreement(int alg_arg,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, our_key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
     PSA_ASSERT(psa_import_key(&attributes,
                               our_key_data->x, our_key_data->len,
                               &our_key));
@@ -11055,6 +11077,7 @@ static void test_key_agreement(int alg_arg,
 
     psa_set_key_type(&shared_secret_attributes, PSA_KEY_TYPE_DERIVE);
     psa_set_key_usage_flags(&shared_secret_attributes, PSA_KEY_USAGE_DERIVE | PSA_KEY_USAGE_EXPORT);
+    SET_KEY_LOCATION(&shared_secret_attributes); /* !!OM */
 
     TEST_EQUAL(psa_key_agreement(our_key, peer_key_data->x, peer_key_data->len,
                                  alg, &shared_secret_attributes, &shared_secret_id),
@@ -11428,6 +11451,7 @@ static void test_key_agreement_capacity(int alg_arg,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, our_key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
     PSA_ASSERT(psa_import_key(&attributes,
                               our_key_data->x, our_key_data->len,
                               &our_key));
@@ -11549,6 +11573,7 @@ static void test_key_agreement_output(int alg_arg,
     psa_set_key_usage_flags(&attributes, PSA_KEY_USAGE_DERIVE);
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_type(&attributes, our_key_type);
+    SET_KEY_LOCATION(&attributes); /* !!OM */
     PSA_ASSERT(psa_import_key(&attributes,
                               our_key_data->x, our_key_data->len,
                               &our_key));
@@ -12251,6 +12276,7 @@ static void test_persistent_key_load_key_from_storage(data_t *data,
                                     PSA_KEY_USAGE_DERIVE);
             psa_set_key_algorithm(&base_attributes, derive_alg);
             psa_set_key_type(&base_attributes, PSA_KEY_TYPE_DERIVE);
+            SET_KEY_LOCATION(&base_attributes); /* !!OM */
             PSA_ASSERT(psa_import_key(&base_attributes,
                                       data->x, data->len,
                                       &base_key));

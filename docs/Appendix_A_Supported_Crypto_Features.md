@@ -1,0 +1,195 @@
+# Appendix A: Supported Crypto Features
+
+The crypto algorithms, key types, and key sizes that are supported in
+_Oberon PSA Crypto_ are listed in this document. Also, some edge-case special
+rules and unsupported/unavailable functions are documented below as
+implementation restrictions.
+
+## Supported Crypto Algorithms and Key Types
+
+_Oberon PSA Crypto_ supports the following algorithms out of the box, i.e., if
+only the _Oberon drivers_ are used. For every algorithm, the appropriate C define
+directive is given, and - where applicable - the supported key types:
+
+| Algorithms                            | Algorithm/Class Directives                                                       | Key Type Directives         | PQC-Resistant |
+|:------------------------------------- |:-------------------------------------------------------------------------------- |:--------------------------- |:------------- |
+| SHA1                                  | PSA_WANT_ALG_SHA_1                                                               | -                           | 8)            |
+| SHA2                                  | PSA_WANT_ALG_SHA_224/256/384/512                                                 | -                           | yes           |
+| SHA3                                  | PSA_WANT_ALG_SHA3_224/256/384/512                                                | -                           | yes           |
+| SHAKE                                 | PSA_WANT_ALG_SHAKE256-512                                                        | -                           | yes           |
+| Ascon-Hash256                         | PSA_WANT_ALG_ASCON_HASH256                                                       | -                           | yes           |
+| Ascon-XOF128/Ascon-CXOF128            | PSA_WANT_ALG_ASCON_XOF128/ASCON_CXOF128                                          | -                           | yes           |
+| HASH-ML-DSA                           | PSA_WANT_ALG_HASH_ML_DSA/DETERMINISTIC_HASH_ML_DSA                               | -                           | yes           |
+| HMAC                                  | PSA_WANT_ALG_HMAC                                                                | PSA_WANT_KEY_TYPE_HMAC      | yes           |
+| AES-CMAC                              | PSA_WANT_ALG_CMAC                                                                | PSA_WANT_KEY_TYPE_AES       | yes           |
+| ChaCha20                              | PSA_WANT_ALG_STREAM_CIPHER                                                       | PSA_WANT_KEY_TYPE_CHACHA20  | yes           |
+| XChaCha20                             | PSA_WANT_ALG_STREAM_CIPHER                                                       | PSA_WANT_KEY_TYPE_XCHACHA20 | yes           |
+| AES (cipher)                          | PSA_WANT_ALG_CTR/CCM_STAR_NO_TAG/ECB_NO_PADDING/CBC_NO_PADDING/CCM/GCM/CBC_PKCS7 | PSA_WANT_KEY_TYPE_AES       | yes           |
+| AES (key wrapping) 1)                 | PSA_WANT_ALG_KW/KWP                                                              | PSA_WANT_KEY_TYPE_AES       | yes           |
+| AES (AEAD)                            | PSA_WANT_ALG_CCM/GCM                                                             | PSA_WANT_KEY_TYPE_AES       | yes           |
+| ChaCha20-Poly1305                     | PSA_WANT_ALG_CHACHA20_POLY1305                                                   | PSA_WANT_KEY_TYPE_CHACHA20  | yes           |
+| XChaCha20-Poly1305                    | PSA_WANT_ALG_XCHACHA20_POLY1305                                                  | PSA_WANT_KEY_TYPE_XCHACHA20 | yes           |
+| Ascon-AEAD128                         | PSA_WANT_ALG_ASCON_AEAD128                                                       | PSA_WANT_KEY_TYPE_ASCON     | yes           |
+| HKDF                                  | PSA_WANT_ALG_HKDF/HKDF_EXTRACT/HKDF_EXPAND                                       | PSA_WANT_KEY_TYPE_DERIVE    | yes           |
+| TLS-1.2 PRF                           | PSA_WANT_ALG_TLS12_PRF                                                           | PSA_WANT_KEY_TYPE_DERIVE    | yes           |
+| TLS-1.2 PSK-to-Mastersecret           | PSA_WANT_ALG_TLS12_PSK_TO_MS                                                     | PSA_WANT_KEY_TYPE_DERIVE    | yes           |
+| PBKDF2-HMAC                           | PSA_WANT_ALG_PBKDF2_HMAC                                                         | PSA_WANT_KEY_TYPE_HMAC      | yes           |
+| PBKDF2-AES-CMAC-PRF128                | PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128                                             | PSA_WANT_KEY_TYPE_AES       | yes           |
+| SP800-108-COUNTER-HMAC                | PSA_WANT_ALG_SP800_108_COUNTER_HMAC                                              | PSA_WANT_KEY_TYPE_HMAC      | yes           |
+| SP800-108-COUNTER-CMAC                | PSA_WANT_ALG_SP800_108_COUNTER_CMAC                                              | PSA_WANT_KEY_TYPE_AES       | yes           |
+| RSA (encryption)                      | PSA_WANT_ALG_RSA_PKCS1V15_CRYPT/OEAP                                             | 1)                          | no            |
+| ECDSA (NIST curves)                   | PSA_WANT_ALG_ECDSA/DETERMINISTIC_ECDSA                                           | 2)                          | no            |
+| EdDSA (Twisted Edwards curves)        | PSA_WANT_ALG_PURE_EDDSA                                                          | 2)                          | no            |
+| EdDSA pre-hashed                      | PSA_WANT_ALG_ED25519PH/ED448PH                                                   | 2)                          | no            |
+| RSA (signature)                       | PSA_WANT_ALG_RSA_PKCS1V15_SIGN/PSS                                               | 1)                          | no            |
+| LMS/HSS (signature verification)      | PSA_WANT_ALG_LMS/HSS                                                             | 3)                          | yes           |
+| XMSS/XMSS^MT (signature verification) | PSA_WANT_ALG_XMSS/XMSS_MT                                                        | 3)                          | yes           |
+| ML-DSA (aka Dilithium)                | PSA_WANT_ALG_ML_DSA/DETERMINISTIC_ML_DSA                                         | 4) 9)                       | yes           |
+| ECDH (NIST and Montgomery curves)     | PSA_WANT_ALG_ECDH                                                                | 2)                          | no            |
+| ML-KEM (aka Kyber)                    | PSA_WANT_ALG_ML_KEM                                                              | 5) 9)                       | yes           |
+| EC-JPAKE                              | PSA_WANT_ALG_JPAKE                                                               | TLS12_ECJPAKE_TO_PMS        | no            |
+| SPAKE2+                               | PSA_WANT_ALG_SPAKE2P_HMAC/CMAC/MATTER                                            | 6)                          | no            |
+| SRP-6                                 | PSA_WANT_ALG_SRP_6                                                               | 7)                          | no            |
+| CTR_DRBG                              | PSA_WANT_GENERATE_RANDOM + PSA_USE_CTR_DRBG_DRIVER                               | -                           | n/a           |
+| HMAC_DRBG                             | PSA_WANT_GENERATE_RANDOM + PSA_USE_HMAC_DRBG_DRIVER                              | -                           | n/a           |
+
+1) PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC/IMPORT/EXPORT.
+2) PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC/IMPORT/EXPORT/GENERATE/DERIVE.
+3) PSA_WANT_KEY_TYPE_LMS_PUBLIC_KEY/HSS_PUBLIC_KEY/XMSS_PUBLIC_KEY/XMSS_MT_PUBLIC_KEY for SHA256 and SHAKE256.
+4) PSA_WANT_KEY_TYPE_ML_DSA_KEY_PAIR_BASIC/IMPORT/EXPORT/GENERATE/DERIVE.
+5) PSA_WANT_KEY_TYPE_ML_KEM_KEY_PAIR_BASIC/IMPORT/EXPORT/GENERATE/DERIVE.
+6) PSA_WANT_KEY_TYPE_SPAKE2P_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE.
+7) PSA_WANT_KEY_TYPE_SRP_KEY_PAIR_BASIC/IMPORT/EXPORT/DERIVE.
+8) Considered non-secure even without quantum computers. Use only for legacy compatibility.
+9) ML-DSA and ML-KEM are pure software implementations (no _driver chaining_).
+They require more stack space than the other _Oberon PSA Crypto_ operations.
+Worst case: signing with ML-DSA-87 requires a stack size of about 16 KB.
+
+By defining these directives, the application developer provides the C
+preprocessor with the information that is necessary to include only the wanted
+code in the resulting firmware image.
+
+_Oberon PSA Crypto_ may be extended by further crypto algorithms as defined in the
+_PSA Certified Crypto API_ standard by adding appropriate _crypto drivers_.
+
+## Supported Key Sizes
+
+Some algorithms support different key sizes. For them, the appropriate C define
+directives are given:
+
+| Algorithm                            | Supported Key Sizes in Bits              | Directives                                               |
+|:------------------------------------ |:---------------------------------------- |:-------------------------------------------------------- |
+| SHA1                                 | na                                       | -                                                        |
+| SHA2                                 | na                                       | -                                                        |
+| SHA3                                 | na                                       | -                                                        |
+| SHAKE                                | na                                       | -                                                        |
+| Ascon-Hash256                        | na                                       | -                                                        |
+| HMAC                                 | na                                       | -                                                        |
+| AES-CMAC                             | 128, 192, 256                            | PSA_WANT_AES_KEY_SIZE_128/192/256                        |
+| ChaCha20 (cipher)                    | 256                                      | -                                                        |
+| AES (cipher)                         | 128, 192, 256                            | PSA_WANT_AES_KEY_SIZE_128/192/256                        |
+| AES (AEAD)                           | 128, 192, 256                            | PSA_WANT_AES_KEY_SIZE_128/192/256                        |
+| ChaCha20-Poly1305 (AEAD)             | 256                                      | -                                                        |
+| HKDF                                 | na                                       | -                                                        |
+| TLS-1.2 PRF                          | na                                       | -                                                        |
+| TLS-1.2 PSK-to-Mastersecret          | na                                       | -                                                        |
+| PBKDF2-HMAC                          | na                                       | -                                                        |
+| PBKDF2-AES-CMAC-PRF128               | 128                                      | PSA_WANT_AES_KEY_SIZE_128                                |
+| SP800_108_COUNTER-HMAC               | na                                       | -                                                        |
+| SP800_108_COUNTER-CMAC               | 128, 192, 256                            | PSA_WANT_AES_KEY_SIZE_128/192/256                        |
+| RSA (encryption)                     | 1024, 1536, 2048, 3072, 4096, 6144, 8192 | PSA_WANT_RSA_KEY_SIZE_1024/1536/2048/3072/4096/6144/8192 |
+| ECDSA (NIST curves)                  | 224, 256, 384, 521                       | PSA_WANT_ECC_SECP_R1_224/256/384/521/K1_256              |
+| Deterministic ECDSA (NIST curves)    | 224, 256, 384, 521                       | PSA_WANT_ECC_SECP_R1_224/256/384/521                     |
+| EdDSA (Twisted Edwards curves)       | 255, 448                                 | PSA_WANT_ECC_TWISTED_EDWARDS_255/448                     |
+| RSA (signature)                      | 1024, 1536, 2048, 3072, 4096, 6144, 8192 | PSA_WANT_RSA_KEY_SIZE_1024/1536/2048/3072/4096/6144/8192 |
+| LMS/HSS (signature verifiction)      | 192, 256                                 | -                                                        |
+| XMSS/XMSS^MT (signature verifiction) | 192, 256                                 | -                                                        |
+| ML-DSA                               | 1)                                       | 3)                                                       |
+| ECDH (NIST curves)                   | 224, 256, 384, 521                       | PSA_WANT_ECC_SECP_R1_224/256/384/521                     |
+| ECDH (Montgomery curves)             | 255, 448                                 | PSA_WANT_ECC_MONTGOMERY_255/448                          |
+| ML-KEM                               | 2)                                       | -                                                        |
+| EC-JPAKE                             | 256                                      | -                                                        |
+| SPAKE2+                              | 256                                      | -                                                        |
+| SRP-6                                | 3072                                     | -                                                        |
+| CTR_DRBG                             | 256                                      | -                                                        |
+| HMAC_DRBG                            | na                                       | -                                                        |
+
+1) ML-DSA-44: private key 32 bytes, public key 1312 bytes, signature 2420 bytes.
+   ML-DSA-65: private key 32 bytes, public key 1952 bytes, signature 3309 bytes.
+   ML-DSA-87: private key 32 bytes, public key 2592 bytes, signature 4627 bytes.
+2) ML-KEM-512: private key 64 bytes, public key 800 bytes, ciphertext 768 bytes.
+   ML-KEM-768: private key 64 bytes, public key 1184 bytes, ciphertext 1088 bytes.
+   ML-KEM-1024: private key 64 bytes, public key 1568 bytes, ciphertext 1568 bytes.
+
+HMAC, HKDF, and PBKDF2 are hash-based and can use any available hash algorithm.
+Key sizes are independent of hash sizes.
+
+LMS/HSS and XMSS/XMSS^MT are hash-based and can use SHA256-192, SHA256-256,
+SHAKE256-192, or SHAKE256-256 as hash algorithms.
+
+## Implementation Restrictions
+
+In the _PSA Certified Crypto API_, most functions are optional. The only
+mandatory function is `psa_crypto_init()`. Other functions, if not supported,
+return `PSA_ERROR_NOT_SUPPORTED` or are completely unavailable in a given
+implementation. Every implementation of the API can provide its own subset of
+supported crypto features.
+
+_Oberon PSA Crypto_ implements all _PSA Crypto API_ functions in the _PSA Core_,
+in the _dispatch logic_ (aka driver wrappers), and in the available drivers,
+except for the following unsupported or unavailable functions.
+
+*Note: If a function is implemented in the _PSA Core_ and the _dispatch logic_,
+this does not mean that a suitable driver is available for any algorithm, key
+type, or key size that is a valid parameter of this function. See the above
+tables for the cryptographic features that are actually supported in
+_Oberon PSA Crypto_.*
+
+### Unsupported Functions
+
+The following (optional) functions of the _PSA Crypto API_ return
+`PSA_ERROR_NOT_SUPPORTED` in _Oberon PSA Crypto_, regardless of the used
+algorithms:
+
+- `*_interruptible_*()`
+
+This is handled directly in the _PSA Core_, i.e., the _PSA Core_ and the
+_dispatch logic_ do not support _crypto drivers_ for interruptible functions.
+
+### Unavailable Functions
+
+The following (optional) functions of the _PSA Crypto API_ are unavailable in
+_Oberon PSA Crypto_:
+
+- `psa_attach_key()`
+- `psa_check_key_usage()`
+- `psa_generate_key_custom()`
+- `psa_hash_resume()`
+- `psa_hash_suspend()`
+- `psa_key_derivation_output_key_custom()`
+
+### Overlap Rules
+
+All functions comply with overlap rules as specified in the
+_PSA Certified Crypto API_ specification, section
+`5.4.4 Overlap between parameters`, except for
+
+- `psa_cipher_encrypt`
+- `psa_cipher_decrypt`
+- `psa_cipher_update`
+- `psa_aead_encrypt`
+- `psa_aead_decrypt`
+- `psa_aead_update`
+
+For the latter functions, the following two overlap scenarios are supported:
+
+1. Input and output parameters point to the same buffer.
+2. For the multi-call functions `psa_cipher_update` and `psa_aead_update`, a
+   single common buffer may be used for the whole plaintext and ciphertext, if
+   buffer pointers for input and output of the first update call are equal and
+   are incremented individually by the input and output size for each further
+   call (meaning the plaintext and ciphertext are stored contiguously in the
+   common buffer).
+
+This file by _Oberon microsystems_ is licensed under the
+[Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).

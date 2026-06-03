@@ -194,6 +194,12 @@
 // Additional configuration option
 #define PSA_WANT_GENERATE_RANDOM                1
 
+// Optimize ML-DSA implementation for maximum speed
+//#define OBERON_ML_DSA_FAST 1
+
+// Optimize ML-DSA implementation for minimum RAM usage
+//#define OBERON_ML_DSA_SMALL 1
+
 // Moved from mbedtls_config.h
 
 /**
@@ -790,9 +796,5 @@
 
 
 /** \} name SECTION: PSA core */
-
-
-#define MBEDTLS_TEST_PSA_SKIP_IF_SMALL_RSA_KEY 1  /* !!OM */
-
 
 #endif /* PSA_CRYPTO_CONFIG_H */

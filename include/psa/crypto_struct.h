@@ -64,6 +64,13 @@ extern "C" {
  * algorithms. */
 #include "psa/crypto_driver_contexts_primitives.h"
 
+#if defined(PSA_WANT_ALG_TLS12_PSK_TO_MS) && \
+    (defined(PSA_WANT_ALG_RSA_OAEP) || defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT) || defined(PSA_WANT_ALG_FFDH))
+#define KEY_DERIVATION_INPUT_BUFFER_SIZE 500
+#else
+#define KEY_DERIVATION_INPUT_BUFFER_SIZE 200
+#endif
+
 struct psa_hash_operation_s {
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT) && !defined(MBEDTLS_PSA_CRYPTO_C)
     mbedtls_psa_client_handle_t handle;
@@ -251,8 +258,16 @@ struct psa_key_derivation_s {  /*!!OM*/
     unsigned int MBEDTLS_PRIVATE(context_set) : 1;
     unsigned int MBEDTLS_PRIVATE(passw_set) : 1;
     unsigned int MBEDTLS_PRIVATE(info_set) : 1;
+    unsigned int MBEDTLS_PRIVATE(other_set) : 1;
+    unsigned int MBEDTLS_PRIVATE(capacity_set) : 1;
+    unsigned int MBEDTLS_PRIVATE(setup) : 1;
     unsigned int MBEDTLS_PRIVATE(no_input) : 1;
+    unsigned int MBEDTLS_PRIVATE(temp_key) : 1;
     size_t MBEDTLS_PRIVATE(capacity);
+
+    // buffered inputs
+    uint32_t MBEDTLS_PRIVATE(input[KEY_DERIVATION_INPUT_BUFFER_SIZE / 4]);
+    uint16_t MBEDTLS_PRIVATE(input_len);
 
     psa_driver_key_derivation_context_t MBEDTLS_PRIVATE(ctx);
 #endif
@@ -262,7 +277,8 @@ struct psa_key_derivation_s {  /*!!OM*/
 #define PSA_KEY_DERIVATION_OPERATION_INIT { 0 }
 #else
 /* This only zeroes out the first byte in the union, the rest is unspecified. */
-#define PSA_KEY_DERIVATION_OPERATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 } }
+#define PSA_KEY_DERIVATION_OPERATION_INIT \
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, { 0 } }
 #endif
 static inline struct psa_key_derivation_s psa_key_derivation_operation_init(
     void)

@@ -1,0 +1,67 @@
+cmake_minimum_required(VERSION 3.13)
+
+set(DRIVER_SOURCES
+        oberon_aead.c
+        oberon_aead.h
+        oberon_asymmetric_encrypt.c
+        oberon_asymmetric_encrypt.h
+        oberon_asymmetric_signature.c
+        oberon_asymmetric_signature.h
+        oberon_cipher.c
+        oberon_cipher.h
+        oberon_driver_config.h
+        oberon_ctr_drbg.c
+        oberon_ctr_drbg.h
+        oberon_ecdh.c
+        oberon_ecdh.h
+        oberon_ecdsa.c
+        oberon_ecdsa.h
+        oberon_eddsa.c
+        oberon_eddsa.h
+        oberon_ec_keys.c
+        oberon_ec_keys.h
+        oberon_hash.c
+        oberon_hash.h
+        oberon_helpers.c
+        oberon_helpers.h
+        oberon_hmac_drbg.c
+        oberon_hmac_drbg.h
+        oberon_jpake.c
+        oberon_jpake.h
+        oberon_key_agreement.c
+        oberon_key_agreement.h
+        oberon_key_derivation.c
+        oberon_key_derivation.h
+        oberon_key_encapsulation.c
+        oberon_key_encapsulation.h
+        oberon_key_management.c
+        oberon_key_management.h
+        oberon_key_wrap.c
+        oberon_key_wrap.h
+        oberon_lms.c
+        oberon_lms.h
+        oberon_mac.c
+        oberon_mac.h
+        oberon_ml_dsa.c
+        oberon_ml_dsa.h
+        oberon_ml_kem.c
+        oberon_ml_kem.h
+        oberon_pake.c
+        oberon_pake.h
+        oberon_rsa.c
+        oberon_rsa.h
+        oberon_spake2p.c
+        oberon_spake2p.h
+        oberon_srp.c
+        oberon_srp.h
+        oberon_wpa3_sae.c
+        oberon_wpa3_sae.h
+        oberon_xmss.c
+        oberon_xmss.h
+        oberon_xof.c
+        oberon_xof.h
+)
+
+target_sources(${PROJECT_NAME} PRIVATE ${DRIVER_SOURCES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

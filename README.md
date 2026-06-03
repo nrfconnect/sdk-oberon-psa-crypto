@@ -14,7 +14,7 @@ The software is compatible with the _PSA Certified Crypto API_ version as
 specified in
 [PSA Certified Crypto API](https://arm-software.github.io/psa-api/crypto/),
 and is aligned with the current version of Arm's _TF-PSA-Crypto_. For the
-currently supported API versions, see the _Compatibility_ section in the
+currently supported API version, see the _Compatibility_ section in the
 [CHANGELOG](CHANGELOG.md) document.
 
 The software consists of a portable _PSA_ _Crypto Core_ that exposes the
@@ -24,7 +24,7 @@ vendor-specific _hardware drivers_, where available.
 
 The crypto feature set supported by the core and the software drivers is
 documented in
-[Appendix A: Supported Crypto Features](oberon/docs/Appendix_A_Supported_Crypto_Features.md).
+[Appendix A: Supported Crypto Features](docs/Appendix_A_Supported_Crypto_Features.md).
 
 The software passes the _PSA API Test Suite_ for cryptographic functions and
 thereby demonstrates compliance with the standard. See the official
@@ -37,12 +37,18 @@ _TF-PSA-Crypto_ files that have been modified by Oberon contain a _NOTICE_ line.
 Some files originating from _TF-PSA-Crypto_ or _Mbed TLS_ are contained in the
 following subdirectories.
 
-Main _PSA_ components of the product (apart from the _Oberon drivers_, see
-below):
+Main _PSA_ components of the product:
 
 - `include`
 - `core`
 - `dispatch`
+- `drivers`
+
+The following directory contains the source code of the _Oberon drivers_.
+Some of them depend on the _ocrypto_ software product (which is not included in
+this repo):
+
+- `drivers/oberon`
 
 Extra functionality that is not part of the _PSA_ standard and is provided for
 _Mbed TLS_- or _TF-PSA-Crypto_-compatibility:
@@ -52,39 +58,32 @@ _Mbed TLS_- or _TF-PSA-Crypto_-compatibility:
 - `extras`
 - `legacy_sub`
 
-Test code, can also be used as example code showing the API usage:
+Test code that can also be used as example code showing the API usage:
 
-- `api-tests`
-- `programs`
 - `framework`
+- `programs`
+- `psa-arch-tests`
 - `tests`
-- `val_common`
-
-The following directory contains the source code of the _Oberon drivers_.
-Some of them depend on the _ocrypto_ software product (which is not included in
-this repo):
-
-- `oberon/drivers`
 
 The following directory contains the documentation of _Oberon PSA Crypto_:
 
-- `oberon/docs`
+- `docs`
 
 For reading the documentation, it is recommended to start with
-[Documentation Overview](oberon/docs/Documentation_Overview.md).
+[Documentation Overview](docs/Documentation_Overview.md).
 
-The following directory contains sketches of platform-specific _system crypto
+The following directory contains sketches of target-specific _system crypto
 configurations_ and mock _crypto driver_ implementations. This code is intended
 as starting point useful for _system crypto configurators_, _platform
 integrators_ and _crypto driver developers_. They are not intended to be used as
 production code and no guarantees are given that they can be built and run as is:
 
-- `oberon/platforms`
+- `targets/acme`
 
 The following directory contains a copy of the
-[PSA API Test Suite](https://github.com/ARM-software/psa-arch-tests/tree/main/api-tests):
+[PSA API Test Suite](https://github.com/ARM-software/psa-arch-tests/tree/main):
 
-- `api-tests`
+- `psa-arch-tests`
 
 The following directory contains a `README-SSL` and a CMake file for building the
 `ssl_server2` and `ssl_client2` examples and SSL tests from _Mbed TLS_, using
@@ -96,8 +95,8 @@ The following file contains the change history of _Oberon PSA Crypto_:
 
 - `CHANGELOG.md`
 
-For every release, API compatibility information is given regarding the
-_PSA Certified Crypto API_ version that is supported.
+For every release, the changelog gives API compatibility information regarding
+the _PSA Certified Crypto API_ version that is supported.
 
 The following file contains licensing information:
 
@@ -107,10 +106,16 @@ The following file contains the current software version:
 
 - `VERSION`
 
+## Migrate from Oberon PSA Crypto 1.6.x or earlier
+
+Some directories have moved. If you want to migrate from Oberon PSA Crypto 1.6.x
+or earlier to _Oberon PSA Crypto_ 2.1.0 or later, please see
+[Appendix D: Mbed TLS](docs/Appendix_D_Mbed_TLS.md).
+
 ## Migrate from TF-PSA-Crypto
 
- If you want to migrate from _TF-PSA-Crypto_ to _Oberon PSA Crypto_, please see
- [Appendix D: Mbed TLS](oberon/docs/Appendix_D_Mbed_TLS.md).
+If you want to migrate from _TF-PSA-Crypto_ to _Oberon PSA Crypto_, please see
+[Appendix H: Directory Structure Migration](docs/Appendix_H_Directory_Structure_Migration.md).
 
 ## Build with CMake
 
@@ -127,12 +132,12 @@ _CMake_ version 3.13 or newer.
 Compatible _ocrypto_ release version, see
 [CHANGELOG.md](CHANGELOG.md).
 
-*Note: _Oberon PSA Crypto_ uses _ocrypto_ as implementation of its crypto
+*Note: _Oberon PSA Crypto_ uses _ocrypto_ for the implementation of its crypto
 primitives. The provided _CMake_ files can be used for a quick test on a host
 platform (Linux, Windows) and uses _ocrypto_'s platform-independent
 implementation (no assembly language). When _Oberon PSA Crypto_ is used on a
 microcontroller, please make sure that you use the platform-optimized code
-instead! It is located in _ocrypto_ inside `src/platforms/`, e.g. folder
+instead! It is located in _ocrypto_ inside `src/platforms/`, e.g., folder
 `src/platforms/M4F` for Cortex-M4F, instead of the default folder `Generic` for
 the platform-independent code, which is far less optimized.*
 
@@ -152,11 +157,20 @@ Build the source in a separate directory `build` from the command line:
     cmake --build build
 
 Supported platforms with demonstration drivers, configurations, and includes
-are located in path `oberon/platforms` and can be provided to CMake via
-`-DPLATFORM=folder_name`.
+are located in path `targets/acme` and can be selected for build within CMake
+via `-DPLATFORM=folder_name`.
 
 Multi-threading support can be enabled with define `MBEDTLS_THREADING_C` in
-`mbedtls_config.h`.
+`psa/crypto_config.h`.
+
+The ML-DSA implementation provides a good tradeoff between speed and RAM
+requirements by default. The `generate key` and `verify` operations are
+considerably faster than `sign`. If you need to run a `sign` operation at
+maximum speed or reduce RAM usage to a minimum, two mutually exclusive build
+options are provided:
+
+- `OBERON_ML_DSA_FAST` for max speed of the `sign` operations
+- `OBERON_ML_DSA_SMALL` for min RAM usage
 
 ### Build with Tests
 
@@ -207,14 +221,14 @@ file for copyright and licensing information.
 
 The documentation of _Oberon PSA Crypto_ is organized as a sequence of markdown
 pages. It starts with the
-[Documentation Overview](oberon/docs/Documentation_Overview.md)
+[Documentation Overview](docs/Documentation_Overview.md)
 and can be read sequentially. A number of appendices give additional information
 on special topics.
 
 ## Bug Tracking and Security Vulnerabilities
 
 _Oberon PSA Crypto_ bugs and security vulnerabilities are tracked in document
-[Bug Tracking](oberon/docs/Appendix_E_Bug_Tracking.md).
+[Bug Tracking](docs/Appendix_E_Bug_Tracking.md).
 
 This file by _Oberon microsystems_ is licensed under the
 [Creative Commons Attribution-ShareAlike 4.0 License](https://creativecommons.org/licenses/by-sa/4.0/).
