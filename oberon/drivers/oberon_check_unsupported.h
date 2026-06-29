@@ -129,6 +129,7 @@
     #if defined(CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(CONFIG_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_K1_192)
         #error "No crypto implementation for secp-k1-192 key pair derive"
     #endif
+    #define PSA_WANT_GENERATE_RANDOM 1
 #endif
 
 #if defined(CONFIG_PSA_WANT_ECC_SECP_K1_224)
@@ -167,6 +168,7 @@
     #if defined(CONFIG_PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE) && !defined(CONFIG_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR_DERIVE_SECP_R1_192)
         #error "No crypto implementation for secp-r1-192 key pair derive"
     #endif
+    #define PSA_WANT_GENERATE_RANDOM 1
 #endif
 
 #if defined(CONFIG_PSA_WANT_ECC_SECP_R2_160)
@@ -742,5 +744,32 @@
         #error "No crypto implementation for ARC4"
     #endif
 #endif
+
+/* Oberon Random Driver */
+
+#if defined(PSA_WANT_GENERATE_RANDOM)
+    #if defined(PSA_USE_CTR_DRBG_DRIVER)
+        #if defined(PSA_ACCEL_GENERATE_RANDOM)
+            #error "No more than one DRBG_DRIVER usage must be defined."
+        #endif
+        #define PSA_NEED_OBERON_CTR_DRBG_DRIVER 1
+        #define PSA_ACCEL_GENERATE_RANDOM
+    #endif
+    #if defined(PSA_USE_HMAC_DRBG_DRIVER)
+        #if defined(PSA_ACCEL_GENERATE_RANDOM)
+            #error "No more than one DRBG_DRIVER usage must be defined."
+        #endif
+        #define PSA_NEED_OBERON_HMAC_DRBG_DRIVER 1
+        #define PSA_ACCEL_GENERATE_RANDOM
+    #endif
+
+    #if !defined(PSA_ACCEL_GENERATE_RANDOM)
+        #error "PSA_WANT_GENERATE_RANDOM defined, but no random driver"
+    #endif
+
+    #if !defined(PSA_ACCEL_GET_ENTROPY)
+        #error "PSA_WANT_GENERATE_RANDOM defined, but no entropy driver"
+    #endif
+#endif // defined(PSA_WANT_GENERATE_RANDOM)
 
 #endif /* OBERON_CHECK_UNSUPPORTED_H */
