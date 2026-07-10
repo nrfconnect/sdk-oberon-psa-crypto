@@ -4319,6 +4319,7 @@ psa_status_t psa_key_derivation_get_capacity(const psa_key_derivation_operation_
  * that the input was passed as a buffer rather than via a key object.
  */
 static int psa_key_derivation_check_input_type(
+    psa_algorithm_t alg,
     psa_key_derivation_step_t step,
     psa_key_type_t key_type)
 {
@@ -4334,6 +4335,9 @@ static int psa_key_derivation_check_input_type(
             return PSA_SUCCESS;
         }
         if (key_type == PSA_KEY_TYPE_NONE) {
+            return PSA_SUCCESS;
+        }
+        if (key_type == PSA_KEY_TYPE_AES && alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
             return PSA_SUCCESS;
         }
         break;
@@ -4644,7 +4648,7 @@ static psa_status_t psa_key_derivation_input_internal(
         key_type == PSA_KEY_TYPE_HMAC) {
         // ok
     } else {
-        status = psa_key_derivation_check_input_type(step, key_type);
+        status = psa_key_derivation_check_input_type(operation->alg, step, key_type);
         if (status != PSA_SUCCESS) {
             goto exit;
         }
@@ -4715,7 +4719,7 @@ psa_status_t psa_key_derivation_input_integer(
     status = psa_key_derivation_check_state(operation, step);
     if (status != PSA_SUCCESS) goto exit;
 
-    status = psa_key_derivation_check_input_type(step, PSA_KEY_TYPE_NONE);
+    status = psa_key_derivation_check_input_type(operation->alg, step, PSA_KEY_TYPE_NONE);
     if (status != PSA_SUCCESS) goto exit;
 
     if (PSA_ALG_IS_PBKDF2(operation->alg)) {
