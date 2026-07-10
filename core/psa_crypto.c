@@ -2781,9 +2781,13 @@ psa_status_t psa_asymmetric_decrypt(mbedtls_svc_key_id_t key,
         output, output_size, output_length);
 
 exit:
-    unlock_status = psa_unregister_read_under_mutex(slot);
 
-    return (status == PSA_SUCCESS) ? unlock_status : status;
+    unlock_status = psa_unregister_read_under_mutex(slot);
+    if (unlock_status != PSA_SUCCESS) {
+        status = unlock_status;
+    }
+    *output_length &= ~(status >> 31);
+    return status;
 }
 
 /****************************************************************/

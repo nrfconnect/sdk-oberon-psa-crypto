@@ -755,11 +755,13 @@ static psa_status_t eme_pkcs1_v15_encode(
 }
 
 static psa_status_t eme_pkcs1_v15_decode(
-    const uint8_t *em, size_t em_len,
+    uint8_t *em, size_t em_len,
     uint8_t *m, size_t m_size, size_t *m_len)
 {
-    size_t i, inc, length;
-    int diff;
+    size_t i, length, copylen;
+    uint32_t inc, bit, sc;
+    int32_t diff, mask, data;
+    psa_status_t res = PSA_SUCCESS;
 
     // em = 0 : 2 : {rnd} : 0 : m
     diff = (int)em[0]; // check em[0] == 0
@@ -773,14 +775,32 @@ static psa_status_t eme_pkcs1_v15_decode(
         inc |= IS_ZERO(em[i]);
         length += inc;
     }
-    diff |= (int)(em[em_len - length - 1]); // check em[i] == 0
-    if (diff) return PSA_ERROR_INVALID_PADDING;
-
-    if (length > m_size) return PSA_ERROR_BUFFER_TOO_SMALL;
+    diff |= (int)(inc ^ 1); // check inc == 1 <=> separator found
+    copylen = em_len;
+    if (m_size < em_len) {
+        copylen = m_size; // min(em_len, m_size)
+        // m_size < length -> buffer too small
+        res = ((int32_t)(m_size - length) >> 31) & PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+    // shift data left in buffer without leaking the shift count
+    sc = em_len - length; // shift count
+    bit = em_len & ~(em_len >> 1); // single bit <= em_len
+    while (bit > 0) {
+        mask = ((int32_t)(sc & bit) - 1) >> 31;
+        for (i = 0; i < em_len; i++) {
+            data = em[i] & mask;
+            if (i + bit < em_len) data |= em[i + bit] & ~mask;
+            em[i] = (uint8_t)data;
+        }
+        bit >>= 1;
+    }
+    // diff != 0 -> padding error
+    res ^= ((diff | (-diff)) >> 31) & (res ^ PSA_ERROR_INVALID_PADDING);
+    // copy to output
     *m_len = length;
-    memcpy(m, &em[em_len - length], length);
+    memcpy(m, em, copylen);
 
-    return PSA_SUCCESS;
+    return res;
 }
 #endif /* PSA_NEED_OBERON_RSA_PKCS1V15_CRYPT */
 
@@ -1083,7 +1103,6 @@ psa_status_t oberon_rsa_decrypt(
     if (type != PSA_KEY_TYPE_RSA_KEY_PAIR) return PSA_ERROR_NOT_SUPPORTED;
 
     if (input_length != key_size) return PSA_ERROR_INVALID_ARGUMENT;
-
 
     // Get secret key
 

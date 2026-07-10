@@ -1222,6 +1222,12 @@
  *
  * The underlying stream cipher is determined by the key type.
  * - To use ChaCha20, use a key type of #PSA_KEY_TYPE_CHACHA20.
+ *
+ * \warning When using ChaCha20: For one key and nonce, the cumulated length of
+ *          all input message chunks must not exceed 256 GB (2^32 blocks).
+ *          This would result in a counter wrap around and a reuse of a counter
+ *          value as nonce with the same key and as a consequence would void
+ *          confidentiality guarantees.
  */
 #define PSA_ALG_STREAM_CIPHER                   ((psa_algorithm_t) 0x04800100)
 
@@ -1335,6 +1341,12 @@
 /** The GCM authenticated encryption algorithm.
  *
  * The underlying block cipher is determined by the key type.
+ *
+ * \warning For one key and nonce the cumulated length of all input message
+ *          chunks must not exceed 64 GB (2^32 blocks).
+ *          This would result in a counter wrap around and a reuse of a counter
+ *          value as nonce with the same key and as a consequence would void
+ *          confidentiality guarantees.
  */
 #define PSA_ALG_GCM                             ((psa_algorithm_t) 0x05500200)
 
@@ -1346,6 +1358,13 @@
  * and should reject other sizes.
  *
  * Implementations must support 16-byte tags and should reject other sizes.
+ *
+ * \warning For one key and nonce the cumulated length of all input message
+ *          chunks must not exceed 256 GB (2^32-1 blocks).
+ *          This would result in a counter wrap around and a reuse of a counter
+ *          value as nonce with the same key and as a consequence would void
+ *          confidentiality guarantees.
+
  */
 #define PSA_ALG_CHACHA20_POLY1305               ((psa_algorithm_t) 0x05100500)
 
