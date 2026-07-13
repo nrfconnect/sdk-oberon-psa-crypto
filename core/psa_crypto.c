@@ -866,7 +866,11 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
     }
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    && !psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))
+#endif
+    ) {
         /* Destroy the copy of the persistent key from storage.
          * The slot will still hold a copy of the key until the last reader
          * unregisters. */
@@ -1169,7 +1173,8 @@ static psa_status_t psa_validate_key_attributes(const psa_key_attributes_t *attr
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     } else {
-        if (!psa_key_id_is_user(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key))) {
+        if ((!psa_key_id_is_user(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key)) &&
+             !(PSA_KEY_ID_VENDOR_MIN <= MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key)) && (MBEDTLS_SVC_KEY_ID_GET_KEY_ID(key) <= PSA_KEY_ID_VENDOR_MAX))) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
     }
@@ -1308,7 +1313,11 @@ static psa_status_t psa_finish_key_creation(
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
-    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)) {
+    if (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime)
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    && !psa_key_id_is_builtin(MBEDTLS_SVC_KEY_ID_GET_KEY_ID(slot->attr.id))
+#endif
+    ) {
         /* Key material is saved in export representation in the slot, so
          * just pass the slot buffer for storage. */
         status = psa_save_persistent_key(&slot->attr,
