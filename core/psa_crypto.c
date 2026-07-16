@@ -4378,16 +4378,16 @@ psa_status_t psa_key_derivation_setup(psa_key_derivation_operation_t *operation,
      * all of its members. */
     memset(&operation->ctx, 0, sizeof(operation->ctx));
 
-#ifdef PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128
+#if defined(PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128)
     if (alg == PSA_ALG_PBKDF2_AES_CMAC_PRF_128) {
         // ok
     } else
-#endif /* PSA_NEED_OBERON_PBKDF2_AES_CMAC_PRF_128 */
-#ifdef PSA_NEED_OBERON_SP800_108_COUNTER_CMAC
+#endif /* PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128 */
+#if defined(PSA_WANT_ALG_SP800_108_COUNTER_CMAC)
     if (alg == PSA_ALG_SP800_108_COUNTER_CMAC) {
         // ok
     } else
-#endif /* PSA_NEED_OBERON_SP800_108_COUNTER_CMAC */
+#endif /* PSA_WANT_ALG_SP800_108_COUNTER_CMAC */
 #if defined(PSA_WANT_ALG_TLS12_PRF) || defined(PSA_WANT_ALG_TLS12_PSK_TO_MS)
     if (PSA_ALG_IS_TLS12_PRF(kdf_alg) || PSA_ALG_IS_TLS12_PSK_TO_MS(kdf_alg)) {
         psa_algorithm_t hash_alg = PSA_ALG_HKDF_GET_HASH(kdf_alg);
