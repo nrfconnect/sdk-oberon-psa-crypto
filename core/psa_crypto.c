@@ -5315,6 +5315,10 @@ static psa_status_t psa_key_agreement_internal(psa_key_derivation_operation_t *o
                                                shared_secret,
                                                shared_secret_length);
 
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
     /* Step 3: the temporary key must be destroyed at the end of the operation */
     if (step != PSA_KEY_DERIVATION_INPUT_SECRET && step != PSA_KEY_DERIVATION_INPUT_OTHER_SECRET) {
         // the usage of psa_key_agreement_key_derivation() is restricted to avoid hard to handle edge cases
